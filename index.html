@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — AI-Powered Creative Tools</title>
+<meta name="description" content="Professional AI tools for content creators. Compare before/after images & videos with AI-powered analysis.">
+<link rel="stylesheet" href="style.css">
+<style>
+  /* Hero */
+  .hero {
+    width: 100%;
+    padding: 80px 20px 60px;
+    text-align: center;
+    background: linear-gradient(180deg, var(--sf) 0%, var(--bg) 100%);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, var(--acd) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-badge {
+    display: inline-block;
+    padding: 4px 14px;
+    border: 1px solid var(--acd);
+    border-radius: 20px;
+    font-size: 12px;
+    color: var(--ac);
+    margin-bottom: 20px;
+    background: rgba(232,197,71,.05);
+  }
+  .hero h1 {
+    font-size: 48px;
+    font-weight: 900;
+    letter-spacing: -1px;
+    margin-bottom: 16px;
+    line-height: 1.1;
+  }
+  .hero h1 .accent { color: var(--ac); }
+  .hero p {
+    font-size: 18px;
+    color: var(--txd);
+    max-width: 520px;
+    margin: 0 auto 32px;
+    line-height: 1.5;
+  }
+  .hero-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  /* Demo Animation */
+  .demo-section {
+    width: 90%;
+    max-width: 700px;
+    margin: -20px auto 60px;
+    position: relative;
+  }
+  .demo-box {
+    width: 100%;
+    aspect-ratio: 16/9;
+    border-radius: 14px;
+    border: 1px solid var(--bd);
+    overflow: hidden;
+    position: relative;
+    background: var(--sf);
+  }
+  .demo-box .side-a, .demo-box .side-b {
+    position: absolute;
+    inset: 0;
+  }
+  .demo-box .side-a {
+    background: linear-gradient(135deg, #8B4513, #A0522D, #654321);
+  }
+  .demo-box .side-b {
+    background: linear-gradient(135deg, #1a6b3c, #228B45, #0d4f2a);
+    clip-path: inset(0 0 0 50%);
+    animation: demoSlide 3s ease-in-out infinite;
+  }
+  .demo-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: rgba(255,255,255,.4);
+    left: 50%;
+    z-index: 2;
+    animation: demoLine 3s ease-in-out infinite;
+  }
+  .demo-label-b, .demo-label-a {
+    position: absolute;
+    top: 12px;
+    padding: 3px 12px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    background: rgba(0,0,0,.5);
+    backdrop-filter: blur(6px);
+    z-index: 3;
+  }
+  .demo-label-b { left: 12px; color: var(--red); }
+  .demo-label-a { right: 12px; color: var(--grn); }
+  @keyframes demoSlide {
+    0%, 100% { clip-path: inset(0 0 0 50%); }
+    30% { clip-path: inset(0 0 0 25%); }
+    70% { clip-path: inset(0 0 0 75%); }
+  }
+  @keyframes demoLine {
+    0%, 100% { left: 50%; }
+    30% { left: 25%; }
+    70% { left: 75%; }
+  }
+
+  /* Tools Section */
+  .section {
+    width: 90%;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 60px 0;
+  }
+  .section-title {
+    font-size: 32px;
+    font-weight: 900;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .section-sub {
+    font-size: 15px;
+    color: var(--txd);
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  /* Tool Card */
+  .tool-card {
+    background: var(--sf);
+    border: 1px solid var(--bd);
+    border-radius: 16px;
+    padding: 32px;
+    display: flex;
+    gap: 32px;
+    align-items: center;
+    transition: border-color .3s;
+  }
+  .tool-card:hover { border-color: var(--ac); }
+  .tool-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    background: var(--acd);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .tool-icon svg { width: 32px; height: 32px; color: var(--ac); }
+  .tool-info { flex: 1; }
+  .tool-info h3 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .tool-info p {
+    font-size: 14px;
+    color: var(--txd);
+    line-height: 1.5;
+    margin-bottom: 14px;
+  }
+  .tool-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .tag {
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    background: rgba(255,255,255,.05);
+    color: var(--txd);
+  }
+  .tag.free { background: rgba(81,207,102,.1); color: var(--grn); }
+  .tag.pro { background: var(--acd); color: var(--ac); }
+
+  /* Pricing */
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+  .price-card {
+    background: var(--sf);
+    border: 1px solid var(--bd);
+    border-radius: 16px;
+    padding: 28px;
+    text-align: center;
+    transition: all .3s;
+    position: relative;
+  }
+  .price-card.featured {
+    border-color: var(--ac);
+    box-shadow: 0 0 40px var(--acd);
+  }
+  .price-card.featured::before {
+    content: 'POPULAR';
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ac);
+    color: var(--bg);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 12px;
+    border-radius: 10px;
+    letter-spacing: 1px;
+  }
+  .price-name {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .price-amount {
+    font-size: 42px;
+    font-weight: 900;
+    margin: 12px 0;
+  }
+  .price-amount span {
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--txd);
+  }
+  .price-features {
+    list-style: none;
+    text-align: left;
+    margin: 20px 0;
+  }
+  .price-features li {
+    font-size: 13px;
+    color: var(--txd);
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,.04);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .price-features li::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .price-card .price-features li::before { background: var(--grn); }
+  .price-card.featured .price-features li::before { background: var(--ac); }
+
+  /* CTA Banner */
+  .cta-banner {
+    width: 90%;
+    max-width: 700px;
+    margin: 0 auto 60px;
+    background: linear-gradient(135deg, rgba(232,197,71,.1), rgba(232,197,71,.03));
+    border: 1px solid var(--acd);
+    border-radius: 16px;
+    padding: 40px;
+    text-align: center;
+  }
+  .cta-banner h3 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .cta-banner p {
+    color: var(--txd);
+    margin-bottom: 20px;
+  }
+
+  @media (max-width: 600px) {
+    .hero { padding: 50px 16px 40px; }
+    .hero h1 { font-size: 30px; }
+    .hero p { font-size: 15px; }
+    .pricing-grid { grid-template-columns: 1fr; }
+    .tool-card { flex-direction: column; text-align: center; gap: 16px; }
+    .tool-tags { justify-content: center; }
+    .section-title { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav class="nav">
+  <a href="/" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="#pricing" class="nav-link" data-en="Pricing" data-he="מחירים">Pricing</a>
+    <a href="/compare/" class="nav-link" data-en="Compare Tool" data-he="כלי השוואה">Compare Tool</a>
+    <a href="/auth/" class="btn" style="padding:6px 16px; font-size:12px;" data-en="Login" data-he="התחבר">Login</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" id="lE" onclick="setLang('en')">EN</button>
+      <button class="lang-btn on" id="lH" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-badge" data-en="BQ Production LLC" data-he="BQ Production LLC">BQ Production LLC</div>
+  <h1>
+    <span data-en="AI-Powered" data-he="כלים מבוססי">AI-Powered</span><br>
+    <span class="accent" data-en="Creative Tools" data-he="AI ליוצרי תוכן">Creative Tools</span>
+  </h1>
+  <p data-en="Professional tools for content creators. Compare before &amp; after visuals, get AI analysis, and share your work — all in one place." data-he="כלים מקצועיים ליוצרי תוכן. השוו תמונות לפני ואחרי, קבלו ניתוח AI, ושתפו את העבודה שלכם — הכל במקום אחד.">Professional tools for content creators. Compare before &amp; after visuals, get AI analysis, and share your work — all in one place.</p>
+  <div class="hero-buttons">
+    <a href="/compare/" class="btn btn-primary btn-large" data-en="Start Free" data-he="התחל בחינם">Start Free</a>
+    <a href="#pricing" class="btn btn-large" data-en="See Pricing" data-he="ראה מחירים">See Pricing</a>
+  </div>
+</section>
+
+<!-- Demo Animation -->
+<div class="demo-section">
+  <div class="demo-box">
+    <div class="side-a"></div>
+    <div class="side-b"></div>
+    <div class="demo-line"></div>
+    <div class="demo-label-b">BEFORE</div>
+    <div class="demo-label-a">AFTER</div>
+  </div>
+</div>
+
+<!-- Tools -->
+<section class="section">
+  <h2 class="section-title" data-en="Tools" data-he="כלים">Tools</h2>
+  <p class="section-sub" data-en="Everything you need to showcase your creative work" data-he="כל מה שצריך כדי להציג את העבודה היצירתית שלך">Everything you need to showcase your creative work</p>
+
+  <div class="tool-card">
+    <div class="tool-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="18" height="18" rx="3"/>
+        <path d="M12 3v18"/>
+        <circle cx="8.5" cy="8.5" r="1.5"/>
+        <path d="M21 15l-5-5L5 21"/>
+      </svg>
+    </div>
+    <div class="tool-info">
+      <h3>BQ Compare</h3>
+      <p data-en="Before/after image &amp; video comparison with an interactive slider. Get AI-powered analysis that scores your work and identifies every change." data-he="השוואת תמונות ווידאו לפני/אחרי עם סליידר אינטראקטיבי. קבלו ניתוח AI שמדרג את העבודה ומזהה כל שינוי.">Before/after image &amp; video comparison with an interactive slider. Get AI-powered analysis that scores your work and identifies every change.</p>
+      <div class="tool-tags">
+        <span class="tag free" data-en="Slider — Free" data-he="סליידר — חינם">Slider — Free</span>
+        <span class="tag pro" data-en="AI Analysis — Pro" data-he="ניתוח AI — Pro">AI Analysis — Pro</span>
+        <span class="tag" data-en="Image + Video" data-he="תמונה + וידאו">Image + Video</span>
+        <span class="tag" data-en="Horizontal + Vertical" data-he="אופקי + אנכי">Horizontal + Vertical</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Pricing -->
+<section class="section" id="pricing">
+  <h2 class="section-title" data-en="Simple Pricing" data-he="מחירים פשוטים">Simple Pricing</h2>
+  <p class="section-sub" data-en="Start free, upgrade when you need AI analysis" data-he="התחל בחינם, שדרג כשתצטרך ניתוח AI">Start free, upgrade when you need AI analysis</p>
+
+  <div class="pricing-grid">
+    <!-- Free -->
+    <div class="price-card">
+      <div class="price-name">Free</div>
+      <div class="price-amount">$0</div>
+      <ul class="price-features">
+        <li data-en="Before/after slider" data-he="סליידר לפני/אחרי">Before/after slider</li>
+        <li data-en="Image + video support" data-he="תמיכה בתמונות + וידאו">Image + video support</li>
+        <li data-en="Horizontal + vertical modes" data-he="מצב אופקי + אנכי">Horizontal + vertical modes</li>
+        <li data-en="Unlimited comparisons" data-he="השוואות ללא הגבלה">Unlimited comparisons</li>
+        <li data-en="EN / HE language toggle" data-he="מעבר שפה EN / HE">EN / HE language toggle</li>
+      </ul>
+      <a href="/compare/" class="btn" style="width:100%;justify-content:center;" data-en="Start Free" data-he="התחל בחינם">Start Free</a>
+    </div>
+
+    <!-- Pro -->
+    <div class="price-card featured">
+      <div class="price-name">Pro</div>
+      <div class="price-amount">$7<span>.99/mo</span></div>
+      <ul class="price-features">
+        <li data-en="Everything in Free" data-he="הכל מה-Free">Everything in Free</li>
+        <li data-en="AI Analysis (Gemini + Claude)" data-he="ניתוח AI (Gemini + Claude)">AI Analysis (Gemini + Claude)</li>
+        <li data-en="Quality scoring (1-10)" data-he="ציון איכות (1-10)">Quality scoring (1-10)</li>
+        <li data-en="Export with BQ watermark" data-he="ייצוא עם ווטרמרק BQ">Export with BQ watermark</li>
+        <li data-en="Share comparison link" data-he="שיתוף לינק השוואה">Share comparison link</li>
+        <li data-en="50 AI analyses / month" data-he="50 ניתוחי AI / חודש">50 AI analyses / month</li>
+      </ul>
+      <a href="https://www.paypal.com/ncp/payment/2LA7B7PZTHN54" target="_blank" rel="noopener" class="btn btn-primary" style="width:100%;justify-content:center;" data-en="Go Pro" data-he="שדרג ל-Pro">Go Pro</a>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta-banner">
+  <h3 data-en="Ready to level up your content?" data-he="מוכן לשדרג את התוכן שלך?">Ready to level up your content?</h3>
+  <p data-en="Start comparing for free. No account needed." data-he="התחל להשוות בחינם. לא צריך חשבון.">Start comparing for free. No account needed.</p>
+  <a href="/compare/" class="btn btn-primary btn-large" data-en="Open BQ Compare" data-he="פתח את BQ Compare">Open BQ Compare</a>
+</div>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="footer-brand">BQ Tools — BQ Production LLC</div>
+  <div class="footer-links">
+    <a href="https://bqprod.pages.dev" target="_blank">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/></svg>
+      bqprod.pages.dev
+    </a>
+    <a href="https://instagram.com/bq_music" target="_blank">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/></svg>
+      @bq_music
+    </a>
+  </div>
+</footer>
+
+<script>
+let lang = 'en';
+
+function setLang(l) {
+  lang = l;
+  document.getElementById('lH').classList.toggle('on', l === 'he');
+  document.getElementById('lE').classList.toggle('on', l === 'en');
+  document.documentElement.dir = l === 'he' ? 'rtl' : 'ltr';
+  document.documentElement.lang = l;
+  document.querySelectorAll('[data-he]').forEach(el => {
+    const text = el.getAttribute('data-' + l);
+    if (text) el.textContent = text;
+  });
+}
+
+// Init
+setLang('en');
+</script>
+</body>
+</html>

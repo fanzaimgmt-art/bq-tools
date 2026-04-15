@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Activate Pro</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  body { display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+
+  .auth-container {
+    width: 90%;
+    max-width: 420px;
+    margin: 60px auto;
+    text-align: center;
+  }
+  .auth-card {
+    background: var(--sf);
+    border: 1px solid var(--bd);
+    border-radius: 16px;
+    padding: 36px 28px;
+  }
+  .auth-card h2 {
+    font-size: 24px;
+    font-weight: 900;
+    margin-bottom: 6px;
+  }
+  .auth-card .sub {
+    font-size: 14px;
+    color: var(--txd);
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+  .auth-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--bd);
+    border-radius: var(--r);
+    background: var(--bg);
+    color: var(--tx);
+    font-family: monospace;
+    font-size: 16px;
+    text-align: center;
+    letter-spacing: 2px;
+    margin-bottom: 14px;
+    user-select: text;
+    -webkit-user-select: text;
+  }
+  .auth-input:focus { outline: none; border-color: var(--ac); }
+  .auth-input::placeholder { letter-spacing: 0; font-size: 13px; }
+
+  .auth-btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: var(--r);
+    background: var(--ac);
+    color: var(--bg);
+    font-family: 'Heebo', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: filter .2s;
+    margin-bottom: 12px;
+  }
+  .auth-btn:hover { filter: brightness(1.1); }
+
+  .auth-msg {
+    font-size: 13px;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 14px;
+    display: none;
+  }
+  .auth-msg.ok { display: block; background: rgba(81,207,102,.1); color: var(--grn); border: 1px solid rgba(81,207,102,.2); }
+  .auth-msg.err { display: block; background: rgba(255,107,107,.1); color: var(--red); border: 1px solid rgba(255,107,107,.2); }
+
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 24px 0;
+    color: var(--txd);
+    font-size: 12px;
+  }
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--bd);
+  }
+
+  .buy-section p {
+    font-size: 13px;
+    color: var(--txd);
+    margin-bottom: 12px;
+    line-height: 1.6;
+  }
+
+  .status-card {
+    background: var(--bg);
+    border: 1px solid var(--bd);
+    border-radius: var(--r);
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .status-card.active { border-color: var(--ac); }
+  .status-label {
+    font-size: 11px;
+    color: var(--txd);
+    letter-spacing: 1px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .status-value {
+    font-size: 20px;
+    font-weight: 900;
+  }
+  .status-value.pro { color: var(--ac); }
+  .status-value.free { color: var(--txd); }
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav class="nav">
+  <a href="/" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/compare/" class="nav-link" data-en="Compare Tool" data-he="כלי השוואה">Compare Tool</a>
+    <div class="lang-toggle">
+      <button class="lang-btn on" id="lE" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" id="lH" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="auth-container">
+  <div class="auth-card">
+    <!-- Status -->
+    <div class="status-card" id="statusCard">
+      <div class="status-label" data-en="YOUR STATUS" data-he="הסטטוס שלך">YOUR STATUS</div>
+      <div class="status-value" id="statusValue">Free</div>
+    </div>
+
+    <h2 data-en="Activate Pro" data-he="הפעל Pro">Activate Pro</h2>
+    <p class="sub" data-en="Enter the Pro code you received after payment." data-he="הכנס את קוד ה-Pro שקיבלת אחרי התשלום.">Enter the Pro code you received after payment.</p>
+
+    <div class="auth-msg" id="authMsg"></div>
+
+    <input type="text" class="auth-input" id="codeInput" placeholder="BQPRO-XXXX-XXXX" spellcheck="false" autocomplete="off">
+
+    <button class="auth-btn" onclick="activate()" data-en="Activate" data-he="הפעל">Activate</button>
+
+    <div class="divider" data-en="Don't have a code?" data-he="אין לך קוד?">Don't have a code?</div>
+
+    <div class="buy-section">
+      <p data-en="Get Pro access for $7.99/month. After payment you'll receive your Pro code by email." data-he="קבל גישת Pro ב-$7.99/חודש. אחרי התשלום תקבל את קוד ה-Pro במייל.">Get Pro access for $7.99/month. After payment you'll receive your Pro code by email.</p>
+      <a href="https://www.paypal.com/ncp/payment/2LA7B7PZTHN54" target="_blank" rel="noopener" class="btn btn-primary" style="width:100%;justify-content:center;" data-en="Pay with PayPal — $7.99/mo" data-he="שלם ב-PayPal — $7.99/חודש">Pay with PayPal — $7.99/mo</a>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="footer" style="width:100%;">
+  <div class="footer-brand">BQ Tools — BQ Production LLC</div>
+  <div class="footer-links">
+    <a href="https://bqprod.pages.dev" target="_blank">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/></svg>
+      bqprod.pages.dev
+    </a>
+    <a href="https://instagram.com/bq_music" target="_blank">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/></svg>
+      @bq_music
+    </a>
+  </div>
+</footer>
+
+<script>
+let lang = 'en';
+
+// Same codes as compare tool
+const VALID_CODES = [
+  'BQPRO-2024-GOLD',
+  'BQPRO-2024-VIP1',
+  'BQPRO-2025-LAUNCH',
+];
+
+function setLang(l) {
+  lang = l;
+  document.getElementById('lH').classList.toggle('on', l === 'he');
+  document.getElementById('lE').classList.toggle('on', l === 'en');
+  document.documentElement.dir = l === 'he' ? 'rtl' : 'ltr';
+  document.documentElement.lang = l;
+  document.querySelectorAll('[data-he]').forEach(el => {
+    const t = el.getAttribute('data-' + l);
+    if (t) el.textContent = t;
+  });
+  updateStatus();
+}
+
+function updateStatus() {
+  const code = localStorage.getItem('bq_pro_code') || '';
+  const isActive = VALID_CODES.includes(code.trim().toUpperCase());
+  const card = document.getElementById('statusCard');
+  const val = document.getElementById('statusValue');
+
+  if (isActive) {
+    card.classList.add('active');
+    val.className = 'status-value pro';
+    val.textContent = 'Pro ✓';
+  } else {
+    card.classList.remove('active');
+    val.className = 'status-value free';
+    val.textContent = 'Free';
+  }
+}
+
+function activate() {
+  const input = document.getElementById('codeInput');
+  const msg = document.getElementById('authMsg');
+  const code = input.value.trim().toUpperCase();
+
+  if (!code) {
+    msg.className = 'auth-msg err';
+    msg.textContent = lang === 'he' ? 'אנא הכנס קוד' : 'Please enter a code';
+    return;
+  }
+
+  if (VALID_CODES.includes(code)) {
+    localStorage.setItem('bq_pro_code', code);
+    msg.className = 'auth-msg ok';
+    msg.textContent = lang === 'he' ? '✓ Pro הופעל בהצלחה! אתה יכול לעבור ל-Compare Tool.' : '✓ Pro activated! You can now use the Compare Tool.';
+    updateStatus();
+  } else {
+    msg.className = 'auth-msg err';
+    msg.textContent = lang === 'he' ? '✗ קוד לא תקין. בדוק ונסה שוב.' : '✗ Invalid code. Please check and try again.';
+  }
+}
+
+// Enter key
+document.getElementById('codeInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') activate();
+});
+
+setLang('en');
+updateStatus();
+</script>
+</body>
+</html>

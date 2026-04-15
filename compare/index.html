@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Compare — Before/After AI Analysis</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  body { display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+
+  /* Header controls */
+  .hc { display: flex; align-items: center; gap: 8px; }
+  .tg { display: flex; gap: 1px; background: var(--bg); border-radius: 5px; padding: 2px; }
+  .tn {
+    padding: 4px 8px; border: none; border-radius: 4px; background: transparent;
+    color: var(--txd); font-family: 'Heebo', sans-serif; font-size: 11px;
+    cursor: pointer; transition: all .2s; display: flex; align-items: center; gap: 3px;
+  }
+  .tn.on { background: var(--sf); color: var(--ac); }
+  .tn:hover:not(.on) { color: var(--tx); }
+  .tn svg { width: 13px; height: 13px; }
+  .sb {
+    width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--bd);
+    background: var(--sf); color: var(--txd); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; transition: all .2s;
+  }
+  .sb:hover { border-color: var(--ac); color: var(--ac); }
+  .sb svg { width: 14px; height: 14px; }
+  .pro-badge {
+    font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px;
+    background: var(--acd); color: var(--ac); letter-spacing: .5px;
+  }
+
+  /* Drop zones */
+  .dz { width: 92%; max-width: 860px; margin: 16px auto 0; display: flex; gap: 14px; justify-content: center; }
+  .db {
+    flex: 1; max-width: 410px; aspect-ratio: 4/3; border: 2px dashed var(--bd);
+    border-radius: var(--r); display: flex; flex-direction: column; align-items: center;
+    justify-content: center; cursor: pointer; transition: all .2s; position: relative;
+    overflow: hidden; background: var(--sf);
+  }
+  .db:hover, .db.dg { border-color: var(--ac); background: var(--acd); }
+  .db.hm { border-style: solid; border-color: var(--bd); }
+  .db .pm { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: calc(var(--r) - 2px); }
+  .dl { font-size: 14px; font-weight: 700; color: var(--ac); margin-bottom: 3px; z-index: 2; }
+  .ds { font-size: 10px; color: var(--txd); z-index: 2; }
+  .di { width: 32px; height: 32px; margin-bottom: 6px; opacity: .2; z-index: 2; color: var(--tx); }
+  .db.hm .dl, .db.hm .ds, .db.hm .di { display: none; }
+  .db input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 5; }
+
+  /* Compare area */
+  .cs { width: 92%; max-width: 860px; margin: 14px auto 0; display: none; flex-direction: column; align-items: center; }
+  .cs.on { display: flex; animation: fi .3s ease; }
+  .cc {
+    width: 100%; position: relative; overflow: hidden; border-radius: var(--r);
+    border: 1px solid var(--bd); cursor: col-resize; background: var(--sf); touch-action: none;
+  }
+  .cc.vt { cursor: row-resize; }
+  #mB img, #mB video { display: block; width: 100%; height: auto; pointer-events: none; }
+  .mw { position: absolute; inset: 0; overflow: hidden; }
+  #mA img, #mA video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+  .sln { position: absolute; z-index: 10; pointer-events: none; background: rgba(255,255,255,.25); transition: background .2s; }
+  .sln.hz { top: 0; bottom: 0; width: 1.5px; }
+  .sln.vt { left: 0; right: 0; height: 1.5px; }
+  .cc:hover .sln { background: rgba(255,255,255,.4); }
+  .sh {
+    position: absolute; transform: translate(-50%,-50%); width: 28px; height: 28px;
+    border-radius: 50%; background: rgba(255,255,255,.1); border: 1.5px solid rgba(255,255,255,.2);
+    backdrop-filter: blur(6px); z-index: 11; pointer-events: none;
+    display: flex; align-items: center; justify-content: center; transition: all .2s;
+  }
+  .cc:hover .sh { background: rgba(255,255,255,.18); border-color: rgba(255,255,255,.35); }
+  .sh svg { width: 14px; height: 14px; }
+  .cl { position: absolute; z-index: 12; pointer-events: none; opacity: 0; transition: opacity .3s; }
+  .cl.hz { top: 8px; left: 8px; right: 8px; display: flex; justify-content: space-between; }
+  .cl.vt { top: 8px; bottom: 8px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; justify-content: space-between; align-items: center; }
+  .cc:hover .cl { opacity: 1; }
+  .cb { background: rgba(0,0,0,.6); backdrop-filter: blur(6px); padding: 3px 12px; border-radius: 14px; font-size: 10px; font-weight: 700; letter-spacing: 1px; }
+  .cb.bf { color: var(--red); }
+  .cb.af { color: var(--grn); }
+
+  /* Buttons row */
+  .br { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  .bt {
+    padding: 7px 16px; border: 1px solid var(--bd); border-radius: 7px;
+    background: var(--sf); color: var(--tx); font-family: 'Heebo', sans-serif;
+    font-size: 12px; cursor: pointer; transition: all .2s;
+  }
+  .bt:hover { border-color: var(--ac); color: var(--ac); }
+  .bt.ai {
+    background: var(--ac); color: var(--bg); border-color: var(--ac);
+    font-weight: 700; display: flex; align-items: center; gap: 5px;
+  }
+  .bt.ai:hover { filter: brightness(1.1); }
+  .bt.ai:disabled { opacity: .5; cursor: wait; }
+  .bt.ex {
+    background: rgba(81,207,102,.1); border-color: rgba(81,207,102,.3); color: var(--grn);
+  }
+
+  /* AI Panel */
+  .ap { width: 92%; max-width: 860px; margin: 12px auto 0; display: none; flex-direction: column; }
+  .ap.on { display: flex; animation: fi .4s ease; }
+  .as { background: var(--sf); border: 1px solid var(--bd); border-radius: 8px; padding: 14px; margin-bottom: 8px; }
+  .ash { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+  .asi { width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+  .ast { font-size: 12px; font-weight: 700; }
+  .ass { font-size: 9px; color: var(--txd); }
+  .asm { font-size: 12px; line-height: 1.6; padding: 8px 10px; background: var(--bg); border-radius: 6px; }
+  .sr { display: flex; gap: 6px; margin-top: 6px; }
+  .sc { flex: 1; background: var(--bg); border-radius: 6px; padding: 8px; text-align: center; }
+  .scl { font-size: 8px; font-weight: 700; letter-spacing: 1px; margin-bottom: 2px; }
+  .scn { font-size: 24px; font-weight: 900; }
+  .scn span { font-size: 12px; color: var(--txd); }
+  .ci { display: flex; align-items: flex-start; gap: 6px; padding: 6px 8px; background: var(--bg); border-radius: 6px; margin-top: 4px; }
+  .cia { font-size: 11px; font-weight: 700; }
+  .cid { font-size: 10px; color: var(--txd); margin-top: 1px; }
+  .cib { margin-left: auto; font-size: 8px; font-weight: 700; padding: 2px 6px; border-radius: 6px; white-space: nowrap; }
+  .at { padding: 8px 10px; background: var(--acd); border: 1px solid rgba(232,197,71,.2); border-radius: 6px; font-size: 11px; color: var(--ac); display: flex; align-items: flex-start; gap: 6px; margin-top: 5px; }
+  .err { padding: 8px 12px; background: rgba(255,107,107,.1); border: 1px solid var(--red); border-radius: 6px; color: var(--red); font-size: 11px; margin-top: 6px; word-break: break-all; }
+  .ld { display: inline-flex; gap: 3px; }
+  .ld span { width: 5px; height: 5px; border-radius: 50%; background: var(--ac); animation: bn 1.2s infinite; }
+  .ld span:nth-child(2) { animation-delay: .2s; }
+  .ld span:nth-child(3) { animation-delay: .4s; }
+  @keyframes bn { 0%,80%,100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+  /* Modal */
+  .mo { position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 200; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+  .mo.open { display: flex; }
+  .mdc {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 12px;
+    padding: 22px; width: 92%; max-width: 440px; max-height: 90vh; overflow-y: auto;
+  }
+  .mdc h3 { font-size: 15px; color: var(--ac); margin-bottom: 14px; }
+  .mdc label { display: block; font-size: 11px; color: var(--txd); margin-bottom: 2px; font-weight: 700; }
+  .mdc input, .mdc select {
+    width: 100%; padding: 7px 10px; border: 1px solid var(--bd); border-radius: 6px;
+    background: var(--bg); color: var(--tx); font-family: monospace; font-size: 12px;
+    margin-bottom: 10px; user-select: text; -webkit-user-select: text;
+  }
+  .mdc select { font-family: 'Heebo', sans-serif; cursor: pointer; }
+  .mdc input:focus, .mdc select:focus { outline: none; border-color: var(--ac); }
+  .mdc .sep { font-size: 12px; font-weight: 700; color: var(--tx); margin: 12px 0 6px; padding-top: 8px; border-top: 1px solid var(--bd); }
+  .mdc .hint { font-size: 9px; color: var(--txd); margin-top: -6px; margin-bottom: 8px; }
+  .mdc .hint a { color: var(--ac); }
+  .mdc .mb { display: flex; gap: 6px; justify-content: flex-end; margin-top: 10px; }
+  .mdc .bn { padding: 7px 18px; border: 1px solid var(--bd); border-radius: 6px; background: var(--sf); color: var(--tx); font-family: 'Heebo', sans-serif; font-size: 12px; cursor: pointer; }
+  .mdc .bn:hover { border-color: var(--ac); color: var(--ac); }
+  .mdc .bn.pr { background: var(--ac); color: var(--bg); border-color: var(--ac); font-weight: 700; }
+
+  /* Upgrade popup */
+  .upgrade-box { text-align: center; }
+  .upgrade-box h3 { font-size: 18px; margin-bottom: 8px; }
+  .upgrade-box p { font-size: 13px; color: var(--txd); margin-bottom: 16px; line-height: 1.5; }
+  .upgrade-box .price { font-size: 36px; font-weight: 900; color: var(--ac); margin: 10px 0; }
+  .upgrade-box .price span { font-size: 14px; color: var(--txd); font-weight: 400; }
+  .upgrade-box .steps { text-align: left; font-size: 12px; color: var(--txd); margin: 16px 0; line-height: 1.8; }
+  .upgrade-box .steps b { color: var(--tx); }
+
+  /* Watermark canvas */
+  #exportCanvas { display: none; }
+
+  @media (max-width: 500px) {
+    .dz { flex-direction: column; align-items: center; }
+    .db { max-width: 100%; width: 100%; }
+  }
+  @keyframes fi { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav class="nav">
+  <a href="/" class="nav-logo">BQ <span>Compare</span></a>
+  <div class="hc">
+    <div class="tg">
+      <button class="tn on" id="mi" onclick="setMode('image')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+        <span data-he="תמונה" data-en="Image">Image</span>
+      </button>
+      <button class="tn" id="mv" onclick="setMode('video')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        <span data-he="וידאו" data-en="Video">Video</span>
+      </button>
+    </div>
+    <div class="tg">
+      <button class="tn on" id="dH" onclick="setDir('hz')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 18l-5-6 5-6"/><path d="M17 6l5 6-5 6"/></svg>
+      </button>
+      <button class="tn" id="dV" onclick="setDir('vt')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 7l6-5 6 5"/><path d="M18 17l-6 5-6-5"/></svg>
+      </button>
+    </div>
+    <div class="lang-toggle">
+      <button class="lang-btn on" id="lE" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" id="lH" onclick="setLang('he')">עב</button>
+    </div>
+    <button class="sb" onclick="openSettings()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+    <span class="pro-badge" id="proBadge" style="display:none">PRO</span>
+  </div>
+</nav>
+
+<!-- Settings Modal -->
+<div class="mo" id="sM">
+  <div class="mdc">
+    <h3><span data-he="הגדרות" data-en="Settings">Settings</span></h3>
+
+    <div class="sep" data-en="Pro Access" data-he="גישת Pro">Pro Access</div>
+    <label data-en="Pro Code" data-he="קוד Pro">Pro Code</label>
+    <input type="text" id="proCode" placeholder="BQPRO-XXXX-XXXX" spellcheck="false" autocomplete="off">
+    <div class="hint" data-en="Enter the code you received after payment" data-he="הכנס את הקוד שקיבלת אחרי התשלום">Enter the code you received after payment</div>
+
+    <div class="sep">Gemini (Google)</div>
+    <label>API Key</label>
+    <input type="text" id="gK" placeholder="AIzaSy..." spellcheck="false" autocomplete="off">
+    <label data-he="מודל" data-en="Model">Model</label>
+    <select id="gM">
+      <optgroup label="Gemini 3">
+        <option value="gemini-3.1-pro-preview-0514">3.1 Pro Preview</option>
+        <option value="gemini-3.0-flash">3.0 Flash</option>
+      </optgroup>
+      <optgroup label="Gemini 2.5">
+        <option value="gemini-2.5-pro">2.5 Pro</option>
+        <option value="gemini-2.5-flash" selected>2.5 Flash</option>
+        <option value="gemini-2.5-flash-lite">2.5 Flash Lite</option>
+      </optgroup>
+    </select>
+    <div class="hint"><a href="https://aistudio.google.com/apikey" target="_blank">Get free Gemini key &rarr;</a></div>
+
+    <div class="sep">Claude (Anthropic)</div>
+    <label>API Key</label>
+    <input type="text" id="cK" placeholder="sk-ant-..." spellcheck="false" autocomplete="off">
+    <label data-he="מודל" data-en="Model">Model</label>
+    <select id="cM">
+      <optgroup label="Claude 4">
+        <option value="claude-opus-4-20250514">Opus 4</option>
+        <option value="claude-sonnet-4-20250514" selected>Sonnet 4</option>
+      </optgroup>
+      <optgroup label="Claude 3.5">
+        <option value="claude-3-5-sonnet-20241022">3.5 Sonnet</option>
+        <option value="claude-3-5-haiku-20241022">3.5 Haiku</option>
+      </optgroup>
+    </select>
+    <div class="hint"><a href="https://console.anthropic.com" target="_blank">Get Claude key &rarr;</a></div>
+
+    <div class="sep" data-en="Analysis Mode" data-he="מצב ניתוח">Analysis Mode</div>
+    <select id="aMode">
+      <option value="both">Gemini + Claude (Gemini scans &rarr; Claude judges)</option>
+      <option value="claude_only">Claude only</option>
+    </select>
+
+    <div class="mb">
+      <button class="bn" onclick="closeSettings()" data-he="ביטול" data-en="Cancel">Cancel</button>
+      <button class="bn pr" onclick="saveSettings()" data-he="שמור" data-en="Save">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Upgrade Modal -->
+<div class="mo" id="uM">
+  <div class="mdc upgrade-box">
+    <h3 data-en="Upgrade to Pro" data-he="שדרג ל-Pro">Upgrade to Pro</h3>
+    <div class="price">$7<span>.99/mo</span></div>
+    <p data-en="AI-powered analysis with Gemini + Claude, export with BQ watermark, and more." data-he="ניתוח AI עם Gemini + Claude, ייצוא עם ווטרמרק BQ, ועוד.">AI-powered analysis with Gemini + Claude, export with BQ watermark, and more.</p>
+    <div class="steps">
+      <b>1.</b> <span data-en="Pay via PayPal" data-he="שלם דרך PayPal">Pay via PayPal</span><br>
+      <b>2.</b> <span data-en="Receive your Pro code by email" data-he="קבל את קוד ה-Pro במייל">Receive your Pro code by email</span><br>
+      <b>3.</b> <span data-en="Enter the code in Settings" data-he="הכנס את הקוד בהגדרות">Enter the code in Settings</span>
+    </div>
+    <a href="https://www.paypal.com/ncp/payment/2LA7B7PZTHN54" target="_blank" rel="noopener" class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:8px;" data-en="Pay with PayPal" data-he="שלם ב-PayPal">Pay with PayPal</a>
+    <button class="bn" onclick="closeUpgrade()" style="width:100%;padding:8px;" data-en="I already have a code" data-he="יש לי כבר קוד">I already have a code</button>
+  </div>
+</div>
+
+<!-- Drop zones -->
+<div class="dz">
+  <div class="db" id="dB">
+    <input type="file" accept="image/*,video/*" id="iB">
+    <svg class="di" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+    <div class="dl" data-he="לפני" data-en="Before">Before</div>
+    <div class="ds">BEFORE</div>
+  </div>
+  <div class="db" id="dA">
+    <input type="file" accept="image/*,video/*" id="iA">
+    <svg class="di" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+    <div class="dl" data-he="אחרי" data-en="After">After</div>
+    <div class="ds">AFTER</div>
+  </div>
+</div>
+
+<!-- Compare viewer -->
+<div class="cs" id="cS">
+  <div class="cc" id="cC">
+    <div id="mB"></div>
+    <div class="mw" id="aW"><div id="mA"></div></div>
+    <div class="sln hz" id="sL"></div>
+    <div class="sh" id="sH">
+      <svg id="iH" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2" stroke-linecap="round"><path d="M15 18l6-6-6-6"/><path d="M9 6l-6 6 6 6"/></svg>
+      <svg id="iV" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2" stroke-linecap="round" style="display:none"><path d="M6 9l6-6 6 6"/><path d="M18 15l-6 6-6-6"/></svg>
+    </div>
+    <div class="cl hz" id="cL"><span class="cb bf">BEFORE</span><span class="cb af">AFTER</span></div>
+  </div>
+  <div class="br">
+    <button class="bt" onclick="reset()" data-he="איפוס" data-en="Reset">Reset</button>
+    <button class="bt" onclick="swap()" data-he="החלף" data-en="Swap">Swap</button>
+    <button class="bt ex" onclick="exportImg()" data-he="ייצוא תמונה" data-en="Export Image">Export Image</button>
+    <button class="bt ai" id="aB" onclick="analyze()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      <span data-he="נתח עם AI" data-en="Analyze AI">Analyze AI</span>
+    </button>
+  </div>
+</div>
+
+<!-- AI results -->
+<div class="ap" id="aP"></div>
+
+<!-- Hidden export canvas -->
+<canvas id="exportCanvas"></canvas>
+
+<!-- Footer -->
+<footer class="footer" style="width:100%;">
+  <div class="footer-brand">BQ Compare AI &mdash; BQ Production LLC</div>
+  <div class="footer-links">
+    <a href="https://bqprod.pages.dev" target="_blank">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/></svg>
+      bqprod.pages.dev
+    </a>
+    <a href="https://instagram.com/bq_music" target="_blank">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/></svg>
+      @bq_music
+    </a>
+  </div>
+</footer>
+
+<script>
+// ── State ──
+let bD = null, aD = null, dir = 'hz', drag = false, lang = 'en';
+
+// Valid Pro codes — add codes here after payment
+const VALID_CODES = [
+  'BQPRO-2024-GOLD',
+  'BQPRO-2024-VIP1',
+  'BQPRO-2025-LAUNCH',
+];
+
+function isPro() {
+  const code = localStorage.getItem('bq_pro_code') || '';
+  return VALID_CODES.includes(code.trim().toUpperCase());
+}
+
+function updateProUI() {
+  document.getElementById('proBadge').style.display = isPro() ? 'inline-block' : 'none';
+}
+
+// ── Language ──
+function setLang(l) {
+  lang = l;
+  document.getElementById('lH').classList.toggle('on', l === 'he');
+  document.getElementById('lE').classList.toggle('on', l === 'en');
+  document.documentElement.dir = l === 'he' ? 'rtl' : 'ltr';
+  document.documentElement.lang = l;
+  document.querySelectorAll('[data-he]').forEach(el => {
+    const t = el.getAttribute('data-' + l);
+    if (t) el.textContent = t;
+  });
+}
+
+// ── Settings ──
+function openSettings() {
+  document.getElementById('sM').classList.add('open');
+  document.getElementById('proCode').value = localStorage.getItem('bq_pro_code') || '';
+  document.getElementById('gK').value = localStorage.getItem('bq_gk') || '';
+  document.getElementById('cK').value = localStorage.getItem('bq_ck') || '';
+  document.getElementById('gM').value = localStorage.getItem('bq_gm') || 'gemini-2.5-flash';
+  document.getElementById('cM').value = localStorage.getItem('bq_cm') || 'claude-sonnet-4-20250514';
+  document.getElementById('aMode').value = localStorage.getItem('bq_mode') || 'both';
+}
+function closeSettings() { document.getElementById('sM').classList.remove('open'); }
+function saveSettings() {
+  localStorage.setItem('bq_pro_code', document.getElementById('proCode').value.trim());
+  localStorage.setItem('bq_gk', document.getElementById('gK').value.trim());
+  localStorage.setItem('bq_ck', document.getElementById('cK').value.trim());
+  localStorage.setItem('bq_gm', document.getElementById('gM').value);
+  localStorage.setItem('bq_cm', document.getElementById('cM').value);
+  localStorage.setItem('bq_mode', document.getElementById('aMode').value);
+  updateProUI();
+  closeSettings();
+}
+
+function openUpgrade() { document.getElementById('uM').classList.add('open'); }
+function closeUpgrade() { document.getElementById('uM').classList.remove('open'); openSettings(); }
+
+// ── Mode & Direction ──
+const iB = document.getElementById('iB'), iA = document.getElementById('iA');
+const dB = document.getElementById('dB'), dA = document.getElementById('dA');
+const cS = document.getElementById('cS'), cC = document.getElementById('cC');
+const aW = document.getElementById('aW'), sL = document.getElementById('sL');
+const sH = document.getElementById('sH'), cL = document.getElementById('cL');
+
+function setMode(m) {
+  document.getElementById('mi').classList.toggle('on', m === 'image');
+  document.getElementById('mv').classList.toggle('on', m === 'video');
+  iB.accept = iA.accept = m === 'video' ? 'video/*' : 'image/*,video/*';
+}
+
+function setDir(d) {
+  dir = d;
+  document.getElementById('dH').classList.toggle('on', d === 'hz');
+  document.getElementById('dV').classList.toggle('on', d === 'vt');
+  sL.className = 'sln ' + d;
+  cL.className = 'cl ' + d;
+  cC.classList.toggle('vt', d === 'vt');
+  document.getElementById('iH').style.display = d === 'hz' ? 'block' : 'none';
+  document.getElementById('iV').style.display = d === 'vt' ? 'block' : 'none';
+  if (bD && aD) setPos(.5);
+}
+
+// ── File Loading ──
+function loadF(file, side) {
+  const iv = file.type.startsWith('video/');
+  const r = new FileReader();
+  r.onload = e => {
+    const src = e.target.result;
+    const data = { src, type: iv ? 'video' : 'image', file };
+    const box = side === 'b' ? dB : dA;
+    const old = box.querySelector('.pm');
+    if (old) old.remove();
+    if (side === 'b') bD = data; else aD = data;
+    let el;
+    if (iv) {
+      el = document.createElement('video');
+      el.src = src; el.muted = true; el.loop = true; el.autoplay = true; el.playsInline = true;
+    } else {
+      el = document.createElement('img');
+      el.src = src;
+    }
+    el.className = 'pm';
+    box.appendChild(el);
+    box.classList.add('hm');
+    tryShow();
+  };
+  r.readAsDataURL(file);
+}
+
+iB.addEventListener('change', e => { if (e.target.files[0]) loadF(e.target.files[0], 'b'); });
+iA.addEventListener('change', e => { if (e.target.files[0]) loadF(e.target.files[0], 'a'); });
+[['dB','b'],['dA','a']].forEach(([id, s]) => {
+  const el = document.getElementById(id);
+  el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('dg'); });
+  el.addEventListener('dragleave', () => el.classList.remove('dg'));
+  el.addEventListener('drop', e => { e.preventDefault(); el.classList.remove('dg'); if (e.dataTransfer.files[0]) loadF(e.dataTransfer.files[0], s); });
+});
+
+// ── Compare Viewer ──
+function mkEl(d) {
+  if (d.type === 'video') {
+    const v = document.createElement('video');
+    v.src = d.src; v.muted = true; v.loop = true; v.autoplay = true; v.playsInline = true;
+    return v;
+  }
+  const i = document.createElement('img');
+  i.src = d.src;
+  return i;
+}
+
+function tryShow() {
+  if (!bD || !aD) return;
+  const mb = document.getElementById('mB'), ma = document.getElementById('mA');
+  mb.innerHTML = ''; ma.innerHTML = '';
+  mb.appendChild(mkEl(bD)); ma.appendChild(mkEl(aD));
+  if (bD.type === 'video' && aD.type === 'video') {
+    const vb = mb.querySelector('video'), va = ma.querySelector('video');
+    vb.addEventListener('play', () => { va.currentTime = vb.currentTime; va.play(); });
+    vb.addEventListener('seeked', () => { va.currentTime = vb.currentTime; });
+  }
+  cS.classList.add('on');
+  setPos(.5);
+}
+
+function setPos(r) {
+  r = Math.max(0, Math.min(1, r));
+  const p = r * 100;
+  if (dir === 'hz') {
+    aW.style.clipPath = `inset(0 0 0 ${p}%)`;
+    sL.style.left = `${p}%`; sL.style.top = '';
+    sH.style.left = `${p}%`; sH.style.top = '50%';
+  } else {
+    aW.style.clipPath = `inset(${p}% 0 0 0)`;
+    sL.style.top = `${p}%`; sL.style.left = '';
+    sH.style.top = `${p}%`; sH.style.left = '50%';
+  }
+}
+
+function getP(e) {
+  const r = cC.getBoundingClientRect();
+  if (dir === 'hz') {
+    const x = e.touches ? e.touches[0].clientX : e.clientX;
+    return (x - r.left) / r.width;
+  }
+  const y = e.touches ? e.touches[0].clientY : e.clientY;
+  return (y - r.top) / r.height;
+}
+
+cC.addEventListener('mousedown', e => { e.preventDefault(); drag = true; setPos(getP(e)); });
+cC.addEventListener('touchstart', e => { drag = true; setPos(getP(e)); }, { passive: true });
+window.addEventListener('mousemove', e => { if (drag) { e.preventDefault(); setPos(getP(e)); } });
+window.addEventListener('touchmove', e => { if (drag) setPos(getP(e)); }, { passive: true });
+window.addEventListener('mouseup', () => drag = false);
+window.addEventListener('touchend', () => drag = false);
+
+// ── Swap & Reset ──
+function swap() {
+  if (!bD || !aD) return;
+  [bD, aD] = [aD, bD];
+  const pb = dB.querySelector('.pm'), pa = dA.querySelector('.pm');
+  if (pb) dB.removeChild(pb);
+  if (pa) dA.removeChild(pa);
+  if (pa) dB.appendChild(pa);
+  if (pb) dA.appendChild(pb);
+  tryShow();
+}
+
+function reset() {
+  bD = null; aD = null;
+  [dB, dA].forEach(b => { const p = b.querySelector('.pm'); if (p) p.remove(); b.classList.remove('hm'); });
+  cS.classList.remove('on');
+  iB.value = ''; iA.value = '';
+  const ap = document.getElementById('aP');
+  ap.innerHTML = ''; ap.classList.remove('on');
+}
+
+// ── Export with BQ watermark ──
+function exportImg() {
+  if (!bD || !aD) return;
+  const canvas = document.getElementById('exportCanvas');
+  const ctx = canvas.getContext('2d');
+  const container = cC.getBoundingClientRect();
+  const ratio = container.width / container.height;
+
+  // Use the before image's natural dimensions
+  const imgB = document.getElementById('mB').querySelector('img, video');
+  const w = imgB.naturalWidth || imgB.videoWidth || 1200;
+  const h = imgB.naturalHeight || imgB.videoHeight || Math.round(w / ratio);
+
+  canvas.width = w; canvas.height = h;
+
+  // Draw before (full)
+  const beforeEl = document.getElementById('mB').querySelector('img, video');
+  ctx.drawImage(beforeEl, 0, 0, w, h);
+
+  // Draw after (right half for hz, bottom half for vt)
+  const afterEl = document.getElementById('mA').querySelector('img, video');
+  if (dir === 'hz') {
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(w / 2, 0, w / 2, h);
+    ctx.clip();
+    ctx.drawImage(afterEl, 0, 0, w, h);
+    ctx.restore();
+    // Divider line
+    ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(w / 2, 0); ctx.lineTo(w / 2, h); ctx.stroke();
+  } else {
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, h / 2, w, h / 2);
+    ctx.clip();
+    ctx.drawImage(afterEl, 0, 0, w, h);
+    ctx.restore();
+    ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2); ctx.stroke();
+  }
+
+  // Labels
+  ctx.font = `bold ${Math.round(w * 0.018)}px Heebo, sans-serif`;
+  const pad = w * 0.015;
+  // Before label
+  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  const bTxt = 'BEFORE';
+  const bm = ctx.measureText(bTxt);
+  ctx.beginPath();
+  ctx.roundRect(pad, pad, bm.width + 16, 24, 10);
+  ctx.fill();
+  ctx.fillStyle = '#ff6b6b';
+  ctx.fillText(bTxt, pad + 8, pad + 17);
+  // After label
+  const aTxt = 'AFTER';
+  const am = ctx.measureText(aTxt);
+  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  ctx.beginPath();
+  ctx.roundRect(w - am.width - 16 - pad, pad, am.width + 16, 24, 10);
+  ctx.fill();
+  ctx.fillStyle = '#51cf66';
+  ctx.fillText(aTxt, w - am.width - 8 - pad, pad + 17);
+
+  // BQ watermark (bottom right)
+  const wmSize = Math.round(w * 0.022);
+  ctx.font = `900 ${wmSize}px Heebo, sans-serif`;
+  ctx.fillStyle = 'rgba(232,197,71,0.5)';
+  ctx.fillText('BQ Compare', w - ctx.measureText('BQ Compare').width - pad, h - pad);
+
+  // Download
+  const link = document.createElement('a');
+  link.download = 'bq-compare-export.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+// ── Resize for API ──
+function resizeForAPI(dataUrl, maxSize = 1024) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      let w = img.width, h = img.height;
+      if (w <= maxSize && h <= maxSize) { resolve(dataUrl.split(',')[1]); return; }
+      const scale = Math.min(maxSize / w, maxSize / h);
+      w = Math.round(w * scale); h = Math.round(h * scale);
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(c.toDataURL('image/jpeg', 0.85).split(',')[1]);
+    };
+    img.src = dataUrl;
+  });
+}
+
+// ── AI Analysis ──
+async function analyze() {
+  // Pro gate
+  if (!isPro()) { openUpgrade(); return; }
+
+  const gk = localStorage.getItem('bq_gk');
+  const ck = localStorage.getItem('bq_ck');
+  const mode = localStorage.getItem('bq_mode') || 'both';
+  if (!ck) { openSettings(); return; }
+  if (mode === 'both' && !gk) { openSettings(); return; }
+  if (!bD || !aD) return;
+  if (bD.type === 'video' || aD.type === 'video') {
+    alert(lang === 'he' ? 'ניתוח AI עובד רק על תמונות' : 'AI analysis works for images only');
+    return;
+  }
+
+  const gModel = localStorage.getItem('bq_gm') || 'gemini-2.5-flash';
+  const cModel = localStorage.getItem('bq_cm') || 'claude-sonnet-4-20250514';
+  const cName = cModel.includes('opus') ? 'Opus' : cModel.includes('haiku') ? 'Haiku' : 'Sonnet';
+
+  const btn = document.getElementById('aB');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="ld"><span></span><span></span><span></span></span> ' + (lang === 'he' ? 'מנתח...' : 'Analyzing...');
+
+  const ap = document.getElementById('aP');
+  ap.classList.add('on');
+  ap.innerHTML = `<div class="as"><div class="asm" style="color:var(--txd)">${lang === 'he' ? 'מקטין תמונות...' : 'Resizing images...'} <span class="ld"><span></span><span></span><span></span></span></div></div>`;
+
+  const b1 = await resizeForAPI(bD.src);
+  const b2 = await resizeForAPI(aD.src);
+  const mt = 'image/jpeg';
+
+  try {
+    if (mode === 'both') {
+      // Gemini scans → Claude judges
+      ap.innerHTML = `<div class="as"><div class="ash"><div class="asi" style="background:rgba(66,133,244,.15);color:#4285f4">G</div><div><div class="ast">Gemini (${gModel.split('-').slice(1,3).join(' ')})</div><div class="ass">${lang === 'he' ? 'סורק...' : 'Scanning...'}</div></div></div><div class="asm" style="color:var(--txd)"><span class="ld"><span></span><span></span><span></span></span></div></div>`;
+
+      const gRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${gModel}:generateContent?key=${gk}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [
+            { inlineData: { mimeType: mt, data: b1 } },
+            { inlineData: { mimeType: mt, data: b2 } },
+            { text: 'Compare these two images (1=BEFORE, 2=AFTER). List ALL visual differences. Be specific. Respond JSON only: {"differences":[{"area":"name","before_state":"...","after_state":"...","significance":"high/medium/low"}],"overall_transformation":"summary"}' }
+          ]}]
+        })
+      });
+      const gd = await gRes.json();
+      if (gd.error) throw new Error('Gemini: ' + gd.error.message);
+      const gText = gd.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      if (!gText) throw new Error('Gemini returned empty');
+      const gp = JSON.parse(gText.replace(/```json|```/g, '').trim());
+
+      let dH = gp.differences.map(d =>
+        `<div class="ci" style="border-left:3px solid ${d.significance === 'high' ? 'var(--ac)' : d.significance === 'medium' ? 'var(--blu)' : 'var(--txd)'}"><div><div class="cia">${d.area}</div><div class="cid">${d.before_state} → ${d.after_state}</div></div><div class="cib" style="background:${d.significance === 'high' ? 'var(--acd)' : 'rgba(136,136,136,.1)'};color:${d.significance === 'high' ? 'var(--ac)' : 'var(--txd)'}">${d.significance}</div></div>`
+      ).join('');
+
+      ap.innerHTML = `<div class="as"><div class="ash"><div class="asi" style="background:rgba(66,133,244,.15);color:#4285f4">G</div><div><div class="ast">Gemini (${gModel.split('-').slice(1,3).join(' ')})</div><div class="ass">${gp.differences.length} ${lang === 'he' ? 'הבדלים' : 'diffs'}</div></div></div><div class="asm">${gp.overall_transformation}</div>${dH}</div><div class="as"><div class="ash"><div class="asi" style="background:var(--acd);color:var(--ac)">C</div><div><div class="ast">Claude (${cName})</div><div class="ass">${lang === 'he' ? 'שופט...' : 'Judging...'}</div></div></div><div class="asm" style="color:var(--txd)"><span class="ld"><span></span><span></span><span></span></span></div></div>`;
+
+      const cRes = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': ck,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: cModel,
+          max_tokens: 1000,
+          messages: [{ role: 'user', content: [
+            { type: 'image', source: { type: 'base64', media_type: mt, data: b1 } },
+            { type: 'image', source: { type: 'base64', media_type: mt, data: b2 } },
+            { type: 'text', text: `Judge these images. Gemini found: ${gText}\nRespond JSON only: {"verdict":"improved/degraded/mixed","before_score":1-10,"after_score":1-10,"judge_notes":"2 sentences","top_improvement":"best thing","concern":"or null","pro_tip":"tip"}` }
+          ]}]
+        })
+      });
+      const cd = await cRes.json();
+      if (cd.error) throw new Error('Claude: ' + (cd.error?.message || JSON.stringify(cd.error)));
+      const ct = cd.content?.map(c => c.text || '').join('') || '';
+      if (!ct) throw new Error('Claude returned empty');
+      const cp = JSON.parse(ct.replace(/```json|```/g, '').trim());
+
+      const vc = { improved: 'var(--grn)', degraded: 'var(--red)', mixed: 'var(--ac)' };
+      const vl = { improved: lang === 'he' ? '✓ שיפור' : '✓ Better', degraded: lang === 'he' ? '✗ ירד' : '✗ Worse', mixed: lang === 'he' ? '↔ מעורב' : '↔ Mixed' };
+      const cs = ap.querySelectorAll('.as')[1];
+      cs.innerHTML = `<div class="ash"><div class="asi" style="background:var(--acd);color:var(--ac)">C</div><div><div class="ast">Claude (${cName}) — ${lang === 'he' ? 'שיפוט' : 'Judgment'}</div></div><div class="cib" style="margin-left:auto;font-size:9px;padding:2px 8px;background:${vc[cp.verdict] || 'var(--ac)'}22;color:${vc[cp.verdict] || 'var(--ac)'}">${vl[cp.verdict] || cp.verdict}</div></div><div class="sr"><div class="sc"><div class="scl" style="color:var(--red)">BEFORE</div><div class="scn">${cp.before_score}<span>/10</span></div></div><div class="sc"><div class="scl" style="color:var(--grn)">AFTER</div><div class="scn">${cp.after_score}<span>/10</span></div></div></div><div class="asm" style="margin-top:6px">${cp.judge_notes}</div>${cp.top_improvement ? `<div class="ci" style="border-left:3px solid var(--grn);margin-top:4px"><div><div class="cia">💪</div><div class="cid">${cp.top_improvement}</div></div></div>` : ''}${cp.concern ? `<div class="ci" style="border-left:3px solid var(--red);margin-top:3px"><div><div class="cia">⚠️</div><div class="cid">${cp.concern}</div></div></div>` : ''}${cp.pro_tip ? `<div class="at">💡 ${cp.pro_tip}</div>` : ''}`;
+
+    } else {
+      // Claude only
+      ap.innerHTML = `<div class="as"><div class="ash"><div class="asi" style="background:var(--acd);color:var(--ac)">C</div><div><div class="ast">Claude (${cName})</div><div class="ass">${lang === 'he' ? 'מנתח ושופט...' : 'Analyzing & judging...'}</div></div></div><div class="asm" style="color:var(--txd)"><span class="ld"><span></span><span></span><span></span></span></div></div>`;
+
+      const cRes = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': ck,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: cModel,
+          max_tokens: 1500,
+          messages: [{ role: 'user', content: [
+            { type: 'image', source: { type: 'base64', media_type: mt, data: b1 } },
+            { type: 'image', source: { type: 'base64', media_type: mt, data: b2 } },
+            { type: 'text', text: `You are a professional visual analyst and creative director. Compare these two images (1=BEFORE, 2=AFTER). Find ALL differences and judge quality.\n\nRespond JSON only:\n{"overall_transformation":"summary","differences":[{"area":"name","before_state":"...","after_state":"...","significance":"high/medium/low"}],"verdict":"improved/degraded/mixed","before_score":1-10,"after_score":1-10,"judge_notes":"2 sentences","top_improvement":"best thing","concern":"or null","pro_tip":"tip"}` }
+          ]}]
+        })
+      });
+      const cd = await cRes.json();
+      if (cd.error) throw new Error('Claude: ' + (cd.error?.message || JSON.stringify(cd.error)));
+      const ct = cd.content?.map(c => c.text || '').join('') || '';
+      if (!ct) throw new Error('Claude returned empty');
+      const cp = JSON.parse(ct.replace(/```json|```/g, '').trim());
+
+      let dH = (cp.differences || []).map(d =>
+        `<div class="ci" style="border-left:3px solid ${d.significance === 'high' ? 'var(--ac)' : d.significance === 'medium' ? 'var(--blu)' : 'var(--txd)'}"><div><div class="cia">${d.area}</div><div class="cid">${d.before_state} → ${d.after_state}</div></div><div class="cib" style="background:${d.significance === 'high' ? 'var(--acd)' : 'rgba(136,136,136,.1)'};color:${d.significance === 'high' ? 'var(--ac)' : 'var(--txd)'}">${d.significance}</div></div>`
+      ).join('');
+
+      const vc = { improved: 'var(--grn)', degraded: 'var(--red)', mixed: 'var(--ac)' };
+      const vl = { improved: lang === 'he' ? '✓ שיפור' : '✓ Better', degraded: lang === 'he' ? '✗ ירד' : '✗ Worse', mixed: lang === 'he' ? '↔ מעורב' : '↔ Mixed' };
+
+      ap.innerHTML = `<div class="as"><div class="ash"><div class="asi" style="background:var(--acd);color:var(--ac)">C</div><div><div class="ast">Claude (${cName}) — ${lang === 'he' ? 'ניתוח מלא' : 'Full Analysis'}</div></div><div class="cib" style="margin-left:auto;font-size:9px;padding:2px 8px;background:${vc[cp.verdict] || 'var(--ac)'}22;color:${vc[cp.verdict] || 'var(--ac)'}">${vl[cp.verdict] || cp.verdict}</div></div><div class="asm">${cp.overall_transformation || ''}</div>${dH}<div class="sr" style="margin-top:8px"><div class="sc"><div class="scl" style="color:var(--red)">BEFORE</div><div class="scn">${cp.before_score}<span>/10</span></div></div><div class="sc"><div class="scl" style="color:var(--grn)">AFTER</div><div class="scn">${cp.after_score}<span>/10</span></div></div></div><div class="asm" style="margin-top:6px">${cp.judge_notes || ''}</div>${cp.top_improvement ? `<div class="ci" style="border-left:3px solid var(--grn);margin-top:4px"><div><div class="cia">💪</div><div class="cid">${cp.top_improvement}</div></div></div>` : ''}${cp.concern ? `<div class="ci" style="border-left:3px solid var(--red);margin-top:3px"><div><div class="cia">⚠️</div><div class="cid">${cp.concern}</div></div></div>` : ''}${cp.pro_tip ? `<div class="at">💡 ${cp.pro_tip}</div>` : ''}`;
+    }
+  } catch(err) {
+    console.error('AI Error:', err);
+    ap.innerHTML += `<div class="err">❌ ${err.message || err}</div>`;
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg><span data-he="נתח עם AI" data-en="Analyze AI">Analyze AI</span>`;
+  setLang(lang);
+}
+
+// ── Init ──
+setLang('en');
+updateProUI();
+</script>
+</body>
+</html>
