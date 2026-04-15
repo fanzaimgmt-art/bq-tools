@@ -90,6 +90,7 @@
 <footer class="footer"><div class="footer-brand">Powered by BQ Tools — BQ Production LLC</div></footer>
 
 <script src="../js/auth.js"></script>
+<script src="../js/crypto.js"></script>
 <script src="../js/ai.js"></script>
 <script src="../js/common.js"></script>
 <script>
@@ -102,17 +103,18 @@ function setPlatform(el, p) {
   el.classList.add('on');
 }
 
-document.getElementById('photoInput').addEventListener('change', e => {
+function handlePhotoUpload(e) {
   const f = e.target.files[0];
   if (!f) return;
   const r = new FileReader();
   r.onload = ev => {
     photoSrc = ev.target.result;
     document.getElementById('uploadArea').innerHTML = `<img src="${photoSrc}"><input type="file" accept="image/*" id="photoInput">`;
-    document.getElementById('photoInput').addEventListener('change', arguments.callee);
+    document.getElementById('photoInput').addEventListener('change', handlePhotoUpload);
   };
   r.readAsDataURL(f);
-});
+}
+document.getElementById('photoInput').addEventListener('change', handlePhotoUpload);
 
 async function generatePost() {
   if (!requirePro()) return;

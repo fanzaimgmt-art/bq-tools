@@ -19,14 +19,14 @@
     display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; align-items: center;
   }
   .tool-btn {
-    padding: 8px 14px; border: 1px solid var(--bd); border-radius: 6px;
-    background: var(--sf); color: var(--txd); font-size: 13px; cursor: pointer;
-    font-family: 'Heebo', sans-serif; transition: all .2s; min-height: 44px;
+    padding: 10px 14px; border: 1px solid var(--bd); border-radius: 6px;
+    background: var(--sf); color: var(--txd); font-size: 14px; cursor: pointer;
+    font-family: 'Heebo', sans-serif; transition: all .2s; min-height: 48px;
   }
   .tool-btn.on { border-color: var(--ac); color: var(--ac); background: var(--acd); }
   .tool-btn:hover { border-color: var(--ac); }
   .color-dot {
-    width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--bd);
+    width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--bd);
     cursor: pointer; transition: all .2s;
   }
   .color-dot.on { border-color: #fff; box-shadow: 0 0 0 2px var(--ac); }
@@ -113,6 +113,7 @@
 <footer class="footer"><div class="footer-brand">Powered by BQ Tools — BQ Production LLC</div></footer>
 
 <script src="../js/auth.js"></script>
+<script src="../js/crypto.js"></script>
 <script src="../js/ai.js"></script>
 <script src="../js/common.js"></script>
 <script>
@@ -203,17 +204,18 @@ function doDraw(e) {
 function endDraw() { drawing = false; }
 
 // Upload sketch
-document.getElementById('sketchInput').addEventListener('change', e => {
+function handleSketchUpload(e) {
   const f = e.target.files[0];
   if (!f) return;
   const r = new FileReader();
   r.onload = ev => {
     uploadedSketch = ev.target.result;
     document.getElementById('uploadArea').innerHTML = `<img src="${uploadedSketch}"><input type="file" accept="image/*" id="sketchInput">`;
-    document.getElementById('sketchInput').addEventListener('change', arguments.callee);
+    document.getElementById('sketchInput').addEventListener('change', handleSketchUpload);
   };
   r.readAsDataURL(f);
-});
+}
+document.getElementById('sketchInput').addEventListener('change', handleSketchUpload);
 
 async function cleanUpSketch() {
   if (!requirePro()) return;

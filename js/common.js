@@ -13,7 +13,13 @@ function setLang(l) {
   });
   document.querySelectorAll('[data-he]').forEach(el => {
     const t = el.getAttribute('data-' + l);
-    if (t) el.textContent = t;
+    if (!t) return;
+    // Use innerHTML if the attribute contains HTML tags, textContent otherwise
+    if (t.includes('<')) {
+      el.innerHTML = t;
+    } else {
+      el.textContent = t;
+    }
   });
 }
 

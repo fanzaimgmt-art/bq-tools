@@ -22,16 +22,16 @@
   }
   .tg { display: flex; gap: 1px; background: var(--bg); border-radius: 6px; padding: 2px; border: 1px solid var(--bd); }
   .tn {
-    padding: 8px 14px; border: none; border-radius: 5px; background: transparent;
-    color: var(--txd); font-family: 'Heebo', sans-serif; font-size: 13px;
+    padding: 10px 14px; border: none; border-radius: 5px; background: transparent;
+    color: var(--txd); font-family: 'Heebo', sans-serif; font-size: 14px;
     cursor: pointer; transition: all .2s; display: flex; align-items: center; gap: 4px;
-    min-height: 40px;
+    min-height: 48px;
   }
   .tn.on { background: var(--sf); color: var(--ac); }
   .tn:hover:not(.on) { color: var(--tx); }
   .tn svg { width: 16px; height: 16px; }
   .settings-btn {
-    width: 40px; height: 40px; border-radius: 8px; border: 1px solid var(--bd);
+    width: 48px; height: 48px; border-radius: 8px; border: 1px solid var(--bd);
     background: var(--sf); color: var(--txd); cursor: pointer;
     display: flex; align-items: center; justify-content: center; transition: all .2s;
   }
@@ -57,7 +57,7 @@
     object-fit: cover; border-radius: 10px;
   }
   .drop-box .label { font-size: 16px; font-weight: 700; color: var(--ac); margin-bottom: 4px; z-index: 2; }
-  .drop-box .sublabel { font-size: 12px; color: var(--txd); z-index: 2; }
+  .drop-box .sublabel { font-size: 14px; color: var(--txd); z-index: 2; }
   .drop-box .icon { width: 36px; height: 36px; margin-bottom: 8px; opacity: .2; z-index: 2; color: var(--tx); }
   .drop-box.has-media .label, .drop-box.has-media .sublabel, .drop-box.has-media .icon { display: none; }
   .drop-box input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 5; }
@@ -130,34 +130,34 @@
     width: 28px; height: 28px; border-radius: 8px;
     display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900;
   }
-  .ai-title { font-size: 13px; font-weight: 700; }
-  .ai-sub { font-size: 10px; color: var(--txd); }
-  .ai-body { font-size: 13px; line-height: 1.6; padding: 10px 12px; background: var(--bg); border-radius: 8px; }
+  .ai-title { font-size: 14px; font-weight: 700; }
+  .ai-sub { font-size: 12px; color: var(--txd); }
+  .ai-body { font-size: 14px; line-height: 1.6; padding: 10px 12px; background: var(--bg); border-radius: 8px; }
   .ai-scores { display: flex; gap: 8px; margin-top: 8px; }
   .ai-score {
     flex: 1; background: var(--bg); border-radius: 8px; padding: 10px; text-align: center;
   }
-  .ai-score-label { font-size: 9px; font-weight: 700; letter-spacing: 1px; margin-bottom: 2px; }
+  .ai-score-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; margin-bottom: 2px; }
   .ai-score-num { font-size: 28px; font-weight: 900; }
   .ai-score-num span { font-size: 14px; color: var(--txd); }
   .ai-diff {
-    display: flex; align-items: flex-start; gap: 8px; padding: 8px 10px;
+    display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px;
     background: var(--bg); border-radius: 8px; margin-top: 5px;
   }
-  .ai-diff-title { font-size: 12px; font-weight: 700; }
-  .ai-diff-desc { font-size: 11px; color: var(--txd); margin-top: 2px; }
+  .ai-diff-title { font-size: 14px; font-weight: 700; }
+  .ai-diff-desc { font-size: 14px; color: var(--txd); margin-top: 2px; }
   .ai-diff-badge {
-    margin-left: auto; font-size: 9px; font-weight: 700; padding: 2px 8px;
+    margin-left: auto; font-size: 11px; font-weight: 700; padding: 3px 8px;
     border-radius: 6px; white-space: nowrap;
   }
   .ai-tip {
-    padding: 10px 12px; background: var(--acd); border: 1px solid rgba(232,197,71,.2);
-    border-radius: 8px; font-size: 12px; color: var(--ac);
+    padding: 12px 14px; background: var(--acd); border: 1px solid rgba(232,197,71,.2);
+    border-radius: 8px; font-size: 14px; color: var(--ac);
     display: flex; align-items: flex-start; gap: 8px; margin-top: 6px;
   }
   .ai-error {
-    padding: 10px 14px; background: rgba(255,107,107,.1); border: 1px solid var(--red);
-    border-radius: 8px; color: var(--red); font-size: 12px; margin-top: 8px; word-break: break-all;
+    padding: 12px 14px; background: rgba(255,107,107,.1); border: 1px solid var(--red);
+    border-radius: 8px; color: var(--red); font-size: 14px; margin-top: 8px; word-break: break-all;
   }
 
   /* Progress steps */
@@ -172,7 +172,7 @@
     .drop-zone { flex-direction: column; align-items: center; }
     .drop-box { max-width: 100%; width: 100%; }
     .controls { gap: 6px; padding: 8px 12px; }
-    .tn { padding: 6px 10px; font-size: 12px; }
+    .tn { padding: 8px 10px; font-size: 14px; }
   }
 </style>
 </head>
@@ -224,13 +224,13 @@
     <input type="file" accept="image/*,video/*" id="inputBefore">
     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
     <div class="label" data-en="Before" data-he="לפני">Before</div>
-    <div class="sublabel">BEFORE</div>
+    <div class="sublabel" data-en="BEFORE" data-he="לפני">BEFORE</div>
   </div>
   <div class="drop-box" id="dropAfter">
     <input type="file" accept="image/*,video/*" id="inputAfter">
     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
     <div class="label" data-en="After" data-he="אחרי">After</div>
-    <div class="sublabel">AFTER</div>
+    <div class="sublabel" data-en="AFTER" data-he="אחרי">AFTER</div>
   </div>
 </div>
 
@@ -274,6 +274,7 @@
 </footer>
 
 <script src="../js/auth.js"></script>
+<script src="../js/crypto.js"></script>
 <script src="../js/ai.js"></script>
 <script src="../js/common.js"></script>
 <script>
