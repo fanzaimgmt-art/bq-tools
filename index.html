@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BQ Tools — AI-Powered Creative Tools</title>
-<meta name="description" content="Professional AI tools for content creators. Compare before/after images & videos with AI-powered analysis.">
+<title>BQ Tools — AI-Powered Tools for Contractors</title>
+<meta name="description" content="AI-powered tools for contractors and remodelers. Before/after comparisons, AI reports, smart estimates, and more. Make your work sell itself.">
 <link rel="stylesheet" href="style.css">
 <style>
-  /* Hero */
+  /* ── Hero ── */
   .hero {
     width: 100%;
     padding: 80px 20px 60px;
@@ -27,44 +27,40 @@
     background: radial-gradient(circle, var(--acd) 0%, transparent 70%);
     pointer-events: none;
   }
-  .hero-badge {
-    display: inline-block;
-    padding: 4px 14px;
-    border: 1px solid var(--acd);
-    border-radius: 20px;
-    font-size: 12px;
-    color: var(--ac);
-    margin-bottom: 20px;
-    background: rgba(232,197,71,.05);
-  }
   .hero h1 {
     font-size: 48px;
     font-weight: 900;
     letter-spacing: -1px;
     margin-bottom: 16px;
     line-height: 1.1;
+    position: relative;
   }
   .hero h1 .accent { color: var(--ac); }
-  .hero p {
-    font-size: 18px;
+  .hero .tagline {
+    font-size: 20px;
     color: var(--txd);
-    max-width: 520px;
-    margin: 0 auto 32px;
-    line-height: 1.5;
+    max-width: 480px;
+    margin: 0 auto 12px;
+    line-height: 1.4;
+  }
+  .hero .tagline-bold {
+    font-size: 16px;
+    color: var(--ac);
+    font-weight: 600;
+    margin-bottom: 32px;
   }
   .hero-buttons {
     display: flex;
-    gap: 12px;
+    gap: 14px;
     justify-content: center;
     flex-wrap: wrap;
   }
 
-  /* Demo Animation */
+  /* ── Demo ── */
   .demo-section {
     width: 90%;
     max-width: 700px;
-    margin: -20px auto 60px;
-    position: relative;
+    margin: -20px auto 50px;
   }
   .demo-box {
     width: 100%;
@@ -75,129 +71,95 @@
     position: relative;
     background: var(--sf);
   }
-  .demo-box .side-a, .demo-box .side-b {
-    position: absolute;
-    inset: 0;
-  }
-  .demo-box .side-a {
-    background: linear-gradient(135deg, #8B4513, #A0522D, #654321);
-  }
+  .demo-box .side-a, .demo-box .side-b { position: absolute; inset: 0; }
+  .demo-box .side-a { background: linear-gradient(135deg, #6b4226, #8B5A3C, #5a3520); }
   .demo-box .side-b {
-    background: linear-gradient(135deg, #1a6b3c, #228B45, #0d4f2a);
+    background: linear-gradient(135deg, #2d7a4f, #3a9d66, #1f6b3e);
     clip-path: inset(0 0 0 50%);
     animation: demoSlide 3s ease-in-out infinite;
   }
   .demo-line {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background: rgba(255,255,255,.4);
-    left: 50%;
-    z-index: 2;
+    position: absolute; top: 0; bottom: 0; width: 2px;
+    background: rgba(255,255,255,.4); left: 50%; z-index: 2;
     animation: demoLine 3s ease-in-out infinite;
   }
   .demo-label-b, .demo-label-a {
-    position: absolute;
-    top: 12px;
-    padding: 3px 12px;
-    border-radius: 12px;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    background: rgba(0,0,0,.5);
-    backdrop-filter: blur(6px);
-    z-index: 3;
+    position: absolute; top: 12px; padding: 4px 14px; border-radius: 12px;
+    font-size: 11px; font-weight: 700; letter-spacing: 1px;
+    background: rgba(0,0,0,.5); backdrop-filter: blur(6px); z-index: 3;
   }
   .demo-label-b { left: 12px; color: var(--red); }
   .demo-label-a { right: 12px; color: var(--grn); }
   @keyframes demoSlide {
-    0%, 100% { clip-path: inset(0 0 0 50%); }
+    0%,100% { clip-path: inset(0 0 0 50%); }
     30% { clip-path: inset(0 0 0 25%); }
     70% { clip-path: inset(0 0 0 75%); }
   }
   @keyframes demoLine {
-    0%, 100% { left: 50%; }
-    30% { left: 25%; }
-    70% { left: 75%; }
+    0%,100% { left: 50%; } 30% { left: 25%; } 70% { left: 75%; }
   }
 
-  /* Tools Section */
+  /* ── Section ── */
   .section {
-    width: 90%;
+    width: 92%;
     max-width: 900px;
     margin: 0 auto;
-    padding: 60px 0;
+    padding: 50px 0;
   }
   .section-title {
     font-size: 32px;
     font-weight: 900;
     text-align: center;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
   }
   .section-sub {
     font-size: 15px;
     color: var(--txd);
     text-align: center;
-    margin-bottom: 40px;
+    margin-bottom: 36px;
   }
 
-  /* Tool Card */
+  /* ── Tools Grid ── */
+  .tools-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
   .tool-card {
     background: var(--sf);
     border: 1px solid var(--bd);
-    border-radius: 16px;
-    padding: 32px;
+    border-radius: 14px;
+    padding: 24px;
+    cursor: pointer;
+    transition: all .25s;
+    text-decoration: none;
+    color: var(--tx);
     display: flex;
-    gap: 32px;
-    align-items: center;
-    transition: border-color .3s;
+    flex-direction: column;
+    min-height: 140px;
   }
-  .tool-card:hover { border-color: var(--ac); }
-  .tool-icon {
-    width: 64px;
-    height: 64px;
-    border-radius: 16px;
-    background: var(--acd);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-  .tool-icon svg { width: 32px; height: 32px; color: var(--ac); }
-  .tool-info { flex: 1; }
-  .tool-info h3 {
-    font-size: 20px;
+  .tool-card:hover { border-color: var(--ac); transform: translateY(-2px); opacity: 1; }
+  .tool-card .tool-emoji { font-size: 28px; margin-bottom: 10px; }
+  .tool-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .tool-card p { font-size: 12px; color: var(--txd); line-height: 1.4; flex: 1; }
+  .tool-card .tool-badge {
+    margin-top: 10px;
+    font-size: 10px;
     font-weight: 700;
-    margin-bottom: 6px;
+    padding: 3px 8px;
+    border-radius: 5px;
+    display: inline-block;
+    align-self: flex-start;
   }
-  .tool-info p {
-    font-size: 14px;
-    color: var(--txd);
-    line-height: 1.5;
-    margin-bottom: 14px;
-  }
-  .tool-tags {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
-  .tag {
-    padding: 3px 10px;
-    border-radius: 6px;
-    font-size: 11px;
-    background: rgba(255,255,255,.05);
-    color: var(--txd);
-  }
-  .tag.free { background: rgba(81,207,102,.1); color: var(--grn); }
-  .tag.pro { background: var(--acd); color: var(--ac); }
+  .tool-badge.free { background: rgba(81,207,102,.12); color: var(--grn); }
+  .tool-badge.pro { background: var(--acd); color: var(--ac); }
 
-  /* Pricing */
+  /* ── Pricing ── */
   .pricing-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
-    max-width: 700px;
+    max-width: 720px;
     margin: 0 auto;
   }
   .price-card {
@@ -206,7 +168,6 @@
     border-radius: 16px;
     padding: 28px;
     text-align: center;
-    transition: all .3s;
     position: relative;
   }
   .price-card.featured {
@@ -214,61 +175,53 @@
     box-shadow: 0 0 40px var(--acd);
   }
   .price-card.featured::before {
-    content: 'POPULAR';
-    position: absolute;
-    top: -10px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--ac);
-    color: var(--bg);
-    font-size: 10px;
-    font-weight: 700;
-    padding: 2px 12px;
-    border-radius: 10px;
-    letter-spacing: 1px;
+    content: 'BEST VALUE';
+    position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+    background: var(--ac); color: var(--bg);
+    font-size: 10px; font-weight: 700; padding: 2px 12px;
+    border-radius: 10px; letter-spacing: 1px;
   }
-  .price-name {
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: 4px;
-  }
-  .price-amount {
-    font-size: 42px;
-    font-weight: 900;
-    margin: 12px 0;
-  }
-  .price-amount span {
-    font-size: 16px;
-    font-weight: 400;
-    color: var(--txd);
-  }
-  .price-features {
-    list-style: none;
-    text-align: left;
-    margin: 20px 0;
-  }
+  .price-name { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .price-amount { font-size: 42px; font-weight: 900; margin: 12px 0; }
+  .price-amount span { font-size: 16px; font-weight: 400; color: var(--txd); }
+  .price-features { list-style: none; text-align: left; margin: 20px 0; }
   .price-features li {
-    font-size: 13px;
-    color: var(--txd);
-    padding: 6px 0;
+    font-size: 13px; color: var(--txd); padding: 7px 0;
     border-bottom: 1px solid rgba(255,255,255,.04);
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    display: flex; align-items: center; gap: 8px;
   }
   .price-features li::before {
-    content: '';
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    flex-shrink: 0;
+    content: ''; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
   }
   .price-card .price-features li::before { background: var(--grn); }
   .price-card.featured .price-features li::before { background: var(--ac); }
 
-  /* CTA Banner */
+  /* ── Social Proof ── */
+  .proof {
+    width: 92%;
+    max-width: 700px;
+    margin: 0 auto 50px;
+    text-align: center;
+    padding: 36px 24px;
+    background: var(--sf);
+    border: 1px solid var(--bd);
+    border-radius: 16px;
+  }
+  .proof blockquote {
+    font-size: 16px;
+    font-style: italic;
+    line-height: 1.6;
+    color: var(--tx);
+    margin-bottom: 14px;
+  }
+  .proof .proof-cite {
+    font-size: 12px;
+    color: var(--txd);
+  }
+
+  /* ── CTA ── */
   .cta-banner {
-    width: 90%;
+    width: 92%;
     max-width: 700px;
     margin: 0 auto 60px;
     background: linear-gradient(135deg, rgba(232,197,71,.1), rgba(232,197,71,.03));
@@ -277,24 +230,17 @@
     padding: 40px;
     text-align: center;
   }
-  .cta-banner h3 {
-    font-size: 22px;
-    font-weight: 700;
-    margin-bottom: 8px;
-  }
-  .cta-banner p {
-    color: var(--txd);
-    margin-bottom: 20px;
-  }
+  .cta-banner h3 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .cta-banner p { color: var(--txd); margin-bottom: 20px; }
 
   @media (max-width: 600px) {
     .hero { padding: 50px 16px 40px; }
     .hero h1 { font-size: 30px; }
-    .hero p { font-size: 15px; }
+    .hero .tagline { font-size: 16px; }
+    .tools-grid { grid-template-columns: 1fr; }
     .pricing-grid { grid-template-columns: 1fr; }
-    .tool-card { flex-direction: column; text-align: center; gap: 16px; }
-    .tool-tags { justify-content: center; }
     .section-title { font-size: 24px; }
+    .proof blockquote { font-size: 14px; }
   }
 </style>
 </head>
@@ -304,31 +250,31 @@
 <nav class="nav">
   <a href="/" class="nav-logo">BQ <span>Tools</span></a>
   <div class="nav-right">
+    <a href="#tools" class="nav-link" data-en="Tools" data-he="כלים">Tools</a>
     <a href="#pricing" class="nav-link" data-en="Pricing" data-he="מחירים">Pricing</a>
-    <a href="/compare/" class="nav-link" data-en="Compare Tool" data-he="כלי השוואה">Compare Tool</a>
-    <a href="/auth/" class="btn" style="padding:6px 16px; font-size:12px;" data-en="Login" data-he="התחבר">Login</a>
+    <a href="/auth.html" class="btn btn-sm" id="navProBtn" data-en="Pro" data-he="Pro">Pro</a>
     <div class="lang-toggle">
-      <button class="lang-btn" id="lE" onclick="setLang('en')">EN</button>
-      <button class="lang-btn on" id="lH" onclick="setLang('he')">עב</button>
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
     </div>
   </div>
 </nav>
 
 <!-- Hero -->
 <section class="hero">
-  <div class="hero-badge" data-en="BQ Production LLC" data-he="BQ Production LLC">BQ Production LLC</div>
   <h1>
-    <span data-en="AI-Powered" data-he="כלים מבוססי">AI-Powered</span><br>
-    <span class="accent" data-en="Creative Tools" data-he="AI ליוצרי תוכן">Creative Tools</span>
+    <span>BQ </span><span class="accent">Tools</span><br>
+    <span style="font-size:.55em;font-weight:700;" data-en="AI-Powered Tools for Contractors" data-he="כלי AI לקבלנים">AI-Powered Tools for Contractors</span>
   </h1>
-  <p data-en="Professional tools for content creators. Compare before &amp; after visuals, get AI analysis, and share your work — all in one place." data-he="כלים מקצועיים ליוצרי תוכן. השוו תמונות לפני ואחרי, קבלו ניתוח AI, ושתפו את העבודה שלכם — הכל במקום אחד.">Professional tools for content creators. Compare before &amp; after visuals, get AI analysis, and share your work — all in one place.</p>
+  <p class="tagline" data-en="Your work speaks for itself. Now let AI help it speak louder." data-he="העבודה שלך מדברת בעד עצמה. עכשיו תן ל-AI לדבר חזק יותר.">Your work speaks for itself. Now let AI help it speak louder.</p>
+  <p class="tagline-bold" data-en="One thing done right: make your work sell your next job." data-he="דבר אחד נכון: לגרום לעבודה שלך למכור את הפרויקט הבא.">One thing done right: make your work sell your next job.</p>
   <div class="hero-buttons">
-    <a href="/compare/" class="btn btn-primary btn-large" data-en="Start Free" data-he="התחל בחינם">Start Free</a>
-    <a href="#pricing" class="btn btn-large" data-en="See Pricing" data-he="ראה מחירים">See Pricing</a>
+    <a href="/tools/compare.html" class="btn btn-primary btn-large" data-en="Start Free →" data-he="התחל בחינם →">Start Free →</a>
+    <a href="#pricing" class="btn btn-large" data-en="See Pricing ↓" data-he="ראה מחירים ↓">See Pricing ↓</a>
   </div>
 </section>
 
-<!-- Demo Animation -->
+<!-- Demo -->
 <div class="demo-section">
   <div class="demo-box">
     <div class="side-a"></div>
@@ -340,79 +286,132 @@
 </div>
 
 <!-- Tools -->
-<section class="section">
-  <h2 class="section-title" data-en="Tools" data-he="כלים">Tools</h2>
-  <p class="section-sub" data-en="Everything you need to showcase your creative work" data-he="כל מה שצריך כדי להציג את העבודה היצירתית שלך">Everything you need to showcase your creative work</p>
+<section class="section" id="tools">
+  <h2 class="section-title" data-en="Your Toolbox" data-he="ארגז הכלים שלך">Your Toolbox</h2>
+  <p class="section-sub" data-en="Everything you need to turn finished work into new clients" data-he="כל מה שצריך כדי להפוך עבודה שהסתיימה ללקוחות חדשים">Everything you need to turn finished work into new clients</p>
 
-  <div class="tool-card">
-    <div class="tool-icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <rect x="3" y="3" width="18" height="18" rx="3"/>
-        <path d="M12 3v18"/>
-        <circle cx="8.5" cy="8.5" r="1.5"/>
-        <path d="M21 15l-5-5L5 21"/>
-      </svg>
-    </div>
-    <div class="tool-info">
-      <h3>BQ Compare</h3>
-      <p data-en="Before/after image &amp; video comparison with an interactive slider. Get AI-powered analysis that scores your work and identifies every change." data-he="השוואת תמונות ווידאו לפני/אחרי עם סליידר אינטראקטיבי. קבלו ניתוח AI שמדרג את העבודה ומזהה כל שינוי.">Before/after image &amp; video comparison with an interactive slider. Get AI-powered analysis that scores your work and identifies every change.</p>
-      <div class="tool-tags">
-        <span class="tag free" data-en="Slider — Free" data-he="סליידר — חינם">Slider — Free</span>
-        <span class="tag pro" data-en="AI Analysis — Pro" data-he="ניתוח AI — Pro">AI Analysis — Pro</span>
-        <span class="tag" data-en="Image + Video" data-he="תמונה + וידאו">Image + Video</span>
-        <span class="tag" data-en="Horizontal + Vertical" data-he="אופקי + אנכי">Horizontal + Vertical</span>
-      </div>
-    </div>
+  <div class="tools-grid">
+    <!-- 1. Compare -->
+    <a href="/tools/compare.html" class="tool-card">
+      <div class="tool-emoji">🔀</div>
+      <h3 data-en="Compare" data-he="השוואה">Compare</h3>
+      <p data-en="Before/after slider in one click. Image + video, horizontal + vertical." data-he="סליידר לפני/אחרי בלחיצה. תמונה + וידאו, אופקי + אנכי.">Before/after slider in one click. Image + video, horizontal + vertical.</p>
+      <span class="tool-badge free">FREE</span>
+    </a>
+
+    <!-- 2. AI Analysis -->
+    <a href="/tools/compare.html" class="tool-card">
+      <div class="tool-emoji">🧠</div>
+      <h3 data-en="AI Analysis" data-he="ניתוח AI">AI Analysis</h3>
+      <p data-en="AI spots every change, scores quality 1-10, gives pro recommendations." data-he="AI מזהה כל שינוי, מדרג 1-10, נותן המלצות מקצועיות.">AI spots every change, scores quality 1-10, gives pro recommendations.</p>
+      <span class="tool-badge pro">PRO</span>
+    </a>
+
+    <!-- 3. Quick Report -->
+    <a href="/tools/report.html" class="tool-card">
+      <div class="tool-emoji">📄</div>
+      <h3 data-en="Quick Report" data-he="דוח מהיר">Quick Report</h3>
+      <p data-en="Upload photos → AI generates a professional project report. Export PDF." data-he="העלה תמונות → AI מייצר דוח פרויקט מקצועי. ייצוא PDF.">Upload photos → AI generates a professional project report. Export PDF.</p>
+      <span class="tool-badge pro">PRO</span>
+    </a>
+
+    <!-- 4. Smart Estimate -->
+    <a href="/tools/estimate.html" class="tool-card">
+      <div class="tool-emoji">💰</div>
+      <h3 data-en="Smart Estimate" data-he="הערכת עלות">Smart Estimate</h3>
+      <p data-en="Photo + description → AI estimates materials, labor, and total cost range." data-he="תמונה + תיאור → AI מעריך חומרים, עבודה וטווח עלויות.">Photo + description → AI estimates materials, labor, and total cost range.</p>
+      <span class="tool-badge pro">PRO</span>
+    </a>
+
+    <!-- 5. Client Page -->
+    <a href="/tools/client-page.html" class="tool-card">
+      <div class="tool-emoji">🔗</div>
+      <h3 data-en="Client Page" data-he="עמוד לקוח">Client Page</h3>
+      <p data-en="Beautiful shareable page with before/after, timeline, and your info." data-he="עמוד יפה לשיתוף עם לפני/אחרי, ציר זמן ופרטים שלך.">Beautiful shareable page with before/after, timeline, and your info.</p>
+      <span class="tool-badge free" data-en="1 FREE" data-he="1 חינם">1 FREE</span>
+    </a>
+
+    <!-- 6. Social Post -->
+    <a href="/tools/social-post.html" class="tool-card">
+      <div class="tool-emoji">📱</div>
+      <h3 data-en="Social Post" data-he="פוסט חברתי">Social Post</h3>
+      <p data-en="AI writes your Instagram/Facebook caption with hooks and hashtags." data-he="AI כותב לך קפשן לאינסטגרם/פייסבוק עם הוקים והאשטגים.">AI writes your Instagram/Facebook caption with hooks and hashtags.</p>
+      <span class="tool-badge pro">PRO</span>
+    </a>
+
+    <!-- 7. Review Request -->
+    <a href="/tools/review.html" class="tool-card">
+      <div class="tool-emoji">⭐</div>
+      <h3 data-en="Review Request" data-he="בקשת ביקורת">Review Request</h3>
+      <p data-en="Generate personalized SMS/WhatsApp/email to get Google reviews." data-he="צור הודעה מותאמת ל-SMS/WhatsApp/מייל לקבלת ביקורות ב-Google.">Generate personalized SMS/WhatsApp/email to get Google reviews.</p>
+      <span class="tool-badge pro">PRO</span>
+    </a>
+
+    <!-- 8. Quick Sketch -->
+    <a href="/tools/sketch.html" class="tool-card">
+      <div class="tool-emoji">✏️</div>
+      <h3 data-en="Quick Sketch" data-he="סקיצה מהירה">Quick Sketch</h3>
+      <p data-en="Draw or upload a rough sketch → AI cleans it into a sharp blueprint." data-he="צייר או העלה סקיצה → AI מנקה לשרטוט חד.">Draw or upload a rough sketch → AI cleans it into a sharp blueprint.</p>
+      <span class="tool-badge pro">PRO</span>
+    </a>
   </div>
 </section>
 
 <!-- Pricing -->
 <section class="section" id="pricing">
   <h2 class="section-title" data-en="Simple Pricing" data-he="מחירים פשוטים">Simple Pricing</h2>
-  <p class="section-sub" data-en="Start free, upgrade when you need AI analysis" data-he="התחל בחינם, שדרג כשתצטרך ניתוח AI">Start free, upgrade when you need AI analysis</p>
+  <p class="section-sub" data-en="Start free. Upgrade when your business is ready." data-he="התחל בחינם. שדרג כשהעסק שלך מוכן.">Start free. Upgrade when your business is ready.</p>
 
   <div class="pricing-grid">
-    <!-- Free -->
     <div class="price-card">
       <div class="price-name">Free</div>
       <div class="price-amount">$0</div>
       <ul class="price-features">
-        <li data-en="Before/after slider" data-he="סליידר לפני/אחרי">Before/after slider</li>
-        <li data-en="Image + video support" data-he="תמיכה בתמונות + וידאו">Image + video support</li>
-        <li data-en="Horizontal + vertical modes" data-he="מצב אופקי + אנכי">Horizontal + vertical modes</li>
+        <li data-en="Before/after Compare slider" data-he="סליידר לפני/אחרי">Before/after Compare slider</li>
+        <li data-en="1 Client Page" data-he="1 עמוד לקוח">1 Client Page</li>
+        <li data-en="Image + video support" data-he="תמונה + וידאו">Image + video support</li>
+        <li data-en="EN / HE language" data-he="EN / HE שפה">EN / HE language</li>
         <li data-en="Unlimited comparisons" data-he="השוואות ללא הגבלה">Unlimited comparisons</li>
-        <li data-en="EN / HE language toggle" data-he="מעבר שפה EN / HE">EN / HE language toggle</li>
       </ul>
-      <a href="/compare/" class="btn" style="width:100%;justify-content:center;" data-en="Start Free" data-he="התחל בחינם">Start Free</a>
+      <a href="/tools/compare.html" class="btn" style="width:100%;" data-en="Start Free" data-he="התחל בחינם">Start Free</a>
     </div>
 
-    <!-- Pro -->
     <div class="price-card featured">
       <div class="price-name">Pro</div>
-      <div class="price-amount">$7<span>.99/mo</span></div>
+      <div class="price-amount">$14<span>.99/mo</span></div>
       <ul class="price-features">
         <li data-en="Everything in Free" data-he="הכל מה-Free">Everything in Free</li>
-        <li data-en="AI Analysis (Gemini + Claude)" data-he="ניתוח AI (Gemini + Claude)">AI Analysis (Gemini + Claude)</li>
-        <li data-en="Quality scoring (1-10)" data-he="ציון איכות (1-10)">Quality scoring (1-10)</li>
-        <li data-en="Export with BQ watermark" data-he="ייצוא עם ווטרמרק BQ">Export with BQ watermark</li>
-        <li data-en="Share comparison link" data-he="שיתוף לינק השוואה">Share comparison link</li>
-        <li data-en="50 AI analyses / month" data-he="50 ניתוחי AI / חודש">50 AI analyses / month</li>
+        <li data-en="AI Analysis (50/month)" data-he="ניתוח AI (50/חודש)">AI Analysis (50/month)</li>
+        <li data-en="Quick Report → PDF" data-he="דוח מהיר → PDF">Quick Report → PDF</li>
+        <li data-en="Smart Estimate" data-he="הערכת עלות חכמה">Smart Estimate</li>
+        <li data-en="Unlimited Client Pages" data-he="עמודי לקוח ללא הגבלה">Unlimited Client Pages</li>
+        <li data-en="Social Post AI" data-he="פוסט חברתי AI">Social Post AI</li>
+        <li data-en="Review Request generator" data-he="מחולל בקשות ביקורת">Review Request generator</li>
+        <li data-en="Quick Sketch cleanup" data-he="ניקוי סקיצה">Quick Sketch cleanup</li>
+        <li data-en="Your logo on exports" data-he="הלוגו שלך על ייצוא">Your logo on exports</li>
+        <li data-en="Project Gallery" data-he="גלריית פרויקטים">Project Gallery</li>
       </ul>
-      <a href="https://www.paypal.com/ncp/payment/2LA7B7PZTHN54" target="_blank" rel="noopener" class="btn btn-primary" style="width:100%;justify-content:center;" data-en="Go Pro" data-he="שדרג ל-Pro">Go Pro</a>
+      <a href="https://www.paypal.com/ncp/payment/2LA7B7PZTHN54" target="_blank" rel="noopener" class="btn btn-primary" style="width:100%;" data-en="Go Pro → $14.99/mo" data-he="שדרג ל-Pro → $14.99/חודש">Go Pro → $14.99/mo</a>
     </div>
   </div>
 </section>
 
+<!-- Social Proof -->
+<div class="proof">
+  <blockquote data-en="&ldquo;CompanyCam charges $99/mo for photos alone. BQ Tools gives you AI-powered marketing tools for $14.99.&rdquo;" data-he="&ldquo;CompanyCam גובה $99/חודש על תמונות בלבד. BQ Tools נותן לך כלי שיווק מבוססי AI ב-$14.99.&rdquo;">&ldquo;CompanyCam charges $99/mo for photos alone. BQ Tools gives you AI-powered marketing tools for $14.99.&rdquo;</blockquote>
+  <div class="proof-cite" data-en="Trusted by contractors in LA, Seattle, Miami" data-he="בשימוש קבלנים ב-LA, סיאטל, מיאמי">Trusted by contractors in LA, Seattle, Miami</div>
+</div>
+
 <!-- CTA -->
 <div class="cta-banner">
-  <h3 data-en="Ready to level up your content?" data-he="מוכן לשדרג את התוכן שלך?">Ready to level up your content?</h3>
+  <h3 data-en="Your work already sells itself. Now sell faster." data-he="העבודה שלך כבר מוכרת את עצמה. עכשיו תמכור מהר יותר.">Your work already sells itself. Now sell faster.</h3>
   <p data-en="Start comparing for free. No account needed." data-he="התחל להשוות בחינם. לא צריך חשבון.">Start comparing for free. No account needed.</p>
-  <a href="/compare/" class="btn btn-primary btn-large" data-en="Open BQ Compare" data-he="פתח את BQ Compare">Open BQ Compare</a>
+  <a href="/tools/compare.html" class="btn btn-primary btn-large" data-en="Open BQ Compare →" data-he="פתח BQ Compare →">Open BQ Compare →</a>
 </div>
 
 <!-- Footer -->
 <footer class="footer">
-  <div class="footer-brand">BQ Tools — BQ Production LLC</div>
+  <div class="footer-brand">Powered by BQ Tools — BQ Production LLC</div>
   <div class="footer-links">
     <a href="https://bqprod.pages.dev" target="_blank">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/></svg>
@@ -425,23 +424,14 @@
   </div>
 </footer>
 
+<script src="js/auth.js"></script>
+<script src="js/common.js"></script>
 <script>
-let lang = 'en';
-
-function setLang(l) {
-  lang = l;
-  document.getElementById('lH').classList.toggle('on', l === 'he');
-  document.getElementById('lE').classList.toggle('on', l === 'en');
-  document.documentElement.dir = l === 'he' ? 'rtl' : 'ltr';
-  document.documentElement.lang = l;
-  document.querySelectorAll('[data-he]').forEach(el => {
-    const text = el.getAttribute('data-' + l);
-    if (text) el.textContent = text;
-  });
-}
-
-// Init
-setLang('en');
+  // Update Pro button in nav
+  if (isPro()) {
+    const btn = document.getElementById('navProBtn');
+    if (btn) { btn.textContent = 'PRO ✓'; btn.classList.add('btn-pro-active'); }
+  }
 </script>
 </body>
 </html>

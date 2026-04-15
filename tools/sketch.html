@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Quick Sketch</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  body { display: flex; flex-direction: column; }
+
+  .canvas-wrap {
+    background: #fff; border-radius: 12px; border: 1px solid var(--bd);
+    position: relative; overflow: hidden; margin-bottom: 14px;
+    touch-action: none;
+  }
+  canvas { display: block; width: 100%; cursor: crosshair; }
+
+  .toolbar {
+    display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; align-items: center;
+  }
+  .tool-btn {
+    padding: 8px 14px; border: 1px solid var(--bd); border-radius: 6px;
+    background: var(--sf); color: var(--txd); font-size: 13px; cursor: pointer;
+    font-family: 'Heebo', sans-serif; transition: all .2s; min-height: 44px;
+  }
+  .tool-btn.on { border-color: var(--ac); color: var(--ac); background: var(--acd); }
+  .tool-btn:hover { border-color: var(--ac); }
+  .color-dot {
+    width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--bd);
+    cursor: pointer; transition: all .2s;
+  }
+  .color-dot.on { border-color: #fff; box-shadow: 0 0 0 2px var(--ac); }
+  .size-slider {
+    width: 80px; accent-color: var(--ac);
+  }
+
+  .upload-or {
+    text-align: center; font-size: 13px; color: var(--txd); margin: 14px 0;
+  }
+  .upload-area {
+    border: 2px dashed var(--bd); border-radius: 10px; padding: 20px;
+    text-align: center; cursor: pointer; transition: all .2s;
+    position: relative; background: var(--sf); margin-bottom: 14px;
+  }
+  .upload-area:hover { border-color: var(--ac); }
+  .upload-area input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .upload-area img { max-height: 200px; border-radius: 8px; }
+
+  .result-img {
+    max-width: 100%; border-radius: 12px; border: 1px solid var(--bd);
+    margin-top: 14px; display: none;
+  }
+  .result-img.on { display: block; animation: fadeIn .3s; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/" class="nav-link" data-en="← Back" data-he="← חזור">← Back</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <a href="/" class="page-back" data-en="← All Tools" data-he="← כל הכלים">← All Tools</a>
+  <h1 class="page-title" data-en="✏️ Quick Sketch" data-he="✏️ סקיצה מהירה">✏️ Quick Sketch</h1>
+  <p class="page-sub" data-en="Draw a rough sketch or upload a photo of one. AI cleans it up into a sharp blueprint." data-he="צייר סקיצה או העלה תמונה. AI מנקה לשרטוט חד.">Draw a rough sketch or upload a photo of one. AI cleans it up into a sharp blueprint.</p>
+
+  <!-- Drawing tools -->
+  <div class="toolbar">
+    <button class="tool-btn on" onclick="setTool(this,'pen')" data-en="✏️ Pen" data-he="✏️ עט">✏️ Pen</button>
+    <button class="tool-btn" onclick="setTool(this,'line')" data-en="📏 Line" data-he="📏 קו">📏 Line</button>
+    <button class="tool-btn" onclick="setTool(this,'rect')" data-en="⬜ Rect" data-he="⬜ מלבן">⬜ Rect</button>
+    <button class="tool-btn" onclick="setTool(this,'eraser')" data-en="🧹 Erase" data-he="🧹 מחק">🧹 Erase</button>
+    <div style="display:flex;gap:4px;align-items:center;">
+      <div class="color-dot on" style="background:#222" onclick="setColor(this,'#222')"></div>
+      <div class="color-dot" style="background:#ff6b6b" onclick="setColor(this,'#ff6b6b')"></div>
+      <div class="color-dot" style="background:#74b9ff" onclick="setColor(this,'#74b9ff')"></div>
+      <div class="color-dot" style="background:#51cf66" onclick="setColor(this,'#51cf66')"></div>
+    </div>
+    <input type="range" class="size-slider" min="1" max="12" value="3" id="sizeSlider">
+    <button class="tool-btn" onclick="clearCanvas()" data-en="Clear" data-he="נקה">Clear</button>
+  </div>
+
+  <div class="canvas-wrap">
+    <canvas id="sketchCanvas" width="800" height="500"></canvas>
+  </div>
+
+  <div class="upload-or" data-en="— OR upload a sketch photo —" data-he="— או העלה תמונת סקיצה —">— OR upload a sketch photo —</div>
+
+  <div class="upload-area" id="uploadArea">
+    <span data-en="Click to upload sketch photo" data-he="לחץ להעלאת תמונת סקיצה">Click to upload sketch photo</span>
+    <input type="file" accept="image/*" id="sketchInput">
+  </div>
+
+  <label class="input-label" data-en="Describe what this sketch shows (optional)" data-he="תאר מה הסקיצה מציגה (אופציונלי)">Describe the sketch (optional)</label>
+  <input class="input" id="sketchDesc" placeholder="Floor plan for kitchen extension, 12x14 feet" style="margin-bottom:14px;">
+
+  <button class="btn btn-primary btn-large" style="width:100%;" onclick="cleanUpSketch()" id="cleanBtn" data-en="🧠 Clean Up with AI" data-he="🧠 נקה עם AI">🧠 Clean Up with AI</button>
+
+  <div id="resultSection" style="display:none;margin-top:16px;text-align:center;">
+    <p style="font-size:14px;color:var(--ac);margin-bottom:8px;" data-en="AI cleaned your sketch into a sharper version. The result is a text-based description — for a visual blueprint, export your sketch and use an AI image tool." data-he="AI ניקה את הסקיצה שלך. התוצאה היא תיאור טקסטואלי — לשרטוט ויזואלי, ייצא את הסקיצה ושתמש בכלי תמונת AI.">AI Analysis</p>
+    <div class="card" id="cleanResult" style="text-align:left;font-size:13px;line-height:1.7;"></div>
+    <button class="btn" style="margin-top:10px;" onclick="exportSketch()" data-en="📥 Export Sketch PNG" data-he="📥 ייצוא סקיצה PNG">📥 Export Sketch PNG</button>
+  </div>
+</div>
+
+<footer class="footer"><div class="footer-brand">Powered by BQ Tools — BQ Production LLC</div></footer>
+
+<script src="../js/auth.js"></script>
+<script src="../js/ai.js"></script>
+<script src="../js/common.js"></script>
+<script>
+const canvas = document.getElementById('sketchCanvas');
+const ctx = canvas.getContext('2d');
+let tool = 'pen', color = '#222', drawing = false;
+let startX, startY, snapshot;
+let uploadedSketch = null;
+
+// Init white background
+ctx.fillStyle = '#fff';
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+function setTool(el, t) {
+  tool = t;
+  document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+}
+
+function setColor(el, c) {
+  color = c;
+  document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('on'));
+  el.classList.add('on');
+}
+
+function clearCanvas() {
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+function getLineWidth() { return parseInt(document.getElementById('sizeSlider').value); }
+
+function getPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+}
+
+canvas.addEventListener('mousedown', e => { startDraw(e); });
+canvas.addEventListener('touchstart', e => { e.preventDefault(); startDraw(e); }, { passive: false });
+window.addEventListener('mousemove', e => { if (drawing) doDraw(e); });
+window.addEventListener('touchmove', e => { if (drawing) { e.preventDefault(); doDraw(e); } }, { passive: false });
+window.addEventListener('mouseup', endDraw);
+window.addEventListener('touchend', endDraw);
+
+function startDraw(e) {
+  drawing = true;
+  const p = getPos(e);
+  startX = p.x; startY = p.y;
+  if (tool === 'pen' || tool === 'eraser') {
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+  }
+  snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+}
+
+function doDraw(e) {
+  const p = getPos(e);
+  ctx.lineWidth = getLineWidth();
+  ctx.lineCap = 'round';
+
+  if (tool === 'pen') {
+    ctx.strokeStyle = color;
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+  } else if (tool === 'eraser') {
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = getLineWidth() * 4;
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+  } else if (tool === 'line') {
+    ctx.putImageData(snapshot, 0, 0);
+    ctx.strokeStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+  } else if (tool === 'rect') {
+    ctx.putImageData(snapshot, 0, 0);
+    ctx.strokeStyle = color;
+    ctx.strokeRect(startX, startY, p.x - startX, p.y - startY);
+  }
+}
+
+function endDraw() { drawing = false; }
+
+// Upload sketch
+document.getElementById('sketchInput').addEventListener('change', e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    uploadedSketch = ev.target.result;
+    document.getElementById('uploadArea').innerHTML = `<img src="${uploadedSketch}"><input type="file" accept="image/*" id="sketchInput">`;
+    document.getElementById('sketchInput').addEventListener('change', arguments.callee);
+  };
+  r.readAsDataURL(f);
+});
+
+async function cleanUpSketch() {
+  if (!requirePro()) return;
+  const s = getAISettings();
+  if (!s.claudeKey) { openAISettings(); return; }
+
+  const btn = document.getElementById('cleanBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳...';
+
+  try {
+    let imgSrc = uploadedSketch || canvas.toDataURL('image/png');
+    const b64 = await resizeForAPI(imgSrc);
+    const desc = document.getElementById('sketchDesc').value.trim();
+
+    const prompt = `You are a construction blueprint analyst. Look at this sketch/drawing and:
+1. Identify what it represents (floor plan, elevation, layout, etc.)
+2. List all elements you can see (walls, doors, windows, measurements, labels)
+3. Suggest improvements for clarity
+4. If there are measurements, organize them into a table
+${desc ? 'Context: ' + desc : ''}
+
+Respond JSON only:
+{
+  "type": "what the sketch represents",
+  "elements": ["element 1", "element 2", ...],
+  "measurements": [{"item": "name", "value": "dimension"}] or [],
+  "suggestions": ["improvement 1", "improvement 2"],
+  "clean_description": "A professional text description of this blueprint that could be given to a draftsperson"
+}`;
+
+    const content = [
+      { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 } },
+      { type: 'text', text: prompt }
+    ];
+    const text = await callClaude(s.claudeKey, s.claudeModel, [{ role: 'user', content }], 1500);
+    const r = parseAIJSON(text);
+
+    const el = document.getElementById('cleanResult');
+    el.innerHTML = `
+      <p><strong>Type:</strong> ${r.type}</p>
+      <p><strong>Elements:</strong></p>
+      <ul>${r.elements.map(e => `<li>${e}</li>`).join('')}</ul>
+      ${r.measurements?.length ? `<p><strong>Measurements:</strong></p><ul>${r.measurements.map(m => `<li>${m.item}: ${m.value}</li>`).join('')}</ul>` : ''}
+      <p><strong>Suggestions:</strong></p>
+      <ul>${r.suggestions.map(s => `<li>${s}</li>`).join('')}</ul>
+      <p style="margin-top:10px;padding:10px;background:var(--acd);border-radius:6px;"><strong>Professional Description:</strong><br>${r.clean_description}</p>`;
+
+    document.getElementById('resultSection').style.display = 'block';
+    showToast(lang === 'he' ? 'ניתוח מוכן!' : 'Analysis ready!', 'ok');
+
+  } catch(err) {
+    showToast('Error: ' + err.message, 'err');
+  }
+
+  btn.disabled = false;
+  btn.textContent = lang === 'he' ? '🧠 נקה עם AI' : '🧠 Clean Up with AI';
+}
+
+function exportSketch() {
+  const link = document.createElement('a');
+  link.download = 'bq-sketch.png';
+  link.href = uploadedSketch || canvas.toDataURL('image/png');
+  link.click();
+  showToast(lang === 'he' ? 'סקיצה יוצאה!' : 'Sketch exported!', 'ok');
+}
+</script>
+</body>
+</html>

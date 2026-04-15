@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Client Page</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  body { display: flex; flex-direction: column; }
+  .photos-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 6px; margin-bottom: 12px;
+  }
+  .photos-grid img {
+    width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; border: 1px solid var(--bd);
+    cursor: pointer;
+  }
+  .photos-grid img:hover { border-color: var(--ac); }
+  .add-btn {
+    aspect-ratio: 1; border: 2px dashed var(--bd); border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 24px; color: var(--txd); background: var(--sf);
+    position: relative; min-height: 80px;
+  }
+  .add-btn:hover { border-color: var(--ac); color: var(--ac); }
+  .add-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+  /* Client page preview */
+  .client-preview {
+    background: #fff; color: #222; border-radius: 12px; padding: 24px;
+    max-width: 600px; margin: 20px auto 0; display: none;
+  }
+  .client-preview.on { display: block; animation: fadeIn .3s; }
+  .client-preview h2 { font-size: 22px; color: #111; margin-bottom: 8px; }
+  .client-preview .cp-meta { font-size: 12px; color: #888; margin-bottom: 16px; }
+  .client-preview .cp-desc { font-size: 14px; line-height: 1.7; color: #333; margin-bottom: 16px; }
+  .client-preview .cp-photos { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+  .client-preview .cp-photos img { width: 100%; border-radius: 8px; }
+  .client-preview .cp-contact { background: #f5f5f5; border-radius: 8px; padding: 14px; font-size: 13px; }
+  .client-preview .cp-footer { font-size: 10px; color: #aaa; text-align: center; margin-top: 16px; }
+  .client-preview .cp-footer a { color: #e8c547; }
+
+  .share-box {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 8px;
+    padding: 12px; margin-top: 14px; display: none;
+  }
+  .share-box.on { display: block; }
+  .share-box .share-url {
+    width: 100%; padding: 8px; border-radius: 6px; background: var(--bg);
+    border: 1px solid var(--bd); color: var(--ac); font-family: monospace; font-size: 12px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/" class="nav-link" data-en="← Back" data-he="← חזור">← Back</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <a href="/" class="page-back" data-en="← All Tools" data-he="← כל הכלים">← All Tools</a>
+  <h1 class="page-title" data-en="🔗 Client Page" data-he="🔗 עמוד לקוח">🔗 Client Page</h1>
+  <p class="page-sub" data-en="Create a beautiful shareable page for your client. 1 free, unlimited with Pro." data-he="צור עמוד יפה לשיתוף עם הלקוח. 1 חינם, ללא הגבלה עם Pro.">Create a beautiful shareable page for your client. 1 free, unlimited with Pro.</p>
+
+  <div class="card" style="margin-bottom:14px;">
+    <label class="input-label" data-en="Project Name" data-he="שם פרויקט">Project Name</label>
+    <input class="input" id="projName" placeholder="Kitchen Remodel - Smith Family" style="margin-bottom:12px;">
+
+    <label class="input-label" data-en="Description" data-he="תיאור">Description</label>
+    <textarea class="textarea" id="projDesc" placeholder="Complete kitchen renovation including new cabinets, countertops, backsplash, and lighting."></textarea>
+  </div>
+
+  <div class="card" style="margin-bottom:14px;">
+    <label class="input-label" data-en="Project Photos" data-he="תמונות פרויקט">Project Photos</label>
+    <div class="photos-grid" id="photosGrid">
+      <div class="add-btn">+<input type="file" accept="image/*" multiple id="photoInput"></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:14px;">
+    <label class="input-label" data-en="Your Info (shown on page)" data-he="הפרטים שלך (מוצגים בעמוד)">Your Info</label>
+    <input class="input" id="bizName" placeholder="Your Company Name" style="margin-bottom:8px;">
+    <input class="input" id="bizPhone" placeholder="(555) 123-4567" style="margin-bottom:8px;">
+    <input class="input" id="bizEmail" placeholder="info@yourcompany.com">
+  </div>
+
+  <button class="btn btn-primary btn-large" style="width:100%;" onclick="createPage()" data-en="Create Client Page" data-he="צור עמוד לקוח">Create Client Page</button>
+
+  <div class="client-preview" id="preview"></div>
+
+  <div class="share-box" id="shareBox">
+    <label class="input-label" data-en="Share this link with your client" data-he="שתף את הלינק הזה עם הלקוח">Share this link</label>
+    <input class="share-url" id="shareUrl" readonly>
+    <button class="btn" style="width:100%;margin-top:8px;" onclick="copyLink()" data-en="📋 Copy Link" data-he="📋 העתק לינק">📋 Copy Link</button>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="footer-brand">Powered by BQ Tools — BQ Production LLC</div>
+</footer>
+
+<script src="../js/auth.js"></script>
+<script src="../js/ai.js"></script>
+<script src="../js/common.js"></script>
+<script>
+let photos = [];
+
+document.getElementById('photoInput').addEventListener('change', handlePhotos);
+
+function handlePhotos(e) {
+  Array.from(e.target.files).forEach(f => {
+    if (photos.length >= 20) return;
+    const r = new FileReader();
+    r.onload = ev => { photos.push(ev.target.result); renderGrid(); };
+    r.readAsDataURL(f);
+  });
+  e.target.value = '';
+}
+
+function renderGrid() {
+  const grid = document.getElementById('photosGrid');
+  grid.innerHTML = '';
+  photos.forEach((src, i) => {
+    const img = document.createElement('img');
+    img.src = src; img.title = 'Click to remove';
+    img.onclick = () => { photos.splice(i, 1); renderGrid(); };
+    grid.appendChild(img);
+  });
+  if (photos.length < 20) {
+    grid.innerHTML += `<div class="add-btn">+<input type="file" accept="image/*" multiple id="photoInput"></div>`;
+    document.getElementById('photoInput').addEventListener('change', handlePhotos);
+  }
+}
+
+function createPage() {
+  // Check free limit
+  const pages = JSON.parse(localStorage.getItem('bq_client_pages') || '[]');
+  if (pages.length >= 1 && !isPro()) {
+    requirePro();
+    return;
+  }
+
+  const name = document.getElementById('projName').value.trim();
+  const desc = document.getElementById('projDesc').value.trim();
+  if (!name) { showToast(lang === 'he' ? 'הכנס שם פרויקט' : 'Enter project name', 'err'); return; }
+  if (photos.length === 0) { showToast(lang === 'he' ? 'העלה תמונות' : 'Upload photos', 'err'); return; }
+
+  const biz = document.getElementById('bizName').value.trim();
+  const phone = document.getElementById('bizPhone').value.trim();
+  const email = document.getElementById('bizEmail').value.trim();
+
+  const id = Date.now().toString(36);
+  const page = { id, name, desc, photos: photos.slice(0, 10), biz, phone, email, date: new Date().toISOString().split('T')[0] };
+
+  pages.unshift(page);
+  localStorage.setItem('bq_client_pages', JSON.stringify(pages));
+
+  // Show preview
+  const preview = document.getElementById('preview');
+  preview.classList.add('on');
+  preview.innerHTML = `
+    <h2>${page.name}</h2>
+    <div class="cp-meta">${page.date}${biz ? ' — ' + biz : ''}</div>
+    <div class="cp-desc">${page.desc}</div>
+    <div class="cp-photos">${page.photos.map(s => `<img src="${s}">`).join('')}</div>
+    ${biz || phone || email ? `<div class="cp-contact"><strong>${biz}</strong>${phone ? '<br>' + phone : ''}${email ? '<br>' + email : ''}</div>` : ''}
+    <div class="cp-footer">Powered by <a href="https://bqprod.pages.dev">BQ Tools</a> — Get yours free</div>`;
+
+  const shareBox = document.getElementById('shareBox');
+  shareBox.classList.add('on');
+  document.getElementById('shareUrl').value = window.location.origin + '/tools/client-page.html#view=' + id;
+
+  showToast(lang === 'he' ? 'עמוד נוצר!' : 'Page created!', 'ok');
+}
+
+function copyLink() {
+  const url = document.getElementById('shareUrl');
+  url.select();
+  navigator.clipboard.writeText(url.value);
+  showToast(lang === 'he' ? 'הלינק הועתק!' : 'Link copied!', 'ok');
+}
+
+// Check if viewing a shared page
+if (window.location.hash.startsWith('#view=')) {
+  const id = window.location.hash.split('=')[1];
+  const pages = JSON.parse(localStorage.getItem('bq_client_pages') || '[]');
+  const page = pages.find(p => p.id === id);
+  if (page) {
+    document.addEventListener('DOMContentLoaded', () => {
+      const preview = document.getElementById('preview');
+      preview.classList.add('on');
+      preview.innerHTML = `
+        <h2>${page.name}</h2>
+        <div class="cp-meta">${page.date}${page.biz ? ' — ' + page.biz : ''}</div>
+        <div class="cp-desc">${page.desc}</div>
+        <div class="cp-photos">${page.photos.map(s => `<img src="${s}">`).join('')}</div>
+        ${page.biz || page.phone || page.email ? `<div class="cp-contact"><strong>${page.biz}</strong>${page.phone ? '<br>' + page.phone : ''}${page.email ? '<br>' + page.email : ''}</div>` : ''}
+        <div class="cp-footer">Powered by <a href="https://bqprod.pages.dev">BQ Tools</a> — Get yours free</div>`;
+    });
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Review Request Generator</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  body { display: flex; flex-direction: column; }
+  .channel-btns { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .ch-btn {
+    padding: 10px 18px; border: 1px solid var(--bd); border-radius: 8px;
+    background: var(--sf); color: var(--txd); font-family: 'Heebo', sans-serif;
+    font-size: 14px; cursor: pointer; transition: all .2s; min-height: 48px;
+  }
+  .ch-btn.on { border-color: var(--ac); color: var(--ac); background: var(--acd); }
+  .ch-btn:hover { border-color: var(--ac); }
+
+  .msg-result {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 12px;
+    padding: 20px; margin-top: 16px; display: none;
+  }
+  .msg-result.on { display: block; animation: fadeIn .3s; }
+  .msg-text {
+    background: var(--bg); border-radius: 8px; padding: 16px;
+    font-size: 15px; line-height: 1.8; white-space: pre-wrap;
+    user-select: text; -webkit-user-select: text; margin-bottom: 14px;
+  }
+  .msg-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/" class="nav-link" data-en="← Back" data-he="← חזור">← Back</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <a href="/" class="page-back" data-en="← All Tools" data-he="← כל הכלים">← All Tools</a>
+  <h1 class="page-title" data-en="⭐ Review Request" data-he="⭐ בקשת ביקורת">⭐ Review Request</h1>
+  <p class="page-sub" data-en="Generate a personalized message to get Google reviews from happy clients." data-he="צור הודעה מותאמת אישית לקבלת ביקורות Google מלקוחות מרוצים.">Generate a personalized message to get Google reviews from happy clients.</p>
+
+  <div class="card" style="margin-bottom:14px;">
+    <label class="input-label" data-en="Client's First Name" data-he="שם פרטי של הלקוח">Client's First Name</label>
+    <input class="input" id="clientName" placeholder="Sarah" style="margin-bottom:12px;">
+
+    <label class="input-label" data-en="Type of Work" data-he="סוג העבודה">Type of Work</label>
+    <input class="input" id="workType" placeholder="kitchen remodel" style="margin-bottom:12px;">
+
+    <label class="input-label" data-en="Your Business Name" data-he="שם העסק שלך">Your Business Name</label>
+    <input class="input" id="bizName" placeholder="ABC Renovations" style="margin-bottom:12px;">
+
+    <label class="input-label" data-en="Google Review Link (optional)" data-he="לינק ביקורת Google (אופציונלי)">Google Review Link</label>
+    <input class="input" id="reviewLink" placeholder="https://g.page/r/..." style="margin-bottom:14px;">
+
+    <label class="input-label" data-en="Channel" data-he="ערוץ">Channel</label>
+    <div class="channel-btns">
+      <button class="ch-btn on" onclick="setChannel(this, 'sms')">SMS</button>
+      <button class="ch-btn" onclick="setChannel(this, 'whatsapp')">WhatsApp</button>
+      <button class="ch-btn" onclick="setChannel(this, 'email')">Email</button>
+    </div>
+  </div>
+
+  <button class="btn btn-primary btn-large" style="width:100%;" onclick="generateReview()" id="genBtn" data-en="🧠 Generate Message" data-he="🧠 צור הודעה">🧠 Generate Message</button>
+
+  <div class="msg-result" id="msgResult">
+    <div class="msg-text" id="msgText" contenteditable="true"></div>
+    <div class="msg-actions">
+      <button class="btn btn-primary" onclick="copyMsg()" style="flex:1;" data-en="📋 Copy" data-he="📋 העתק">📋 Copy</button>
+      <button class="btn" onclick="openWhatsApp()" id="waBtn" style="flex:1;display:none;" data-en="Open WhatsApp" data-he="פתח WhatsApp">Open WhatsApp</button>
+    </div>
+  </div>
+</div>
+
+<footer class="footer"><div class="footer-brand">Powered by BQ Tools — BQ Production LLC</div></footer>
+
+<script src="../js/auth.js"></script>
+<script src="../js/ai.js"></script>
+<script src="../js/common.js"></script>
+<script>
+let channel = 'sms';
+
+function setChannel(el, ch) {
+  channel = ch;
+  document.querySelectorAll('.ch-btn').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+}
+
+async function generateReview() {
+  if (!requirePro()) return;
+  const s = getAISettings();
+  if (!s.claudeKey) { openAISettings(); return; }
+
+  const name = document.getElementById('clientName').value.trim();
+  const work = document.getElementById('workType').value.trim();
+  const biz = document.getElementById('bizName').value.trim();
+  const link = document.getElementById('reviewLink').value.trim();
+
+  if (!name || !work) { showToast(lang === 'he' ? 'מלא שם לקוח וסוג עבודה' : 'Fill in client name and work type', 'err'); return; }
+
+  const btn = document.getElementById('genBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳...';
+
+  try {
+    const prompt = `Write a ${channel === 'email' ? 'short email' : 'short text message'} asking a client for a Google review.
+
+Client name: ${name}
+Work done: ${work}
+Business: ${biz || 'the contractor'}
+${link ? 'Review link: ' + link : ''}
+Channel: ${channel}
+
+Requirements:
+- Warm, personal, not pushy
+- Thank them for their trust
+- Mention the specific work
+- ${channel !== 'email' ? 'Keep it under 300 characters for SMS/WhatsApp' : 'Keep it brief - 3-4 sentences max'}
+- End with the review link if provided, or a generic "Leave us a quick review" CTA
+- Sign off with business name
+
+Respond JSON only:
+{"message": "the full message text"}`;
+
+    const text = await callClaude(s.claudeKey, s.claudeModel, [{ role: 'user', content: prompt }], 500);
+    const result = parseAIJSON(text);
+
+    document.getElementById('msgText').textContent = result.message;
+    document.getElementById('msgResult').classList.add('on');
+    document.getElementById('waBtn').style.display = channel === 'whatsapp' ? 'flex' : 'none';
+    showToast(lang === 'he' ? 'הודעה מוכנה!' : 'Message ready!', 'ok');
+
+  } catch(err) {
+    showToast('Error: ' + err.message, 'err');
+  }
+
+  btn.disabled = false;
+  btn.textContent = lang === 'he' ? '🧠 צור הודעה' : '🧠 Generate Message';
+}
+
+function copyMsg() {
+  navigator.clipboard.writeText(document.getElementById('msgText').textContent);
+  showToast(lang === 'he' ? 'הועתק!' : 'Copied!', 'ok');
+}
+
+function openWhatsApp() {
+  const msg = encodeURIComponent(document.getElementById('msgText').textContent);
+  window.open('https://wa.me/?text=' + msg, '_blank');
+}
+</script>
+</body>
+</html>

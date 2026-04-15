@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Activate Pro</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  body { display: flex; flex-direction: column; align-items: center; }
+
+  .auth-wrap {
+    width: 92%;
+    max-width: 420px;
+    margin: 40px auto;
+  }
+  .auth-card {
+    background: var(--sf);
+    border: 1px solid var(--bd);
+    border-radius: 16px;
+    padding: 32px 24px;
+    text-align: center;
+  }
+
+  /* Status */
+  .status {
+    background: var(--bg);
+    border: 1px solid var(--bd);
+    border-radius: var(--r);
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+  .status.active { border-color: var(--ac); }
+  .status-label {
+    font-size: 11px; color: var(--txd); letter-spacing: 1px; font-weight: 700; margin-bottom: 4px;
+  }
+  .status-value { font-size: 24px; font-weight: 900; }
+  .status-value.is-pro { color: var(--ac); }
+  .status-value.is-free { color: var(--txd); }
+  .status-date { font-size: 11px; color: var(--txd); margin-top: 4px; }
+
+  .auth-card h2 { font-size: 22px; font-weight: 900; margin-bottom: 6px; }
+  .auth-card .sub { font-size: 14px; color: var(--txd); margin-bottom: 20px; line-height: 1.5; }
+
+  .code-input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid var(--bd);
+    border-radius: var(--r);
+    background: var(--bg);
+    color: var(--tx);
+    font-family: monospace;
+    font-size: 18px;
+    text-align: center;
+    letter-spacing: 3px;
+    margin-bottom: 14px;
+    user-select: text;
+    -webkit-user-select: text;
+  }
+  .code-input:focus { outline: none; border-color: var(--ac); }
+  .code-input::placeholder { letter-spacing: 0; font-size: 14px; }
+
+  .auth-msg {
+    font-size: 14px; padding: 12px; border-radius: 8px; margin-bottom: 14px; display: none;
+  }
+  .auth-msg.ok { display: block; background: rgba(81,207,102,.1); color: var(--grn); border: 1px solid rgba(81,207,102,.2); }
+  .auth-msg.err { display: block; background: rgba(255,107,107,.1); color: var(--red); border: 1px solid rgba(255,107,107,.2); }
+
+  .divider {
+    display: flex; align-items: center; gap: 12px; margin: 24px 0; color: var(--txd); font-size: 13px;
+  }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--bd); }
+
+  .buy-section p { font-size: 13px; color: var(--txd); margin-bottom: 14px; line-height: 1.6; }
+
+  .deactivate-section {
+    margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--bd);
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/" class="nav-link" data-en="← Home" data-he="← בית">← Home</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="auth-wrap">
+  <div class="auth-card">
+    <!-- Status -->
+    <div class="status" id="statusBox">
+      <div class="status-label" data-en="YOUR STATUS" data-he="הסטטוס שלך">YOUR STATUS</div>
+      <div class="status-value" id="statusVal">Free</div>
+      <div class="status-date" id="statusDate"></div>
+    </div>
+
+    <h2 data-en="Enter Pro Code" data-he="הכנס קוד Pro">Enter Pro Code</h2>
+    <p class="sub" data-en="Enter the code you received after payment." data-he="הכנס את הקוד שקיבלת אחרי התשלום.">Enter the code you received after payment.</p>
+
+    <div class="auth-msg" id="authMsg"></div>
+
+    <input type="text" class="code-input" id="codeInput" placeholder="BQPRO-XXXX-XXXX" spellcheck="false" autocomplete="off">
+
+    <button class="btn btn-primary" style="width:100%;font-size:16px;" onclick="doActivate()" data-en="Activate Pro" data-he="הפעל Pro">Activate Pro</button>
+
+    <div class="divider" data-en="Don't have a code?" data-he="אין לך קוד?">Don't have a code?</div>
+
+    <div class="buy-section">
+      <p data-en="Get Pro for $14.99/month. You'll receive your code by email after payment." data-he="קבל Pro ב-$14.99/חודש. תקבל את הקוד שלך במייל אחרי התשלום.">Get Pro for $14.99/month. You'll receive your code by email after payment.</p>
+      <a href="https://www.paypal.com/ncp/payment/2LA7B7PZTHN54" target="_blank" rel="noopener" class="btn" style="width:100%;font-size:15px;" data-en="Pay with PayPal — $14.99/mo" data-he="שלם ב-PayPal — $14.99/חודש">Pay with PayPal — $14.99/mo</a>
+    </div>
+
+    <div class="deactivate-section" id="deactivateSection" style="display:none;">
+      <button class="btn btn-danger" style="width:100%;" onclick="doDeactivate()" data-en="Deactivate Pro" data-he="בטל Pro">Deactivate Pro</button>
+    </div>
+  </div>
+</div>
+
+<footer class="footer" style="width:100%;">
+  <div class="footer-brand">Powered by BQ Tools — BQ Production LLC</div>
+  <div class="footer-links">
+    <a href="https://bqprod.pages.dev" target="_blank">bqprod.pages.dev</a>
+    <a href="https://instagram.com/bq_music" target="_blank">@bq_music</a>
+  </div>
+</footer>
+
+<script src="js/auth.js"></script>
+<script src="js/common.js"></script>
+<script>
+function updateUI() {
+  const box = document.getElementById('statusBox');
+  const val = document.getElementById('statusVal');
+  const date = document.getElementById('statusDate');
+  const deact = document.getElementById('deactivateSection');
+
+  if (isPro()) {
+    box.classList.add('active');
+    val.className = 'status-value is-pro';
+    val.textContent = 'PRO ✓';
+    deact.style.display = 'block';
+    try {
+      const data = JSON.parse(localStorage.getItem('bq_pro'));
+      if (data?.activatedAt) {
+        date.textContent = (lang === 'he' ? 'הופעל ב-' : 'Activated: ') + data.activatedAt;
+      }
+    } catch {}
+  } else {
+    box.classList.remove('active');
+    val.className = 'status-value is-free';
+    val.textContent = 'Free';
+    date.textContent = '';
+    deact.style.display = 'none';
+  }
+}
+
+function doActivate() {
+  const input = document.getElementById('codeInput');
+  const msg = document.getElementById('authMsg');
+  const result = activatePro(input.value);
+
+  if (result.ok) {
+    msg.className = 'auth-msg ok';
+    msg.textContent = lang === 'he' ? '✓ Pro הופעל! עכשיו לך ל-Compare Tool.' : '✓ Pro activated! Head to the Compare Tool.';
+    updateUI();
+  } else if (result.msg === 'enter_code') {
+    msg.className = 'auth-msg err';
+    msg.textContent = lang === 'he' ? 'הכנס קוד' : 'Please enter a code';
+  } else {
+    msg.className = 'auth-msg err';
+    msg.textContent = lang === 'he' ? '✗ קוד לא תקין' : '✗ Invalid code';
+  }
+}
+
+function doDeactivate() {
+  deactivatePro();
+  document.getElementById('authMsg').className = 'auth-msg';
+  document.getElementById('codeInput').value = '';
+  updateUI();
+  showToast(lang === 'he' ? 'Pro בוטל' : 'Pro deactivated', 'info');
+}
+
+document.getElementById('codeInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doActivate();
+});
+
+updateUI();
+</script>
+</body>
+</html>

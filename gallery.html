@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Project Gallery</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  body { display: flex; flex-direction: column; }
+
+  .gallery-stats {
+    display: flex; gap: 12px; margin-bottom: 20px;
+  }
+  .stat-card {
+    flex: 1; background: var(--sf); border: 1px solid var(--bd); border-radius: 10px;
+    padding: 14px; text-align: center;
+  }
+  .stat-num { font-size: 28px; font-weight: 900; color: var(--ac); }
+  .stat-label { font-size: 11px; color: var(--txd); margin-top: 2px; }
+
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+  }
+  .gallery-card {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 12px;
+    overflow: hidden; cursor: pointer; transition: all .2s;
+  }
+  .gallery-card:hover { border-color: var(--ac); transform: translateY(-2px); }
+  .gallery-thumb {
+    width: 100%; aspect-ratio: 4/3; object-fit: cover;
+  }
+  .gallery-info { padding: 10px; }
+  .gallery-date { font-size: 11px; color: var(--txd); }
+  .gallery-type { font-size: 10px; color: var(--ac); margin-top: 2px; }
+
+  .empty-state {
+    text-align: center; padding: 60px 20px;
+  }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; opacity: .3; }
+  .empty-state h3 { color: var(--txd); font-size: 18px; margin-bottom: 8px; }
+  .empty-state p { color: var(--txd); font-size: 13px; }
+
+  /* Detail modal */
+  .detail-imgs { display: flex; gap: 8px; margin-bottom: 12px; }
+  .detail-imgs img { flex: 1; max-width: 50%; border-radius: 8px; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/" class="nav-link" data-en="← Home" data-he="← בית">← Home</a>
+    <a href="/auth.html" class="btn btn-sm" id="navProBtn" data-en="Pro" data-he="Pro">Pro</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <h1 class="page-title" data-en="📁 Project Gallery" data-he="📁 גלריית פרויקטים">📁 Project Gallery</h1>
+  <p class="page-sub" data-en="All your saved comparisons in one place." data-he="כל ההשוואות השמורות שלך במקום אחד.">All your saved comparisons in one place.</p>
+
+  <div class="gallery-stats" id="statsRow">
+    <div class="stat-card">
+      <div class="stat-num" id="projCount">0</div>
+      <div class="stat-label" data-en="Projects" data-he="פרויקטים">Projects</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="statusBadge">Free</div>
+      <div class="stat-label" data-en="Plan" data-he="תוכנית">Plan</div>
+    </div>
+  </div>
+
+  <div id="galleryContent"></div>
+</div>
+
+<footer class="footer"><div class="footer-brand">Powered by BQ Tools — BQ Production LLC</div></footer>
+
+<script src="js/auth.js"></script>
+<script src="js/common.js"></script>
+<script>
+function renderGallery() {
+  const gallery = JSON.parse(localStorage.getItem('bq_gallery') || '[]');
+  const container = document.getElementById('galleryContent');
+  const countEl = document.getElementById('projCount');
+  const statusEl = document.getElementById('statusBadge');
+
+  countEl.textContent = gallery.length;
+  statusEl.textContent = isPro() ? 'PRO' : 'Free';
+  statusEl.style.color = isPro() ? 'var(--ac)' : 'var(--txd)';
+
+  if (isPro()) {
+    const btn = document.getElementById('navProBtn');
+    if (btn) { btn.textContent = 'PRO ✓'; btn.classList.add('btn-pro-active'); }
+  }
+
+  if (gallery.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="icon">📁</div>
+        <h3 data-en="No projects yet" data-he="אין פרויקטים עדיין">No projects yet</h3>
+        <p data-en="Use the Compare tool and click 'Save to Gallery' to start building your portfolio." data-he="השתמש בכלי ההשוואה ולחץ 'שמור לגלריה' כדי להתחיל לבנות את הפורטפוליו שלך.">Use the Compare tool and click 'Save to Gallery' to start building your portfolio.</p>
+        <a href="/tools/compare.html" class="btn btn-primary" style="margin-top:16px;" data-en="Open Compare Tool" data-he="פתח כלי השוואה">Open Compare Tool</a>
+      </div>`;
+    setLang(lang);
+    return;
+  }
+
+  let html = '<div class="gallery-grid">';
+  gallery.forEach((p, i) => {
+    // Use a tiny version for the thumbnail
+    const thumb = p.afterFull ? p.afterFull.substring(0, 100) : '';
+    html += `
+      <div class="gallery-card" onclick="openProject(${i})">
+        ${p.afterFull ? `<img class="gallery-thumb" src="${p.afterFull}" loading="lazy">` : '<div class="gallery-thumb" style="background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:24px;">📁</div>'}
+        <div class="gallery-info">
+          <div class="gallery-date">${p.date || 'Unknown'}</div>
+          <div class="gallery-type">${p.type || 'image'}</div>
+        </div>
+      </div>`;
+  });
+  html += '</div>';
+  container.innerHTML = html;
+  setLang(lang);
+}
+
+function openProject(idx) {
+  const gallery = JSON.parse(localStorage.getItem('bq_gallery') || '[]');
+  const p = gallery[idx];
+  if (!p) return;
+
+  const m = document.createElement('div');
+  m.className = 'modal-overlay';
+  m.innerHTML = `
+    <div class="modal-card" style="max-width:600px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <h3 style="color:var(--ac);">${p.date || 'Project'}</h3>
+        <button onclick="this.closest('.modal-overlay').remove()" style="background:none;border:none;color:var(--txd);font-size:20px;cursor:pointer;">✕</button>
+      </div>
+      <div class="detail-imgs">
+        ${p.beforeFull ? `<img src="${p.beforeFull}" style="border:1px solid var(--red);">` : ''}
+        ${p.afterFull ? `<img src="${p.afterFull}" style="border:1px solid var(--grn);">` : ''}
+      </div>
+      <div style="display:flex;gap:8px;">
+        <a href="/tools/compare.html" class="btn" style="flex:1;" data-en="Open in Compare" data-he="פתח בהשוואה">Open in Compare</a>
+        <button class="btn btn-danger" style="flex:1;" onclick="deleteProject(${idx});this.closest('.modal-overlay').remove();" data-en="Delete" data-he="מחק">Delete</button>
+      </div>
+    </div>`;
+  document.body.appendChild(m);
+  requestAnimationFrame(() => m.classList.add('open'));
+  setLang(lang);
+}
+
+function deleteProject(idx) {
+  const gallery = JSON.parse(localStorage.getItem('bq_gallery') || '[]');
+  gallery.splice(idx, 1);
+  localStorage.setItem('bq_gallery', JSON.stringify(gallery));
+  renderGallery();
+  showToast(lang === 'he' ? 'נמחק' : 'Deleted', 'info');
+}
+
+renderGallery();
+</script>
+</body>
+</html>

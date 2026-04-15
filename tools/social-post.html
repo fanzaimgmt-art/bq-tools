@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Social Post Generator</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  body { display: flex; flex-direction: column; }
+  .platform-btns { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .plat-btn {
+    padding: 10px 20px; border: 1px solid var(--bd); border-radius: 8px;
+    background: var(--sf); color: var(--txd); font-family: 'Heebo', sans-serif;
+    font-size: 14px; cursor: pointer; transition: all .2s; min-height: 48px;
+  }
+  .plat-btn.on { border-color: var(--ac); color: var(--ac); background: var(--acd); }
+  .plat-btn:hover { border-color: var(--ac); }
+
+  .result-card {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 12px;
+    padding: 20px; margin-top: 16px; display: none;
+  }
+  .result-card.on { display: block; animation: fadeIn .3s; }
+  .result-card h3 { font-size: 14px; color: var(--ac); margin-bottom: 12px; }
+  .caption-box {
+    background: var(--bg); border-radius: 8px; padding: 14px;
+    font-size: 14px; line-height: 1.7; white-space: pre-wrap; margin-bottom: 12px;
+    user-select: text; -webkit-user-select: text;
+  }
+  .hashtags {
+    font-size: 13px; color: var(--blu); margin-bottom: 12px;
+    user-select: text; -webkit-user-select: text;
+  }
+  .upload-area {
+    border: 2px dashed var(--bd); border-radius: 10px; padding: 24px;
+    text-align: center; cursor: pointer; transition: all .2s;
+    position: relative; background: var(--sf); margin-bottom: 12px;
+  }
+  .upload-area:hover { border-color: var(--ac); }
+  .upload-area input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .upload-area img { max-height: 200px; border-radius: 8px; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/" class="nav-link" data-en="← Back" data-he="← חזור">← Back</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <a href="/" class="page-back" data-en="← All Tools" data-he="← כל הכלים">← All Tools</a>
+  <h1 class="page-title" data-en="📱 Social Post Generator" data-he="📱 מחולל פוסטים">📱 Social Post Generator</h1>
+  <p class="page-sub" data-en="Upload a before/after, pick your platform, get a ready-to-post caption." data-he="העלה לפני/אחרי, בחר פלטפורמה, קבל קפשן מוכן לפרסום.">Upload a before/after, pick your platform, get a ready-to-post caption.</p>
+
+  <div class="card" style="margin-bottom:14px;">
+    <label class="input-label" data-en="Upload Before/After Photo" data-he="העלה תמונת לפני/אחרי">Upload Photo</label>
+    <div class="upload-area" id="uploadArea">
+      <span id="uploadText" data-en="Click or drag to upload" data-he="לחץ או גרור להעלאה">Click or drag to upload</span>
+      <input type="file" accept="image/*" id="photoInput">
+    </div>
+
+    <label class="input-label" data-en="What work was done?" data-he="מה בוצע?">What work was done?</label>
+    <input class="input" id="workDesc" placeholder="Bathroom renovation - new tile, vanity, and fixtures" style="margin-bottom:14px;">
+
+    <label class="input-label" data-en="Platform" data-he="פלטפורמה">Platform</label>
+    <div class="platform-btns">
+      <button class="plat-btn on" onclick="setPlatform(this, 'instagram')">Instagram</button>
+      <button class="plat-btn" onclick="setPlatform(this, 'facebook')">Facebook</button>
+      <button class="plat-btn" onclick="setPlatform(this, 'linkedin')">LinkedIn</button>
+    </div>
+  </div>
+
+  <button class="btn btn-primary btn-large" style="width:100%;" onclick="generatePost()" id="genBtn" data-en="🧠 Generate Caption" data-he="🧠 צור קפשן">🧠 Generate Caption</button>
+
+  <div class="result-card" id="resultCard">
+    <h3 data-en="Your Caption" data-he="הקפשן שלך">Your Caption</h3>
+    <div class="caption-box" id="captionBox"></div>
+    <div class="hashtags" id="hashtagBox"></div>
+    <button class="btn btn-primary" style="width:100%;" onclick="copyCaption()" data-en="📋 Copy to Clipboard" data-he="📋 העתק ללוח">📋 Copy to Clipboard</button>
+  </div>
+</div>
+
+<footer class="footer"><div class="footer-brand">Powered by BQ Tools — BQ Production LLC</div></footer>
+
+<script src="../js/auth.js"></script>
+<script src="../js/ai.js"></script>
+<script src="../js/common.js"></script>
+<script>
+let platform = 'instagram';
+let photoSrc = null;
+
+function setPlatform(el, p) {
+  platform = p;
+  document.querySelectorAll('.plat-btn').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+}
+
+document.getElementById('photoInput').addEventListener('change', e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    photoSrc = ev.target.result;
+    document.getElementById('uploadArea').innerHTML = `<img src="${photoSrc}"><input type="file" accept="image/*" id="photoInput">`;
+    document.getElementById('photoInput').addEventListener('change', arguments.callee);
+  };
+  r.readAsDataURL(f);
+});
+
+async function generatePost() {
+  if (!requirePro()) return;
+  const s = getAISettings();
+  if (!s.claudeKey) { openAISettings(); return; }
+
+  const desc = document.getElementById('workDesc').value.trim();
+  if (!desc) { showToast(lang === 'he' ? 'תאר את העבודה' : 'Describe the work', 'err'); return; }
+
+  const btn = document.getElementById('genBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳...';
+
+  try {
+    const imageParts = [];
+    if (photoSrc) {
+      const b64 = await resizeForAPI(photoSrc);
+      imageParts.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 } });
+    }
+
+    const prompt = `You are a social media expert for construction contractors. Write a ${platform} post for this project:
+
+Work: ${desc}
+Platform: ${platform}
+
+Requirements:
+- Start with a strong hook (first line must grab attention)
+- Professional but relatable tone
+- Include a clear CTA (call to action)
+- ${platform === 'instagram' ? '15-20 relevant hashtags' : platform === 'linkedin' ? '5-8 professional hashtags' : '5-10 hashtags'}
+
+Respond JSON only:
+{"caption": "the full caption text", "hashtags": "#tag1 #tag2 ..."}`;
+
+    const content = [...imageParts, { type: 'text', text: prompt }];
+    const text = await callClaude(s.claudeKey, s.claudeModel, [{ role: 'user', content }], 1000);
+    const result = parseAIJSON(text);
+
+    document.getElementById('captionBox').textContent = result.caption;
+    document.getElementById('hashtagBox').textContent = result.hashtags;
+    document.getElementById('resultCard').classList.add('on');
+    showToast(lang === 'he' ? 'קפשן מוכן!' : 'Caption ready!', 'ok');
+
+  } catch(err) {
+    showToast('Error: ' + err.message, 'err');
+  }
+
+  btn.disabled = false;
+  btn.textContent = lang === 'he' ? '🧠 צור קפשן' : '🧠 Generate Caption';
+}
+
+function copyCaption() {
+  const text = document.getElementById('captionBox').textContent + '\n\n' + document.getElementById('hashtagBox').textContent;
+  navigator.clipboard.writeText(text);
+  showToast(lang === 'he' ? 'הועתק!' : 'Copied!', 'ok');
+}
+</script>
+</body>
+</html>

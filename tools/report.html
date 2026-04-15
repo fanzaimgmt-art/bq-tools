@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Quick Report</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  body { display: flex; flex-direction: column; }
+
+  .upload-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .upload-thumb {
+    aspect-ratio: 1;
+    border-radius: 8px;
+    object-fit: cover;
+    width: 100%;
+    border: 1px solid var(--bd);
+  }
+  .upload-add {
+    aspect-ratio: 1;
+    border: 2px dashed var(--bd);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all .2s;
+    position: relative;
+    font-size: 28px;
+    color: var(--txd);
+    background: var(--sf);
+    min-height: 100px;
+  }
+  .upload-add:hover { border-color: var(--ac); color: var(--ac); }
+  .upload-add input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .photo-count { font-size: 12px; color: var(--txd); margin-bottom: 8px; }
+
+  /* Report preview */
+  .report-preview {
+    background: #fff;
+    color: #222;
+    border-radius: 12px;
+    padding: 32px;
+    max-width: 700px;
+    margin: 20px auto 0;
+    font-family: 'Heebo', Georgia, serif;
+    display: none;
+  }
+  .report-preview.on { display: block; animation: fadeIn .3s ease; }
+  .report-preview h2 { font-size: 22px; color: #111; margin-bottom: 4px; }
+  .report-preview .report-date { font-size: 12px; color: #888; margin-bottom: 16px; }
+  .report-preview .report-section { margin-bottom: 16px; }
+  .report-preview .report-section h3 { font-size: 14px; color: #555; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid #ddd; }
+  .report-preview .report-section p, .report-preview .report-section li { font-size: 14px; line-height: 1.7; color: #333; }
+  .report-preview ul { padding-left: 20px; }
+  .report-preview .report-score { font-size: 32px; font-weight: 900; color: var(--ac); }
+  .report-preview .report-footer { font-size: 10px; color: #aaa; text-align: center; margin-top: 20px; padding-top: 10px; border-top: 1px solid #eee; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/" class="nav-link" data-en="← Back" data-he="← חזור">← Back</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <a href="/" class="page-back" data-en="← All Tools" data-he="← כל הכלים">← All Tools</a>
+  <h1 class="page-title" data-en="📄 Quick Report" data-he="📄 דוח מהיר">📄 Quick Report</h1>
+  <p class="page-sub" data-en="Upload project photos, describe the work, get a professional report." data-he="העלה תמונות פרויקט, תאר את העבודה, קבל דוח מקצועי.">Upload project photos, describe the work, get a professional report.</p>
+
+  <!-- Photos -->
+  <div class="card" style="margin-bottom:16px;">
+    <label class="input-label" data-en="Project Photos (1-10)" data-he="תמונות פרויקט (1-10)">Project Photos (1-10)</label>
+    <div class="photo-count" id="photoCount" data-en="0 photos" data-he="0 תמונות">0 photos</div>
+    <div class="upload-grid" id="photoGrid">
+      <div class="upload-add" id="addPhoto">
+        +
+        <input type="file" accept="image/*" multiple id="photoInput">
+      </div>
+    </div>
+  </div>
+
+  <!-- Info -->
+  <div class="card" style="margin-bottom:16px;">
+    <label class="input-label" data-en="Client Name (optional)" data-he="שם לקוח (אופציונלי)">Client Name (optional)</label>
+    <input class="input" type="text" id="clientName" placeholder="John & Sarah Smith" style="margin-bottom:12px;">
+
+    <label class="input-label" data-en="Describe the work" data-he="תאר את העבודה">Describe the work</label>
+    <textarea class="textarea" id="workDesc" placeholder="Kitchen remodel - removed wall, new island, quartz countertops, new lighting"></textarea>
+  </div>
+
+  <!-- Generate -->
+  <button class="btn btn-primary btn-large" style="width:100%;font-size:16px;" onclick="generateReport()" id="genBtn" data-en="🧠 Generate Report" data-he="🧠 צור דוח">🧠 Generate Report</button>
+
+  <!-- Report Preview -->
+  <div class="report-preview" id="reportPreview"></div>
+
+  <!-- Export -->
+  <div id="exportRow" style="display:none;margin-top:16px;text-align:center;">
+    <button class="btn btn-primary btn-large" onclick="exportReportPDF()" data-en="📥 Download PDF" data-he="📥 הורד PDF">📥 Download PDF</button>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="footer-brand">Powered by BQ Tools — BQ Production LLC</div>
+</footer>
+
+<script src="../js/auth.js"></script>
+<script src="../js/ai.js"></script>
+<script src="../js/common.js"></script>
+<script>
+let photos = [];
+
+document.getElementById('photoInput').addEventListener('change', e => {
+  const files = Array.from(e.target.files);
+  if (photos.length + files.length > 10) {
+    showToast(lang === 'he' ? 'מקסימום 10 תמונות' : 'Maximum 10 photos', 'err');
+    return;
+  }
+  files.forEach(f => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      photos.push(ev.target.result);
+      renderPhotos();
+    };
+    reader.readAsDataURL(f);
+  });
+  e.target.value = '';
+});
+
+function renderPhotos() {
+  const grid = document.getElementById('photoGrid');
+  const count = document.getElementById('photoCount');
+  grid.innerHTML = '';
+  photos.forEach((src, i) => {
+    const img = document.createElement('img');
+    img.src = src;
+    img.className = 'upload-thumb';
+    img.title = 'Click to remove';
+    img.style.cursor = 'pointer';
+    img.onclick = () => { photos.splice(i, 1); renderPhotos(); };
+    grid.appendChild(img);
+  });
+  if (photos.length < 10) {
+    grid.innerHTML += `<div class="upload-add" id="addPhoto">+<input type="file" accept="image/*" multiple id="photoInput"></div>`;
+    document.getElementById('photoInput').addEventListener('change', e => {
+      const files = Array.from(e.target.files);
+      if (photos.length + files.length > 10) { showToast('Max 10', 'err'); return; }
+      files.forEach(f => { const r = new FileReader(); r.onload = ev => { photos.push(ev.target.result); renderPhotos(); }; r.readAsDataURL(f); });
+      e.target.value = '';
+    });
+  }
+  count.textContent = photos.length + (lang === 'he' ? ' תמונות' : ' photos');
+}
+
+async function generateReport() {
+  if (!requirePro()) return;
+  if (photos.length === 0) { showToast(lang === 'he' ? 'העלה לפחות תמונה אחת' : 'Upload at least 1 photo', 'err'); return; }
+
+  const s = getAISettings();
+  if (!s.claudeKey) { openAISettings(); return; }
+
+  const desc = document.getElementById('workDesc').value.trim();
+  if (!desc) { showToast(lang === 'he' ? 'תאר את העבודה' : 'Describe the work', 'err'); return; }
+
+  const btn = document.getElementById('genBtn');
+  btn.disabled = true;
+  btn.textContent = lang === 'he' ? '⏳ מייצר דוח...' : '⏳ Generating report...';
+
+  try {
+    // Resize first 4 images max for API
+    const imageParts = [];
+    const toSend = photos.slice(0, 4);
+    for (const src of toSend) {
+      const b64 = await resizeForAPI(src);
+      imageParts.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 } });
+    }
+
+    const client = document.getElementById('clientName').value.trim();
+    const prompt = `You are a professional construction report writer. Based on these project photos and the description below, generate a professional project report.
+
+Description: ${desc}
+${client ? 'Client: ' + client : ''}
+Photos provided: ${toSend.length}
+
+Respond JSON only:
+{
+  "project_title": "...",
+  "overview": "2-3 sentence project overview",
+  "work_completed": ["item 1", "item 2", ...],
+  "materials_noted": ["material 1", ...],
+  "quality_score": 1-10,
+  "quality_notes": "1-2 sentences about quality",
+  "recommendations": "optional recommendation or null"
+}`;
+
+    const content = [...imageParts, { type: 'text', text: prompt }];
+    const text = await callClaude(s.claudeKey, s.claudeModel, [{ role: 'user', content }], 1500);
+    const r = parseAIJSON(text);
+
+    const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const preview = document.getElementById('reportPreview');
+    preview.classList.add('on');
+    preview.innerHTML = `
+      <h2>${r.project_title}</h2>
+      <div class="report-date">${today}${client ? ' — ' + client : ''}</div>
+      <div class="report-section"><h3>Project Overview</h3><p>${r.overview}</p></div>
+      <div class="report-section"><h3>Work Completed</h3><ul>${r.work_completed.map(w => '<li>' + w + '</li>').join('')}</ul></div>
+      ${r.materials_noted?.length ? `<div class="report-section"><h3>Materials</h3><ul>${r.materials_noted.map(m => '<li>' + m + '</li>').join('')}</ul></div>` : ''}
+      <div class="report-section"><h3>AI Quality Assessment</h3><div class="report-score">${r.quality_score}/10</div><p>${r.quality_notes}</p></div>
+      ${r.recommendations ? `<div class="report-section"><h3>Recommendations</h3><p>${r.recommendations}</p></div>` : ''}
+      <div class="report-footer">Powered by BQ Tools — bqtools.dev</div>`;
+
+    document.getElementById('exportRow').style.display = 'block';
+    showToast(lang === 'he' ? 'הדוח מוכן!' : 'Report ready!', 'ok');
+
+  } catch(err) {
+    console.error(err);
+    showToast('Error: ' + err.message, 'err');
+  }
+
+  btn.disabled = false;
+  btn.textContent = lang === 'he' ? '🧠 צור דוח' : '🧠 Generate Report';
+}
+
+function exportReportPDF() {
+  // Use browser print as PDF
+  const preview = document.getElementById('reportPreview');
+  const w = window.open('', '_blank');
+  w.document.write(`
+    <html><head><title>Project Report</title>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+      body { font-family: 'Heebo', Georgia, serif; padding: 40px; color: #222; max-width: 700px; margin: 0 auto; }
+      h2 { font-size: 24px; margin-bottom: 4px; }
+      h3 { font-size: 14px; color: #555; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid #ddd; }
+      p, li { font-size: 14px; line-height: 1.7; }
+      ul { padding-left: 20px; }
+      .score { font-size: 36px; font-weight: 900; color: #e8c547; }
+      .footer { font-size: 10px; color: #aaa; text-align: center; margin-top: 20px; border-top: 1px solid #eee; padding-top: 10px; }
+    </style></head><body>${preview.innerHTML}</body></html>`);
+  w.document.close();
+  setTimeout(() => { w.print(); }, 500);
+}
+</script>
+</body>
+</html>

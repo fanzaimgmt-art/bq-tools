@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Compare — Before/After Slider + AI Analysis</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  body { display: flex; flex-direction: column; align-items: center; }
+
+  /* Controls bar */
+  .controls {
+    width: 100%;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    background: var(--bg);
+    border-bottom: 1px solid var(--bd);
+  }
+  .tg { display: flex; gap: 1px; background: var(--bg); border-radius: 6px; padding: 2px; border: 1px solid var(--bd); }
+  .tn {
+    padding: 8px 14px; border: none; border-radius: 5px; background: transparent;
+    color: var(--txd); font-family: 'Heebo', sans-serif; font-size: 13px;
+    cursor: pointer; transition: all .2s; display: flex; align-items: center; gap: 4px;
+    min-height: 40px;
+  }
+  .tn.on { background: var(--sf); color: var(--ac); }
+  .tn:hover:not(.on) { color: var(--tx); }
+  .tn svg { width: 16px; height: 16px; }
+  .settings-btn {
+    width: 40px; height: 40px; border-radius: 8px; border: 1px solid var(--bd);
+    background: var(--sf); color: var(--txd); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; transition: all .2s;
+  }
+  .settings-btn:hover { border-color: var(--ac); color: var(--ac); }
+  .settings-btn svg { width: 18px; height: 18px; }
+
+  /* Drop zones */
+  .drop-zone {
+    width: 92%; max-width: 860px; margin: 16px auto 0;
+    display: flex; gap: 14px; justify-content: center;
+  }
+  .drop-box {
+    flex: 1; max-width: 420px; aspect-ratio: 4/3;
+    border: 2px dashed var(--bd); border-radius: 12px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer; transition: all .2s; position: relative; overflow: hidden;
+    background: var(--sf);
+  }
+  .drop-box:hover, .drop-box.drag-over { border-color: var(--ac); background: var(--acd); }
+  .drop-box.has-media { border-style: solid; border-color: var(--bd); }
+  .drop-box .preview {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; border-radius: 10px;
+  }
+  .drop-box .label { font-size: 16px; font-weight: 700; color: var(--ac); margin-bottom: 4px; z-index: 2; }
+  .drop-box .sublabel { font-size: 12px; color: var(--txd); z-index: 2; }
+  .drop-box .icon { width: 36px; height: 36px; margin-bottom: 8px; opacity: .2; z-index: 2; color: var(--tx); }
+  .drop-box.has-media .label, .drop-box.has-media .sublabel, .drop-box.has-media .icon { display: none; }
+  .drop-box input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 5; }
+
+  /* Compare viewer */
+  .compare-section {
+    width: 92%; max-width: 860px; margin: 16px auto 0;
+    display: none; flex-direction: column; align-items: center;
+  }
+  .compare-section.on { display: flex; animation: fadeIn .3s ease; }
+  .compare-container {
+    width: 100%; position: relative; overflow: hidden;
+    border-radius: 12px; border: 1px solid var(--bd);
+    cursor: col-resize; background: var(--sf); touch-action: none;
+  }
+  .compare-container.vt { cursor: row-resize; }
+  #mediaBefore img, #mediaBefore video { display: block; width: 100%; height: auto; pointer-events: none; }
+  .after-wrap { position: absolute; inset: 0; overflow: hidden; }
+  #mediaAfter img, #mediaAfter video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+  .slider-line {
+    position: absolute; z-index: 10; pointer-events: none;
+    background: rgba(255,255,255,.25); transition: background .2s;
+  }
+  .slider-line.hz { top: 0; bottom: 0; width: 2px; }
+  .slider-line.vt { left: 0; right: 0; height: 2px; }
+  .compare-container:hover .slider-line { background: rgba(255,255,255,.45); }
+  .slider-handle {
+    position: absolute; transform: translate(-50%,-50%);
+    width: 32px; height: 32px; border-radius: 50%;
+    background: rgba(255,255,255,.12); border: 2px solid rgba(255,255,255,.25);
+    backdrop-filter: blur(6px); z-index: 11; pointer-events: none;
+    display: flex; align-items: center; justify-content: center; transition: all .2s;
+  }
+  .compare-container:hover .slider-handle { background: rgba(255,255,255,.2); border-color: rgba(255,255,255,.4); }
+  .slider-handle svg { width: 16px; height: 16px; }
+  .compare-labels {
+    position: absolute; z-index: 12; pointer-events: none; opacity: 0; transition: opacity .3s;
+  }
+  .compare-labels.hz { top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; }
+  .compare-labels.vt { top: 10px; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; justify-content: space-between; align-items: center; }
+  .compare-container:hover .compare-labels { opacity: 1; }
+  .clabel {
+    background: rgba(0,0,0,.6); backdrop-filter: blur(6px);
+    padding: 4px 14px; border-radius: 14px; font-size: 11px; font-weight: 700; letter-spacing: 1px;
+  }
+  .clabel.bf { color: var(--red); }
+  .clabel.af { color: var(--grn); }
+
+  /* Action buttons */
+  .actions {
+    margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+  }
+  .actions .btn { min-height: 48px; font-size: 14px; }
+  .btn-ai {
+    background: var(--ac); color: var(--bg); border-color: var(--ac); font-weight: 700;
+  }
+  .btn-ai:hover { filter: brightness(1.1); color: var(--bg); opacity: 1; }
+  .btn-ai:disabled { opacity: .5; cursor: wait; }
+  .btn-export { background: rgba(81,207,102,.1); border-color: rgba(81,207,102,.3); color: var(--grn); }
+
+  /* AI Results Panel */
+  .ai-panel {
+    width: 92%; max-width: 860px; margin: 14px auto 0;
+    display: none; flex-direction: column;
+  }
+  .ai-panel.on { display: flex; animation: fadeIn .4s ease; }
+  .ai-card { background: var(--sf); border: 1px solid var(--bd); border-radius: 10px; padding: 16px; margin-bottom: 10px; }
+  .ai-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .ai-icon {
+    width: 28px; height: 28px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900;
+  }
+  .ai-title { font-size: 13px; font-weight: 700; }
+  .ai-sub { font-size: 10px; color: var(--txd); }
+  .ai-body { font-size: 13px; line-height: 1.6; padding: 10px 12px; background: var(--bg); border-radius: 8px; }
+  .ai-scores { display: flex; gap: 8px; margin-top: 8px; }
+  .ai-score {
+    flex: 1; background: var(--bg); border-radius: 8px; padding: 10px; text-align: center;
+  }
+  .ai-score-label { font-size: 9px; font-weight: 700; letter-spacing: 1px; margin-bottom: 2px; }
+  .ai-score-num { font-size: 28px; font-weight: 900; }
+  .ai-score-num span { font-size: 14px; color: var(--txd); }
+  .ai-diff {
+    display: flex; align-items: flex-start; gap: 8px; padding: 8px 10px;
+    background: var(--bg); border-radius: 8px; margin-top: 5px;
+  }
+  .ai-diff-title { font-size: 12px; font-weight: 700; }
+  .ai-diff-desc { font-size: 11px; color: var(--txd); margin-top: 2px; }
+  .ai-diff-badge {
+    margin-left: auto; font-size: 9px; font-weight: 700; padding: 2px 8px;
+    border-radius: 6px; white-space: nowrap;
+  }
+  .ai-tip {
+    padding: 10px 12px; background: var(--acd); border: 1px solid rgba(232,197,71,.2);
+    border-radius: 8px; font-size: 12px; color: var(--ac);
+    display: flex; align-items: flex-start; gap: 8px; margin-top: 6px;
+  }
+  .ai-error {
+    padding: 10px 14px; background: rgba(255,107,107,.1); border: 1px solid var(--red);
+    border-radius: 8px; color: var(--red); font-size: 12px; margin-top: 8px; word-break: break-all;
+  }
+
+  /* Progress steps */
+  .ai-progress { font-size: 12px; color: var(--txd); }
+  .ai-progress .step { padding: 4px 0; display: flex; align-items: center; gap: 6px; }
+  .ai-progress .step.done { color: var(--grn); }
+  .ai-progress .step.active { color: var(--ac); }
+
+  #exportCanvas { display: none; }
+
+  @media (max-width: 600px) {
+    .drop-zone { flex-direction: column; align-items: center; }
+    .drop-box { max-width: 100%; width: 100%; }
+    .controls { gap: 6px; padding: 8px 12px; }
+    .tn { padding: 6px 10px; font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav class="nav">
+  <a href="/" class="nav-logo">BQ <span>Compare</span></a>
+  <div class="nav-right">
+    <a href="/" class="nav-link" data-en="← Back" data-he="← חזור">← Back</a>
+    <a href="/auth.html" class="btn btn-sm" id="navProBtn" data-en="Pro" data-he="Pro">Pro</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<!-- Controls -->
+<div class="controls">
+  <div class="tg">
+    <button class="tn on" id="modeImg" onclick="setMode('image')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+      <span data-en="Image" data-he="תמונה">Image</span>
+    </button>
+    <button class="tn" id="modeVid" onclick="setMode('video')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      <span data-en="Video" data-he="וידאו">Video</span>
+    </button>
+  </div>
+  <div class="tg">
+    <button class="tn on" id="dirH" onclick="setDir('hz')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 18l-5-6 5-6"/><path d="M17 6l5 6-5 6"/></svg>
+      ↔
+    </button>
+    <button class="tn" id="dirV" onclick="setDir('vt')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 7l6-5 6 5"/><path d="M18 17l-6 5-6-5"/></svg>
+      ↕
+    </button>
+  </div>
+  <button class="settings-btn" onclick="openAISettings()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+  </button>
+</div>
+
+<!-- Drop Zones -->
+<div class="drop-zone">
+  <div class="drop-box" id="dropBefore">
+    <input type="file" accept="image/*,video/*" id="inputBefore">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+    <div class="label" data-en="Before" data-he="לפני">Before</div>
+    <div class="sublabel">BEFORE</div>
+  </div>
+  <div class="drop-box" id="dropAfter">
+    <input type="file" accept="image/*,video/*" id="inputAfter">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+    <div class="label" data-en="After" data-he="אחרי">After</div>
+    <div class="sublabel">AFTER</div>
+  </div>
+</div>
+
+<!-- Compare Viewer -->
+<div class="compare-section" id="compareSection">
+  <div class="compare-container" id="compareContainer">
+    <div id="mediaBefore"></div>
+    <div class="after-wrap" id="afterWrap"><div id="mediaAfter"></div></div>
+    <div class="slider-line hz" id="sliderLine"></div>
+    <div class="slider-handle" id="sliderHandle">
+      <svg id="iconH" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2" stroke-linecap="round"><path d="M15 18l6-6-6-6"/><path d="M9 6l-6 6 6 6"/></svg>
+      <svg id="iconV" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2" stroke-linecap="round" style="display:none"><path d="M6 9l6-6 6 6"/><path d="M18 15l-6 6-6-6"/></svg>
+    </div>
+    <div class="compare-labels hz" id="compLabels">
+      <span class="clabel bf">BEFORE</span>
+      <span class="clabel af">AFTER</span>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn" onclick="resetAll()" data-en="Reset" data-he="איפוס">Reset</button>
+    <button class="btn" onclick="swapMedia()" data-en="Swap" data-he="החלף">Swap</button>
+    <button class="btn btn-export" onclick="exportImage()" data-en="Export Image" data-he="ייצוא תמונה">Export Image</button>
+    <button class="btn" onclick="saveToGallery()" data-en="Save to Gallery" data-he="שמור לגלריה">Save to Gallery</button>
+    <button class="btn btn-ai" id="analyzeBtn" onclick="analyze()" data-en="🧠 Analyze AI" data-he="🧠 נתח עם AI">🧠 Analyze AI</button>
+  </div>
+</div>
+
+<!-- AI Results -->
+<div class="ai-panel" id="aiPanel"></div>
+
+<canvas id="exportCanvas"></canvas>
+
+<!-- Footer -->
+<footer class="footer" style="width:100%;">
+  <div class="footer-brand">Powered by BQ Tools — BQ Production LLC</div>
+  <div class="footer-links">
+    <a href="https://bqprod.pages.dev" target="_blank">bqprod.pages.dev</a>
+    <a href="https://instagram.com/bq_music" target="_blank">@bq_music</a>
+  </div>
+</footer>
+
+<script src="../js/auth.js"></script>
+<script src="../js/ai.js"></script>
+<script src="../js/common.js"></script>
+<script>
+// ── State ──
+let bData = null, aData = null, dir = 'hz', dragging = false;
+
+const inputB = document.getElementById('inputBefore');
+const inputA = document.getElementById('inputAfter');
+const dropB = document.getElementById('dropBefore');
+const dropA = document.getElementById('dropAfter');
+const compSection = document.getElementById('compareSection');
+const compContainer = document.getElementById('compareContainer');
+const afterWrap = document.getElementById('afterWrap');
+const sliderLine = document.getElementById('sliderLine');
+const sliderHandle = document.getElementById('sliderHandle');
+const compLabels = document.getElementById('compLabels');
+
+// Update Pro badge
+if (isPro()) {
+  const btn = document.getElementById('navProBtn');
+  if (btn) { btn.textContent = 'PRO ✓'; btn.classList.add('btn-pro-active'); }
+}
+
+// ── Mode & Direction ──
+function setMode(m) {
+  document.getElementById('modeImg').classList.toggle('on', m === 'image');
+  document.getElementById('modeVid').classList.toggle('on', m === 'video');
+  inputB.accept = inputA.accept = m === 'video' ? 'video/*' : 'image/*,video/*';
+}
+
+function setDir(d) {
+  dir = d;
+  document.getElementById('dirH').classList.toggle('on', d === 'hz');
+  document.getElementById('dirV').classList.toggle('on', d === 'vt');
+  sliderLine.className = 'slider-line ' + d;
+  compLabels.className = 'compare-labels ' + d;
+  compContainer.classList.toggle('vt', d === 'vt');
+  document.getElementById('iconH').style.display = d === 'hz' ? 'block' : 'none';
+  document.getElementById('iconV').style.display = d === 'vt' ? 'block' : 'none';
+  if (bData && aData) setPos(.5);
+}
+
+// ── File Loading ──
+function loadFile(file, side) {
+  const isVid = file.type.startsWith('video/');
+  const reader = new FileReader();
+  reader.onload = e => {
+    const src = e.target.result;
+    const data = { src, type: isVid ? 'video' : 'image', name: file.name };
+    const box = side === 'b' ? dropB : dropA;
+    const old = box.querySelector('.preview');
+    if (old) old.remove();
+    if (side === 'b') bData = data; else aData = data;
+    let el;
+    if (isVid) {
+      el = document.createElement('video');
+      el.src = src; el.muted = true; el.loop = true; el.autoplay = true; el.playsInline = true;
+    } else {
+      el = document.createElement('img');
+      el.src = src;
+    }
+    el.className = 'preview';
+    box.appendChild(el);
+    box.classList.add('has-media');
+    tryShow();
+  };
+  reader.readAsDataURL(file);
+}
+
+inputB.addEventListener('change', e => { if (e.target.files[0]) loadFile(e.target.files[0], 'b'); });
+inputA.addEventListener('change', e => { if (e.target.files[0]) loadFile(e.target.files[0], 'a'); });
+
+[['dropBefore','b'],['dropAfter','a']].forEach(([id, s]) => {
+  const el = document.getElementById(id);
+  el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('drag-over'); });
+  el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
+  el.addEventListener('drop', e => { e.preventDefault(); el.classList.remove('drag-over'); if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0], s); });
+});
+
+// ── Compare Viewer ──
+function mkEl(d) {
+  if (d.type === 'video') {
+    const v = document.createElement('video');
+    v.src = d.src; v.muted = true; v.loop = true; v.autoplay = true; v.playsInline = true;
+    return v;
+  }
+  const i = document.createElement('img');
+  i.src = d.src;
+  return i;
+}
+
+function tryShow() {
+  if (!bData || !aData) return;
+  const mb = document.getElementById('mediaBefore'), ma = document.getElementById('mediaAfter');
+  mb.innerHTML = ''; ma.innerHTML = '';
+  mb.appendChild(mkEl(bData)); ma.appendChild(mkEl(aData));
+  if (bData.type === 'video' && aData.type === 'video') {
+    const vb = mb.querySelector('video'), va = ma.querySelector('video');
+    vb.addEventListener('play', () => { va.currentTime = vb.currentTime; va.play(); });
+    vb.addEventListener('seeked', () => { va.currentTime = vb.currentTime; });
+  }
+  compSection.classList.add('on');
+  setPos(.5);
+}
+
+function setPos(r) {
+  r = Math.max(0, Math.min(1, r));
+  const p = r * 100;
+  if (dir === 'hz') {
+    afterWrap.style.clipPath = `inset(0 0 0 ${p}%)`;
+    sliderLine.style.left = `${p}%`; sliderLine.style.top = '';
+    sliderHandle.style.left = `${p}%`; sliderHandle.style.top = '50%';
+  } else {
+    afterWrap.style.clipPath = `inset(${p}% 0 0 0)`;
+    sliderLine.style.top = `${p}%`; sliderLine.style.left = '';
+    sliderHandle.style.top = `${p}%`; sliderHandle.style.left = '50%';
+  }
+}
+
+function getP(e) {
+  const r = compContainer.getBoundingClientRect();
+  if (dir === 'hz') {
+    const x = e.touches ? e.touches[0].clientX : e.clientX;
+    return (x - r.left) / r.width;
+  }
+  const y = e.touches ? e.touches[0].clientY : e.clientY;
+  return (y - r.top) / r.height;
+}
+
+compContainer.addEventListener('mousedown', e => { e.preventDefault(); dragging = true; setPos(getP(e)); });
+compContainer.addEventListener('touchstart', e => { dragging = true; setPos(getP(e)); }, { passive: true });
+window.addEventListener('mousemove', e => { if (dragging) { e.preventDefault(); setPos(getP(e)); } });
+window.addEventListener('touchmove', e => { if (dragging) setPos(getP(e)); }, { passive: true });
+window.addEventListener('mouseup', () => dragging = false);
+window.addEventListener('touchend', () => dragging = false);
+
+// ── Swap & Reset ──
+function swapMedia() {
+  if (!bData || !aData) return;
+  [bData, aData] = [aData, bData];
+  const pb = dropB.querySelector('.preview'), pa = dropA.querySelector('.preview');
+  if (pb) dropB.removeChild(pb);
+  if (pa) dropA.removeChild(pa);
+  if (pa) dropB.appendChild(pa);
+  if (pb) dropA.appendChild(pb);
+  tryShow();
+}
+
+function resetAll() {
+  bData = null; aData = null;
+  [dropB, dropA].forEach(b => { const p = b.querySelector('.preview'); if (p) p.remove(); b.classList.remove('has-media'); });
+  compSection.classList.remove('on');
+  inputB.value = ''; inputA.value = '';
+  const ap = document.getElementById('aiPanel');
+  ap.innerHTML = ''; ap.classList.remove('on');
+}
+
+// ── Export with watermark ──
+function exportImage() {
+  if (!bData || !aData) return;
+  const canvas = document.getElementById('exportCanvas');
+  const ctx = canvas.getContext('2d');
+  const imgB = document.getElementById('mediaBefore').querySelector('img, video');
+  const w = imgB.naturalWidth || imgB.videoWidth || 1200;
+  const h = imgB.naturalHeight || imgB.videoHeight || 800;
+  canvas.width = w; canvas.height = h;
+
+  const beforeEl = document.getElementById('mediaBefore').querySelector('img, video');
+  const afterEl = document.getElementById('mediaAfter').querySelector('img, video');
+  ctx.drawImage(beforeEl, 0, 0, w, h);
+
+  if (dir === 'hz') {
+    ctx.save(); ctx.beginPath(); ctx.rect(w/2, 0, w/2, h); ctx.clip();
+    ctx.drawImage(afterEl, 0, 0, w, h); ctx.restore();
+    ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(w/2, 0); ctx.lineTo(w/2, h); ctx.stroke();
+  } else {
+    ctx.save(); ctx.beginPath(); ctx.rect(0, h/2, w, h/2); ctx.clip();
+    ctx.drawImage(afterEl, 0, 0, w, h); ctx.restore();
+    ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0, h/2); ctx.lineTo(w, h/2); ctx.stroke();
+  }
+
+  // Labels
+  const fs = Math.max(14, Math.round(w * 0.016));
+  ctx.font = `bold ${fs}px Heebo, sans-serif`;
+  const pad = w * 0.012;
+  // BEFORE
+  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  const bm = ctx.measureText('BEFORE');
+  ctx.beginPath(); ctx.roundRect(pad, pad, bm.width + 16, fs + 8, 8); ctx.fill();
+  ctx.fillStyle = '#ff6b6b'; ctx.fillText('BEFORE', pad + 8, pad + fs + 1);
+  // AFTER
+  const am = ctx.measureText('AFTER');
+  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  ctx.beginPath(); ctx.roundRect(w - am.width - 16 - pad, pad, am.width + 16, fs + 8, 8); ctx.fill();
+  ctx.fillStyle = '#51cf66'; ctx.fillText('AFTER', w - am.width - 8 - pad, pad + fs + 1);
+
+  // Watermark
+  const wmFs = Math.max(11, Math.round(w * 0.014));
+  ctx.font = `900 ${wmFs}px Heebo, sans-serif`;
+  ctx.fillStyle = 'rgba(232,197,71,0.45)';
+  const wmText = 'Powered by BQ Tools | bqtools.dev';
+  ctx.fillText(wmText, w - ctx.measureText(wmText).width - pad, h - pad);
+
+  const link = document.createElement('a');
+  link.download = 'bq-compare-export.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+  showToast(lang === 'he' ? 'תמונה יוצאה!' : 'Image exported!', 'ok');
+}
+
+// ── Save to Gallery ──
+function saveToGallery() {
+  if (!bData || !aData) return;
+  const gallery = JSON.parse(localStorage.getItem('bq_gallery') || '[]');
+  const project = {
+    id: Date.now(),
+    date: new Date().toISOString().split('T')[0],
+    before: bData.src.substring(0, 200) + '...', // store thumbnail reference
+    after: aData.src.substring(0, 200) + '...',
+    beforeFull: bData.src,
+    afterFull: aData.src,
+    type: bData.type,
+  };
+  gallery.unshift(project);
+  // Keep max 50 projects
+  if (gallery.length > 50) gallery.length = 50;
+  localStorage.setItem('bq_gallery', JSON.stringify(gallery));
+  showToast(lang === 'he' ? 'נשמר לגלריה!' : 'Saved to Gallery!', 'ok');
+}
+
+// ── AI Analysis ──
+async function analyze() {
+  if (!requirePro()) return;
+
+  const s = getAISettings();
+  if (!s.claudeKey) { openAISettings(); return; }
+  if (!bData || !aData) return;
+  if (bData.type === 'video' || aData.type === 'video') {
+    showToast(lang === 'he' ? 'ניתוח AI עובד רק על תמונות' : 'AI analysis works for images only', 'err');
+    return;
+  }
+
+  const cModel = s.claudeModel;
+  const cName = cModel.includes('opus') ? 'Opus' : cModel.includes('haiku') ? 'Haiku' : 'Sonnet';
+  const btn = document.getElementById('analyzeBtn');
+  btn.disabled = true;
+  btn.textContent = lang === 'he' ? '⏳ מנתח...' : '⏳ Analyzing...';
+
+  const ap = document.getElementById('aiPanel');
+  ap.classList.add('on');
+  ap.innerHTML = `
+    <div class="ai-card">
+      <div class="ai-progress">
+        <div class="step active">▸ ${lang === 'he' ? 'מקטין תמונות...' : 'Resizing images...'}</div>
+        <div class="step">○ ${lang === 'he' ? 'שולח ל-AI...' : 'Sending to AI...'}</div>
+        <div class="step">○ ${lang === 'he' ? 'מעבד תוצאות...' : 'Processing results...'}</div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:20%"></div></div>
+    </div>`;
+
+  try {
+    const b1 = await resizeForAPI(bData.src);
+    const b2 = await resizeForAPI(aData.src);
+
+    // Update progress
+    ap.querySelector('.step:nth-child(1)').className = 'step done';
+    ap.querySelector('.step:nth-child(1)').textContent = '✓ ' + (lang === 'he' ? 'תמונות מוכנות' : 'Images ready');
+    ap.querySelector('.step:nth-child(2)').className = 'step active';
+    ap.querySelector('.progress-fill').style.width = '50%';
+
+    const prompt = `You are a professional construction/remodeling visual analyst. Compare these two images (1=BEFORE, 2=AFTER) of a construction or remodeling project.
+
+Find ALL differences and judge quality. Be specific about construction details.
+
+Respond JSON only:
+{"overall_transformation":"1-2 sentence summary","differences":[{"area":"name","before_state":"...","after_state":"...","significance":"high/medium/low"}],"verdict":"improved/degraded/mixed","before_score":1-10,"after_score":1-10,"judge_notes":"2 sentences for the contractor","top_improvement":"best improvement made","concern":"any concern, or null","pro_tip":"actionable tip for marketing this work"}`;
+
+    const content = [
+      { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b1 } },
+      { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b2 } },
+      { type: 'text', text: prompt }
+    ];
+
+    const text = await callClaude(s.claudeKey, cModel, [{ role: 'user', content }], 1500);
+    const result = parseAIJSON(text);
+
+    // Update progress
+    ap.querySelector('.step:nth-child(2)').className = 'step done';
+    ap.querySelector('.step:nth-child(2)').textContent = '✓ ' + (lang === 'he' ? 'AI ענה' : 'AI responded');
+    ap.querySelector('.step:nth-child(3)').className = 'step done';
+    ap.querySelector('.step:nth-child(3)').textContent = '✓ ' + (lang === 'he' ? 'מוכן!' : 'Done!');
+    ap.querySelector('.progress-fill').style.width = '100%';
+
+    // Render results after brief delay
+    setTimeout(() => {
+      const vc = { improved: 'var(--grn)', degraded: 'var(--red)', mixed: 'var(--ac)' };
+      const vl = { improved: lang === 'he' ? '✓ שיפור' : '✓ Improved', degraded: lang === 'he' ? '✗ ירד' : '✗ Worse', mixed: lang === 'he' ? '↔ מעורב' : '↔ Mixed' };
+
+      const diffsHtml = (result.differences || []).map(d =>
+        `<div class="ai-diff" style="border-left:3px solid ${d.significance==='high'?'var(--ac)':d.significance==='medium'?'var(--blu)':'var(--txd)'}">
+          <div><div class="ai-diff-title">${d.area}</div><div class="ai-diff-desc">${d.before_state} → ${d.after_state}</div></div>
+          <div class="ai-diff-badge" style="background:${d.significance==='high'?'var(--acd)':'rgba(136,136,136,.1)'};color:${d.significance==='high'?'var(--ac)':'var(--txd)'}">${d.significance}</div>
+        </div>`
+      ).join('');
+
+      ap.innerHTML = `
+        <div class="ai-card">
+          <div class="ai-header">
+            <div class="ai-icon" style="background:var(--acd);color:var(--ac)">C</div>
+            <div>
+              <div class="ai-title">Claude ${cName} — ${lang === 'he' ? 'ניתוח מלא' : 'Full Analysis'}</div>
+            </div>
+            <div class="ai-diff-badge" style="margin-left:auto;font-size:10px;padding:3px 10px;background:${vc[result.verdict]||'var(--ac)'}22;color:${vc[result.verdict]||'var(--ac)'}">${vl[result.verdict]||result.verdict}</div>
+          </div>
+          <div class="ai-body">${result.overall_transformation || ''}</div>
+          ${diffsHtml}
+          <div class="ai-scores">
+            <div class="ai-score"><div class="ai-score-label" style="color:var(--red)">BEFORE</div><div class="ai-score-num">${result.before_score}<span>/10</span></div></div>
+            <div class="ai-score"><div class="ai-score-label" style="color:var(--grn)">AFTER</div><div class="ai-score-num">${result.after_score}<span>/10</span></div></div>
+          </div>
+          <div class="ai-body" style="margin-top:8px">${result.judge_notes || ''}</div>
+          ${result.top_improvement ? `<div class="ai-diff" style="border-left:3px solid var(--grn);margin-top:6px"><div><div class="ai-diff-title">💪 ${lang==='he'?'שיפור מרכזי':'Top Improvement'}</div><div class="ai-diff-desc">${result.top_improvement}</div></div></div>` : ''}
+          ${result.concern ? `<div class="ai-diff" style="border-left:3px solid var(--red);margin-top:4px"><div><div class="ai-diff-title">⚠️ ${lang==='he'?'לשים לב':'Concern'}</div><div class="ai-diff-desc">${result.concern}</div></div></div>` : ''}
+          ${result.pro_tip ? `<div class="ai-tip">💡 ${result.pro_tip}</div>` : ''}
+        </div>`;
+    }, 500);
+
+  } catch(err) {
+    console.error('AI Error:', err);
+    ap.innerHTML += `<div class="ai-error">❌ ${err.message || err}</div>`;
+  }
+
+  btn.disabled = false;
+  btn.textContent = lang === 'he' ? '🧠 נתח עם AI' : '🧠 Analyze AI';
+  setLang(lang);
+}
+</script>
+</body>
+</html>
