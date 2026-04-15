@@ -60,7 +60,8 @@ function showUpgradeModal() {
         <b style="color:var(--tx)">2.</b> <span data-en="Get your Pro code by email" data-he="קבל קוד Pro במייל">Get your Pro code by email</span><br>
         <b style="color:var(--tx)">3.</b> <span data-en="Enter code to unlock" data-he="הכנס קוד לפתיחה">Enter code to unlock</span>
       </div>
-      <a href="https://www.paypal.com/ncp/payment/2LA7B7PZTHN54" target="_blank" rel="noopener" class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:10px;min-height:48px;" data-en="Pay with PayPal" data-he="שלם ב-PayPal">Pay with PayPal</a>
+      <a href="https://www.paypal.com/ncp/payment/2LA7B7PZTHN54" target="_blank" rel="noopener" class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:8px;min-height:48px;" data-en="Pay with PayPal — $14.99" data-he="שלם ב-PayPal — $14.99">Pay with PayPal — $14.99</a>
+      <button onclick="this.closest('.modal-overlay').remove();openCryptoModal()" class="btn" style="width:100%;justify-content:center;margin-bottom:8px;min-height:48px;border-color:rgba(81,207,102,.3);color:var(--grn);font-size:12px;" data-en="Pay with Crypto — 35% OFF → $9.74" data-he="שלם בקריפטו — 35% הנחה → $9.74">Pay with Crypto — 35% OFF → $9.74</button>
       <a href="/auth.html" class="btn" style="width:100%;justify-content:center;min-height:48px;" data-en="I have a code" data-he="יש לי קוד">I have a code</a>
       <button onclick="this.closest('.modal-overlay').remove()" style="margin-top:12px;background:none;border:none;color:var(--txd);cursor:pointer;font-size:12px;font-family:inherit;" data-en="Maybe later" data-he="אולי אחר כך">Maybe later</button>
     </div>`;
