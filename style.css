@@ -318,6 +318,33 @@ a:hover, a:active { opacity: .8; }
   .btn-large { padding: 14px 24px; font-size: 15px; }
 }
 
+/* ── Credit Bar ── */
+.credit-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: var(--acd);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ac);
+  cursor: default;
+  min-height: 36px;
+}
+.credit-bar.credit-low {
+  animation: creditPulse 1.5s ease-in-out infinite;
+}
+.credit-bar.credit-empty {
+  background: rgba(255,107,107,.15);
+  color: var(--red);
+  animation: creditPulse 1s ease-in-out infinite;
+}
+@keyframes creditPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .5; }
+}
+
 /* ── Animations ── */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }

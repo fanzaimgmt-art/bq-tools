@@ -14,7 +14,6 @@ function setLang(l) {
   document.querySelectorAll('[data-he]').forEach(el => {
     const t = el.getAttribute('data-' + l);
     if (!t) return;
-    // Use innerHTML if the attribute contains HTML tags, textContent otherwise
     if (t.includes('<')) {
       el.innerHTML = t;
     } else {
@@ -27,29 +26,36 @@ function setLang(l) {
 function buildNav(activePage) {
   const nav = document.createElement('nav');
   nav.className = 'nav';
+
+  const user = typeof getCachedUser === 'function' ? getCachedUser() : null;
+  const loggedIn = typeof isLoggedIn === 'function' ? isLoggedIn() : false;
+  const credits = user ? user.credits : 0;
+  const pro = user ? user.isPro : false;
+
+  const authBtn = loggedIn
+    ? `<a href="/dashboard.html" class="btn btn-sm ${pro ? 'btn-pro-active' : ''}">${pro ? 'PRO' : 'Account'}</a>`
+    : `<a href="/auth.html" class="btn btn-sm" data-en="Login" data-he="התחבר">Login</a>`;
+
+  const creditBar = loggedIn
+    ? `<div class="credit-bar ${credits < 5 ? (credits === 0 ? 'credit-empty' : 'credit-low') : ''}" id="creditBar">
+        <span>⚡</span>
+        <span class="credit-count">${credits}</span>
+      </div>`
+    : '';
+
   nav.innerHTML = `
     <a href="/" class="nav-logo">BQ <span>Tools</span></a>
     <div class="nav-right">
       <a href="/#tools" class="nav-link" data-en="Tools" data-he="כלים">Tools</a>
-      <a href="/#pricing" class="nav-link" data-en="Pricing" data-he="מחירים">Pricing</a>
       <a href="/gallery.html" class="nav-link" data-en="Gallery" data-he="גלריה">Gallery</a>
-      <a href="/auth.html" class="btn btn-sm" data-en="Pro" data-he="Pro" id="navProBtn">Pro</a>
+      ${creditBar}
+      ${authBtn}
       <div class="lang-toggle">
         <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
         <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
       </div>
     </div>`;
   document.body.prepend(nav);
-  updateNavPro();
-}
-
-function updateNavPro() {
-  const btn = document.getElementById('navProBtn');
-  if (!btn) return;
-  if (isPro()) {
-    btn.textContent = 'PRO ✓';
-    btn.classList.add('btn-pro-active');
-  }
 }
 
 // ── Footer Builder ──
@@ -81,7 +87,61 @@ function showToast(msg, type) {
   setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 2500);
 }
 
+// ── Global Error Handler ──
+window.onerror = function(msg, src, line, col, err) {
+  const errors = JSON.parse(localStorage.getItem('bq_errors') || '[]');
+  errors.unshift({
+    timestamp: new Date().toISOString(),
+    page: window.location.pathname,
+    error: msg,
+    source: src,
+    line,
+    browser: navigator.userAgent
+  });
+  if (errors.length > 50) errors.length = 50;
+  localStorage.setItem('bq_errors', JSON.stringify(errors));
+
+  // Try to send to server
+  if (typeof apiCall === 'function') {
+    apiCall('/api/error-report', {
+      method: 'POST',
+      body: { page: window.location.pathname, error: msg, source: src, line, browser: navigator.userAgent }
+    }).catch(() => {}); // silent fail
+  }
+};
+
+// ── Last Action Tracking (for Smart Suggestions) ──
+function trackAction(tool, projectId) {
+  localStorage.setItem('bq_lastAction', JSON.stringify({
+    tool,
+    projectId: projectId || null,
+    timestamp: Date.now()
+  }));
+}
+
+function getLastAction() {
+  try {
+    return JSON.parse(localStorage.getItem('bq_lastAction') || 'null');
+  } catch { return null; }
+}
+
+// ── Offline Check ──
+function requireOnline() {
+  if (!navigator.onLine) {
+    showToast(lang === 'he' ? 'נדרש אינטרנט לפעולה זו' : 'Internet required for this action', 'err');
+    return false;
+  }
+  return true;
+}
+
 // ── Init on load ──
 document.addEventListener('DOMContentLoaded', () => {
   setLang(lang);
+
+  // Refresh user data from server if logged in
+  if (typeof isLoggedIn === 'function' && isLoggedIn()) {
+    fetchUser().then(() => {
+      if (typeof updateCreditDisplay === 'function') updateCreditDisplay();
+    }).catch(() => {});
+  }
 });

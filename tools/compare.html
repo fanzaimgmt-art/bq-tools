@@ -213,9 +213,7 @@
       ↕
     </button>
   </div>
-  <button class="settings-btn" onclick="openAISettings()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-  </button>
+  <!-- Settings button removed — AI runs through server -->
 </div>
 
 <!-- Drop Zones -->
@@ -273,9 +271,9 @@
   </div>
 </footer>
 
+<script src="../js/ai.js"></script>
 <script src="../js/auth.js"></script>
 <script src="../js/crypto.js"></script>
-<script src="../js/ai.js"></script>
 <script src="../js/common.js"></script>
 <script>
 // ── State ──
@@ -292,10 +290,10 @@ const sliderLine = document.getElementById('sliderLine');
 const sliderHandle = document.getElementById('sliderHandle');
 const compLabels = document.getElementById('compLabels');
 
-// Update Pro badge
-if (isPro()) {
+// Update nav Pro badge + credits
+if (isLoggedIn()) {
   const btn = document.getElementById('navProBtn');
-  if (btn) { btn.textContent = 'PRO ✓'; btn.classList.add('btn-pro-active'); }
+  if (btn && isPro()) { btn.textContent = 'PRO ✓'; btn.classList.add('btn-pro-active'); }
 }
 
 // ── Mode & Direction ──
@@ -488,39 +486,54 @@ function exportImage() {
 }
 
 // ── Save to Gallery ──
-function saveToGallery() {
+async function saveToGallery() {
   if (!bData || !aData) return;
+
+  // Generate thumbnail (200px)
+  let thumbnail = '';
+  try {
+    thumbnail = await resizeForThumbnail(aData.src);
+  } catch {}
+
+  // Save locally
   const gallery = JSON.parse(localStorage.getItem('bq_gallery') || '[]');
   const project = {
     id: Date.now(),
     date: new Date().toISOString().split('T')[0],
-    before: bData.src.substring(0, 200) + '...', // store thumbnail reference
-    after: aData.src.substring(0, 200) + '...',
     beforeFull: bData.src,
     afterFull: aData.src,
     type: bData.type,
   };
   gallery.unshift(project);
-  // Keep max 50 projects
   if (gallery.length > 50) gallery.length = 50;
   localStorage.setItem('bq_gallery', JSON.stringify(gallery));
+
+  // Save to server
+  saveProjectToServer({
+    tool: 'compare',
+    title: 'Before/After Compare',
+    thumbnail: thumbnail,
+    result_summary: 'Comparison saved'
+  });
+
+  trackAction('compare', Date.now());
   showToast(lang === 'he' ? 'נשמר לגלריה!' : 'Saved to Gallery!', 'ok');
 }
 
-// ── AI Analysis ──
+// ── AI Analysis (via Worker) ──
 async function analyze() {
+  if (!requireOnline()) return;
   if (!requirePro()) return;
-
-  const s = getAISettings();
-  if (!s.claudeKey) { openAISettings(); return; }
   if (!bData || !aData) return;
   if (bData.type === 'video' || aData.type === 'video') {
     showToast(lang === 'he' ? 'ניתוח AI עובד רק על תמונות' : 'AI analysis works for images only', 'err');
     return;
   }
 
-  const cModel = s.claudeModel;
-  const cName = cModel.includes('opus') ? 'Opus' : cModel.includes('haiku') ? 'Haiku' : 'Sonnet';
+  // Confirm credit usage
+  const ok = await confirmCredit(lang === 'he' ? 'ניתוח AI' : 'AI Analysis');
+  if (!ok) return;
+
   const btn = document.getElementById('analyzeBtn');
   btn.disabled = true;
   btn.textContent = lang === 'he' ? '⏳ מנתח...' : '⏳ Analyzing...';
@@ -554,13 +567,7 @@ Find ALL differences and judge quality. Be specific about construction details.
 Respond JSON only:
 {"overall_transformation":"1-2 sentence summary","differences":[{"area":"name","before_state":"...","after_state":"...","significance":"high/medium/low"}],"verdict":"improved/degraded/mixed","before_score":1-10,"after_score":1-10,"judge_notes":"2 sentences for the contractor","top_improvement":"best improvement made","concern":"any concern, or null","pro_tip":"actionable tip for marketing this work"}`;
 
-    const content = [
-      { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b1 } },
-      { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b2 } },
-      { type: 'text', text: prompt }
-    ];
-
-    const text = await callClaude(s.claudeKey, cModel, [{ role: 'user', content }], 1500);
+    const text = await callWorkerAI('AI Analysis', prompt, [b1, b2], 'Compare Analysis');
     const result = parseAIJSON(text);
 
     // Update progress
@@ -569,6 +576,9 @@ Respond JSON only:
     ap.querySelector('.step:nth-child(3)').className = 'step done';
     ap.querySelector('.step:nth-child(3)').textContent = '✓ ' + (lang === 'he' ? 'מוכן!' : 'Done!');
     ap.querySelector('.progress-fill').style.width = '100%';
+
+    // Track action for smart suggestions
+    trackAction('compare', Date.now());
 
     // Render results after brief delay
     setTimeout(() => {
@@ -585,9 +595,9 @@ Respond JSON only:
       ap.innerHTML = `
         <div class="ai-card">
           <div class="ai-header">
-            <div class="ai-icon" style="background:var(--acd);color:var(--ac)">C</div>
+            <div class="ai-icon" style="background:var(--acd);color:var(--ac)">AI</div>
             <div>
-              <div class="ai-title">Claude ${cName} — ${lang === 'he' ? 'ניתוח מלא' : 'Full Analysis'}</div>
+              <div class="ai-title">BQ AI — ${lang === 'he' ? 'ניתוח מלא' : 'Full Analysis'}</div>
             </div>
             <div class="ai-diff-badge" style="margin-left:auto;font-size:10px;padding:3px 10px;background:${vc[result.verdict]||'var(--ac)'}22;color:${vc[result.verdict]||'var(--ac)'}">${vl[result.verdict]||result.verdict}</div>
           </div>

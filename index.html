@@ -367,32 +367,30 @@
       <div class="price-name">Free</div>
       <div class="price-amount">$0</div>
       <ul class="price-features">
+        <li data-en="5 AI credits (one-time)" data-he="5 קרדיטים (חד פעמי)">5 AI credits (one-time)</li>
         <li data-en="Before/after Compare slider" data-he="סליידר לפני/אחרי">Before/after Compare slider</li>
         <li data-en="1 Client Page" data-he="1 עמוד לקוח">1 Client Page</li>
         <li data-en="Image + video support" data-he="תמונה + וידאו">Image + video support</li>
         <li data-en="EN / HE language" data-he="EN / HE שפה">EN / HE language</li>
-        <li data-en="Unlimited comparisons" data-he="השוואות ללא הגבלה">Unlimited comparisons</li>
       </ul>
-      <a href="/tools/compare.html" class="btn" style="width:100%;" data-en="Start Free" data-he="התחל בחינם">Start Free</a>
+      <a href="/auth.html" class="btn" style="width:100%;" data-en="Sign Up Free" data-he="הרשם בחינם">Sign Up Free</a>
     </div>
 
     <div class="price-card featured">
-      <div class="price-name">Pro</div>
-      <div class="price-amount">$14<span>.99/mo</span></div>
+      <div class="price-name" data-en="Credit Packs" data-he="חבילות קרדיטים">Credit Packs</div>
+      <div class="price-amount" style="font-size:28px;">⚡ <span style="font-size:28px;color:var(--tx);font-weight:900;">Credits</span></div>
       <ul class="price-features">
-        <li data-en="Everything in Free" data-he="הכל מה-Free">Everything in Free</li>
-        <li data-en="AI Analysis (50/month)" data-he="ניתוח AI (50/חודש)">AI Analysis (50/month)</li>
-        <li data-en="Quick Report → PDF" data-he="דוח מהיר → PDF">Quick Report → PDF</li>
-        <li data-en="Smart Estimate" data-he="הערכת עלות חכמה">Smart Estimate</li>
-        <li data-en="Unlimited Client Pages" data-he="עמודי לקוח ללא הגבלה">Unlimited Client Pages</li>
-        <li data-en="Social Post AI" data-he="פוסט חברתי AI">Social Post AI</li>
-        <li data-en="Review Request generator" data-he="מחולל בקשות ביקורת">Review Request generator</li>
-        <li data-en="Quick Sketch cleanup" data-he="ניקוי סקיצה">Quick Sketch cleanup</li>
+        <li data-en="25 credits — $4.99" data-he="25 קרדיטים — $4.99">25 credits — $4.99</li>
+        <li data-en="60 credits — $9.99" data-he="60 קרדיטים — $9.99">60 credits — $9.99</li>
+        <li data-en="150 credits — $19.99" data-he="150 קרדיטים — $19.99">150 credits — $19.99</li>
+        <li data-en="AI Analysis, Reports, Estimates" data-he="ניתוח AI, דוחות, הערכות">AI Analysis, Reports, Estimates</li>
+        <li data-en="Social Post AI + Review Request" data-he="פוסט AI + בקשת ביקורת">Social Post AI + Review Request</li>
+        <li data-en="Quick Sketch + AI Assistant" data-he="סקיצה + עוזר AI">Quick Sketch + AI Assistant</li>
         <li data-en="Your logo on exports" data-he="הלוגו שלך על ייצוא">Your logo on exports</li>
-        <li data-en="Project Gallery" data-he="גלריית פרויקטים">Project Gallery</li>
+        <li data-en="Project Gallery + Dashboard" data-he="גלריה + דשבורד">Project Gallery + Dashboard</li>
       </ul>
-      <a href="https://www.paypal.com/ncp/payment/2LA7B7PZTHN54" target="_blank" rel="noopener" class="btn btn-primary" style="width:100%;" data-en="Go Pro → $14.99/mo" data-he="שדרג ל-Pro → $14.99/חודש">Go Pro → $14.99/mo</a>
-      <button onclick="openCryptoModal()" class="btn" style="width:100%;margin-top:8px;border-color:rgba(81,207,102,.3);color:var(--grn);" data-en="Pay with Crypto — 35% OFF → $9.74/mo" data-he="שלם בקריפטו — 35% הנחה → $9.74/חודש">Pay with Crypto — 35% OFF → $9.74/mo</button>
+      <a href="https://www.paypal.com/ncp/payment/2LA7B7PZTHN54" target="_blank" rel="noopener" class="btn btn-primary" style="width:100%;" data-en="Buy Credits — PayPal" data-he="קנה קרדיטים — PayPal">Buy Credits — PayPal</a>
+      <button onclick="openCryptoModal()" class="btn" style="width:100%;margin-top:8px;border-color:rgba(81,207,102,.3);color:var(--grn);" data-en="Pay with Crypto — 35% OFF" data-he="שלם בקריפטו — 35% הנחה">Pay with Crypto — 35% OFF</button>
     </div>
   </div>
 </section>
@@ -425,14 +423,23 @@
   </div>
 </footer>
 
+<script src="js/ai.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/crypto.js"></script>
 <script src="js/common.js"></script>
 <script>
-  // Update Pro button in nav
-  if (isPro()) {
+  // Update nav based on login state
+  if (isLoggedIn()) {
     const btn = document.getElementById('navProBtn');
-    if (btn) { btn.textContent = 'PRO ✓'; btn.classList.add('btn-pro-active'); }
+    if (btn) {
+      if (isPro()) {
+        btn.textContent = 'PRO ✓';
+        btn.classList.add('btn-pro-active');
+      } else {
+        btn.textContent = 'Account';
+        btn.href = '/auth.html';
+      }
+    }
   }
 </script>
 </body>

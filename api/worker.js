@@ -1,0 +1,686 @@
+// ── BQ Tools API Worker ──
+// Cloudflare Worker that proxies AI calls, manages credits, auth, and admin.
+
+export default {
+  async fetch(request, env) {
+    // CORS preflight
+    if (request.method === 'OPTIONS') {
+      return corsResponse(env, new Response(null, { status: 204 }));
+    }
+
+    const url = new URL(request.url);
+    const path = url.pathname;
+
+    try {
+      // ── Routes ──
+      if (path === '/api/auth/register' && request.method === 'POST') {
+        return corsResponse(env, await handleRegister(request, env));
+      }
+      if (path === '/api/auth/verify' && request.method === 'POST') {
+        return corsResponse(env, await handleVerify(request, env));
+      }
+      if (path === '/api/user' && request.method === 'GET') {
+        return corsResponse(env, await handleGetUser(request, env));
+      }
+      if (path === '/api/user/update' && request.method === 'POST') {
+        return corsResponse(env, await handleUpdateUser(request, env));
+      }
+      if (path === '/api/ai' && request.method === 'POST') {
+        return corsResponse(env, await handleAI(request, env));
+      }
+      if (path === '/api/credits/add' && request.method === 'POST') {
+        return corsResponse(env, await handleAddCredits(request, env));
+      }
+      if (path === '/api/admin/users' && request.method === 'GET') {
+        return corsResponse(env, await handleAdminUsers(request, env));
+      }
+      if (path === '/api/admin/user' && request.method === 'GET') {
+        return corsResponse(env, await handleAdminGetUser(request, env));
+      }
+      if (path === '/api/admin/toggle-pro' && request.method === 'POST') {
+        return corsResponse(env, await handleAdminTogglePro(request, env));
+      }
+      if (path === '/api/error-report' && request.method === 'POST') {
+        return corsResponse(env, await handleErrorReport(request, env));
+      }
+      if (path === '/api/admin/errors' && request.method === 'GET') {
+        return corsResponse(env, await handleAdminErrors(request, env));
+      }
+      if (path === '/api/projects' && request.method === 'GET') {
+        return corsResponse(env, await handleGetProjects(request, env));
+      }
+      if (path === '/api/projects' && request.method === 'POST') {
+        return corsResponse(env, await handleSaveProject(request, env));
+      }
+      if (path === '/api/credits/history' && request.method === 'GET') {
+        return corsResponse(env, await handleGetCreditHistory(request, env));
+      }
+      if (path === '/api/monthly-tip' && request.method === 'GET') {
+        return corsResponse(env, await handleMonthlyTip(request, env));
+      }
+      if (path === '/api/health') {
+        return corsResponse(env, json({ ok: true, ts: Date.now() }));
+      }
+
+      return corsResponse(env, json({ error: 'Not found' }, 404));
+    } catch (err) {
+      console.error('Worker error:', err);
+      return corsResponse(env, json({ error: err.message || 'Internal error' }, 500));
+    }
+  }
+};
+
+// ── Helpers ──
+
+function json(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
+function corsResponse(env, response) {
+  const origin = env.ALLOWED_ORIGIN || '*';
+  const headers = new Headers(response.headers);
+  headers.set('Access-Control-Allow-Origin', origin);
+  headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  headers.set('Access-Control-Max-Age', '86400');
+  return new Response(response.body, {
+    status: response.status,
+    headers
+  });
+}
+
+function generateCode() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+function generateToken() {
+  return crypto.randomUUID();
+}
+
+// Get user from token
+async function getUserByToken(token, env) {
+  if (!token) return null;
+  const email = await env.BQ_USERS.get(`token:${token}`);
+  if (!email) return null;
+  const raw = await env.BQ_USERS.get(`user:${email}`);
+  if (!raw) return null;
+  return JSON.parse(raw);
+}
+
+// Check and reset monthly credits if needed
+function checkMonthlyReset(user) {
+  if (!user.isPro || !user.resetDate) return user;
+  const now = new Date();
+  const reset = new Date(user.resetDate);
+  if (now >= reset) {
+    user.credits = 50;
+    user.creditsUsedThisMonth = 0;
+    // Set next reset date to same day next month
+    const next = new Date(reset);
+    next.setMonth(next.getMonth() + 1);
+    user.resetDate = next.toISOString();
+  }
+  return user;
+}
+
+// Rate limit check: max 10 requests per minute per user
+async function checkRateLimit(email, env) {
+  const now = Math.floor(Date.now() / 60000); // minute bucket
+  const key = `rate:${email}:${now}`;
+  const count = parseInt(await env.BQ_USERS.get(key) || '0');
+  if (count >= 10) return false;
+  await env.BQ_USERS.put(key, String(count + 1), { expirationTtl: 120 });
+  return true;
+}
+
+// Admin auth check
+function isAdmin(request, env) {
+  const auth = request.headers.get('Authorization') || '';
+  const password = auth.replace('Bearer ', '');
+  return password === (env.ADMIN_PASSWORD || 'bqadmin2026');
+}
+
+// ── Auth Routes ──
+
+async function handleRegister(request, env) {
+  const { email } = await request.json();
+  if (!email || !email.includes('@')) {
+    return json({ error: 'Valid email required' }, 400);
+  }
+
+  const emailLower = email.toLowerCase().trim();
+  const code = generateCode();
+
+  // Store verification code (expires in 10 min)
+  await env.BQ_USERS.put(`verify:${emailLower}`, code, { expirationTtl: 600 });
+
+  // Check if user already exists
+  const existing = await env.BQ_USERS.get(`user:${emailLower}`);
+
+  // MVP: return code on screen (Phase 2: send via email)
+  return json({
+    ok: true,
+    code, // REMOVE THIS IN PRODUCTION — show on screen for MVP only
+    isNew: !existing,
+    message: `Your verification code is: ${code}`
+  });
+}
+
+async function handleVerify(request, env) {
+  const { email, code } = await request.json();
+  if (!email || !code) return json({ error: 'Email and code required' }, 400);
+
+  const emailLower = email.toLowerCase().trim();
+  const stored = await env.BQ_USERS.get(`verify:${emailLower}`);
+
+  if (!stored || stored !== code.trim()) {
+    return json({ error: 'Invalid or expired code' }, 401);
+  }
+
+  // Delete used code
+  await env.BQ_USERS.delete(`verify:${emailLower}`);
+
+  // Check if user exists
+  let user = null;
+  const existing = await env.BQ_USERS.get(`user:${emailLower}`);
+
+  if (existing) {
+    user = JSON.parse(existing);
+    // Generate new token
+    const newToken = generateToken();
+    // Delete old token mapping
+    if (user.userToken) {
+      await env.BQ_USERS.delete(`token:${user.userToken}`);
+    }
+    user.userToken = newToken;
+    user.lastLogin = new Date().toISOString();
+    user = checkMonthlyReset(user);
+  } else {
+    // New user
+    const token = generateToken();
+    const freeCredits = parseInt(env.FREE_CREDITS || '5');
+    user = {
+      email: emailLower,
+      userToken: token,
+      credits: freeCredits,
+      isPro: false,
+      creditsUsedThisMonth: 0,
+      createdAt: new Date().toISOString(),
+      resetDate: null,
+      businessName: '',
+      phone: '',
+      logo: '',
+      businessType: '',
+      language: 'en',
+      lastLogin: new Date().toISOString(),
+      isNew: true
+    };
+  }
+
+  // Save user + token mapping
+  await env.BQ_USERS.put(`user:${emailLower}`, JSON.stringify(user));
+  await env.BQ_USERS.put(`token:${user.userToken}`, emailLower);
+
+  return json({
+    ok: true,
+    userToken: user.userToken,
+    user: sanitizeUser(user)
+  });
+}
+
+function sanitizeUser(user) {
+  // Return user data safe for client (no internal fields)
+  return {
+    email: user.email,
+    credits: user.credits,
+    isPro: user.isPro,
+    creditsUsedThisMonth: user.creditsUsedThisMonth,
+    createdAt: user.createdAt,
+    resetDate: user.resetDate,
+    businessName: user.businessName,
+    phone: user.phone,
+    logo: user.logo,
+    businessType: user.businessType,
+    language: user.language,
+    isNew: user.isNew || false
+  };
+}
+
+// ── User Routes ──
+
+async function handleGetUser(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const updated = checkMonthlyReset(user);
+  if (updated !== user) {
+    await env.BQ_USERS.put(`user:${updated.email}`, JSON.stringify(updated));
+  }
+
+  return json({ ok: true, user: sanitizeUser(updated) });
+}
+
+async function handleUpdateUser(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const updates = await request.json();
+
+  // Only allow updating these fields
+  const allowed = ['businessName', 'phone', 'logo', 'businessType', 'language'];
+  for (const key of allowed) {
+    if (updates[key] !== undefined) {
+      // Logo size check
+      if (key === 'logo' && updates[key] && updates[key].length > 70000) {
+        return json({ error: 'Logo too large. Max 50KB.' }, 400);
+      }
+      user[key] = updates[key];
+    }
+  }
+
+  // Clear isNew flag after profile setup
+  if (updates.businessName) {
+    user.isNew = false;
+  }
+
+  await env.BQ_USERS.put(`user:${user.email}`, JSON.stringify(user));
+  return json({ ok: true, user: sanitizeUser(user) });
+}
+
+// ── AI Proxy ──
+
+async function handleAI(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  // Rate limit
+  if (!(await checkRateLimit(user.email, env))) {
+    return json({ error: 'Rate limit exceeded. Max 10 requests per minute.' }, 429);
+  }
+
+  // Check credits
+  const updated = checkMonthlyReset(user);
+  if (updated.credits <= 0) {
+    return json({ error: 'No credits remaining', credits: 0 }, 402);
+  }
+
+  const body = await request.json();
+  const { action, images, prompt } = body;
+
+  if (!action || !prompt) {
+    return json({ error: 'action and prompt required' }, 400);
+  }
+
+  let aiResponse;
+  try {
+    // Try Claude first
+    aiResponse = await callClaudeAPI(env, prompt, images || []);
+  } catch (claudeErr) {
+    console.error('Claude error, trying Gemini:', claudeErr.message);
+    try {
+      aiResponse = await callGeminiAPI(env, prompt, images || []);
+    } catch (geminiErr) {
+      console.error('Gemini also failed:', geminiErr.message);
+      return json({ error: `AI failed: ${claudeErr.message}` }, 502);
+    }
+  }
+
+  // Deduct credit
+  updated.credits -= 1;
+  updated.creditsUsedThisMonth = (updated.creditsUsedThisMonth || 0) + 1;
+  await env.BQ_USERS.put(`user:${updated.email}`, JSON.stringify(updated));
+
+  // Log credit usage
+  await logCreditUsage(updated.email, action, body.projectTitle || action, env);
+
+  return json({
+    ok: true,
+    result: aiResponse,
+    credits: updated.credits
+  });
+}
+
+async function callClaudeAPI(env, prompt, images) {
+  const apiKey = env.CLAUDE_API_KEY;
+  if (!apiKey) throw new Error('Claude API key not configured');
+
+  const model = env.CLAUDE_MODEL || 'claude-3-5-haiku-20241022';
+
+  // Build content array
+  const content = [];
+  for (const img of images) {
+    content.push({
+      type: 'image',
+      source: { type: 'base64', media_type: 'image/jpeg', data: img }
+    });
+  }
+  content.push({ type: 'text', text: prompt });
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01'
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: 1500,
+      messages: [{ role: 'user', content }]
+    })
+  });
+
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+  const text = data.content?.map(c => c.text || '').join('') || '';
+  if (!text) throw new Error('Claude returned empty response');
+  return text;
+}
+
+async function callGeminiAPI(env, prompt, images) {
+  const apiKey = env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error('Gemini API key not configured');
+
+  const model = env.GEMINI_MODEL || 'gemini-2.5-flash';
+
+  const parts = [];
+  for (const img of images) {
+    parts.push({ inline_data: { mime_type: 'image/jpeg', data: img } });
+  }
+  parts.push({ text: prompt });
+
+  let res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts }] })
+    }
+  );
+
+  let data = await res.json();
+
+  // Fallback to older model if primary fails
+  if (data.error && env.GEMINI_MODEL_FALLBACK) {
+    res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${env.GEMINI_MODEL_FALLBACK}:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts }] })
+      }
+    );
+    data = await res.json();
+  }
+
+  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  if (!text) throw new Error('Gemini returned empty response');
+  return text;
+}
+
+// ── Credit Usage Logging ──
+
+async function logCreditUsage(email, tool, projectTitle, env) {
+  const key = `credits:${email}`;
+  const raw = await env.BQ_USERS.get(key);
+  const history = raw ? JSON.parse(raw) : [];
+
+  history.unshift({
+    date: new Date().toISOString(),
+    tool,
+    action: tool,
+    creditCost: 1,
+    projectTitle: projectTitle || tool
+  });
+
+  // Keep last 500 entries
+  if (history.length > 500) history.length = 500;
+
+  await env.BQ_USERS.put(key, JSON.stringify(history));
+}
+
+// ── Credits ──
+
+async function handleAddCredits(request, env) {
+  if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
+
+  const { email, amount, makePro } = await request.json();
+  if (!email || !amount) return json({ error: 'email and amount required' }, 400);
+
+  const emailLower = email.toLowerCase().trim();
+  const raw = await env.BQ_USERS.get(`user:${emailLower}`);
+  if (!raw) return json({ error: 'User not found' }, 404);
+
+  const user = JSON.parse(raw);
+  user.credits = (user.credits || 0) + parseInt(amount);
+
+  if (makePro) {
+    user.isPro = true;
+    if (!user.resetDate) {
+      const next = new Date();
+      next.setMonth(next.getMonth() + 1);
+      user.resetDate = next.toISOString();
+    }
+  }
+
+  await env.BQ_USERS.put(`user:${emailLower}`, JSON.stringify(user));
+  return json({ ok: true, credits: user.credits, isPro: user.isPro });
+}
+
+// ── Admin ──
+
+async function handleAdminUsers(request, env) {
+  if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
+
+  // List all users from KV (prefix scan)
+  const list = await env.BQ_USERS.list({ prefix: 'user:' });
+  const users = [];
+
+  for (const key of list.keys) {
+    const raw = await env.BQ_USERS.get(key.name);
+    if (raw) {
+      const u = JSON.parse(raw);
+      users.push({
+        email: u.email,
+        credits: u.credits,
+        isPro: u.isPro,
+        businessName: u.businessName,
+        createdAt: u.createdAt,
+        lastLogin: u.lastLogin,
+        creditsUsedThisMonth: u.creditsUsedThisMonth
+      });
+    }
+  }
+
+  return json({ ok: true, users, count: users.length });
+}
+
+async function handleAdminGetUser(request, env) {
+  if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
+
+  const url = new URL(request.url);
+  const email = url.searchParams.get('email');
+  if (!email) return json({ error: 'email param required' }, 400);
+
+  const raw = await env.BQ_USERS.get(`user:${email.toLowerCase().trim()}`);
+  if (!raw) return json({ error: 'User not found' }, 404);
+
+  const user = JSON.parse(raw);
+
+  // Also get their credit history
+  const creditsRaw = await env.BQ_USERS.get(`credits:${user.email}`);
+  const creditHistory = creditsRaw ? JSON.parse(creditsRaw) : [];
+
+  // And project history
+  const projectsRaw = await env.BQ_USERS.get(`projects:${user.email}`);
+  const projects = projectsRaw ? JSON.parse(projectsRaw) : [];
+
+  return json({ ok: true, user: sanitizeUser(user), creditHistory, projects });
+}
+
+async function handleAdminTogglePro(request, env) {
+  if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
+
+  const { email } = await request.json();
+  if (!email) return json({ error: 'email required' }, 400);
+
+  const emailLower = email.toLowerCase().trim();
+  const raw = await env.BQ_USERS.get(`user:${emailLower}`);
+  if (!raw) return json({ error: 'User not found' }, 404);
+
+  const user = JSON.parse(raw);
+  user.isPro = !user.isPro;
+
+  if (user.isPro) {
+    user.credits = 50;
+    user.creditsUsedThisMonth = 0;
+    const next = new Date();
+    next.setMonth(next.getMonth() + 1);
+    user.resetDate = next.toISOString();
+  }
+
+  await env.BQ_USERS.put(`user:${emailLower}`, JSON.stringify(user));
+  return json({ ok: true, isPro: user.isPro, credits: user.credits });
+}
+
+// ── Projects ──
+
+async function handleGetProjects(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const raw = await env.BQ_USERS.get(`projects:${user.email}`);
+  const projects = raw ? JSON.parse(raw) : [];
+  return json({ ok: true, projects });
+}
+
+async function handleSaveProject(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const project = await request.json();
+  const key = `projects:${user.email}`;
+  const raw = await env.BQ_USERS.get(key);
+  const projects = raw ? JSON.parse(raw) : [];
+
+  projects.unshift({
+    id: Date.now(),
+    date: new Date().toISOString(),
+    tool: project.tool || 'compare',
+    title: project.title || 'Untitled',
+    thumbnail: project.thumbnail || '', // 200px base64
+    result_summary: project.result_summary || ''
+  });
+
+  // Keep last 200 projects
+  if (projects.length > 200) projects.length = 200;
+
+  await env.BQ_USERS.put(key, JSON.stringify(projects));
+  return json({ ok: true, count: projects.length });
+}
+
+// ── Credit History ──
+
+async function handleGetCreditHistory(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const raw = await env.BQ_USERS.get(`credits:${user.email}`);
+  const history = raw ? JSON.parse(raw) : [];
+  return json({ ok: true, history });
+}
+
+// ── Monthly Tip ──
+
+async function handleMonthlyTip(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  // Check if we already have a recent tip
+  const tipKey = `tip:${user.email}`;
+  const existingTip = await env.BQ_USERS.get(tipKey);
+  if (existingTip) {
+    const tip = JSON.parse(existingTip);
+    const tipDate = new Date(tip.date);
+    const daysSince = (Date.now() - tipDate.getTime()) / (1000 * 60 * 60 * 24);
+    if (daysSince < 30) {
+      return json({ ok: true, tip: tip.text, cached: true });
+    }
+  }
+
+  // Get credit history for analysis
+  const creditsRaw = await env.BQ_USERS.get(`credits:${user.email}`);
+  const history = creditsRaw ? JSON.parse(creditsRaw) : [];
+
+  if (history.length === 0) {
+    const defaultTip = "Welcome! Start with the Compare tool — it's free and helps you build your portfolio.";
+    return json({ ok: true, tip: defaultTip, cached: false });
+  }
+
+  // Analyze usage
+  const toolCounts = {};
+  history.forEach(h => {
+    toolCounts[h.tool] = (toolCounts[h.tool] || 0) + 1;
+  });
+
+  const topTool = Object.entries(toolCounts).sort((a, b) => b[1] - a[1])[0];
+  const allTools = ['AI Analysis', 'Quick Report', 'Smart Estimate', 'Social Post', 'Review Request', 'Quick Sketch', 'AI Assistant'];
+  const unused = allTools.filter(t => !toolCounts[t]);
+
+  // Generate tip using AI (FREE — no credit cost)
+  const tipPrompt = `You are BQ Assistant for contractors. Based on this usage data, give ONE short actionable tip (max 2 sentences):
+- Most used: ${topTool[0]} (${topTool[1]} times)
+- Total actions: ${history.length}
+- Unused tools: ${unused.join(', ') || 'none'}
+Respond with just the tip text, no quotes or prefix.`;
+
+  let tipText;
+  try {
+    tipText = await callClaudeAPI(env, tipPrompt, []);
+  } catch {
+    tipText = unused.length > 0
+      ? `You haven't tried ${unused[0]} yet — give it a shot!`
+      : `Great usage! Your most-used tool is ${topTool[0]}. Keep building that portfolio!`;
+  }
+
+  await env.BQ_USERS.put(tipKey, JSON.stringify({ text: tipText, date: new Date().toISOString() }));
+  return json({ ok: true, tip: tipText, cached: false });
+}
+
+// ── Error Reporting ──
+
+async function handleErrorReport(request, env) {
+  const body = await request.json();
+  const key = `error:${Date.now()}`;
+  await env.BQ_USERS.put(key, JSON.stringify({
+    ...body,
+    timestamp: new Date().toISOString()
+  }), { expirationTtl: 2592000 }); // 30 days
+
+  return json({ ok: true });
+}
+
+async function handleAdminErrors(request, env) {
+  if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
+
+  const list = await env.BQ_USERS.list({ prefix: 'error:' });
+  const errors = [];
+
+  for (const key of list.keys) {
+    const raw = await env.BQ_USERS.get(key.name);
+    if (raw) errors.push(JSON.parse(raw));
+  }
+
+  return json({ ok: true, errors, count: errors.length });
+}
