@@ -633,6 +633,145 @@ function showPageTip() {
   setTimeout(() => banner.remove(), 10000);
 }
 
+// ── How It Works Builder ──
+
+function buildHowItWorks(containerId, config) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const h = lang === 'he';
+
+  const toggleText = h ? '📖 איך זה עובד' : '📖 How it works';
+
+  // Check for demo video
+  const videoSrc = config.video || null;
+  let videoHtml;
+  if (videoSrc) {
+    videoHtml = `<div class="tool-demo-video"><video src="${videoSrc}" autoplay muted loop playsinline poster="${config.videoPoster || ''}"></video></div>`;
+  } else {
+    videoHtml = `<div class="tool-demo-video">🎬 ${h ? 'סרטון הדרכה בקרוב' : 'Video tutorial coming soon'}</div>`;
+  }
+
+  el.innerHTML = `
+    <button class="hiw-toggle" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+      ${toggleText}
+      <span class="hiw-arrow">▼</span>
+    </button>
+    <div class="hiw-body">
+      <div class="hiw-steps">
+        ${config.steps.map((s, i) => `
+          <div class="hiw-step">
+            <span class="hiw-num">${i + 1}</span>
+            <span class="hiw-icon">${s.icon}</span>
+            <p>${h ? s.he : s.en}</p>
+          </div>`).join('')}
+      </div>
+      <div class="hiw-example">${h ? config.example.he : config.example.en}</div>
+      ${videoHtml}
+    </div>`;
+}
+
+const HIW_CONFIGS = {
+  compare: {
+    steps: [
+      { icon: '📸', en: 'Upload a BEFORE photo', he: 'העלה תמונת לפני' },
+      { icon: '📸', en: 'Upload an AFTER photo', he: 'העלה תמונת אחרי' },
+      { icon: '🔀', en: 'Slide to compare, then click Analyze for AI insights', he: 'הזז את הסליידר, ואז לחץ Analyze לניתוח AI' },
+    ],
+    example: {
+      en: 'Kitchen remodel: AI detected new countertops, backsplash, and lighting. Score: 9/10',
+      he: 'שיפוץ מטבח: AI זיהה משטחי שיש חדשים, חיפוי ותאורה. ציון: 9/10'
+    }
+  },
+  report: {
+    steps: [
+      { icon: '📸', en: 'Upload 1-10 project photos', he: 'העלה 1-10 תמונות פרויקט' },
+      { icon: '✍️', en: 'Describe what was done', he: 'תאר מה בוצע' },
+      { icon: '📄', en: 'Get a professional PDF report with your logo', he: 'קבל דוח PDF מקצועי עם הלוגו שלך' },
+    ],
+    example: {
+      en: 'Bathroom renovation report: 5 photos → 2-page PDF with project overview, work completed, and AI quality assessment',
+      he: 'דוח שיפוץ אמבטיה: 5 תמונות → PDF בן 2 עמודים עם סקירה, עבודות שבוצעו, והערכת איכות AI'
+    }
+  },
+  estimate: {
+    steps: [
+      { icon: '📸', en: 'Take a photo of the space', he: 'צלם את החלל' },
+      { icon: '✍️', en: "Describe the project (e.g. 'replace kitchen tiles')", he: "תאר את הפרויקט (למשל 'החלפת אריחים במטבח')" },
+      { icon: '💰', en: 'Get cost breakdown: materials + labor + total range', he: 'קבל פירוט עלויות: חומרים + עבודה + טווח סופי' },
+    ],
+    example: {
+      en: 'Kitchen tile replacement: Materials $800-1,200, Labor $600-900, Total $1,400-2,100',
+      he: 'החלפת אריחים במטבח: חומרים $800-1,200, עבודה $600-900, סה״כ $1,400-2,100'
+    }
+  },
+  'social-post': {
+    steps: [
+      { icon: '📸', en: 'Upload before/after photos', he: 'העלה תמונות לפני/אחרי' },
+      { icon: '📱', en: 'Choose platform: Instagram / Facebook / LinkedIn', he: 'בחר פלטפורמה: Instagram / Facebook / LinkedIn' },
+      { icon: '📋', en: 'Copy AI-generated caption with hashtags', he: 'העתק קפשן שנוצר ע״י AI עם האשטגים' },
+    ],
+    example: {
+      en: '🏠 From outdated to outstanding! This kitchen transformation features custom cabinetry... #KitchenRemodel #BeforeAndAfter',
+      he: '🏠 מישן למרהיב! שיפוץ מטבח זה כולל ארונות מותאמים... #שיפוץמטבח #לפניואחרי'
+    }
+  },
+  review: {
+    steps: [
+      { icon: '✍️', en: 'Enter client name + work type', he: 'הכנס שם לקוח + סוג עבודה' },
+      { icon: '📱', en: 'Choose: SMS / WhatsApp / Email', he: 'בחר: SMS / WhatsApp / Email' },
+      { icon: '📋', en: 'Copy personalized review request message', he: 'העתק הודעת בקשת ביקורת מותאמת' },
+    ],
+    example: {
+      en: 'Hi Sarah! Thanks for trusting us with your kitchen remodel. We\'d love your feedback: [Google Review Link]',
+      he: 'היי שרה! תודה שסמכת עלינו בשיפוץ המטבח. נשמח לביקורת שלך: [לינק ביקורת Google]'
+    }
+  },
+  sketch: {
+    steps: [
+      { icon: '✏️', en: 'Draw on canvas or upload a photo of your sketch', he: 'צייר על הקנבס או העלה תמונה של סקיצה' },
+      { icon: '🧠', en: "Click 'Clean Up' for AI to redraw professionally", he: 'לחץ \'Clean Up\' כדי ש-AI ישרטט מקצועית' },
+      { icon: '📄', en: 'Export as PNG or PDF', he: 'ייצא כ-PNG או PDF' },
+    ],
+    example: {
+      en: 'Hand-drawn floor plan → AI cleaned to professional blueprint with straight lines and measurements',
+      he: 'תוכנית קומה ביד → AI ניקה לשרטוט מקצועי עם קווים ישרים ומידות'
+    }
+  },
+  'social-analysis': {
+    steps: [
+      { icon: '📸', en: 'Enter Instagram username', he: 'הכנס שם משתמש Instagram' },
+      { icon: '🔍', en: 'AI fetches real profile data', he: 'AI שולף נתוני פרופיל אמיתיים' },
+      { icon: '📊', en: 'Get scores, engagement analysis, and recommendations', he: 'קבל ציונים, ניתוח אינטראקציה, והמלצות' },
+    ],
+    example: {
+      en: '@goldremodeling: 2,450 followers, 3.2% engagement, posts 2x/week. Recommendation: Add more before/after reels',
+      he: '@goldremodeling: 2,450 עוקבים, 3.2% אינטראקציה, 2 פוסטים/שבוע. המלצה: הוסיפו עוד רילס לפני/אחרי'
+    }
+  },
+  chat: {
+    steps: [
+      { icon: '💬', en: 'Choose AI model (GPT-4o, Claude, Gemini, etc.)', he: 'בחר מודל AI (GPT-4o, Claude, Gemini וכו\')' },
+      { icon: '✍️', en: 'Type or 🎤 speak your question', he: 'הקלד או 🎤 דבר את השאלה' },
+      { icon: '⚡', en: 'Get expert answers about permits, estimates, contracts, marketing', he: 'קבל תשובות מומחה על היתרים, הצעות מחיר, חוזים, שיווק' },
+    ],
+    example: {
+      en: 'Q: What permits do I need for a bathroom addition in LA? A: You\'ll need a building permit from LADBS...',
+      he: 'ש: אילו היתרים אני צריך להרחבת אמבטיה ב-LA? ת: תצטרך היתר בנייה מ-LADBS...'
+    }
+  },
+  directory: {
+    steps: [
+      { icon: '📝', en: 'Sign up for free', he: 'הירשם בחינם' },
+      { icon: '⭐', en: 'Go Pro to add phone, photos, and reviews', he: 'שדרג ל-Pro כדי להוסיף טלפון, תמונות וביקורות' },
+      { icon: '📍', en: 'Add your work locations to appear on the map', he: 'הוסף את מיקומי העבודה שלך כדי להופיע במפה' },
+    ],
+    example: {
+      en: 'Gold Remodeling: Pro listing with 12 photos, 8 reviews, and 5 work locations across LA',
+      he: 'Gold Remodeling: רישום Pro עם 12 תמונות, 8 ביקורות, ו-5 מיקומי עבודה ברחבי LA'
+    }
+  },
+};
+
 // ── Buy Credits Modal ──
 
 function showBuyCreditsModal() {

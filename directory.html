@@ -134,6 +134,12 @@
   <p data-en="Find trusted contractors near you" data-he="מצא קבלנים מהימנים באזור שלך">Find trusted contractors near you</p>
 </section>
 
+<!-- How to get listed -->
+<div style="max-width:900px;margin:0 auto;padding:0 16px;">
+  <div id="hiw-directory"></div>
+</div>
+<script>document.addEventListener('DOMContentLoaded',()=>{if(typeof buildHowItWorks==='function')buildHowItWorks('hiw-directory',HIW_CONFIGS.directory)});</script>
+
 <!-- Search + Filter -->
 <div class="dir-search">
   <input class="input" type="text" id="searchInput" placeholder="Search by name, type, or area..." data-en-placeholder="Search by name, type, or area..." data-he-placeholder="חפש לפי שם, סוג עבודה או אזור...">
