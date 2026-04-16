@@ -395,7 +395,7 @@ async function finishOnboarding() {
     setLang(selectedLang);
     showToast(lang === 'he' ? '✓ הפרופיל מוכן!' : '✓ Profile ready!', 'ok');
     setTimeout(() => {
-      window.location.href = '/tools/compare.html';
+      window.location.href = '/home.html';
     }, 800);
   } catch (err) {
     showToast(err.message, 'err');

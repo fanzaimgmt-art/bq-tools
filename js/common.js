@@ -547,7 +547,7 @@ function runTutorial() {
       target: null, pos: 'center',
       title: t({ en: "You're ready!", he: 'מוכן!', es: '¡Listo!' }),
       text: t({ en: 'Start by comparing your first before/after photos.', he: 'התחל בהשוואת תמונות לפני/אחרי', es: 'Empieza comparando tus primeras fotos de antes/después.' }),
-      cta: { text: t({ en: 'Go to Compare →', he: 'לך ל-Compare →', es: 'Ir a Comparar →' }), href: '/tools/compare.html' }
+      cta: { text: t({ en: 'Explore Tools →', he: 'גלה כלים →', es: 'Explorar Herramientas →' }), href: '/home.html' }
     },
   ];
 

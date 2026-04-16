@@ -213,7 +213,7 @@
       <div class="profile-info" id="profileInfo"></div>
 
       <a href="/dashboard.html" class="btn" style="width:100%;margin-bottom:8px;" data-en="Open Dashboard" data-es="Abrir Panel" data-he="פתח דשבורד">Open Dashboard</a>
-      <a href="/tools/compare.html" class="btn btn-primary" style="width:100%;margin-bottom:8px;" data-en="Go to Tools →" data-es="Ir a Herramientas →" data-he="← לך לכלים">Go to Tools →</a>
+      <a href="/home.html" class="btn btn-primary" style="width:100%;margin-bottom:8px;" data-en="Go to Tools →" data-es="Ir a Herramientas →" data-he="← לך לכלים">Go to Tools →</a>
 
       <div class="divider" data-en="Need more credits?" data-es="¿Necesitas más créditos?" data-he="צריך עוד קרדיטים?">Need more credits?</div>
 
@@ -403,14 +403,18 @@ function renderProfile() {
   `;
 }
 
-// Export/Import profile
-// On load — check if already logged in
-if (isLoggedIn()) {
+// On load — if already logged in, redirect to home (not profile view).
+// Use ?stay=1 if you explicitly want to view account info on this page.
+const _urlParams = new URLSearchParams(window.location.search);
+if (isLoggedIn() && !_urlParams.has('stay')) {
+  window.location.replace('/home.html');
+} else if (isLoggedIn()) {
   fetchUser().then(() => {
     showStep('stepProfile');
     renderProfile();
   }).catch(() => {
-    // Token invalid, show login
+    localStorage.removeItem('bq_token');
+    localStorage.removeItem('bq_user');
     showStep('stepEmail');
   });
 } else {
