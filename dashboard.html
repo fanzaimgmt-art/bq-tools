@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Dashboard</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  body { display: flex; flex-direction: column; }
+
+  .dash-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .dash-card {
+    background: var(--sf);
+    border: 1px solid var(--bd);
+    border-radius: 12px;
+    padding: 16px;
+  }
+  .dash-card.full { grid-column: 1 / -1; }
+  .dash-num { font-size: 32px; font-weight: 900; color: var(--ac); }
+  .dash-label { font-size: 12px; color: var(--txd); margin-top: 2px; }
+
+  /* Progress bar */
+  .credit-progress {
+    width: 100%; height: 10px; background: var(--bd); border-radius: 5px; margin-top: 10px; overflow: hidden;
+  }
+  .credit-fill {
+    height: 100%; background: var(--ac); border-radius: 5px; transition: width .5s;
+  }
+  .credit-fill.low { background: var(--red); }
+
+  /* Pie chart (CSS conic-gradient) */
+  .pie-chart {
+    width: 160px; height: 160px; border-radius: 50%; margin: 0 auto 12px;
+    position: relative;
+  }
+  .pie-center {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 80px; height: 80px; border-radius: 50%; background: var(--sf);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; color: var(--ac);
+  }
+  .pie-legend {
+    display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+  }
+  .pie-legend-item {
+    display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--txd);
+  }
+  .pie-legend-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  }
+
+  /* Bar chart */
+  .bar-chart {
+    display: flex; align-items: flex-end; gap: 3px; height: 120px; padding: 0 4px;
+  }
+  .bar-col {
+    flex: 1; background: var(--acd); border-radius: 3px 3px 0 0; min-width: 4px;
+    transition: height .3s; position: relative; cursor: default;
+  }
+  .bar-col:hover { background: var(--ac); }
+  .bar-col .bar-tip {
+    display: none; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+    background: var(--bg); border: 1px solid var(--bd); border-radius: 6px;
+    padding: 4px 8px; font-size: 11px; white-space: nowrap; z-index: 10;
+  }
+  .bar-col:hover .bar-tip { display: block; }
+  .bar-labels {
+    display: flex; gap: 3px; padding: 4px 4px 0; justify-content: space-between;
+  }
+  .bar-labels span { font-size: 9px; color: var(--txd); }
+
+  /* Credit table */
+  .credit-table { width: 100%; border-collapse: collapse; }
+  .credit-table th {
+    text-align: left; font-size: 11px; color: var(--txd); font-weight: 700;
+    padding: 8px 6px; border-bottom: 1px solid var(--bd); letter-spacing: .5px;
+  }
+  .credit-table td {
+    font-size: 13px; padding: 8px 6px; border-bottom: 1px solid rgba(255,255,255,.03);
+  }
+  .credit-table .tool-tag {
+    font-size: 11px; background: var(--acd); color: var(--ac); padding: 2px 8px;
+    border-radius: 4px; display: inline-block;
+  }
+  .credit-table .cost { color: var(--red); font-weight: 600; }
+
+  /* Tip card */
+  .tip-card {
+    background: linear-gradient(135deg, rgba(232,197,71,.08), rgba(232,197,71,.02));
+    border: 1px solid var(--acd);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+  .tip-card .tip-icon { font-size: 24px; margin-bottom: 8px; }
+  .tip-card .tip-text { font-size: 14px; line-height: 1.6; color: var(--tx); }
+
+  /* Error widget */
+  .error-widget {
+    font-size: 13px; color: var(--txd); display: flex; align-items: center; gap: 6px;
+  }
+  .error-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .error-dot.ok { background: var(--grn); }
+  .error-dot.bad { background: var(--red); }
+
+  @media (max-width: 600px) {
+    .dash-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/" class="nav-link" data-en="← Home" data-he="← בית">← Home</a>
+    <div class="credit-bar" id="creditBar" style="display:none;">
+      <span>⚡</span><span class="credit-count">0</span>
+    </div>
+    <a href="/auth.html" class="btn btn-sm" id="navAuthBtn">Account</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <h1 class="page-title" data-en="Dashboard" data-he="דשבורד">Dashboard</h1>
+  <p class="page-sub" id="dashSub" data-en="Your usage stats and insights" data-he="הסטטיסטיקות שלך">Your usage stats and insights</p>
+
+  <!-- AI Monthly Tip -->
+  <div class="tip-card" id="tipCard" style="display:none;">
+    <div class="tip-icon">💡</div>
+    <div class="tip-text" id="tipText"></div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="dash-grid">
+    <div class="dash-card">
+      <div class="dash-num" id="dCredits">0</div>
+      <div class="dash-label" data-en="Credits Remaining" data-he="קרדיטים נשארו">Credits Remaining</div>
+      <div class="credit-progress"><div class="credit-fill" id="creditFill" style="width:0%"></div></div>
+    </div>
+    <div class="dash-card">
+      <div class="dash-num" id="dUsed">0</div>
+      <div class="dash-label" data-en="Used This Month" data-he="בשימוש החודש">Used This Month</div>
+    </div>
+    <div class="dash-card">
+      <div class="dash-num" id="dProjects">0</div>
+      <div class="dash-label" data-en="Total Projects" data-he="סה״כ פרויקטים">Total Projects</div>
+    </div>
+    <div class="dash-card">
+      <div class="dash-num" id="dTopTool">—</div>
+      <div class="dash-label" data-en="Most Used Tool" data-he="הכלי הנפוץ">Most Used Tool</div>
+    </div>
+
+    <!-- Plan card -->
+    <div class="dash-card full" style="display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-size:14px;font-weight:700;" id="dPlan">Free</div>
+        <div style="font-size:12px;color:var(--txd);" id="dPlanSub"></div>
+      </div>
+      <a href="/auth.html" class="btn btn-sm" id="dPlanBtn" data-en="Buy Credits" data-he="קנה קרדיטים">Buy Credits</a>
+    </div>
+  </div>
+
+  <!-- Pie Chart: Credits by Tool -->
+  <div class="dash-card" style="margin-bottom:12px;">
+    <div style="font-size:14px;font-weight:700;margin-bottom:12px;" data-en="Credits by Tool" data-he="קרדיטים לפי כלי">Credits by Tool</div>
+    <div class="pie-chart" id="pieChart"></div>
+    <div class="pie-legend" id="pieLegend"></div>
+  </div>
+
+  <!-- Bar Chart: Daily Usage -->
+  <div class="dash-card" style="margin-bottom:12px;">
+    <div style="font-size:14px;font-weight:700;margin-bottom:12px;" data-en="Daily Usage (Last 30 Days)" data-he="שימוש יומי (30 יום אחרונים)">Daily Usage (Last 30 Days)</div>
+    <div class="bar-chart" id="barChart"></div>
+    <div class="bar-labels" id="barLabels"></div>
+  </div>
+
+  <!-- Credit Usage Table -->
+  <div class="dash-card" style="margin-bottom:12px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div style="font-size:14px;font-weight:700;" data-en="Recent Usage" data-he="שימוש אחרון">Recent Usage</div>
+      <button class="btn btn-sm" onclick="exportCSV()" style="font-size:12px;min-height:36px;padding:6px 12px;" data-en="Export CSV" data-he="ייצוא CSV">Export CSV</button>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="credit-table" id="creditTable">
+        <thead>
+          <tr>
+            <th data-en="Date" data-he="תאריך">Date</th>
+            <th data-en="Tool" data-he="כלי">Tool</th>
+            <th data-en="Project" data-he="פרויקט">Project</th>
+            <th data-en="Cost" data-he="עלות">Cost</th>
+          </tr>
+        </thead>
+        <tbody id="creditTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Error widget -->
+  <div class="dash-card" style="margin-bottom:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div class="error-widget" id="errorWidget">
+        <div class="error-dot ok"></div>
+        <span data-en="0 errors this week" data-he="0 שגיאות השבוע">0 errors this week</span>
+      </div>
+      <button class="btn btn-sm" onclick="reportErrors()" style="font-size:12px;min-height:36px;padding:6px 12px;" data-en="Report Issue" data-he="דווח בעיה">Report Issue</button>
+    </div>
+  </div>
+</div>
+
+<footer class="footer"><div class="footer-brand">Powered by BQ Tools — BQ Production LLC</div></footer>
+
+<script src="js/ai.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/crypto.js"></script>
+<script src="js/common.js"></script>
+<script>
+if (!isLoggedIn()) {
+  window.location.href = '/auth.html';
+}
+
+const TOOL_COLORS = {
+  'AI Analysis': '#e8c547',
+  'Quick Report': '#74b9ff',
+  'Smart Estimate': '#51cf66',
+  'Social Post': '#ff6b6b',
+  'Review Request': '#a29bfe',
+  'Quick Sketch': '#fd79a8',
+  'AI Assistant': '#fdcb6e',
+};
+
+let creditHistory = [];
+
+async function loadDashboard() {
+  const user = getCachedUser();
+  if (!user) return;
+
+  // Update nav
+  updateCreditDisplay();
+  const navBtn = document.getElementById('navAuthBtn');
+  if (isPro()) { navBtn.textContent = 'PRO'; navBtn.classList.add('btn-pro-active'); }
+
+  // Stats
+  document.getElementById('dCredits').textContent = user.credits || 0;
+  document.getElementById('dUsed').textContent = user.creditsUsedThisMonth || 0;
+
+  const maxCredits = user.isPro ? 50 : 5;
+  const pct = Math.min(100, ((user.credits || 0) / maxCredits) * 100);
+  const fill = document.getElementById('creditFill');
+  fill.style.width = pct + '%';
+  if (pct < 20) fill.classList.add('low');
+
+  // Plan
+  document.getElementById('dPlan').textContent = user.isPro ? 'PRO' : 'Free';
+  document.getElementById('dPlan').style.color = user.isPro ? 'var(--ac)' : 'var(--txd)';
+  document.getElementById('dPlanSub').textContent = user.isPro
+    ? (lang === 'he' ? '50 קרדיטים/חודש' : '50 credits/month')
+    : (lang === 'he' ? '5 קרדיטים חד פעמיים' : '5 one-time credits');
+
+  // Load projects count
+  try {
+    const projects = await getProjectsFromServer();
+    document.getElementById('dProjects').textContent = projects.length;
+  } catch { document.getElementById('dProjects').textContent = '—'; }
+
+  // Load credit history
+  try {
+    creditHistory = await getCreditHistory();
+  } catch { creditHistory = []; }
+
+  // Top tool
+  const toolCounts = {};
+  creditHistory.forEach(h => {
+    toolCounts[h.tool] = (toolCounts[h.tool] || 0) + 1;
+  });
+  const sorted = Object.entries(toolCounts).sort((a, b) => b[1] - a[1]);
+  document.getElementById('dTopTool').textContent = sorted.length > 0 ? sorted[0][0] : '—';
+  document.getElementById('dTopTool').style.fontSize = sorted.length > 0 ? '16px' : '32px';
+
+  // Render charts
+  renderPieChart(toolCounts);
+  renderBarChart(creditHistory);
+  renderTable(creditHistory);
+  renderErrors();
+
+  // Monthly tip
+  try {
+    const tip = await getMonthlyTip();
+    if (tip) {
+      document.getElementById('tipText').textContent = tip;
+      document.getElementById('tipCard').style.display = 'block';
+    }
+  } catch {}
+}
+
+function renderPieChart(toolCounts) {
+  const entries = Object.entries(toolCounts);
+  if (entries.length === 0) {
+    document.getElementById('pieChart').innerHTML = '<div style="text-align:center;color:var(--txd);font-size:13px;padding:40px 0;">No data yet</div>';
+    return;
+  }
+
+  const total = entries.reduce((s, e) => s + e[1], 0);
+  let gradientParts = [];
+  let offset = 0;
+
+  entries.forEach(([tool, count]) => {
+    const pct = (count / total) * 100;
+    const color = TOOL_COLORS[tool] || '#888';
+    gradientParts.push(`${color} ${offset}% ${offset + pct}%`);
+    offset += pct;
+  });
+
+  const chart = document.getElementById('pieChart');
+  chart.style.background = `conic-gradient(${gradientParts.join(', ')})`;
+  chart.innerHTML = `<div class="pie-center">${total}</div>`;
+
+  const legend = document.getElementById('pieLegend');
+  legend.innerHTML = entries.map(([tool, count]) =>
+    `<div class="pie-legend-item">
+      <div class="pie-legend-dot" style="background:${TOOL_COLORS[tool] || '#888'}"></div>
+      ${tool} (${count})
+    </div>`
+  ).join('');
+}
+
+function renderBarChart(history) {
+  const chart = document.getElementById('barChart');
+  const labels = document.getElementById('barLabels');
+
+  // Last 30 days
+  const days = {};
+  const now = new Date();
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().split('T')[0];
+    days[key] = 0;
+  }
+
+  history.forEach(h => {
+    const key = h.date.split('T')[0];
+    if (days[key] !== undefined) days[key]++;
+  });
+
+  const vals = Object.values(days);
+  const maxVal = Math.max(...vals, 1);
+  const dayKeys = Object.keys(days);
+
+  chart.innerHTML = vals.map((v, i) => {
+    const h = Math.max(2, (v / maxVal) * 100);
+    const date = dayKeys[i];
+    return `<div class="bar-col" style="height:${h}%"><div class="bar-tip">${date}: ${v}</div></div>`;
+  }).join('');
+
+  // Show every 7th label
+  labels.innerHTML = dayKeys.map((k, i) =>
+    i % 7 === 0 ? `<span>${k.slice(5)}</span>` : ''
+  ).join('');
+}
+
+function renderTable(history) {
+  const tbody = document.getElementById('creditTableBody');
+  const recent = history.slice(0, 20);
+
+  if (recent.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--txd);padding:20px;">No usage yet</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = recent.map(h => {
+    const date = new Date(h.date).toLocaleDateString();
+    return `<tr>
+      <td style="color:var(--txd);font-size:12px;">${date}</td>
+      <td><span class="tool-tag">${h.tool}</span></td>
+      <td style="font-size:13px;">${h.projectTitle || '—'}</td>
+      <td class="cost">-${h.creditCost}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderErrors() {
+  const errors = JSON.parse(localStorage.getItem('bq_errors') || '[]');
+  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const recent = errors.filter(e => new Date(e.timestamp).getTime() > weekAgo);
+
+  const widget = document.getElementById('errorWidget');
+  if (recent.length === 0) {
+    widget.innerHTML = `<div class="error-dot ok"></div><span>${lang === 'he' ? '0 שגיאות השבוע ✓' : '0 errors this week ✓'}</span>`;
+  } else {
+    widget.innerHTML = `<div class="error-dot bad"></div><span>${recent.length} ${lang === 'he' ? 'שגיאות השבוע' : 'issues detected'}</span>`;
+  }
+}
+
+function exportCSV() {
+  if (creditHistory.length === 0) {
+    showToast(lang === 'he' ? 'אין נתונים' : 'No data to export', 'info');
+    return;
+  }
+
+  let csv = 'Date,Tool,Project,Credits\n';
+  creditHistory.forEach(h => {
+    csv += `"${h.date}","${h.tool}","${h.projectTitle || ''}",${h.creditCost}\n`;
+  });
+
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `bq-usage-${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast(lang === 'he' ? 'CSV יוצא!' : 'CSV exported!', 'ok');
+}
+
+function reportErrors() {
+  const errors = JSON.parse(localStorage.getItem('bq_errors') || '[]');
+  if (errors.length === 0) {
+    showToast(lang === 'he' ? 'אין שגיאות לדווח' : 'No errors to report', 'info');
+    return;
+  }
+
+  // Send to server
+  errors.slice(0, 10).forEach(err => {
+    apiCall('/api/error-report', { method: 'POST', body: err }).catch(() => {});
+  });
+
+  // Clear local
+  localStorage.setItem('bq_errors', '[]');
+  renderErrors();
+  showToast(lang === 'he' ? 'דווח נשלח!' : 'Report sent!', 'ok');
+}
+
+loadDashboard();
+</script>
+</body>
+</html>
