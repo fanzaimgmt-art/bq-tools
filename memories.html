@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Memories</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  body { display: flex; flex-direction: column; }
+
+  .mem-header {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .mem-header h1 { font-size: 22px; font-weight: 900; margin-right: auto; }
+  .mem-header h1 .icon { font-size: 28px; }
+
+  .mem-controls { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .mem-toggle {
+    display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--txd);
+    cursor: pointer; padding: 8px 14px; border: 1px solid var(--bd); border-radius: 8px;
+    background: var(--sf); min-height: 44px;
+  }
+  .mem-toggle input { accent-color: var(--ac); width: 16px; height: 16px; }
+  .mem-toggle.on { border-color: var(--ac); color: var(--ac); }
+
+  .mem-filter {
+    padding: 8px 14px; border: 1px solid var(--bd); border-radius: 8px;
+    background: var(--sf); color: var(--tx); font-family: 'Heebo', sans-serif;
+    font-size: 14px; min-height: 44px;
+  }
+  .mem-filter:focus { outline: none; border-color: var(--ac); }
+
+  .mem-table-wrap {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 14px;
+    overflow: hidden; margin-bottom: 20px;
+  }
+
+  .mem-table { width: 100%; border-collapse: collapse; }
+  .mem-table th {
+    text-align: left; padding: 12px 16px; font-size: 12px; font-weight: 600;
+    color: var(--txd); text-transform: uppercase; letter-spacing: .5px;
+    border-bottom: 1px solid var(--bd); background: var(--bg);
+  }
+  .mem-table td {
+    padding: 12px 16px; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,.04);
+    vertical-align: top;
+  }
+  .mem-table tr:last-child td { border-bottom: none; }
+  .mem-table tr:hover { background: rgba(255,255,255,.02); }
+
+  .mem-content { max-width: 400px; line-height: 1.5; word-break: break-word; }
+  .mem-cat {
+    display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px;
+    font-weight: 600; background: var(--acd); color: var(--ac);
+  }
+  .mem-cat.address { background: rgba(116,185,255,.15); color: var(--blu); }
+  .mem-cat.contact { background: rgba(81,207,102,.15); color: var(--grn); }
+  .mem-cat.preferences { background: rgba(232,197,71,.15); color: var(--ac); }
+  .mem-cat.business { background: rgba(178,102,255,.15); color: #b266ff; }
+  .mem-cat.tools { background: rgba(255,107,107,.15); color: var(--red); }
+  .mem-cat.projects { background: rgba(116,185,255,.15); color: var(--blu); }
+
+  .mem-stars { color: var(--ac); letter-spacing: 1px; font-size: 13px; white-space: nowrap; }
+  .mem-stars .off { opacity: .2; }
+
+  .mem-date { font-size: 12px; color: var(--txd); white-space: nowrap; }
+
+  .mem-actions { display: flex; gap: 4px; }
+  .mem-actions button {
+    width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--bd);
+    background: none; color: var(--txd); cursor: pointer; font-size: 14px;
+    display: flex; align-items: center; justify-content: center; transition: all .15s;
+  }
+  .mem-actions button:hover { border-color: var(--ac); color: var(--ac); }
+  .mem-actions button.del:hover { border-color: var(--red); color: var(--red); }
+
+  .mem-empty {
+    text-align: center; padding: 40px 20px; color: var(--txd);
+  }
+  .mem-empty .icon { font-size: 48px; margin-bottom: 12px; }
+  .mem-empty p { font-size: 14px; line-height: 1.6; }
+
+  /* Add memory form */
+  .mem-add {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 14px;
+    padding: 20px; margin-bottom: 20px;
+  }
+  .mem-add h3 { font-size: 15px; font-weight: 700; margin-bottom: 12px; }
+  .mem-add-row { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+  .mem-add-row .input { flex: 1; min-width: 200px; }
+  .mem-add-row select {
+    padding: 10px 14px; border: 1px solid var(--bd); border-radius: 8px;
+    background: var(--bg); color: var(--tx); font-family: 'Heebo', sans-serif;
+    font-size: 14px; min-height: 44px;
+  }
+
+  .stars-input { display: flex; gap: 4px; align-items: center; }
+  .stars-input button {
+    background: none; border: none; color: var(--txd); cursor: pointer;
+    font-size: 20px; padding: 4px; transition: color .15s;
+  }
+  .stars-input button.on { color: var(--ac); }
+  .stars-input button:hover { color: var(--ac); }
+
+  @media (max-width: 600px) {
+    .mem-table th:nth-child(4), .mem-table td:nth-child(4) { display: none; }
+    .mem-header h1 { font-size: 18px; }
+    .mem-content { max-width: 200px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/home.html" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/home.html" class="nav-link" data-en="Tools" data-he="כלים">Tools</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <!-- Header -->
+  <div class="mem-header">
+    <h1><span class="icon">🧠</span> <span data-en="Memories" data-he="זיכרונות">Memories</span></h1>
+    <div class="mem-controls">
+      <select class="mem-filter" id="catFilter" onchange="renderMemories()">
+        <option value="" data-en="All Categories" data-he="כל הקטגוריות">All Categories</option>
+        <option value="Address">Address</option>
+        <option value="Contact">Contact</option>
+        <option value="Preferences">Preferences</option>
+        <option value="Business">Business</option>
+        <option value="Tools">Tools</option>
+        <option value="Projects">Projects</option>
+      </select>
+      <label class="mem-toggle" id="autoMemToggle">
+        <input type="checkbox" id="autoMemCheck" onchange="toggleAutoMem()">
+        <span data-en="Auto Memory" data-he="זיכרון אוטומטי">Auto Memory</span>
+      </label>
+      <button class="btn btn-primary" style="font-size:13px;min-height:44px;" onclick="generateMemories()" id="genBtn">
+        <span data-en="Generate with AI ⚡1" data-he="יצירה עם AI ⚡1">Generate with AI ⚡1</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Add Memory Form -->
+  <div class="mem-add">
+    <h3 data-en="Add Memory" data-he="הוסף זיכרון">Add Memory</h3>
+    <div class="mem-add-row">
+      <input class="input" type="text" id="memContent" placeholder="Enter a fact or preference..." style="flex:2;">
+      <select class="mem-filter" id="memCat">
+        <option value="General">General</option>
+        <option value="Address">Address</option>
+        <option value="Contact">Contact</option>
+        <option value="Preferences">Preferences</option>
+        <option value="Business">Business</option>
+        <option value="Tools">Tools</option>
+        <option value="Projects">Projects</option>
+      </select>
+      <div class="stars-input" id="starsInput"></div>
+      <button class="btn" style="min-height:44px;font-size:14px;" onclick="addMemory()" data-en="Add" data-he="הוסף">Add</button>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="mem-table-wrap">
+    <table class="mem-table">
+      <thead>
+        <tr>
+          <th data-en="Memory" data-he="זיכרון">Memory</th>
+          <th data-en="Category" data-he="קטגוריה">Category</th>
+          <th data-en="Importance" data-he="חשיבות">Importance</th>
+          <th data-en="Date" data-he="תאריך">Date</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="memBody"></tbody>
+    </table>
+    <div class="mem-empty" id="memEmpty" style="display:none;">
+      <div class="icon">🧠</div>
+      <p data-en="No memories yet. Add facts about your business<br>so BQ Assistant can personalize responses." data-he="אין זיכרונות עדיין. הוסף עובדות על העסק שלך<br>כדי ש-BQ Assistant יתאים תשובות.">No memories yet. Add facts about your business<br>so BQ Assistant can personalize responses.</p>
+    </div>
+  </div>
+</div>
+
+<script src="js/ai.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/crypto.js"></script>
+<script src="js/common.js"></script>
+<script>
+if (!isLoggedIn()) window.location.replace('/auth.html');
+
+let memories = [];
+let starVal = 3;
+
+// Stars input
+function buildStarsInput() {
+  const el = document.getElementById('starsInput');
+  el.innerHTML = '';
+  for (let i = 1; i <= 5; i++) {
+    const btn = document.createElement('button');
+    btn.textContent = '★';
+    btn.className = i <= starVal ? 'on' : '';
+    btn.onclick = () => { starVal = i; buildStarsInput(); };
+    el.appendChild(btn);
+  }
+}
+buildStarsInput();
+
+// Auto memory toggle
+const autoMem = localStorage.getItem('bq_auto_memory') === '1';
+document.getElementById('autoMemCheck').checked = autoMem;
+if (autoMem) document.getElementById('autoMemToggle').classList.add('on');
+
+function toggleAutoMem() {
+  const on = document.getElementById('autoMemCheck').checked;
+  localStorage.setItem('bq_auto_memory', on ? '1' : '0');
+  document.getElementById('autoMemToggle').classList.toggle('on', on);
+  showToast(on ? (lang === 'he' ? 'זיכרון אוטומטי פעיל' : 'Auto Memory enabled') : (lang === 'he' ? 'זיכרון אוטומטי כבוי' : 'Auto Memory disabled'), 'ok');
+}
+
+// Load memories
+async function loadMemories() {
+  try {
+    const data = await apiCall('/api/memories');
+    memories = data.memories || [];
+    // Also cache in localStorage for chat integration
+    localStorage.setItem('bq_memories', JSON.stringify(memories));
+    renderMemories();
+  } catch (err) {
+    showToast('Failed to load memories', 'err');
+  }
+}
+
+function renderMemories() {
+  const filter = document.getElementById('catFilter').value;
+  const filtered = filter ? memories.filter(m => m.category === filter) : memories;
+  const body = document.getElementById('memBody');
+  const empty = document.getElementById('memEmpty');
+
+  if (filtered.length === 0) {
+    body.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  body.innerHTML = filtered.map(m => {
+    const catClass = (m.category || '').toLowerCase();
+    const stars = Array.from({length: 5}, (_, i) => i < m.importance ? '★' : '<span class="off">★</span>').join('');
+    const date = new Date(m.createdAt).toLocaleDateString();
+    return `<tr>
+      <td class="mem-content">${escHtml(m.content)}</td>
+      <td><span class="mem-cat ${catClass}">${m.category || 'General'}</span></td>
+      <td class="mem-stars">${stars}</td>
+      <td class="mem-date">${date}</td>
+      <td class="mem-actions">
+        <button onclick="editMemory('${m.id}')" title="Edit">✏️</button>
+        <button class="del" onclick="deleteMemory('${m.id}')" title="Delete">🗑️</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+async function addMemory() {
+  const content = document.getElementById('memContent').value.trim();
+  if (!content) { showToast(lang === 'he' ? 'הזן תוכן' : 'Enter content', 'err'); return; }
+
+  try {
+    await apiCall('/api/memories', {
+      method: 'POST',
+      body: {
+        content,
+        category: document.getElementById('memCat').value,
+        importance: starVal
+      }
+    });
+    document.getElementById('memContent').value = '';
+    starVal = 3;
+    buildStarsInput();
+    showToast(lang === 'he' ? 'זיכרון נשמר' : 'Memory saved', 'ok');
+    loadMemories();
+  } catch (err) {
+    showToast(err.message, 'err');
+  }
+}
+
+async function deleteMemory(id) {
+  if (!confirm(lang === 'he' ? 'למחוק זיכרון?' : 'Delete this memory?')) return;
+  try {
+    await apiCall(`/api/memories/${id}`, { method: 'DELETE' });
+    showToast(lang === 'he' ? 'נמחק' : 'Deleted', 'ok');
+    loadMemories();
+  } catch (err) {
+    showToast(err.message, 'err');
+  }
+}
+
+function editMemory(id) {
+  const mem = memories.find(m => m.id === id);
+  if (!mem) return;
+  const h = lang === 'he';
+
+  const m = document.createElement('div');
+  m.className = 'modal-overlay';
+  m.innerHTML = `
+    <div class="modal-card" style="max-width:440px;">
+      <h3 style="margin-bottom:14px;">${h ? 'ערוך זיכרון' : 'Edit Memory'}</h3>
+      <textarea class="input" id="editContent" rows="3" style="margin-bottom:10px;resize:vertical;">${escHtml(mem.content)}</textarea>
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <select class="mem-filter" id="editCat" style="flex:1;">
+          ${['General','Address','Contact','Preferences','Business','Tools','Projects'].map(c =>
+            `<option value="${c}" ${c === mem.category ? 'selected' : ''}>${c}</option>`).join('')}
+        </select>
+        <select class="mem-filter" id="editImp" style="width:80px;">
+          ${[1,2,3,4,5].map(i =>
+            `<option value="${i}" ${i === mem.importance ? 'selected' : ''}>${'★'.repeat(i)}</option>`).join('')}
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn" style="flex:1;" onclick="this.closest('.modal-overlay').remove()">${h ? 'ביטול' : 'Cancel'}</button>
+        <button class="btn btn-primary" style="flex:1;" onclick="saveEdit('${id}')">${h ? 'שמור' : 'Save'}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(m);
+  requestAnimationFrame(() => m.classList.add('open'));
+  m.onclick = (e) => { if (e.target === m) m.remove(); };
+}
+
+async function saveEdit(id) {
+  const content = document.getElementById('editContent').value.trim();
+  if (!content) return;
+  try {
+    await apiCall(`/api/memories/${id}`, {
+      method: 'PUT',
+      body: {
+        content,
+        category: document.getElementById('editCat').value,
+        importance: parseInt(document.getElementById('editImp').value)
+      }
+    });
+    document.querySelector('.modal-overlay')?.remove();
+    showToast(lang === 'he' ? 'עודכן' : 'Updated', 'ok');
+    loadMemories();
+  } catch (err) {
+    showToast(err.message, 'err');
+  }
+}
+
+async function generateMemories() {
+  const btn = document.getElementById('genBtn');
+  const credits = getCredits();
+  if (credits < 1) { showNoCreditModal(); return; }
+
+  const ok = await confirmCredit(lang === 'he' ? 'יצירת זיכרונות עם AI' : 'Generate Memories with AI');
+  if (!ok) return;
+
+  btn.disabled = true;
+  btn.textContent = lang === 'he' ? 'מייצר...' : 'Generating...';
+
+  try {
+    const data = await apiCall('/api/memories/generate', { method: 'POST' });
+    showToast(`${data.generated} ${lang === 'he' ? 'זיכרונות נוצרו' : 'memories generated'}`, 'ok');
+    loadMemories();
+    // Update credit display
+    const user = getCachedUser();
+    if (user && data.credits !== undefined) {
+      user.credits = data.credits;
+      setCachedUser(user);
+      if (typeof updateCreditDisplay === 'function') updateCreditDisplay();
+    }
+  } catch (err) {
+    showToast(err.message, 'err');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = `<span data-en="Generate with AI ⚡1" data-he="יצירה עם AI ⚡1">${lang === 'he' ? 'יצירה עם AI ⚡1' : 'Generate with AI ⚡1'}</span>`;
+}
+
+// Enter to add
+document.getElementById('memContent').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addMemory();
+});
+
+loadMemories();
+</script>
+</body>
+</html>

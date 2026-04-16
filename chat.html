@@ -8,23 +8,76 @@
 <style>
   body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
-  .chat-layout { flex: 1; display: flex; flex-direction: column; max-width: 900px; width: 100%; margin: 0 auto; overflow: hidden; }
+  .chat-wrap { flex: 1; display: flex; overflow: hidden; }
+
+  /* ── Sidebar ── */
+  .chat-sidebar {
+    width: 260px; background: var(--sf); border-right: 1px solid var(--bd);
+    display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0;
+  }
+  .chat-sidebar .new-chat-btn {
+    margin: 12px; padding: 12px; border-radius: 10px; border: 1px solid var(--bd);
+    background: var(--acd); color: var(--ac); font-family: 'Heebo', sans-serif;
+    font-size: 14px; font-weight: 700; cursor: pointer; min-height: 48px;
+    transition: all .15s; text-align: center;
+  }
+  .chat-sidebar .new-chat-btn:hover { background: var(--ac); color: var(--bg); }
+  .chat-sessions {
+    flex: 1; overflow-y: auto; padding: 0 8px 8px;
+  }
+  .chat-sessions .session-label {
+    font-size: 11px; font-weight: 600; color: var(--txd); text-transform: uppercase;
+    letter-spacing: .5px; padding: 8px 8px 4px; margin-top: 4px;
+  }
+  .chat-sessions .session-item {
+    padding: 10px 12px; border-radius: 8px; font-size: 13px; color: var(--txd);
+    cursor: pointer; transition: all .15s; white-space: nowrap; overflow: hidden;
+    text-overflow: ellipsis; min-height: 40px; display: flex; align-items: center;
+  }
+  .chat-sessions .session-item:hover { background: rgba(255,255,255,.04); color: var(--tx); }
+  .chat-sessions .session-item.active { background: var(--acd); color: var(--ac); }
+  .chat-sessions .session-item .del-session {
+    margin-left: auto; opacity: 0; background: none; border: none; color: var(--red);
+    cursor: pointer; font-size: 14px; padding: 2px 4px; flex-shrink: 0;
+  }
+  .chat-sessions .session-item:hover .del-session { opacity: 1; }
+
+  /* ── Main Area ── */
+  .chat-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+
+  /* Quick Actions */
+  .chat-quick {
+    display: flex; gap: 6px; padding: 8px 16px; border-bottom: 1px solid rgba(255,255,255,.04);
+    overflow-x: auto; flex-shrink: 0;
+  }
+  .chat-quick a {
+    padding: 6px 12px; border: 1px solid var(--bd); border-radius: 8px;
+    font-size: 12px; color: var(--txd); white-space: nowrap; min-height: 32px;
+    display: inline-flex; align-items: center; gap: 4px; transition: all .15s;
+    text-decoration: none;
+  }
+  .chat-quick a:hover { border-color: var(--ac); color: var(--ac); opacity: 1; }
 
   /* Top bar */
   .chat-topbar {
-    padding: 12px 16px; border-bottom: 1px solid var(--bd); display: flex;
-    align-items: center; gap: 10px; flex-wrap: wrap; background: var(--sf);
+    padding: 10px 16px; border-bottom: 1px solid var(--bd); display: flex;
+    align-items: center; gap: 8px; flex-wrap: wrap; background: var(--sf); flex-shrink: 0;
   }
   .chat-topbar h2 { font-size: 16px; font-weight: 700; margin-right: auto; }
   .model-select {
     padding: 8px 12px; border: 1px solid var(--bd); border-radius: 8px;
     background: var(--bg); color: var(--tx); font-family: 'Heebo', sans-serif;
-    font-size: 14px; min-height: 40px;
+    font-size: 13px; min-height: 40px;
   }
   .model-select:focus { outline: none; border-color: var(--ac); }
+  .model-select optgroup { font-weight: 700; color: var(--ac); }
   .multi-toggle {
-    display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--txd); cursor: pointer;
+    display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--txd);
+    cursor: pointer; padding: 6px 12px; border: 1px solid var(--bd); border-radius: 8px;
+    background: var(--sf); transition: all .15s; min-height: 40px;
   }
+  .multi-toggle:hover { border-color: var(--ac); }
+  .multi-toggle.on { border-color: var(--ac); color: var(--ac); background: var(--acd); }
   .multi-toggle input { accent-color: var(--ac); width: 16px; height: 16px; }
   .model-cost { font-size: 12px; color: var(--ac); font-weight: 700; }
 
@@ -32,11 +85,31 @@
   .chat-msgs {
     flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px;
   }
-  .msg { max-width: 80%; padding: 12px 16px; border-radius: 14px; font-size: 14px; line-height: 1.6; word-wrap: break-word; }
-  .msg.user { align-self: flex-end; background: var(--acd); color: var(--tx); border-bottom-right-radius: 4px; }
-  .msg.ai { align-self: flex-start; background: var(--sf); border: 1px solid var(--bd); border-bottom-left-radius: 4px; }
-  .msg.ai pre { background: var(--bg); padding: 8px; border-radius: 6px; overflow-x: auto; font-size: 13px; margin: 6px 0; }
-  .msg .msg-model { font-size: 11px; color: var(--txd); margin-bottom: 4px; font-weight: 600; }
+  .msg {
+    max-width: 80%; padding: 12px 16px; border-radius: 14px; font-size: 14px;
+    line-height: 1.6; word-wrap: break-word; position: relative;
+  }
+  .msg.user {
+    align-self: flex-end; background: var(--acd); color: var(--tx);
+    border-bottom-right-radius: 4px;
+  }
+  .msg.ai {
+    align-self: flex-start; background: var(--sf); border: 1px solid var(--bd);
+    border-bottom-left-radius: 4px;
+  }
+  .msg.ai pre {
+    background: var(--bg); padding: 8px; border-radius: 6px; overflow-x: auto;
+    font-size: 13px; margin: 6px 0;
+  }
+  .msg .msg-model {
+    font-size: 11px; color: var(--txd); margin-bottom: 4px; font-weight: 600;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .msg .msg-model .model-icon {
+    width: 16px; height: 16px; border-radius: 4px; display: inline-flex;
+    align-items: center; justify-content: center; font-size: 10px;
+    background: var(--bd);
+  }
   .msg.typing { color: var(--txd); font-style: italic; }
   .msg .msg-img { max-width: 200px; border-radius: 8px; margin-bottom: 6px; display: block; }
 
@@ -47,7 +120,7 @@
   /* Input bar */
   .chat-inputbar {
     padding: 12px 16px; border-top: 1px solid var(--bd); display: flex; gap: 8px;
-    align-items: flex-end; background: var(--sf);
+    align-items: flex-end; background: var(--sf); flex-shrink: 0;
   }
   .chat-textarea {
     flex: 1; padding: 10px 14px; border: 1px solid var(--bd); border-radius: 12px;
@@ -56,15 +129,16 @@
     overflow-y: auto;
   }
   .chat-textarea:focus { outline: none; border-color: var(--ac); }
-  .chat-attach {
+  .chat-btn {
     width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--bd);
     background: var(--bg); color: var(--txd); cursor: pointer; display: flex;
-    align-items: center; justify-content: center; font-size: 18px; position: relative;
-    transition: all .15s; flex-shrink: 0;
+    align-items: center; justify-content: center; font-size: 18px;
+    transition: all .15s; flex-shrink: 0; position: relative;
   }
-  .chat-attach:hover { border-color: var(--ac); color: var(--ac); }
-  .chat-attach input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-  .chat-attach.has-img { border-color: var(--grn); color: var(--grn); }
+  .chat-btn:hover { border-color: var(--ac); color: var(--ac); }
+  .chat-btn input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .chat-btn.has-img { border-color: var(--grn); color: var(--grn); }
+  .chat-btn.recording { border-color: var(--red); color: var(--red); animation: voicePulse 1s ease-in-out infinite; }
   .chat-sendbtn {
     width: 44px; height: 44px; border-radius: 10px; border: none;
     background: var(--ac); color: var(--bg); cursor: pointer; display: flex;
@@ -74,19 +148,48 @@
   .chat-sendbtn:hover { filter: brightness(1.1); }
   .chat-sendbtn:disabled { opacity: .4; cursor: not-allowed; }
 
+  .send-cost {
+    font-size: 11px; color: var(--ac); font-weight: 700; position: absolute;
+    bottom: -2px; right: -2px; background: var(--bg); padding: 0 3px; border-radius: 4px;
+  }
+
   /* Actions bar */
-  .chat-actions { padding: 8px 16px; display: flex; gap: 8px; border-top: 1px solid rgba(255,255,255,.04); }
+  .chat-actions {
+    padding: 6px 16px; display: flex; gap: 8px;
+    border-top: 1px solid rgba(255,255,255,.04); flex-shrink: 0;
+  }
   .chat-actions button {
     padding: 6px 12px; border: 1px solid var(--bd); border-radius: 8px; background: none;
-    color: var(--txd); font-family: inherit; font-size: 12px; cursor: pointer; transition: all .15s; min-height: 32px;
+    color: var(--txd); font-family: inherit; font-size: 12px; cursor: pointer;
+    transition: all .15s; min-height: 32px;
   }
   .chat-actions button:hover { border-color: var(--ac); color: var(--ac); }
 
-  @media (max-width: 600px) {
+  /* Voice wave animation */
+  @keyframes voicePulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,107,107,.3); }
+    50% { box-shadow: 0 0 0 8px rgba(255,107,107,0); }
+  }
+
+  /* Sidebar toggle for mobile */
+  .sidebar-toggle {
+    display: none; width: 40px; height: 40px; border-radius: 8px; border: 1px solid var(--bd);
+    background: var(--sf); color: var(--txd); cursor: pointer; font-size: 18px;
+    align-items: center; justify-content: center; flex-shrink: 0;
+  }
+
+  @media (max-width: 700px) {
+    .chat-sidebar {
+      position: fixed; left: -280px; top: 0; bottom: 0; z-index: 200;
+      transition: left .25s; width: 280px;
+    }
+    .chat-sidebar.open { left: 0; box-shadow: 4px 0 20px rgba(0,0,0,.5); }
+    .sidebar-toggle { display: flex; }
     .chat-topbar { gap: 6px; }
     .chat-topbar h2 { font-size: 14px; }
     .multi-row { flex-direction: column; }
     .msg { max-width: 90%; }
+    .chat-quick { display: none; }
   }
 </style>
 </head>
@@ -95,7 +198,7 @@
 <nav class="nav">
   <a href="/home.html" class="nav-logo">BQ <span>Tools</span></a>
   <div class="nav-right">
-    <a href="/home.html" class="nav-link" data-en="← Tools" data-he="כלים →">← Tools</a>
+    <a href="/home.html" class="nav-link" data-en="Tools" data-he="כלים">Tools</a>
     <div class="lang-toggle">
       <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
       <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
@@ -103,44 +206,86 @@
   </div>
 </nav>
 
-<div class="chat-layout">
-  <!-- Top bar -->
-  <div class="chat-topbar">
-    <h2 data-en="AI Chat" data-he="צ'אט AI">AI Chat</h2>
-    <select class="model-select" id="modelSelect" onchange="updateCost()">
-      <option value="claude-haiku">Claude Haiku (fast)</option>
-      <option value="claude-sonnet">Claude Sonnet (smart)</option>
-      <option value="gemini-flash">Gemini Flash (fast)</option>
-      <option value="gemini-pro">Gemini Pro (smart)</option>
-    </select>
-    <label class="multi-toggle">
-      <input type="checkbox" id="multiToggle" onchange="updateCost()">
-      <span data-en="Multi-Model" data-he="מולטי-מודל">Multi-Model</span>
-    </label>
-    <span class="model-cost" id="costDisplay">⚡ 1 credit</span>
+<div class="chat-wrap">
+  <!-- Sidebar -->
+  <div class="chat-sidebar" id="chatSidebar">
+    <button class="new-chat-btn" onclick="newChat()" data-en="+ New Chat" data-he="+ צ'אט חדש">+ New Chat</button>
+    <div class="chat-sessions" id="chatSessions"></div>
   </div>
 
-  <!-- Messages -->
-  <div class="chat-msgs" id="chatMsgs">
-    <div class="msg ai">
-      <span data-en="Hi! I'm your AI assistant for construction and remodeling. Ask me anything — bids, permits, materials, contracts, or marketing." data-he="היי! אני העוזר AI שלך לבנייה ושיפוצים. שאל אותי כל דבר — הצעות מחיר, היתרים, חומרים, חוזים או שיווק.">Hi! I'm your AI assistant for construction and remodeling. Ask me anything — bids, permits, materials, contracts, or marketing.</span>
+  <!-- Main -->
+  <div class="chat-main">
+    <!-- Quick Actions -->
+    <div class="chat-quick">
+      <a href="/tools/compare.html">🔀 <span data-en="Compare" data-he="השוואה">Compare</span></a>
+      <a href="/tools/report.html">📄 <span data-en="Report" data-he="דוח">Report</span></a>
+      <a href="/tools/estimate.html">💰 <span data-en="Estimate" data-he="הערכה">Estimate</span></a>
+      <a href="/tools/social-post.html">📱 <span data-en="Social Post" data-he="פוסט">Social Post</span></a>
+      <a href="/tools/social-analysis.html">📊 <span data-en="Analyze IG" data-he="ניתוח IG">Analyze IG</span></a>
+      <a href="/tools/sketch.html">✏️ <span data-en="Sketch" data-he="סקיצה">Sketch</span></a>
     </div>
-  </div>
 
-  <!-- Actions -->
-  <div class="chat-actions">
-    <button onclick="clearChat()" data-en="Clear Chat" data-he="נקה צ'אט">Clear Chat</button>
-    <button onclick="exportChat()" data-en="Export PDF" data-he="ייצוא PDF">Export PDF</button>
-  </div>
+    <!-- Top bar -->
+    <div class="chat-topbar">
+      <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+      <h2 data-en="AI Chat" data-he="צ'אט AI">AI Chat</h2>
 
-  <!-- Input -->
-  <div class="chat-inputbar">
-    <div class="chat-attach" id="attachBtn" title="Attach image">
-      📎
-      <input type="file" accept="image/*" id="imgInput" onchange="handleAttach(event)">
+      <select class="model-select" id="modelSelect" onchange="updateCost()">
+        <optgroup label="OPENAI">
+          <option value="gpt-4o-mini">GPT-4o Mini (⚡1)</option>
+          <option value="gpt-4o">GPT-4o (⚡3)</option>
+        </optgroup>
+        <optgroup label="CLAUDE">
+          <option value="claude-haiku" selected>Claude Haiku (⚡1)</option>
+          <option value="claude-sonnet">Claude Sonnet (⚡3)</option>
+        </optgroup>
+        <optgroup label="GOOGLE">
+          <option value="gemini-flash">Gemini Flash (⚡1)</option>
+          <option value="gemini-pro">Gemini Pro (⚡3)</option>
+        </optgroup>
+        <optgroup label="GROQ — Ultra Fast">
+          <option value="llama-3.3-70b">Llama 3.3 70B (⚡1)</option>
+          <option value="mixtral-8x7b">Mixtral 8x7B (⚡1)</option>
+        </optgroup>
+        <optgroup label="MANUS">
+          <option value="manus">Manus Agent (⚡5)</option>
+        </optgroup>
+      </select>
+
+      <label class="multi-toggle" id="multiToggleLabel" onclick="toggleMulti()">
+        <input type="checkbox" id="multiToggle" onchange="updateCost()">
+        <span data-en="Multi-Model" data-he="מולטי-מודל">⚡ Multi-Model</span>
+      </label>
+
+      <span class="model-cost" id="costDisplay">⚡ 1 credit</span>
     </div>
-    <textarea class="chat-textarea" id="chatInput" placeholder="Ask anything..." rows="1" oninput="autoGrow(this)"></textarea>
-    <button class="chat-sendbtn" id="sendBtn" onclick="sendMessage()">→</button>
+
+    <!-- Messages -->
+    <div class="chat-msgs" id="chatMsgs">
+      <div class="msg ai">
+        <span data-en="Hi! I'm your AI assistant for construction and remodeling. Ask me anything — bids, permits, materials, contracts, or marketing." data-he="היי! אני העוזר AI שלך לבנייה ושיפוצים. שאל אותי כל דבר — הצעות מחיר, היתרים, חומרים, חוזים או שיווק.">Hi! I'm your AI assistant for construction and remodeling. Ask me anything — bids, permits, materials, contracts, or marketing.</span>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="chat-actions">
+      <button onclick="clearChat()" data-en="Clear Chat" data-he="נקה צ'אט">Clear Chat</button>
+      <button onclick="exportChat()" data-en="Export PDF" data-he="ייצוא PDF">Export PDF</button>
+    </div>
+
+    <!-- Input -->
+    <div class="chat-inputbar">
+      <div class="chat-btn" id="attachBtn" title="Attach image">
+        📎
+        <input type="file" accept="image/*" id="imgInput" onchange="handleAttach(event)">
+      </div>
+      <div class="chat-btn" id="voiceBtn" onclick="toggleVoice()" title="Voice input">🎤</div>
+      <textarea class="chat-textarea" id="chatInput" placeholder="Ask anything..." rows="1" oninput="autoGrow(this)"></textarea>
+      <button class="chat-sendbtn" id="sendBtn" onclick="sendMessage()" style="position:relative;">
+        →
+        <span class="send-cost" id="sendCost">⚡1</span>
+      </button>
+    </div>
   </div>
 </div>
 
@@ -151,36 +296,219 @@
 <script>
 if (!isLoggedIn()) window.location.replace('/auth.html');
 
+// ── Model Config ──
 const MODELS = {
-  'claude-haiku': { label: 'Claude Haiku', cost: 1 },
-  'claude-sonnet': { label: 'Claude Sonnet', cost: 2 },
-  'gemini-flash': { label: 'Gemini Flash', cost: 1 },
-  'gemini-pro': { label: 'Gemini Pro', cost: 2 },
+  'gpt-4o-mini': { label: 'GPT-4o Mini', cost: 1, icon: '🟢' },
+  'gpt-4o': { label: 'GPT-4o', cost: 3, icon: '🟢' },
+  'claude-haiku': { label: 'Claude Haiku', cost: 1, icon: '🟣' },
+  'claude-sonnet': { label: 'Claude Sonnet', cost: 3, icon: '🟣' },
+  'gemini-flash': { label: 'Gemini Flash', cost: 1, icon: '🔵' },
+  'gemini-pro': { label: 'Gemini Pro', cost: 3, icon: '🔵' },
+  'llama-3.3-70b': { label: 'Llama 3.3 70B', cost: 1, icon: '🟡' },
+  'mixtral-8x7b': { label: 'Mixtral 8x7B', cost: 1, icon: '🟡' },
+  'manus': { label: 'Manus Agent', cost: 5, icon: '🔴' },
 };
 
-let chatHistory = JSON.parse(localStorage.getItem('bq_fullchat') || '[]');
+const SYSTEM_PROMPT = "You are BQ Assistant for contractors. You know about: permits, estimates, materials, contracts, building codes, OSHA safety, client management, marketing, and all BQ Tools. Keep answers practical and actionable.";
+
+// ── Session Management ──
+let sessions = JSON.parse(localStorage.getItem('bq_chat_sessions') || '[]');
+let currentSessionId = null;
+let chatHistory = [];
 let attachedImage = null;
 
-// Restore chat
-chatHistory.forEach(m => addMsg(m.role, m.content, m.model, m.image, true));
+function generateId() { return Date.now().toString(36) + Math.random().toString(36).substring(2, 6); }
+
+function saveSessions() {
+  localStorage.setItem('bq_chat_sessions', JSON.stringify(sessions));
+}
+
+function newChat() {
+  const id = generateId();
+  const session = {
+    id,
+    title: lang === 'he' ? 'צ\'אט חדש' : 'New Chat',
+    messages: [],
+    createdAt: new Date().toISOString()
+  };
+  sessions.unshift(session);
+  if (sessions.length > 50) sessions.length = 50;
+  saveSessions();
+  loadSession(id);
+  renderSessions();
+  closeSidebar();
+}
+
+function loadSession(id) {
+  const session = sessions.find(s => s.id === id);
+  if (!session) return;
+  currentSessionId = id;
+  chatHistory = session.messages || [];
+
+  // Render messages
+  const msgsEl = document.getElementById('chatMsgs');
+  msgsEl.innerHTML = '';
+  if (chatHistory.length === 0) {
+    msgsEl.innerHTML = `<div class="msg ai"><span data-en="Hi! I'm your AI assistant for construction and remodeling. Ask me anything — bids, permits, materials, contracts, or marketing." data-he="היי! אני העוזר AI שלך לבנייה ושיפוצים. שאל אותי כל דבר — הצעות מחיר, היתרים, חומרים, חוזים או שיווק.">${lang === 'he' ? 'היי! אני העוזר AI שלך לבנייה ושיפוצים. שאל אותי כל דבר — הצעות מחיר, היתרים, חומרים, חוזים או שיווק.' : 'Hi! I\'m your AI assistant for construction and remodeling. Ask me anything — bids, permits, materials, contracts, or marketing.'}</span></div>`;
+  } else {
+    chatHistory.forEach(m => addMsg(m.role, m.content, m.model, m.image, true));
+  }
+  renderSessions();
+}
+
+function deleteSession(id) {
+  sessions = sessions.filter(s => s.id !== id);
+  saveSessions();
+  if (currentSessionId === id) {
+    if (sessions.length > 0) loadSession(sessions[0].id);
+    else newChat();
+  }
+  renderSessions();
+}
+
+function saveCurrentSession() {
+  if (!currentSessionId) return;
+  const session = sessions.find(s => s.id === currentSessionId);
+  if (!session) return;
+  session.messages = chatHistory.slice(-100);
+  // Auto-title from first user message
+  const firstUser = chatHistory.find(m => m.role === 'user');
+  if (firstUser && session.title.includes('New Chat') || session.title.includes('צ\'אט חדש')) {
+    session.title = (typeof firstUser.content === 'string' ? firstUser.content : '').substring(0, 40) || session.title;
+  }
+  saveSessions();
+  renderSessions();
+}
+
+function renderSessions() {
+  const el = document.getElementById('chatSessions');
+  const h = lang === 'he';
+
+  // Group by date
+  const today = new Date().toDateString();
+  const yesterday = new Date(Date.now() - 86400000).toDateString();
+
+  let html = '';
+  let lastGroup = '';
+
+  sessions.forEach(s => {
+    const d = new Date(s.createdAt).toDateString();
+    let group = '';
+    if (d === today) group = h ? 'היום' : 'Today';
+    else if (d === yesterday) group = h ? 'אתמול' : 'Yesterday';
+    else group = h ? 'ישן' : 'Older';
+
+    if (group !== lastGroup) {
+      html += `<div class="session-label">${group}</div>`;
+      lastGroup = group;
+    }
+
+    const active = s.id === currentSessionId ? ' active' : '';
+    html += `<div class="session-item${active}" onclick="loadSession('${s.id}');closeSidebar()">
+      ${escHtml(s.title || 'Chat')}
+      <button class="del-session" onclick="event.stopPropagation();deleteSession('${s.id}')" title="Delete">✕</button>
+    </div>`;
+  });
+
+  el.innerHTML = html || `<div style="padding:16px;text-align:center;color:var(--txd);font-size:13px;">${h ? 'אין צ\'אטים' : 'No chats yet'}</div>`;
+}
+
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// ── Sidebar Toggle ──
+function toggleSidebar() {
+  document.getElementById('chatSidebar').classList.toggle('open');
+}
+function closeSidebar() {
+  document.getElementById('chatSidebar').classList.remove('open');
+}
+
+// ── Multi-Model Toggle ──
+function toggleMulti() {
+  const cb = document.getElementById('multiToggle');
+  // Don't toggle here — the checkbox handles it via onchange
+}
 
 function updateCost() {
   const multi = document.getElementById('multiToggle').checked;
+  const label = document.getElementById('multiToggleLabel');
+  label.classList.toggle('on', multi);
+
   let cost;
   if (multi) {
-    cost = Object.values(MODELS).reduce((s, m) => s + m.cost, 0);
+    // Sum of selected models (all non-manus models for multi)
+    cost = 0;
+    for (const [k, m] of Object.entries(MODELS)) {
+      if (k !== 'manus') cost += m.cost;
+    }
   } else {
     const sel = document.getElementById('modelSelect').value;
     cost = MODELS[sel]?.cost || 1;
   }
   document.getElementById('costDisplay').textContent = `⚡ ${cost} credit${cost > 1 ? 's' : ''}`;
+  document.getElementById('sendCost').textContent = `⚡${cost}`;
 }
 
-function autoGrow(el) {
-  el.style.height = '44px';
-  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+// ── Voice Input ──
+let recognition = null;
+let isRecording = false;
+
+function toggleVoice() {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    showToast(lang === 'he' ? 'הדפדפן לא תומך בזיהוי קול' : 'Browser doesn\'t support speech recognition', 'err');
+    return;
+  }
+
+  if (isRecording) {
+    stopVoice();
+    return;
+  }
+
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SpeechRec();
+  recognition.lang = lang === 'he' ? 'he-IL' : 'en-US';
+  recognition.interimResults = true;
+  recognition.continuous = true;
+
+  const input = document.getElementById('chatInput');
+  const btn = document.getElementById('voiceBtn');
+  let finalText = input.value;
+
+  recognition.onresult = (e) => {
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) {
+        finalText += (finalText ? ' ' : '') + e.results[i][0].transcript;
+      } else {
+        interim += e.results[i][0].transcript;
+      }
+    }
+    input.value = finalText + (interim ? ' ' + interim : '');
+    autoGrow(input);
+  };
+
+  recognition.onerror = () => stopVoice();
+  recognition.onend = () => stopVoice();
+
+  recognition.start();
+  isRecording = true;
+  btn.classList.add('recording');
+  btn.textContent = '⏹';
 }
 
+function stopVoice() {
+  if (recognition) { try { recognition.stop(); } catch {} }
+  isRecording = false;
+  const btn = document.getElementById('voiceBtn');
+  btn.classList.remove('recording');
+  btn.textContent = '🎤';
+}
+
+// ── Attach Image ──
 function handleAttach(e) {
   const f = e.target.files[0];
   if (!f) return;
@@ -193,24 +521,32 @@ function handleAttach(e) {
   r.readAsDataURL(f);
 }
 
+// ── Auto Grow Textarea ──
+function autoGrow(el) {
+  el.style.height = '44px';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+// ── Add Message to UI ──
 function addMsg(role, content, model, image, noSave) {
   const msgsEl = document.getElementById('chatMsgs');
   const div = document.createElement('div');
 
   if (role === 'multi') {
-    // Multi-model: content is an array of {model, text}
     div.className = 'multi-row';
     div.innerHTML = content.map(r => `
       <div class="msg ai">
-        <div class="msg-model">${MODELS[r.model]?.label || r.model}</div>
+        <div class="msg-model"><span class="model-icon">${MODELS[r.model]?.icon || '🤖'}</span> ${MODELS[r.model]?.label || r.model}</div>
         ${formatContent(r.text)}
       </div>`).join('');
   } else {
     div.className = 'msg ' + role;
     let inner = '';
-    if (model && role === 'ai') inner += `<div class="msg-model">${MODELS[model]?.label || model}</div>`;
-    if (image) inner += `<img class="msg-img" src="data:image/jpeg;base64,${image}" alt="">`;
-    inner += formatContent(content);
+    if (model && role === 'ai') {
+      inner += `<div class="msg-model"><span class="model-icon">${MODELS[model]?.icon || '🤖'}</span> ${MODELS[model]?.label || model}</div>`;
+    }
+    if (image && image !== '(image)') inner += `<img class="msg-img" src="data:image/jpeg;base64,${image}" alt="">`;
+    inner += formatContent(typeof content === 'string' ? content : JSON.stringify(content));
     div.innerHTML = inner;
   }
 
@@ -220,18 +556,28 @@ function addMsg(role, content, model, image, noSave) {
   if (!noSave) {
     chatHistory.push({ role, content, model, image: image ? '(image)' : null });
     if (chatHistory.length > 100) chatHistory.splice(0, chatHistory.length - 100);
-    localStorage.setItem('bq_fullchat', JSON.stringify(chatHistory));
+    saveCurrentSession();
   }
 }
 
 function formatContent(text) {
-  // Basic markdown: code blocks, bold
   return (text || '')
     .replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre>$2</pre>')
     .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
     .replace(/\n/g, '<br>');
 }
 
+// ── Get Memories for System Prompt ──
+function getMemoriesForPrompt() {
+  try {
+    const mems = JSON.parse(localStorage.getItem('bq_memories') || '[]');
+    if (mems.length === 0) return '';
+    const sorted = mems.sort((a, b) => (b.importance || 3) - (a.importance || 3)).slice(0, 10);
+    return '\n\nUser memories:\n' + sorted.map(m => `- [${m.category}] ${m.content}`).join('\n');
+  } catch { return ''; }
+}
+
+// ── Send Message ──
 async function sendMessage() {
   const input = document.getElementById('chatInput');
   const text = input.value.trim();
@@ -243,7 +589,10 @@ async function sendMessage() {
   // Calculate cost
   let cost;
   if (multi) {
-    cost = Object.values(MODELS).reduce((s, m) => s + m.cost, 0);
+    cost = 0;
+    for (const [k, m] of Object.entries(MODELS)) {
+      if (k !== 'manus') cost += m.cost;
+    }
   } else {
     cost = MODELS[selModel]?.cost || 1;
   }
@@ -259,15 +608,23 @@ async function sendMessage() {
 
   input.value = '';
   input.style.height = '44px';
+  stopVoice();
 
   // Show user message
   addMsg('user', text, null, attachedImage || null);
 
-  // Build messages for context (last 10)
-  const contextMsgs = chatHistory.filter(m => m.role === 'user' || m.role === 'ai').slice(-10).map(m => ({
-    role: m.role === 'user' ? 'user' : 'assistant',
-    content: typeof m.content === 'string' ? m.content : 'multi-model response'
-  }));
+  // Build context messages
+  const contextMsgs = chatHistory
+    .filter(m => m.role === 'user' || m.role === 'ai')
+    .slice(-10)
+    .map(m => ({
+      role: m.role === 'user' ? 'user' : 'assistant',
+      content: typeof m.content === 'string' ? m.content : 'multi-model response'
+    }));
+
+  // Add system prompt + memories
+  const sysPrompt = SYSTEM_PROMPT + getMemoriesForPrompt();
+  contextMsgs.unshift({ role: 'system', content: sysPrompt });
   contextMsgs.push({ role: 'user', content: text });
 
   const images = attachedImage ? [attachedImage] : [];
@@ -279,24 +636,31 @@ async function sendMessage() {
   sendBtn.disabled = true;
 
   if (multi) {
-    // Multi-model: send to all models
+    // Multi-model: send to all non-manus models
     const typing = document.createElement('div');
     typing.className = 'msg ai typing';
-    typing.textContent = lang === 'he' ? 'שולח ל-4 מודלים...' : 'Sending to 4 models...';
+    typing.textContent = lang === 'he' ? 'שולח למספר מודלים...' : 'Sending to multiple models...';
     document.getElementById('chatMsgs').appendChild(typing);
 
+    const modelsToQuery = Object.entries(MODELS).filter(([k]) => k !== 'manus');
     const results = [];
-    for (const [key, conf] of Object.entries(MODELS)) {
+
+    const promises = modelsToQuery.map(async ([key]) => {
       try {
         const data = await apiCall('/api/ai/chat', {
           method: 'POST',
           body: { model: key, messages: contextMsgs, images }
         });
-        results.push({ model: key, text: data.result });
+        return { model: key, text: data.result };
       } catch (err) {
-        results.push({ model: key, text: '❌ ' + (err.message || 'Failed') });
+        return { model: key, text: '❌ ' + (err.message || 'Failed') };
       }
-    }
+    });
+
+    const settled = await Promise.allSettled(promises);
+    settled.forEach(r => {
+      if (r.status === 'fulfilled') results.push(r.value);
+    });
 
     typing.remove();
     addMsg('multi', results);
@@ -316,12 +680,17 @@ async function sendMessage() {
       typing.remove();
       addMsg('ai', data.result, selModel);
 
-      // Update credit display
+      // Update credits
       const user = getCachedUser();
       if (user && data.credits !== undefined) {
         user.credits = data.credits;
         setCachedUser(user);
         if (typeof updateCreditDisplay === 'function') updateCreditDisplay();
+      }
+
+      // Auto-memory: extract facts if enabled
+      if (localStorage.getItem('bq_auto_memory') === '1' && data.result) {
+        autoExtractMemory(text, data.result);
       }
     } catch (err) {
       typing.remove();
@@ -332,13 +701,48 @@ async function sendMessage() {
   sendBtn.disabled = false;
 }
 
-function clearChat() {
-  chatHistory = [];
-  localStorage.removeItem('bq_fullchat');
-  document.getElementById('chatMsgs').innerHTML = `
-    <div class="msg ai"><span data-en="Chat cleared. Ask me anything!" data-he="הצ'אט נוקה. שאל אותי הכל!">${lang === 'he' ? 'הצ'אט נוקה. שאל אותי הכל!' : 'Chat cleared. Ask me anything!'}</span></div>`;
+// Auto-extract memory from conversation
+async function autoExtractMemory(userMsg, aiResponse) {
+  // Only try for messages that might contain facts
+  if (userMsg.length < 20) return;
+  try {
+    const mems = JSON.parse(localStorage.getItem('bq_memories') || '[]');
+    // Simple heuristic: if user mentions address, phone, preference, save locally
+    const patterns = [
+      { regex: /my (address|location|office) is/i, cat: 'Address' },
+      { regex: /my (phone|number|cell) is/i, cat: 'Contact' },
+      { regex: /i prefer|i always|i usually|my favorite/i, cat: 'Preferences' },
+      { regex: /my (company|business|firm) (is|name)/i, cat: 'Business' },
+    ];
+    for (const p of patterns) {
+      if (p.regex.test(userMsg)) {
+        mems.push({
+          id: Date.now().toString(36) + Math.random().toString(36).substring(2, 6),
+          content: userMsg.substring(0, 200),
+          category: p.cat,
+          importance: 3,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          generated: true
+        });
+        localStorage.setItem('bq_memories', JSON.stringify(mems));
+        // Also save to server
+        apiCall('/api/memories', { method: 'POST', body: { content: userMsg.substring(0, 200), category: p.cat, importance: 3 } }).catch(() => {});
+        break;
+      }
+    }
+  } catch {}
 }
 
+// ── Clear Chat ──
+function clearChat() {
+  chatHistory = [];
+  saveCurrentSession();
+  document.getElementById('chatMsgs').innerHTML = `
+    <div class="msg ai"><span data-en="Chat cleared. Ask me anything!" data-he="הצ'אט נוקה. שאל אותי הכל!">${lang === 'he' ? 'הצ\'אט נוקה. שאל אותי הכל!' : 'Chat cleared. Ask me anything!'}</span></div>`;
+}
+
+// ── Export Chat ──
 function exportChat() {
   const msgs = chatHistory.filter(m => typeof m.content === 'string');
   if (!msgs.length) { showToast(lang === 'he' ? 'אין הודעות' : 'No messages', 'info'); return; }
@@ -360,10 +764,21 @@ function exportChat() {
   setTimeout(() => w.print(), 500);
 }
 
-// Enter to send (shift+enter for newline)
+// ── Keyboard ──
 document.getElementById('chatInput').addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
 });
+
+// ── Init ──
+updateCost();
+
+// Load or create first session
+if (sessions.length === 0) {
+  newChat();
+} else {
+  loadSession(sessions[0].id);
+}
+renderSessions();
 </script>
 </body>
 </html>

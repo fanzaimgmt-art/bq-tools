@@ -111,6 +111,7 @@ function _ddHTML(user) {
       <button class="nav-dd-lang-btn${lang === 'en' ? ' on' : ''}" onclick="setLang('en');_rebuildDropdown()">🇺🇸 EN</button>
       <button class="nav-dd-lang-btn${lang === 'he' ? ' on' : ''}" onclick="setLang('he');_rebuildDropdown()">🇮🇱 עב</button>
     </div>
+    <a href="/memories.html" class="nav-dd-item"><span class="dd-icon">🧠</span>${h ? 'זיכרונות' : 'Memories'}</a>
     <button class="nav-dd-item" onclick="showReferralLink()"><span class="dd-icon">🎁</span>${h ? 'הזמן חבר' : 'Refer a Friend'}</button>
     <button class="nav-dd-item" onclick="showRedeemCode()"><span class="dd-icon">🎟️</span>${h ? 'הזן קוד' : 'Redeem Code'}</button>
     <a href="/affiliate.html" class="nav-dd-item"><span class="dd-icon">💰</span>${h ? 'תוכנית שותפים' : 'Affiliate Program'}</a>
@@ -395,6 +396,75 @@ function getLastAction() {
   } catch { return null; }
 }
 
+// ── Voice Input (shared) ──
+
+function addVoiceButton(inputId) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) return;
+
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'voice-btn';
+  btn.innerHTML = '🎤';
+  btn.title = lang === 'he' ? 'הקלטה קולית' : 'Voice input';
+  btn.style.cssText = 'width:44px;height:44px;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--txd);cursor:pointer;font-size:18px;display:inline-flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;margin-inline-start:4px;';
+
+  let rec = null;
+  let recording = false;
+
+  btn.onclick = () => {
+    if (recording) {
+      if (rec) try { rec.stop(); } catch {}
+      recording = false;
+      btn.innerHTML = '🎤';
+      btn.style.borderColor = 'var(--bd)';
+      btn.style.color = 'var(--txd)';
+      btn.style.animation = '';
+      return;
+    }
+
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    rec = new SR();
+    rec.lang = lang === 'he' ? 'he-IL' : 'en-US';
+    rec.interimResults = true;
+    rec.continuous = true;
+
+    let finalText = input.value;
+
+    rec.onresult = (e) => {
+      let interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) {
+          finalText += (finalText ? ' ' : '') + e.results[i][0].transcript;
+        } else {
+          interim += e.results[i][0].transcript;
+        }
+      }
+      input.value = finalText + (interim ? ' ' + interim : '');
+      if (input.tagName === 'TEXTAREA' && typeof autoGrow === 'function') autoGrow(input);
+    };
+
+    rec.onerror = rec.onend = () => {
+      recording = false;
+      btn.innerHTML = '🎤';
+      btn.style.borderColor = 'var(--bd)';
+      btn.style.color = 'var(--txd)';
+      btn.style.animation = '';
+    };
+
+    rec.start();
+    recording = true;
+    btn.innerHTML = '⏹';
+    btn.style.borderColor = 'var(--red)';
+    btn.style.color = 'var(--red)';
+    btn.style.animation = 'voicePulse 1s ease-in-out infinite';
+  };
+
+  // Insert after input
+  input.parentNode.insertBefore(btn, input.nextSibling);
+}
+
 // ── Offline Check ──
 function requireOnline() {
   if (!navigator.onLine) {
@@ -407,7 +477,7 @@ function requireOnline() {
 // ── Routing ──
 const _SKIP_PAGES = ['/admin.html', '/auth.html', '/onboarding.html'];
 const _LANDING_PAGES = ['/', '/index.html'];
-const _APP_PAGES = ['/home.html', '/profile.html', '/dashboard.html', '/gallery.html', '/directory.html', '/directory-profile.html', '/chat.html', '/affiliate.html'];
+const _APP_PAGES = ['/home.html', '/profile.html', '/dashboard.html', '/gallery.html', '/directory.html', '/directory-profile.html', '/chat.html', '/affiliate.html', '/memories.html'];
 
 function _isAppPage() {
   const p = window.location.pathname;

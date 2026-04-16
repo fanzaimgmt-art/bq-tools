@@ -109,6 +109,23 @@ export default {
         return corsResponse(env, await handleReferralLink(request, env));
       }
 
+      // ── Memory Routes ──
+      if (path === '/api/memories' && request.method === 'GET') {
+        return corsResponse(env, await handleGetMemories(request, env));
+      }
+      if (path === '/api/memories' && request.method === 'POST') {
+        return corsResponse(env, await handleSaveMemory(request, env));
+      }
+      if (path.startsWith('/api/memories/') && request.method === 'PUT') {
+        return corsResponse(env, await handleUpdateMemory(request, env, path));
+      }
+      if (path.startsWith('/api/memories/') && request.method === 'DELETE') {
+        return corsResponse(env, await handleDeleteMemory(request, env, path));
+      }
+      if (path === '/api/memories/generate' && request.method === 'POST') {
+        return corsResponse(env, await handleGenerateMemories(request, env));
+      }
+
       if (path === '/api/health') {
         return corsResponse(env, json({ ok: true, ts: Date.now() }));
       }
@@ -134,7 +151,7 @@ function corsResponse(env, response) {
   const origin = env.ALLOWED_ORIGIN || '*';
   const headers = new Headers(response.headers);
   headers.set('Access-Control-Allow-Origin', origin);
-  headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   headers.set('Access-Control-Max-Age', '86400');
   return new Response(response.body, {
@@ -501,10 +518,20 @@ async function handleAI(request, env) {
 // ── Multi-Model Chat ──
 
 const MODEL_MAP = {
+  // Claude
   'claude-haiku': { type: 'claude', model: 'claude-3-5-haiku-20241022', cost: 1 },
-  'claude-sonnet': { type: 'claude', model: 'claude-sonnet-4-20250514', cost: 2 },
+  'claude-sonnet': { type: 'claude', model: 'claude-sonnet-4-20250514', cost: 3 },
+  // Gemini
   'gemini-flash': { type: 'gemini', model: 'gemini-2.5-flash', cost: 1 },
-  'gemini-pro': { type: 'gemini', model: 'gemini-2.0-flash', cost: 2 },
+  'gemini-pro': { type: 'gemini', model: 'gemini-2.0-flash', cost: 3 },
+  // OpenAI
+  'gpt-4o-mini': { type: 'openai', model: 'gpt-4o-mini', cost: 1 },
+  'gpt-4o': { type: 'openai', model: 'gpt-4o', cost: 3 },
+  // Groq
+  'llama-3.3-70b': { type: 'groq', model: 'llama-3.3-70b-versatile', cost: 1 },
+  'mixtral-8x7b': { type: 'groq', model: 'mixtral-8x7b-32768', cost: 1 },
+  // Manus
+  'manus': { type: 'manus', model: 'manus', cost: 5 },
 };
 
 async function handleAIChat(request, env) {
@@ -533,14 +560,26 @@ async function handleAIChat(request, env) {
 
   // Build prompt from messages array
   const lastMsg = messages[messages.length - 1];
-  const prompt = messages.map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`).join('\n');
+  // Extract system prompt if present
+  const systemMsg = messages.find(m => m.role === 'system');
+  const chatMessages = messages.filter(m => m.role !== 'system');
+  const prompt = (systemMsg ? 'System: ' + systemMsg.content + '\n\n' : '') +
+    chatMessages.map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`).join('\n');
 
   let aiResponse;
   try {
     if (modelConf.type === 'claude') {
       aiResponse = await callClaudeWithModel(env, modelConf.model, prompt, images || []);
-    } else {
+    } else if (modelConf.type === 'gemini') {
       aiResponse = await callGeminiWithModel(env, modelConf.model, prompt, images || []);
+    } else if (modelConf.type === 'openai') {
+      aiResponse = await callOpenAIWithModel(env, modelConf.model, prompt, images || []);
+    } else if (modelConf.type === 'groq') {
+      aiResponse = await callGroqWithModel(env, modelConf.model, prompt, images || []);
+    } else if (modelConf.type === 'manus') {
+      aiResponse = await callManusWithModel(env, modelConf.model, prompt, images || []);
+    } else {
+      throw new Error('Unknown provider: ' + modelConf.type);
     }
   } catch (err) {
     return json({ error: `AI failed: ${err.message}` }, 502);
@@ -592,6 +631,62 @@ async function callGeminiWithModel(env, model, prompt, images) {
   const data = await res.json();
   if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
   return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+}
+
+// ── OpenAI ──
+async function callOpenAIWithModel(env, model, prompt, images) {
+  const apiKey = env.OPENAI_API_KEY;
+  if (!apiKey) throw new Error('OpenAI API key not configured');
+
+  const messages = [{ role: 'user', content: prompt }];
+  // If images, use vision format
+  if (images && images.length > 0) {
+    const content = [];
+    for (const img of images) {
+      content.push({ type: 'image_url', image_url: { url: `data:image/jpeg;base64,${img}` } });
+    }
+    content.push({ type: 'text', text: prompt });
+    messages[0].content = content;
+  }
+
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+    body: JSON.stringify({ model, messages, max_tokens: 2000 })
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+  return data.choices?.[0]?.message?.content || '';
+}
+
+// ── Groq ──
+async function callGroqWithModel(env, model, prompt, images) {
+  const apiKey = env.GROQ_API_KEY;
+  if (!apiKey) throw new Error('Groq API key not configured');
+
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+    body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], max_tokens: 2000 })
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+  return data.choices?.[0]?.message?.content || '';
+}
+
+// ── Manus ──
+async function callManusWithModel(env, model, prompt, images) {
+  const apiKey = env.MANUS_API_KEY;
+  if (!apiKey) throw new Error('Manus API key not configured');
+
+  const res = await fetch('https://api.manus.im/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+    body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], max_tokens: 2000 })
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+  return data.choices?.[0]?.message?.content || '';
 }
 
 async function callClaudeAPI(env, prompt, images) {
@@ -1485,6 +1580,153 @@ async function handleAdminScrapeDirectory(request, env) {
     skipped: skipped.length,
     skippedNames: skipped.slice(0, 10)
   });
+}
+
+// ── Memories ──
+
+async function handleGetMemories(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const raw = await env.BQ_USERS.get(`memories:${user.email}`);
+  const memories = raw ? JSON.parse(raw) : [];
+  return json({ ok: true, memories });
+}
+
+async function handleSaveMemory(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const memory = await request.json();
+  const key = `memories:${user.email}`;
+  const raw = await env.BQ_USERS.get(key);
+  const memories = raw ? JSON.parse(raw) : [];
+
+  memories.push({
+    id: Date.now().toString(36) + Math.random().toString(36).substring(2, 6),
+    content: memory.content || '',
+    category: memory.category || 'General',
+    importance: Math.min(5, Math.max(1, parseInt(memory.importance) || 3)),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  });
+
+  if (memories.length > 200) memories.splice(0, memories.length - 200);
+  await env.BQ_USERS.put(key, JSON.stringify(memories));
+  return json({ ok: true, count: memories.length });
+}
+
+async function handleUpdateMemory(request, env, path) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const memId = path.split('/').pop();
+  const updates = await request.json();
+  const key = `memories:${user.email}`;
+  const raw = await env.BQ_USERS.get(key);
+  const memories = raw ? JSON.parse(raw) : [];
+
+  const idx = memories.findIndex(m => m.id === memId);
+  if (idx === -1) return json({ error: 'Memory not found' }, 404);
+
+  if (updates.content !== undefined) memories[idx].content = updates.content;
+  if (updates.category !== undefined) memories[idx].category = updates.category;
+  if (updates.importance !== undefined) memories[idx].importance = Math.min(5, Math.max(1, parseInt(updates.importance) || 3));
+  memories[idx].updatedAt = new Date().toISOString();
+
+  await env.BQ_USERS.put(key, JSON.stringify(memories));
+  return json({ ok: true, memory: memories[idx] });
+}
+
+async function handleDeleteMemory(request, env, path) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const memId = path.split('/').pop();
+  const key = `memories:${user.email}`;
+  const raw = await env.BQ_USERS.get(key);
+  const memories = raw ? JSON.parse(raw) : [];
+
+  const filtered = memories.filter(m => m.id !== memId);
+  if (filtered.length === memories.length) return json({ error: 'Memory not found' }, 404);
+
+  await env.BQ_USERS.put(key, JSON.stringify(filtered));
+  return json({ ok: true, count: filtered.length });
+}
+
+async function handleGenerateMemories(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  if (!(await checkRateLimit(user.email, env))) {
+    return json({ error: 'Rate limit exceeded' }, 429);
+  }
+
+  const updated = checkMonthlyReset(user);
+  if (updated.credits < 1) {
+    return json({ error: 'Need 1 credit', credits: updated.credits }, 402);
+  }
+
+  // Get existing data
+  const creditsRaw = await env.BQ_USERS.get(`credits:${user.email}`);
+  const history = creditsRaw ? JSON.parse(creditsRaw) : [];
+  const memRaw = await env.BQ_USERS.get(`memories:${user.email}`);
+  const existing = memRaw ? JSON.parse(memRaw) : [];
+
+  const prompt = `Based on this user data, generate 3-5 useful memories (facts) about this user that would help personalize future AI interactions.
+User profile: ${JSON.stringify({ businessName: user.businessName, businessType: user.businessType, language: user.language })}
+Recent tool usage: ${JSON.stringify(history.slice(0, 20).map(h => h.tool + ': ' + h.projectTitle))}
+Existing memories: ${JSON.stringify(existing.map(m => m.content))}
+
+Respond with JSON array only: [{"content":"...", "category":"Address|Contact|Preferences|Business|Tools|Projects", "importance":1-5}]
+Do NOT duplicate existing memories. Focus on patterns and preferences.`;
+
+  let aiResponse;
+  try {
+    aiResponse = await callClaudeAPI(env, prompt, []);
+  } catch {
+    try {
+      aiResponse = await callGeminiAPI(env, prompt, []);
+    } catch (e) {
+      return json({ error: 'AI failed: ' + e.message }, 502);
+    }
+  }
+
+  // Deduct credit
+  updated.credits -= 1;
+  updated.creditsUsedThisMonth = (updated.creditsUsedThisMonth || 0) + 1;
+  await env.BQ_USERS.put(`user:${updated.email}`, JSON.stringify(updated));
+  await logCreditUsage(updated.email, 'memory-generate', 'Generate Memories', env);
+
+  // Parse and save new memories
+  let newMems;
+  try {
+    newMems = JSON.parse(aiResponse.replace(/```json|```/g, '').trim());
+  } catch {
+    return json({ error: 'AI returned invalid format', raw: aiResponse }, 500);
+  }
+
+  const key = `memories:${user.email}`;
+  for (const m of newMems) {
+    existing.push({
+      id: Date.now().toString(36) + Math.random().toString(36).substring(2, 6),
+      content: m.content,
+      category: m.category || 'General',
+      importance: m.importance || 3,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      generated: true
+    });
+  }
+  if (existing.length > 200) existing.splice(0, existing.length - 200);
+  await env.BQ_USERS.put(key, JSON.stringify(existing));
+
+  return json({ ok: true, generated: newMems.length, credits: updated.credits });
 }
 
 // ── Gift Codes ──
