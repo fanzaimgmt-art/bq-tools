@@ -141,6 +141,36 @@
     </div>
   </div>
 
+  <!-- Directory & Social -->
+  <div class="profile-section">
+    <h3>🌐 <span data-en="Directory & Social" data-he="Directory ורשתות חברתיות">Directory & Social</span></h3>
+
+    <div class="field-row">
+      <label class="field-label" data-en="Website URL" data-he="כתובת אתר">Website URL</label>
+      <input class="field-input" type="url" id="fWebsite" placeholder="https://your-site.com">
+    </div>
+    <div class="field-row">
+      <label class="field-label" data-en="Instagram URL" data-he="Instagram URL">Instagram URL</label>
+      <input class="field-input" type="url" id="fInstagram" placeholder="https://instagram.com/your_handle">
+    </div>
+    <div class="field-row">
+      <label class="field-label" data-en="Facebook URL" data-he="Facebook URL">Facebook URL</label>
+      <input class="field-input" type="url" id="fFacebook" placeholder="https://facebook.com/your-page">
+    </div>
+    <div class="field-row">
+      <label class="field-label" data-en="YouTube URL" data-he="YouTube URL">YouTube URL</label>
+      <input class="field-input" type="url" id="fYoutube" placeholder="https://youtube.com/@your-channel">
+    </div>
+    <div class="field-row">
+      <label class="field-label" data-en="License Number (optional)" data-he="מספר רישיון (אופציונלי)">License Number (optional)</label>
+      <input class="field-input" type="text" id="fLicense" placeholder="CA-12345">
+    </div>
+    <div class="field-row">
+      <label class="field-label" data-en="Years in Business" data-he="שנות ניסיון">Years in Business</label>
+      <input class="field-input" type="number" id="fYears" placeholder="10" min="0" max="99">
+    </div>
+  </div>
+
   <!-- Settings -->
   <div class="profile-section" id="settings">
     <h3>⚙️ <span data-en="Settings" data-he="הגדרות">Settings</span></h3>
@@ -227,6 +257,27 @@ function loadProfile() {
   selectedLang = user.language || lang;
   document.getElementById('langEn').classList.toggle('selected', selectedLang === 'en');
   document.getElementById('langHe').classList.toggle('selected', selectedLang === 'he');
+
+  // Load directory fields (async — from server)
+  loadDirectoryFields();
+}
+
+async function loadDirectoryFields() {
+  const user = getCachedUser();
+  if (!user) return;
+  try {
+    const res = await fetch(`${API_URL}/api/directory/profile?email=${encodeURIComponent(user.email)}`);
+    const data = await res.json();
+    if (data.ok && data.listing) {
+      const l = data.listing;
+      document.getElementById('fWebsite').value = l.website || '';
+      document.getElementById('fInstagram').value = l.instagram || '';
+      document.getElementById('fFacebook').value = l.facebook || '';
+      document.getElementById('fYoutube').value = l.youtube || '';
+      document.getElementById('fLicense').value = l.licenseNumber || '';
+      document.getElementById('fYears').value = l.yearsInBusiness || '';
+    }
+  } catch {}
 }
 
 function pickLang(l) {
@@ -289,6 +340,24 @@ async function saveProfile() {
 
   try {
     await updateUserProfile(updates);
+
+    // Also save directory fields
+    await apiCall('/api/directory/update', {
+      method: 'POST',
+      body: {
+        businessName: updates.businessName,
+        type: updates.businessType,
+        phone: updates.phone,
+        logo: newLogo || getCachedUser()?.logo || '',
+        website: document.getElementById('fWebsite').value.trim(),
+        instagram: document.getElementById('fInstagram').value.trim(),
+        facebook: document.getElementById('fFacebook').value.trim(),
+        youtube: document.getElementById('fYoutube').value.trim(),
+        licenseNumber: document.getElementById('fLicense').value.trim(),
+        yearsInBusiness: document.getElementById('fYears').value.trim()
+      }
+    });
+
     if (selectedLang !== lang) {
       setLang(selectedLang);
     }

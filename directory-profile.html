@@ -209,9 +209,22 @@ function renderProfile(l) {
     const items = [];
     if (l.phone) items.push(`<div class="contact-item">📞 <a href="tel:${l.phone}">${escHtml(l.phone)}</a></div>`);
     if (l.contactEmail) items.push(`<div class="contact-item">✉️ <a href="mailto:${l.contactEmail}">${escHtml(l.contactEmail)}</a></div>`);
+    if (l.website) items.push(`<div class="contact-item">🌐 <a href="${escHtml(l.website)}" target="_blank" rel="noopener">${escHtml(l.website.replace(/^https?:\/\//, ''))}</a></div>`);
+    if (l.instagram) items.push(`<div class="contact-item">📸 <a href="${escHtml(l.instagram)}" target="_blank" rel="noopener">Instagram</a></div>`);
+    if (l.facebook) items.push(`<div class="contact-item">📘 <a href="${escHtml(l.facebook)}" target="_blank" rel="noopener">Facebook</a></div>`);
+    if (l.youtube) items.push(`<div class="contact-item">▶️ <a href="${escHtml(l.youtube)}" target="_blank" rel="noopener">YouTube</a></div>`);
     if (items.length) {
       contactHTML = `<div class="contact-card">${items.join('')}</div>`;
     }
+  }
+
+  // Business details
+  let detailsHTML = '';
+  const details = [];
+  if (l.yearsInBusiness) details.push(`<div class="contact-item">📅 ${escHtml(l.yearsInBusiness)} ${lang === 'he' ? 'שנות ניסיון' : 'years in business'}</div>`);
+  if (l.licenseNumber) details.push(`<div class="contact-item">📋 ${lang === 'he' ? 'רישיון' : 'License'}: ${escHtml(l.licenseNumber)}</div>`);
+  if (details.length) {
+    detailsHTML = `<div class="contact-card">${details.join('')}</div>`;
   }
 
   // WhatsApp (featured only)
@@ -294,6 +307,7 @@ function renderProfile(l) {
       ${whatsappHTML}
       ${contactBtnHTML}
       ${contactHTML}
+      ${detailsHTML}
       ${descHTML}
       ${photosHTML}
       ${reviewsHTML}

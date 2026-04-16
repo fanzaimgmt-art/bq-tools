@@ -162,6 +162,32 @@
   </div>
 </div>
 
+<!-- Add Location (Pro+ only) -->
+<div class="dir-add-location" id="addLocationSection" style="display:none;">
+  <div style="width:92%;max-width:700px;margin:0 auto 24px;background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:20px;">
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+      📍 <span data-en="Add Work Location" data-he="הוסף מיקום עבודה">Add Work Location</span>
+    </h3>
+    <div style="margin-bottom:10px;">
+      <label class="input-label" data-en="Address" data-he="כתובת">Address</label>
+      <input class="input" type="text" id="locAddress" placeholder="123 Main St, Los Angeles, CA">
+    </div>
+    <div style="margin-bottom:10px;">
+      <label class="input-label" data-en="Project Name (optional)" data-he="שם פרויקט (אופציונלי)">Project Name (optional)</label>
+      <input class="input" type="text" id="locProject" placeholder="Kitchen Remodel — Johnson">
+    </div>
+    <div style="margin-bottom:14px;">
+      <label class="input-label" data-en="Photo (optional)" data-he="תמונה (אופציונלי)">Photo (optional)</label>
+      <div style="border:2px dashed var(--bd);border-radius:10px;padding:16px;text-align:center;cursor:pointer;position:relative;background:var(--bg);">
+        <span id="locThumbPreview" style="font-size:14px;color:var(--txd);" data-en="Click to upload thumbnail" data-he="לחץ להעלאת תמונה">Click to upload thumbnail</span>
+        <input type="file" accept="image/*" id="locThumbInput" style="position:absolute;inset:0;opacity:0;cursor:pointer;">
+      </div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;font-size:15px;" onclick="submitLocation()" id="locSubmitBtn" data-en="Save Location" data-he="שמור מיקום">Save Location</button>
+    <div id="locResult" style="margin-top:8px;font-size:13px;"></div>
+  </div>
+</div>
+
 <!-- CTA -->
 <div class="dir-cta">
   <h3 data-en="Are you a contractor?" data-he="אתה קבלן?">Are you a contractor?</h3>
@@ -377,10 +403,63 @@ function escHtml(s) {
   return d.innerHTML;
 }
 
-// Update nav auth button
-if (isLoggedIn()) {
-  const btn = document.getElementById('navAuthBtn');
-  if (btn) { btn.textContent = isPro() ? 'PRO' : 'Account'; btn.href = '/dashboard.html'; }
+// Show add-location section for Pro+ users
+if (isLoggedIn() && isPro()) {
+  document.getElementById('addLocationSection').style.display = 'block';
+}
+
+// Location thumbnail
+let locThumbB64 = '';
+document.getElementById('locThumbInput').addEventListener('change', async function(e) {
+  const f = e.target.files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = async (ev) => {
+    locThumbB64 = await resizeForThumbnail(ev.target.result);
+    document.getElementById('locThumbPreview').innerHTML = `<img src="data:image/jpeg;base64,${locThumbB64}" style="max-height:80px;border-radius:6px;">`;
+  };
+  reader.readAsDataURL(f);
+});
+
+async function submitLocation() {
+  const address = document.getElementById('locAddress').value.trim();
+  if (!address) { showToast(lang === 'he' ? 'הכנס כתובת' : 'Enter an address', 'err'); return; }
+
+  const btn = document.getElementById('locSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = '...';
+
+  try {
+    // Ensure user has a directory listing first
+    await apiCall('/api/directory/update', {
+      method: 'POST',
+      body: { businessName: getCachedUser()?.businessName || '' }
+    });
+
+    const data = await apiCall('/api/directory/location', {
+      method: 'POST',
+      body: {
+        address,
+        projectTitle: document.getElementById('locProject').value.trim(),
+        thumbnail: locThumbB64 || ''
+      }
+    });
+
+    document.getElementById('locResult').innerHTML = `<span style="color:var(--grn);">✓ ${lang === 'he' ? 'מיקום נוסף!' : 'Location added!'}</span>`;
+    document.getElementById('locAddress').value = '';
+    document.getElementById('locProject').value = '';
+    locThumbB64 = '';
+    document.getElementById('locThumbPreview').textContent = lang === 'he' ? 'לחץ להעלאת תמונה' : 'Click to upload thumbnail';
+
+    // Reload map markers
+    loadListings();
+    showToast(lang === 'he' ? 'מיקום נוסף למפה!' : 'Location added to map!', 'ok');
+  } catch (err) {
+    document.getElementById('locResult').innerHTML = `<span style="color:var(--red);">✗ ${err.message}</span>`;
+  }
+
+  btn.disabled = false;
+  btn.textContent = lang === 'he' ? 'שמור מיקום' : 'Save Location';
 }
 
 // Init

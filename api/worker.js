@@ -839,11 +839,17 @@ async function handleDirectoryUpdate(request, env) {
     locations: [],
     tier: 'free',
     whatsappGroup: '',
+    website: '',
+    facebook: '',
+    instagram: '',
+    youtube: '',
+    licenseNumber: '',
+    yearsInBusiness: '',
     createdAt: new Date().toISOString()
   };
 
   // Allowed fields
-  const allowed = ['businessName', 'type', 'phone', 'contactEmail', 'logo', 'description', 'photos', 'reviews', 'whatsappGroup'];
+  const allowed = ['businessName', 'type', 'phone', 'contactEmail', 'logo', 'description', 'photos', 'reviews', 'whatsappGroup', 'website', 'facebook', 'instagram', 'youtube', 'licenseNumber', 'yearsInBusiness'];
   for (const k of allowed) {
     if (updates[k] !== undefined) {
       // Limit photos based on tier
