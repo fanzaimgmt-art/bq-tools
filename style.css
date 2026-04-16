@@ -391,7 +391,7 @@ a:hover, a:active { opacity: .8; }
 }
 .nav-avatar:hover { border-color: var(--ac); box-shadow: 0 0 14px var(--acd); }
 .nav-avatar img { width: 100%; height: 100%; object-fit: cover; }
-.nav-avatar-wrap { position: relative; }
+.nav-avatar-wrap { position: relative; z-index: 201; }
 
 /* Backdrop — invisible click-catcher on desktop, dim overlay on mobile */
 .nav-dd-backdrop {
@@ -407,10 +407,10 @@ a:hover, a:active { opacity: .8; }
   width: 280px; background: #1a1a1f;
   border: 1px solid rgba(232,197,71,.25); border-radius: 16px;
   box-shadow: 0 12px 48px rgba(0,0,0,.6), 0 0 0 1px rgba(232,197,71,.06);
-  z-index: 200; display: none; overflow: hidden;
+  z-index: 210; display: none; overflow: hidden;
 }
 [dir="rtl"] .nav-dropdown { right: auto; left: 0; }
-.nav-dropdown.open { display: flex; flex-direction: column; animation: ddSlideIn .18s ease; }
+.nav-dropdown.open { display: flex; flex-direction: column; animation: ddSlideIn .18s ease; pointer-events: auto; }
 @keyframes ddSlideIn {
   from { opacity: 0; transform: translateY(-6px) scale(.97); }
   to { opacity: 1; transform: translateY(0) scale(1); }
@@ -459,7 +459,7 @@ a:hover, a:active { opacity: .8; }
   transition: background .12s; cursor: pointer;
   border: none; background: none; width: 100%; font-family: inherit; text-align: start;
 }
-.nav-dd-item:hover { background: rgba(255,255,255,.04); opacity: 1; color: var(--tx); }
+.nav-dd-item:hover { background: #2a2a2f; opacity: 1; color: var(--tx); }
 .nav-dd-item .dd-icon { width: 20px; text-align: center; flex-shrink: 0; font-size: 15px; }
 .nav-dd-item .dd-label { flex: 1; }
 .nav-dd-item .dd-badge {
@@ -468,11 +468,11 @@ a:hover, a:active { opacity: .8; }
 }
 .nav-dd-divider { height: 1px; background: rgba(255,255,255,.06); margin: 2px 0; }
 .nav-dd-item.danger { color: var(--red); }
-.nav-dd-item.danger:hover { background: rgba(255,107,107,.06); }
+.nav-dd-item.danger:hover { background: rgba(255,107,107,.1); }
 .nav-dd-item.accent { color: var(--ac); }
-.nav-dd-item.accent:hover { background: rgba(232,197,71,.06); }
+.nav-dd-item.accent:hover { background: rgba(232,197,71,.1); }
 .nav-dd-item.green { color: var(--grn); }
-.nav-dd-item.green:hover { background: rgba(81,207,102,.06); }
+.nav-dd-item.green:hover { background: rgba(81,207,102,.1); }
 
 /* Language switcher inside dropdown */
 .nav-dd-lang {

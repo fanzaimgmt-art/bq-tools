@@ -4,23 +4,35 @@
   // Don't load on admin page
   if (window.location.pathname === '/admin.html') return;
 
-  const SYSTEM_PROMPT = `You are BQ Assistant, an AI helper for contractors and remodelers. You help them use BQ Tools efficiently. You can navigate them to tools, answer questions about construction/remodeling, and help them market their work. Keep answers short and actionable (max 3 sentences).
+  const SYSTEM_PROMPT = `You are BQ Assistant. You can do ANYTHING the user asks within BQ Tools. You have full control over their account and tools. Keep answers short and actionable (max 3 sentences). Always confirm before making changes. Every message costs 1 credit.
+
+You can:
+- UPDATE PROFILE: "Change my business name to X" → tell them you'll update it, then respond with ACTION:UPDATE_PROFILE:{"businessName":"X"}
+- ADD PHONE: "Add my phone: 310-555-1234" → ACTION:UPDATE_PROFILE:{"phone":"310-555-1234"}
+- SHOW CREDITS: "How many credits?" → answer from context data
+- NAVIGATE: "Create a report" → link to /tools/report.html
+- NAVIGATE: "Compare photos" → link to /tools/compare.html
+- NAVIGATE: "Upload a project" → link to /tools/compare.html
+- ADD LOCATION: "Add work location: 123 Main St, LA" → ACTION:ADD_LOCATION:{"address":"123 Main St, LA"}
+- CHANGE LANGUAGE: "Switch to Hebrew" → ACTION:SET_LANG:he
+- BUY CREDITS: "Buy credits" → ACTION:SHOW_BUY
+- LIST COMMANDS: "What can I do?" → list all capabilities
+- CONSTRUCTION Q&A: answer any construction/remodeling question concisely
 
 Available tools:
-- Compare: /tools/compare.html — before/after slider (FREE)
-- AI Analysis: /tools/compare.html — AI scores and compares photos (1 credit)
-- Quick Report: /tools/report.html — AI generates project report (1 credit)
-- Smart Estimate: /tools/estimate.html — AI estimates costs from photo (1 credit)
-- Client Page: /tools/client-page.html — shareable project page (FREE, 1 free)
-- Social Post: /tools/social-post.html — AI writes captions (1 credit)
-- Review Request: /tools/review.html — AI writes review request messages (1 credit)
-- Quick Sketch: /tools/sketch.html — AI cleans up sketches (1 credit)
-- Gallery: /gallery.html — all saved projects
-- Dashboard: /dashboard.html — usage stats
+- Compare: /tools/compare.html (FREE slider, 1 credit for AI analysis)
+- Quick Report: /tools/report.html (1 credit)
+- Smart Estimate: /tools/estimate.html (1 credit)
+- Client Page: /tools/client-page.html (FREE)
+- Social Post: /tools/social-post.html (1 credit)
+- Review Request: /tools/review.html (1 credit)
+- Quick Sketch: /tools/sketch.html (1 credit)
+- Gallery: /gallery.html
+- Dashboard: /dashboard.html
+- Profile: /profile.html
+- Directory: /directory.html
 
-If the user asks to do something, tell them which tool to use and offer to open it.
-If they mention a name or project, include it as context.
-Answer construction/remodeling questions concisely.`;
+When performing an action, include the ACTION: tag at the END of your response on its own line. Only one action per response.`;
 
   const MAX_HISTORY = 50;
 
@@ -285,12 +297,21 @@ Answer construction/remodeling questions concisely.`;
 
     try {
       const user = getCachedUser();
-      const context = `User: ${user?.businessName || 'contractor'}. Credits: ${user?.credits || 0}. Language: ${lang}.`;
+      const context = `User: ${user?.businessName || 'contractor'}, email: ${user?.email || '?'}, Credits: ${user?.credits || 0}, Plan: ${user?.isPro ? 'Pro' : 'Free'}, Language: ${lang}. Business type: ${user?.businessType || 'unknown'}, Phone: ${user?.phone || 'not set'}.`;
       const fullPrompt = `${SYSTEM_PROMPT}\n\nContext: ${context}\n\nUser says: ${text}`;
 
       const response = await callWorkerAI('AI Assistant', fullPrompt, [], 'Chat');
       typing.remove();
-      addMessage('ai', response);
+
+      // Parse and execute ACTION tags
+      const actionMatch = response.match(/ACTION:(\w+):?(.*)/);
+      const displayText = response.replace(/ACTION:\w+:?.*/g, '').trim();
+      addMessage('ai', displayText || response);
+
+      if (actionMatch) {
+        const [, action, payload] = actionMatch;
+        await executeAction(action, payload);
+      }
     } catch (err) {
       typing.remove();
       addMessage('ai', '❌ ' + (err.message || 'Error'));
@@ -342,6 +363,20 @@ Answer construction/remodeling questions concisely.`;
         ? 'בדוק בדשבורד: /dashboard.html'
         : 'Check your Dashboard: /dashboard.html';
     }
+    if (t.includes('what can') || t.includes('help') || t.includes('מה אפשר') || t.includes('עזרה')) {
+      return lang === 'he'
+        ? 'אני יכול:\n• לעדכן פרופיל (שם, טלפון, שפה)\n• לנווט לכלים\n• להוסיף מיקום ל-Directory\n• להראות קרדיטים\n• לענות על שאלות בנייה/שיפוצים\n• לקנות קרדיטים\n\nפשוט תגיד מה אתה צריך!'
+        : "I can:\n• Update your profile (name, phone, language)\n• Navigate to any tool\n• Add work locations to Directory\n• Show your credits\n• Answer construction/remodeling questions\n• Help you buy credits\n\nJust tell me what you need!";
+    }
+    if (t.includes('buy') || t.includes('purchase') || t.includes('קנה') || t.includes('רכישה')) {
+      if (typeof showNoCreditModal === 'function') showNoCreditModal();
+      return lang === 'he' ? 'פתחתי את חלון הרכישה!' : 'Opened the purchase window!';
+    }
+    if (t.includes('profile') || t.includes('פרופיל')) {
+      return lang === 'he'
+        ? 'ערוך את הפרופיל שלך: /profile.html'
+        : 'Edit your profile: /profile.html';
+    }
 
     return null; // Not a quick answer → use AI
   }
@@ -354,4 +389,42 @@ Answer construction/remodeling questions concisely.`;
       : 'History cleared. What do you want to do?');
     renderSuggestions();
   };
+
+  // ── Action Executor ──
+  async function executeAction(action, payload) {
+    try {
+      switch (action) {
+        case 'UPDATE_PROFILE': {
+          const data = JSON.parse(payload);
+          await updateUserProfile(data);
+          addMessage('ai', lang === 'he' ? '✓ הפרופיל עודכן!' : '✓ Profile updated!');
+          break;
+        }
+        case 'ADD_LOCATION': {
+          const data = JSON.parse(payload);
+          // Ensure directory listing exists
+          const user = getCachedUser();
+          await apiCall('/api/directory/update', { method: 'POST', body: { businessName: user?.businessName || '' } });
+          await apiCall('/api/directory/location', { method: 'POST', body: data });
+          addMessage('ai', lang === 'he' ? '✓ מיקום נוסף למפה!' : '✓ Location added to map!');
+          break;
+        }
+        case 'SET_LANG': {
+          const l = payload.trim();
+          if (l === 'he' || l === 'en') {
+            setLang(l);
+            await updateUserProfile({ language: l });
+            addMessage('ai', l === 'he' ? '✓ שפה שונתה לעברית!' : '✓ Language changed to English!');
+          }
+          break;
+        }
+        case 'SHOW_BUY': {
+          if (typeof showNoCreditModal === 'function') showNoCreditModal();
+          break;
+        }
+      }
+    } catch (err) {
+      addMessage('ai', '❌ ' + (err.message || 'Action failed'));
+    }
+  }
 })();

@@ -37,9 +37,7 @@ function _escHtml(s) {
 }
 
 function _planBadge(user) {
-  // Check directory tier first (featured > pro > free)
-  if (user.directoryTier === 'featured') return '<span class="nav-dd-badge badge-featured">FEATURED</span>';
-  if (user.isPro) return '<span class="nav-dd-badge badge-pro">PRO</span>';
+  if (user.isPro === true) return '<span class="nav-dd-badge badge-pro">PRO</span>';
   return '<span class="nav-dd-badge badge-free">FREE</span>';
 }
 
