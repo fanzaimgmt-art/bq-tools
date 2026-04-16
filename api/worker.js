@@ -181,6 +181,18 @@ export default {
         return corsResponse(env, await handleAdminNewsRefresh(request, env));
       }
 
+      // ── Business Operations Suite ──
+      // Generic CRUD for: receipts, clients, expenses, bprojects, suppliers, equipment, timelogs, compliance
+      const businessMatch = path.match(/^\/api\/(receipts|clients|expenses|bprojects|suppliers|equipment|timelogs|compliance)(\/[^\/]+)?$/);
+      if (businessMatch) {
+        const collection = businessMatch[1];
+        const itemId = businessMatch[2] ? businessMatch[2].slice(1) : null;
+        return corsResponse(env, await handleBusinessCRUD(request, env, collection, itemId));
+      }
+      if (path === '/api/receipts/extract' && request.method === 'POST') {
+        return corsResponse(env, await handleReceiptExtract(request, env));
+      }
+
       if (path === '/api/health') {
         return corsResponse(env, json({ ok: true, ts: Date.now() }));
       }
@@ -2494,4 +2506,144 @@ California-compliant. Professional legal language. JSON only.`;
   await logCreditUsage(updated.email, 'contract-generate', projectDescription.substring(0, 50), env);
 
   return json({ ok: true, contract, credits: updated.credits });
+}
+
+// ── Business Operations Suite — Generic CRUD ──
+
+const BUSINESS_COLLECTIONS = {
+  receipts: { allowed: ['vendor', 'date', 'total', 'tax', 'items', 'category', 'projectId', 'notes', 'thumbnail', 'rawText', 'status'] },
+  clients: { allowed: ['name', 'phone', 'email', 'address', 'city', 'source', 'notes', 'tags', 'lastContactDate', 'totalSpent', 'photo'] },
+  expenses: { allowed: ['amount', 'date', 'vendor', 'category', 'description', 'projectId', 'recurring', 'taxDeductible', 'receiptId'] },
+  bprojects: { allowed: ['name', 'clientId', 'clientName', 'address', 'status', 'startDate', 'endDate', 'value', 'percentComplete', 'description', 'dailyLogs', 'punchList', 'changeOrders', 'documents', 'thumbnail'] },
+  suppliers: { allowed: ['name', 'type', 'phone', 'email', 'address', 'website', 'hours', 'rating', 'notes', 'lat', 'lng', 'lastVisit', 'photo'] },
+  equipment: { allowed: ['name', 'brand', 'model', 'serial', 'purchaseDate', 'cost', 'location', 'photo', 'status', 'category', 'assignedTo', 'projectId', 'lastService', 'nextService', 'mileage', 'fuelLogs'] },
+  timelogs: { allowed: ['date', 'clockIn', 'clockOut', 'hours', 'projectId', 'projectName', 'task', 'workerName', 'workerEmail', 'hourlyRate', 'gps', 'notes', 'status'] },
+  compliance: { allowed: ['name', 'type', 'expirationDate', 'issueDate', 'file', 'projectId', 'status', 'cost', 'issuingAuthority', 'notes', 'documentUrl', 'incidentType', 'incidentDate', 'description', 'action'] },
+};
+
+async function handleBusinessCRUD(request, env, collection, itemId) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const conf = BUSINESS_COLLECTIONS[collection];
+  if (!conf) return json({ error: 'Unknown collection' }, 400);
+
+  const key = `${collection}:${user.email}`;
+  const method = request.method;
+
+  if (method === 'GET') {
+    const raw = await env.BQ_USERS.get(key);
+    const items = raw ? JSON.parse(raw) : [];
+    if (itemId) {
+      const item = items.find(i => i.id === itemId);
+      if (!item) return json({ error: 'Not found' }, 404);
+      return json({ ok: true, item });
+    }
+    return json({ ok: true, items, count: items.length });
+  }
+
+  if (method === 'POST') {
+    if (itemId) return json({ error: 'Use PUT for updates' }, 405);
+    const body = await request.json();
+    const raw = await env.BQ_USERS.get(key);
+    const items = raw ? JSON.parse(raw) : [];
+
+    const newItem = { id: Date.now().toString(36) + Math.random().toString(36).substring(2, 6), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+    for (const k of conf.allowed) {
+      if (body[k] !== undefined) newItem[k] = body[k];
+    }
+
+    items.unshift(newItem);
+    if (items.length > 1000) items.length = 1000;
+    await env.BQ_USERS.put(key, JSON.stringify(items));
+    return json({ ok: true, item: newItem });
+  }
+
+  if (method === 'PUT') {
+    if (!itemId) return json({ error: 'Item ID required' }, 400);
+    const body = await request.json();
+    const raw = await env.BQ_USERS.get(key);
+    const items = raw ? JSON.parse(raw) : [];
+    const idx = items.findIndex(i => i.id === itemId);
+    if (idx === -1) return json({ error: 'Not found' }, 404);
+
+    for (const k of conf.allowed) {
+      if (body[k] !== undefined) items[idx][k] = body[k];
+    }
+    items[idx].updatedAt = new Date().toISOString();
+    await env.BQ_USERS.put(key, JSON.stringify(items));
+    return json({ ok: true, item: items[idx] });
+  }
+
+  if (method === 'DELETE') {
+    if (!itemId) return json({ error: 'Item ID required' }, 400);
+    const raw = await env.BQ_USERS.get(key);
+    const items = raw ? JSON.parse(raw) : [];
+    const filtered = items.filter(i => i.id !== itemId);
+    if (filtered.length === items.length) return json({ error: 'Not found' }, 404);
+    await env.BQ_USERS.put(key, JSON.stringify(filtered));
+    return json({ ok: true, count: filtered.length });
+  }
+
+  return json({ error: 'Method not allowed' }, 405);
+}
+
+// ── Receipt AI Extraction ──
+async function handleReceiptExtract(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  if (!(await checkRateLimit(user.email, env))) {
+    return json({ error: 'Rate limit exceeded' }, 429);
+  }
+
+  const updated = checkMonthlyReset(user);
+  if (updated.credits < 1) {
+    return json({ error: 'Need 1 credit', credits: updated.credits }, 402);
+  }
+
+  const { image } = await request.json();
+  if (!image) return json({ error: 'image required' }, 400);
+
+  const prompt = `Extract data from this receipt. Return JSON ONLY (no markdown):
+{
+  "vendor": "store name",
+  "date": "YYYY-MM-DD",
+  "total": 0,
+  "tax": 0,
+  "items": [{"name":"item","price":0,"quantity":1}],
+  "category": "Materials|Tools|Fuel|Food|Office|Vehicle|Other",
+  "rawText": "full receipt text for reference"
+}
+Guess category based on vendor and items. If unreadable, return {"error":"unreadable"}.`;
+
+  let aiResponse;
+  try {
+    aiResponse = await callClaudeAPI(env, prompt, [image]);
+  } catch (e) {
+    try {
+      aiResponse = await callGeminiAPI(env, prompt, [image]);
+    } catch (e2) {
+      return json({ error: 'AI failed: ' + e.message }, 502);
+    }
+  }
+
+  let data;
+  try {
+    data = JSON.parse(aiResponse.replace(/```json|```/g, '').trim());
+  } catch {
+    return json({ error: 'AI returned invalid format', raw: aiResponse }, 500);
+  }
+
+  if (data.error) return json({ error: data.error, credits: updated.credits });
+
+  // Deduct credit
+  updated.credits -= 1;
+  updated.creditsUsedThisMonth = (updated.creditsUsedThisMonth || 0) + 1;
+  await env.BQ_USERS.put(`user:${updated.email}`, JSON.stringify(updated));
+  await logCreditUsage(updated.email, 'receipt-extract', data.vendor || 'Receipt', env);
+
+  return json({ ok: true, data, credits: updated.credits });
 }

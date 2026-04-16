@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Projects Log</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  body { display: flex; flex-direction: column; }
+
+  .p-tabs { display: flex; gap: 6px; margin-bottom: 16px; border-bottom: 1px solid var(--bd); padding-bottom: 2px; }
+  .p-tab { padding: 10px 16px; background: none; border: none; color: var(--txd); cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 600; border-bottom: 2px solid transparent; transition: all .15s; }
+  .p-tab.on { color: var(--ac); border-bottom-color: var(--ac); }
+  .p-tab .count { background: var(--bd); color: var(--tx); font-size: 11px; padding: 1px 6px; border-radius: 4px; margin-inline-start: 4px; }
+  .p-tab.on .count { background: var(--acd); color: var(--ac); }
+
+  .p-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+  .p-card {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 14px;
+    padding: 16px; cursor: pointer; transition: all .2s; position: relative; overflow: hidden;
+  }
+  .p-card:hover { border-color: var(--ac); transform: translateY(-2px); }
+  .p-card.active::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--grn); }
+  .p-card.hold::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--orange, #ff9f43); }
+  .p-card.done::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--txd); }
+  .p-name { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .p-client { font-size: 12px; color: var(--txd); margin-bottom: 10px; }
+  .p-progress { height: 6px; background: var(--bd); border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
+  .p-fill { height: 100%; background: var(--ac); transition: width .3s; }
+  .p-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--txd); }
+  .p-value { font-weight: 800; color: var(--ac); font-size: 16px; }
+
+  /* Detail modal */
+  .p-detail { max-width: 720px; max-height: 92vh; overflow-y: auto; }
+  .pd-head { display: flex; gap: 14px; margin-bottom: 16px; }
+  .pd-title h2 { font-size: 22px; font-weight: 900; }
+  .pd-status-btn { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+  .pd-status-Active { background: rgba(81,207,102,.15); color: var(--grn); }
+  .pd-status-On-Hold { background: rgba(255,159,67,.15); color: #ff9f43; }
+  .pd-status-Completed { background: rgba(136,136,136,.15); color: var(--txd); }
+
+  .pd-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--bd); margin-bottom: 14px; overflow-x: auto; }
+  .pd-tab { padding: 8px 14px; background: none; border: none; color: var(--txd); cursor: pointer; font-family: inherit; font-size: 13px; white-space: nowrap; border-bottom: 2px solid transparent; }
+  .pd-tab.on { color: var(--ac); border-bottom-color: var(--ac); }
+
+  .pnl-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+  .pnl-box { background: var(--bg); border: 1px solid var(--bd); border-radius: 8px; padding: 10px; text-align: center; }
+  .pnl-val { font-size: 18px; font-weight: 800; }
+  .pnl-lbl { font-size: 11px; color: var(--txd); }
+
+  .log-entry { border-left: 3px solid var(--ac); padding: 10px 14px; margin-bottom: 8px; background: var(--bg); border-radius: 0 8px 8px 0; }
+  .log-date { font-size: 11px; color: var(--txd); margin-bottom: 4px; }
+
+  .punch-item { display: flex; align-items: center; gap: 10px; padding: 8px; border: 1px solid var(--bd); border-radius: 8px; margin-bottom: 6px; }
+  .punch-item.done { opacity: 0.5; text-decoration: line-through; }
+  .punch-item input { accent-color: var(--ac); width: 18px; height: 18px; }
+  .punch-item .p-txt { flex: 1; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/home.html" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/business.html" class="nav-link" data-en="Business" data-he="עסק">Business</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <a href="/business.html" class="page-back" data-en="← Business Hub" data-he="← מרכז עסקי">← Business Hub</a>
+  <h1 class="page-title" data-en="📋 Projects Log" data-he="📋 יומן פרויקטים">📋 Projects Log</h1>
+  <p class="page-sub" data-en="Every job. Every detail. Every dollar." data-he="כל עבודה. כל פרט. כל דולר.">Every job. Every detail. Every dollar.</p>
+
+  <div id="hiw-proj"></div>
+  <script>
+    const HIW_PROJ = {
+      steps: [
+        { icon: '➕', en: 'Create a project with client + value', he: 'צור פרויקט עם לקוח וערך' },
+        { icon: '📝', en: 'Log daily work, punch list, change orders', he: 'תעד עבודה יומית, משימות, שינויים' },
+        { icon: '💰', en: 'See P&L automatically (revenue minus expenses)', he: 'ראה רווח והפסד אוטומטית (הכנסות פחות הוצאות)' },
+      ],
+      example: {
+        en: 'Johnson Kitchen: $12K project, $4,200 spent on materials + $2,800 labor = $5,000 profit (41.6% margin).',
+        he: 'מטבח ג׳ונסון: פרויקט של $12K, $4,200 חומרים + $2,800 עבודה = $5,000 רווח (41.6% שוליים).'
+      }
+    };
+    document.addEventListener('DOMContentLoaded',()=>{if(typeof buildHowItWorks==='function')buildHowItWorks('hiw-proj',HIW_PROJ)});
+  </script>
+
+  <div class="p-tabs">
+    <button class="p-tab on" data-st="Active" onclick="setTab('Active')"><span data-en="Active" data-he="פעילים">Active</span> <span class="count" id="cActive">0</span></button>
+    <button class="p-tab" data-st="On Hold" onclick="setTab('On Hold')"><span data-en="On Hold" data-he="בהמתנה">On Hold</span> <span class="count" id="cHold">0</span></button>
+    <button class="p-tab" data-st="Completed" onclick="setTab('Completed')"><span data-en="Completed" data-he="הושלמו">Completed</span> <span class="count" id="cDone">0</span></button>
+    <div style="flex:1;"></div>
+    <button class="btn btn-primary" onclick="showAddForm()">+ <span data-en="New Project" data-he="פרויקט חדש">New Project</span></button>
+  </div>
+
+  <div class="p-grid" id="list"></div>
+</div>
+
+<script src="../js/ai.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/crypto.js"></script>
+<script src="../js/common.js"></script>
+<script src="../js/business.js"></script>
+<script>
+if (!isLoggedIn()) window.location.replace('/auth.html');
+
+let bprojects = [];
+let clients = [];
+let receipts = [];
+let expenses = [];
+let timelogs = [];
+let activeStatus = 'Active';
+
+async function init() {
+  try {
+    [bprojects, clients, receipts, expenses, timelogs] = await Promise.all([
+      Biz.list('bprojects'), Biz.list('clients'), Biz.list('receipts'),
+      Biz.list('expenses'), Biz.list('timelogs')
+    ]);
+    render();
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+function setTab(status) {
+  activeStatus = status;
+  document.querySelectorAll('.p-tab').forEach(t => t.classList.toggle('on', t.dataset.st === status));
+  render();
+}
+
+function projectPL(p) {
+  const rExp = receipts.filter(r => r.projectId === p.id).reduce((s, r) => s + (parseFloat(r.total) || 0), 0);
+  const eExp = expenses.filter(e => e.projectId === p.id).reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
+  const labor = timelogs.filter(t => t.projectId === p.id).reduce((s, t) => s + ((parseFloat(t.hours) || 0) * (parseFloat(t.hourlyRate) || 0)), 0);
+  const totalExp = rExp + eExp + labor;
+  const revenue = parseFloat(p.value) || 0;
+  const profit = revenue - totalExp;
+  const margin = revenue > 0 ? (profit / revenue) * 100 : 0;
+  return { revenue, expenses: totalExp, materials: rExp + eExp, labor, profit, margin };
+}
+
+function render() {
+  const counts = { 'Active': 0, 'On Hold': 0, 'Completed': 0 };
+  bprojects.forEach(p => {
+    const s = p.status || 'Active';
+    if (counts[s] !== undefined) counts[s]++;
+  });
+  document.getElementById('cActive').textContent = counts['Active'];
+  document.getElementById('cHold').textContent = counts['On Hold'];
+  document.getElementById('cDone').textContent = counts['Completed'];
+
+  const filtered = bprojects.filter(p => (p.status || 'Active') === activeStatus);
+  const list = document.getElementById('list');
+  if (filtered.length === 0) {
+    list.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--txd);">
+      <div style="font-size:48px;">📭</div>
+      <p>${lang === 'he' ? 'אין פרויקטים בסטטוס זה' : 'No projects in this status'}</p></div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(p => {
+    const client = clients.find(c => c.id === p.clientId);
+    const statusCls = p.status === 'Active' ? 'active' : p.status === 'On Hold' ? 'hold' : 'done';
+    const pct = parseFloat(p.percentComplete) || 0;
+    const pl = projectPL(p);
+    return `<div class="p-card ${statusCls}" onclick="viewProject('${p.id}')">
+      <div class="p-name">${escHtml(p.name || 'Unnamed Project')}</div>
+      <div class="p-client">${escHtml(client?.name || p.clientName || '—')}${p.address ? ' · ' + escHtml(p.address) : ''}</div>
+      <div class="p-progress"><div class="p-fill" style="width:${pct}%"></div></div>
+      <div class="p-meta">
+        <span>${pct}% ${lang === 'he' ? 'הושלם' : 'done'}</span>
+        <span class="p-value">${fmtMoney(pl.revenue)}</span>
+      </div>
+      ${pl.profit !== 0 ? `<div style="margin-top:6px;font-size:12px;color:${pl.profit > 0 ? 'var(--grn)' : 'var(--red)'};">${lang === 'he' ? 'רווח' : 'Profit'}: ${fmtMoney(pl.profit)} (${pl.margin.toFixed(1)}%)</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function viewProject(id) {
+  const p = bprojects.find(x => x.id === id);
+  if (!p) return;
+  const client = clients.find(c => c.id === p.clientId);
+  const pl = projectPL(p);
+  const h = lang === 'he';
+
+  const pRec = receipts.filter(r => r.projectId === id);
+  const pExp = expenses.filter(e => e.projectId === id);
+  const pTime = timelogs.filter(t => t.projectId === id);
+
+  const m = document.createElement('div');
+  m.className = 'modal-overlay';
+  m.innerHTML = `
+    <div class="modal-card p-detail">
+      <div class="pd-head">
+        <div class="pd-title" style="flex:1;">
+          <h2>${escHtml(p.name || 'Unnamed')}</h2>
+          <p style="color:var(--txd);font-size:13px;margin-top:2px;">${escHtml(client?.name || '—')}${p.address ? ' · ' + escHtml(p.address) : ''}</p>
+          <span class="pd-status-btn pd-status-${(p.status || 'Active').replace(/\s/g, '-')}">${p.status || 'Active'}</span>
+        </div>
+      </div>
+
+      <div class="pnl-grid">
+        <div class="pnl-box"><div class="pnl-val" style="color:var(--ac);">${fmtMoney(pl.revenue)}</div><div class="pnl-lbl">${h ? 'הכנסה' : 'Revenue'}</div></div>
+        <div class="pnl-box"><div class="pnl-val" style="color:var(--orange,#ff9f43);">${fmtMoney(pl.expenses)}</div><div class="pnl-lbl">${h ? 'הוצאות' : 'Expenses'}</div></div>
+        <div class="pnl-box"><div class="pnl-val" style="color:${pl.profit >= 0 ? 'var(--grn)' : 'var(--red)'};">${fmtMoney(pl.profit)}</div><div class="pnl-lbl">${h ? 'רווח' : 'Profit'} (${pl.margin.toFixed(1)}%)</div></div>
+      </div>
+
+      <div class="pd-tabs">
+        <button class="pd-tab on" data-pt="overview" onclick="pdTab(this,'overview')">${h ? 'סקירה' : 'Overview'}</button>
+        <button class="pd-tab" data-pt="logs" onclick="pdTab(this,'logs')">${h ? 'יומן' : 'Daily Logs'} (${(p.dailyLogs || []).length})</button>
+        <button class="pd-tab" data-pt="punch" onclick="pdTab(this,'punch')">${h ? 'משימות' : 'Punch List'} (${(p.punchList || []).length})</button>
+        <button class="pd-tab" data-pt="changes" onclick="pdTab(this,'changes')">${h ? 'שינויים' : 'Change Orders'} (${(p.changeOrders || []).length})</button>
+        <button class="pd-tab" data-pt="expenses" onclick="pdTab(this,'expenses')">${h ? 'הוצאות' : 'Expenses'} (${pRec.length + pExp.length})</button>
+      </div>
+
+      <div id="pd-overview" class="pd-pane">
+        ${p.description ? `<p style="font-size:14px;line-height:1.6;margin-bottom:14px;">${escHtml(p.description)}</p>` : ''}
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px;">
+          <div><strong>${h ? 'התחלה' : 'Start'}:</strong> ${fmtDate(p.startDate)}</div>
+          <div><strong>${h ? 'סיום' : 'End'}:</strong> ${fmtDate(p.endDate)}</div>
+          <div><strong>${h ? 'ערך' : 'Value'}:</strong> ${fmtMoney(p.value)}</div>
+          <div><strong>${h ? 'הושלם' : 'Progress'}:</strong> ${p.percentComplete || 0}%</div>
+        </div>
+        <input type="range" min="0" max="100" value="${p.percentComplete || 0}" style="width:100%;margin:14px 0;accent-color:var(--ac);" onchange="updatePercent('${id}', this.value)">
+      </div>
+
+      <div id="pd-logs" class="pd-pane" style="display:none;">
+        <div style="margin-bottom:10px;">
+          <textarea class="textarea" id="newLog" rows="3" placeholder="${h ? 'מה עשית היום? מי היה על השטח?' : 'What was done today? Who was on site?'}"></textarea>
+          <button class="btn btn-sm btn-primary" style="margin-top:6px;" onclick="addLog('${id}')">+ ${h ? 'הוסף יומן' : 'Add Log'}</button>
+        </div>
+        ${(p.dailyLogs || []).slice().reverse().map(l => `
+          <div class="log-entry">
+            <div class="log-date">${fmtDate(l.date)}</div>
+            <div style="white-space:pre-wrap;font-size:13px;">${escHtml(l.text)}</div>
+          </div>`).join('') || `<p style="color:var(--txd);text-align:center;padding:20px;">${h ? 'אין יומנים עדיין' : 'No logs yet'}</p>`}
+      </div>
+
+      <div id="pd-punch" class="pd-pane" style="display:none;">
+        <div style="display:flex;gap:6px;margin-bottom:12px;">
+          <input class="input" id="newPunch" placeholder="${h ? 'משימה חדשה...' : 'New task...'}" style="flex:1;">
+          <button class="btn btn-sm btn-primary" onclick="addPunch('${id}')">+</button>
+        </div>
+        ${(p.punchList || []).map((item, i) => `
+          <div class="punch-item ${item.done ? 'done' : ''}">
+            <input type="checkbox" ${item.done ? 'checked' : ''} onchange="togglePunch('${id}',${i})">
+            <div class="p-txt">${escHtml(item.text)}</div>
+            <button onclick="removePunch('${id}',${i})" style="background:none;border:none;color:var(--red);cursor:pointer;">✕</button>
+          </div>`).join('') || `<p style="color:var(--txd);text-align:center;padding:20px;">${h ? 'אין משימות' : 'No tasks yet'}</p>`}
+      </div>
+
+      <div id="pd-changes" class="pd-pane" style="display:none;">
+        <button class="btn btn-sm btn-primary" style="margin-bottom:10px;" onclick="addChange('${id}')">+ ${h ? 'הוסף שינוי' : 'Add Change Order'}</button>
+        ${(p.changeOrders || []).map(co => `
+          <div style="background:var(--bg);padding:12px;border-radius:8px;margin-bottom:6px;">
+            <div style="display:flex;justify-content:space-between;">
+              <strong>${escHtml(co.description)}</strong>
+              <span style="color:var(--ac);font-weight:700;">${co.amount > 0 ? '+' : ''}${fmtMoney(co.amount)}</span>
+            </div>
+            <div style="font-size:11px;color:var(--txd);margin-top:4px;">${fmtDate(co.date)} · ${co.signed ? '✓ Signed' : '⏳ Pending'}</div>
+          </div>`).join('') || `<p style="color:var(--txd);text-align:center;padding:20px;">${h ? 'אין שינויים' : 'No change orders'}</p>`}
+      </div>
+
+      <div id="pd-expenses" class="pd-pane" style="display:none;">
+        <p style="color:var(--txd);font-size:13px;margin-bottom:10px;">${h ? 'כולל קבלות, הוצאות ידניות, ושעות עבודה' : 'Includes receipts, manual expenses, and logged time'}</p>
+        ${pRec.concat(pExp).sort((a,b) => (b.date || '').localeCompare(a.date || '')).slice(0, 50).map(e => `
+          <div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid var(--bd);font-size:13px;">
+            <span>${e.vendor ? '📸 ' : '✏️ '}${escHtml(e.vendor || e.description || 'Expense')}</span>
+            <span style="font-weight:700;">${fmtMoney(e.total || e.amount)}</span>
+          </div>`).join('') || `<p style="color:var(--txd);text-align:center;padding:20px;">${h ? 'אין הוצאות' : 'No expenses'}</p>`}
+      </div>
+
+      <div style="display:flex;gap:6px;margin-top:14px;flex-wrap:wrap;">
+        <select onchange="updateStatus('${id}', this.value)" style="padding:8px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-family:inherit;">
+          ${['Active','On Hold','Completed'].map(s => `<option ${p.status === s ? 'selected' : ''}>${s}</option>`).join('')}
+        </select>
+        <button class="btn btn-sm" onclick="this.closest('.modal-overlay').remove();editProject('${id}')">✏️ ${h ? 'ערוך' : 'Edit'}</button>
+        <button class="btn btn-sm" onclick="deleteProject('${id}')" style="color:var(--red);">🗑️</button>
+        <button class="btn btn-sm" style="flex:1;" onclick="this.closest('.modal-overlay').remove()">${h ? 'סגור' : 'Close'}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(m);
+  requestAnimationFrame(() => m.classList.add('open'));
+  m.onclick = e => { if (e.target === m) m.remove(); };
+}
+
+function pdTab(btn, pane) {
+  document.querySelectorAll('.pd-tab').forEach(t => t.classList.remove('on'));
+  btn.classList.add('on');
+  document.querySelectorAll('.pd-pane').forEach(p => p.style.display = 'none');
+  document.getElementById('pd-' + pane).style.display = 'block';
+}
+
+function showAddForm(proj) {
+  const isEdit = !!proj;
+  const p = proj || {};
+  const h = lang === 'he';
+  const clientOpts = `<option value="">${h ? 'ללא' : 'None'}</option>` + clients.map(c => `<option value="${c.id}" ${p.clientId === c.id ? 'selected' : ''}>${escHtml(c.name)}</option>`).join('');
+
+  const m = document.createElement('div');
+  m.className = 'modal-overlay';
+  m.innerHTML = `
+    <div class="modal-card" style="max-width:460px;max-height:90vh;overflow-y:auto;">
+      <h3 style="margin-bottom:14px;">${isEdit ? (h ? 'ערוך פרויקט' : 'Edit Project') : (h ? 'פרויקט חדש' : 'New Project')}</h3>
+      <label class="input-label">${h ? 'שם פרויקט' : 'Project Name'} *</label>
+      <input class="input" id="pName" value="${escHtml(p.name || '')}" style="margin-bottom:8px;">
+      <label class="input-label">${h ? 'לקוח' : 'Client'}</label>
+      <select class="input" id="pClient" style="margin-bottom:8px;">${clientOpts}</select>
+      <label class="input-label">${h ? 'כתובת' : 'Address'}</label>
+      <input class="input" id="pAddr" value="${escHtml(p.address || '')}" style="margin-bottom:8px;">
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <div style="flex:1;"><label class="input-label">${h ? 'התחלה' : 'Start'}</label><input class="input" id="pStart" type="date" value="${p.startDate || ''}"></div>
+        <div style="flex:1;"><label class="input-label">${h ? 'סיום' : 'End'}</label><input class="input" id="pEnd" type="date" value="${p.endDate || ''}"></div>
+      </div>
+      <label class="input-label">${h ? 'ערך $' : 'Value $'}</label>
+      <input class="input" id="pValue" type="number" step="0.01" value="${p.value || ''}" placeholder="12000" style="margin-bottom:8px;">
+      <label class="input-label">${h ? 'תיאור' : 'Description'}</label>
+      <textarea class="textarea" id="pDesc" rows="3" style="margin-bottom:12px;">${escHtml(p.description || '')}</textarea>
+      <div style="display:flex;gap:8px;">
+        <button class="btn" style="flex:1;" onclick="this.closest('.modal-overlay').remove()">${h ? 'ביטול' : 'Cancel'}</button>
+        <button class="btn btn-primary" style="flex:1;" onclick="saveProject(${isEdit ? `'${p.id}'` : 'null'})">${h ? 'שמור' : 'Save'}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(m);
+  requestAnimationFrame(() => m.classList.add('open'));
+  m.onclick = e => { if (e.target === m) m.remove(); };
+}
+
+async function saveProject(id) {
+  const name = document.getElementById('pName').value.trim();
+  if (!name) { showToast(lang === 'he' ? 'שם חובה' : 'Name required', 'err'); return; }
+  const clientId = document.getElementById('pClient').value;
+  const client = clients.find(c => c.id === clientId);
+  const data = {
+    name,
+    clientId: clientId || null,
+    clientName: client?.name || '',
+    address: document.getElementById('pAddr').value.trim(),
+    startDate: document.getElementById('pStart').value,
+    endDate: document.getElementById('pEnd').value,
+    value: parseFloat(document.getElementById('pValue').value) || 0,
+    description: document.getElementById('pDesc').value.trim(),
+    status: 'Active',
+    percentComplete: 0,
+    dailyLogs: [],
+    punchList: [],
+    changeOrders: []
+  };
+
+  try {
+    if (id) {
+      const updated = await Biz.update('bprojects', id, data);
+      const idx = bprojects.findIndex(p => p.id === id);
+      if (idx !== -1) bprojects[idx] = updated;
+    } else {
+      const created = await Biz.create('bprojects', data);
+      bprojects.unshift(created);
+    }
+    document.querySelector('.modal-overlay')?.remove();
+    render();
+    showToast(lang === 'he' ? 'נשמר' : 'Saved', 'ok');
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+function editProject(id) {
+  const p = bprojects.find(x => x.id === id);
+  if (p) showAddForm(p);
+}
+
+async function deleteProject(id) {
+  if (!confirmDelete('this project')) return;
+  try {
+    await Biz.delete('bprojects', id);
+    bprojects = bprojects.filter(p => p.id !== id);
+    document.querySelector('.modal-overlay')?.remove();
+    render();
+    showToast(lang === 'he' ? 'נמחק' : 'Deleted', 'ok');
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+async function updateStatus(id, status) {
+  try {
+    await Biz.update('bprojects', id, { status });
+    const p = bprojects.find(x => x.id === id);
+    if (p) p.status = status;
+    showToast(lang === 'he' ? 'עודכן' : 'Updated', 'ok');
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+async function updatePercent(id, pct) {
+  const p = bprojects.find(x => x.id === id);
+  if (!p) return;
+  p.percentComplete = parseInt(pct);
+  try { await Biz.update('bprojects', id, { percentComplete: p.percentComplete }); } catch {}
+}
+
+async function addLog(id) {
+  const text = document.getElementById('newLog').value.trim();
+  if (!text) return;
+  const p = bprojects.find(x => x.id === id);
+  if (!p) return;
+  p.dailyLogs = p.dailyLogs || [];
+  p.dailyLogs.push({ date: new Date().toISOString(), text });
+  try {
+    await Biz.update('bprojects', id, { dailyLogs: p.dailyLogs });
+    document.querySelector('.modal-overlay')?.remove();
+    viewProject(id);
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+async function addPunch(id) {
+  const text = document.getElementById('newPunch').value.trim();
+  if (!text) return;
+  const p = bprojects.find(x => x.id === id);
+  if (!p) return;
+  p.punchList = p.punchList || [];
+  p.punchList.push({ text, done: false });
+  try {
+    await Biz.update('bprojects', id, { punchList: p.punchList });
+    document.querySelector('.modal-overlay')?.remove();
+    viewProject(id);
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+async function togglePunch(id, i) {
+  const p = bprojects.find(x => x.id === id);
+  if (!p || !p.punchList) return;
+  p.punchList[i].done = !p.punchList[i].done;
+  try { await Biz.update('bprojects', id, { punchList: p.punchList }); } catch {}
+}
+
+async function removePunch(id, i) {
+  const p = bprojects.find(x => x.id === id);
+  if (!p || !p.punchList) return;
+  p.punchList.splice(i, 1);
+  try {
+    await Biz.update('bprojects', id, { punchList: p.punchList });
+    document.querySelector('.modal-overlay')?.remove();
+    viewProject(id);
+  } catch {}
+}
+
+async function addChange(id) {
+  const h = lang === 'he';
+  const desc = prompt(h ? 'תיאור השינוי?' : 'Change description?');
+  if (!desc) return;
+  const amt = parseFloat(prompt(h ? 'סכום ($)?' : 'Amount ($)?', '0')) || 0;
+  const signed = confirm(h ? 'חתום ע"י הלקוח?' : 'Signed by client?');
+  const p = bprojects.find(x => x.id === id);
+  if (!p) return;
+  p.changeOrders = p.changeOrders || [];
+  p.changeOrders.push({ description: desc, amount: amt, date: new Date().toISOString(), signed });
+  p.value = (parseFloat(p.value) || 0) + amt;
+  try {
+    await Biz.update('bprojects', id, { changeOrders: p.changeOrders, value: p.value });
+    document.querySelector('.modal-overlay')?.remove();
+    viewProject(id);
+  } catch {}
+}
+
+init();
+</script>
+</body>
+</html>

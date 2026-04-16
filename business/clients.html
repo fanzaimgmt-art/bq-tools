@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Clients</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  body { display: flex; flex-direction: column; }
+
+  .c-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .c-bar input, .c-bar select { padding: 9px 12px; border: 1px solid var(--bd); border-radius: 8px; background: var(--bg); color: var(--tx); font-family: inherit; font-size: 14px; min-height: 40px; }
+  .c-bar input { flex: 1; min-width: 160px; }
+
+  .c-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+  .c-card {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 14px;
+    padding: 18px; transition: all .2s; cursor: pointer;
+  }
+  .c-card:hover { border-color: var(--ac); transform: translateY(-2px); }
+  .c-head { display: flex; gap: 12px; align-items: center; margin-bottom: 10px; }
+  .c-avatar {
+    width: 48px; height: 48px; border-radius: 50%; background: var(--acd);
+    display: flex; align-items: center; justify-content: center; font-size: 20px;
+    font-weight: 800; color: var(--ac); flex-shrink: 0; overflow: hidden;
+  }
+  .c-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .c-name { font-size: 16px; font-weight: 700; margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .c-meta { font-size: 12px; color: var(--txd); }
+  .c-stats { display: flex; gap: 12px; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.04); font-size: 12px; }
+  [data-theme="light"] .c-stats { border-top-color: rgba(0,0,0,.06); }
+  .c-stat { flex: 1; }
+  .c-stat-v { font-weight: 700; color: var(--tx); font-size: 14px; }
+  .c-stat-l { color: var(--txd); font-size: 11px; }
+  .c-tags { margin-top: 8px; }
+
+  .empty-state { text-align: center; padding: 40px; color: var(--txd); grid-column: 1/-1; }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+
+  .tag-vip { background: rgba(232,197,71,.15); color: var(--ac); }
+  .tag-recurring { background: rgba(81,207,102,.15); color: var(--grn); }
+  .tag-onetime { background: rgba(116,185,255,.15); color: var(--blu); }
+  .tag-cold { background: rgba(255,107,107,.15); color: var(--red); }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/home.html" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/business.html" class="nav-link" data-en="Business" data-he="עסק">Business</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <a href="/business.html" class="page-back" data-en="← Business Hub" data-he="← מרכז עסקי">← Business Hub</a>
+  <h1 class="page-title" data-en="👥 Clients" data-he="👥 לקוחות">👥 Clients</h1>
+  <p class="page-sub" data-en="Everyone you've worked with, all in one place." data-he="כל מי שעבדת איתו, במקום אחד.">Everyone you've worked with, all in one place.</p>
+
+  <div id="hiw-clients"></div>
+  <script>
+    const HIW_CLIENTS = {
+      steps: [
+        { icon: '➕', en: 'Add a client in 10 seconds', he: 'הוסף לקוח ב-10 שניות' },
+        { icon: '📝', en: 'Log all projects and contact notes', he: 'תעד את כל הפרויקטים והערות' },
+        { icon: '🔔', en: 'Get reminders to follow up with old clients', he: 'קבל תזכורות ליצור קשר עם לקוחות ישנים' },
+      ],
+      example: {
+        en: 'A regular client pays you 30% more lifetime than a one-timer. Track them so you never lose touch.',
+        he: 'לקוח חוזר משלם לך 30% יותר לאורך זמן מלקוח חד-פעמי. עקוב כדי שלא תאבד קשר.'
+      }
+    };
+    document.addEventListener('DOMContentLoaded',()=>{if(typeof buildHowItWorks==='function')buildHowItWorks('hiw-clients',HIW_CLIENTS)});
+  </script>
+
+  <div class="c-bar">
+    <input type="text" id="fSearch" placeholder="Search by name..." oninput="render()">
+    <select id="fTag" onchange="render()">
+      <option value="">All Tags</option>
+      <option value="VIP">VIP</option>
+      <option value="Recurring">Recurring</option>
+      <option value="One-time">One-time</option>
+      <option value="Cold lead">Cold lead</option>
+    </select>
+    <select id="fSort" onchange="render()">
+      <option value="recent">Recent</option>
+      <option value="name">Name A-Z</option>
+      <option value="spent">Total Spent</option>
+    </select>
+    <button class="btn btn-primary" onclick="showAddForm()">+ <span data-en="Add Client" data-he="הוסף לקוח">Add Client</span></button>
+    <button class="btn btn-sm" onclick="exportAll()">📥 CSV</button>
+  </div>
+
+  <div class="c-grid" id="list"></div>
+</div>
+
+<script src="../js/ai.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/crypto.js"></script>
+<script src="../js/common.js"></script>
+<script src="../js/business.js"></script>
+<script>
+if (!isLoggedIn()) window.location.replace('/auth.html');
+
+let clients = [];
+let bprojects = [];
+
+async function init() {
+  try {
+    [clients, bprojects] = await Promise.all([Biz.list('clients'), Biz.list('bprojects')]);
+    render();
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+function clientStats(c) {
+  const projects = bprojects.filter(p => p.clientId === c.id);
+  const totalSpent = projects.reduce((s, p) => s + (parseFloat(p.value) || 0), 0);
+  return { projectCount: projects.length, totalSpent };
+}
+
+function render() {
+  const search = document.getElementById('fSearch').value.toLowerCase();
+  const tag = document.getElementById('fTag').value;
+  const sort = document.getElementById('fSort').value;
+
+  let list = clients.slice();
+  if (search) list = list.filter(c => (c.name + ' ' + (c.email || '') + ' ' + (c.phone || '')).toLowerCase().includes(search));
+  if (tag) list = list.filter(c => (c.tags || []).includes(tag));
+
+  if (sort === 'name') list.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  else if (sort === 'spent') list.sort((a, b) => clientStats(b).totalSpent - clientStats(a).totalSpent);
+  else list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+
+  const listEl = document.getElementById('list');
+  if (list.length === 0) {
+    listEl.innerHTML = `<div class="empty-state"><div class="icon">📭</div>
+      <p>${lang === 'he' ? 'אין לקוחות עדיין. הוסף את הראשון.' : 'No clients yet. Add your first above.'}</p></div>`;
+    return;
+  }
+
+  listEl.innerHTML = list.map(c => {
+    const s = clientStats(c);
+    const initials = (c.name || '?').split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+    const tagsHtml = (c.tags || []).map(t => {
+      const cls = 'tag-' + t.toLowerCase().replace(/\s+/g, '');
+      return `<span class="tag ${cls}" style="display:inline-block;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:600;margin-inline-end:4px;">${escHtml(t)}</span>`;
+    }).join('');
+    return `<div class="c-card" onclick="viewClient('${c.id}')">
+      <div class="c-head">
+        <div class="c-avatar">${c.photo ? `<img src="${c.photo}" alt="">` : initials}</div>
+        <div style="flex:1;min-width:0;">
+          <div class="c-name">${escHtml(c.name || 'Unnamed')}</div>
+          <div class="c-meta">${escHtml(c.phone || c.email || c.city || '—')}</div>
+        </div>
+      </div>
+      ${tagsHtml ? `<div class="c-tags">${tagsHtml}</div>` : ''}
+      <div class="c-stats">
+        <div class="c-stat"><div class="c-stat-v">${s.projectCount}</div><div class="c-stat-l">${lang === 'he' ? 'פרויקטים' : 'Projects'}</div></div>
+        <div class="c-stat"><div class="c-stat-v">${fmtMoney(s.totalSpent)}</div><div class="c-stat-l">${lang === 'he' ? 'סה״כ' : 'Lifetime'}</div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function showAddForm(client) {
+  const isEdit = !!client;
+  const c = client || { tags: [] };
+  const h = lang === 'he';
+  const m = document.createElement('div');
+  m.className = 'modal-overlay';
+  m.innerHTML = `
+    <div class="modal-card" style="max-width:460px;max-height:90vh;overflow-y:auto;">
+      <h3 style="margin-bottom:14px;">${isEdit ? (h ? 'ערוך לקוח' : 'Edit Client') : (h ? 'הוסף לקוח' : 'Add Client')}</h3>
+      <label class="input-label">${h ? 'שם' : 'Name'} *</label>
+      <input class="input" id="cName" value="${escHtml(c.name || '')}" style="margin-bottom:8px;">
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <div style="flex:1;"><label class="input-label">${h ? 'טלפון' : 'Phone'}</label><input class="input" id="cPhone" value="${escHtml(c.phone || '')}"></div>
+        <div style="flex:1;"><label class="input-label">Email</label><input class="input" id="cEmail" type="email" value="${escHtml(c.email || '')}"></div>
+      </div>
+      <label class="input-label">${h ? 'כתובת' : 'Address'}</label>
+      <input class="input" id="cAddr" value="${escHtml(c.address || '')}" style="margin-bottom:8px;">
+      <label class="input-label">${h ? 'עיר' : 'City'}</label>
+      <input class="input" id="cCity" value="${escHtml(c.city || '')}" style="margin-bottom:8px;">
+      <label class="input-label">${h ? 'איך הגיע אלינו' : 'Source (how they found you)'}</label>
+      <input class="input" id="cSource" value="${escHtml(c.source || '')}" placeholder="Google, Referral, Yelp..." style="margin-bottom:8px;">
+      <label class="input-label">${h ? 'תגיות' : 'Tags'}</label>
+      <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
+        ${['VIP','Recurring','One-time','Cold lead'].map(t => `
+          <label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:6px 10px;border:1px solid var(--bd);border-radius:8px;font-size:13px;">
+            <input type="checkbox" class="ctag" value="${t}" ${(c.tags || []).includes(t) ? 'checked' : ''} style="accent-color:var(--ac);"> ${t}
+          </label>`).join('')}
+      </div>
+      <label class="input-label">${h ? 'הערות' : 'Notes'}</label>
+      <textarea class="textarea" id="cNotes" rows="3" style="margin-bottom:12px;">${escHtml(c.notes || '')}</textarea>
+      <div style="display:flex;gap:8px;">
+        <button class="btn" style="flex:1;" onclick="this.closest('.modal-overlay').remove()">${h ? 'ביטול' : 'Cancel'}</button>
+        <button class="btn btn-primary" style="flex:1;" onclick="saveClient(${isEdit ? `'${c.id}'` : 'null'})">${h ? 'שמור' : 'Save'}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(m);
+  requestAnimationFrame(() => m.classList.add('open'));
+  m.onclick = e => { if (e.target === m) m.remove(); };
+}
+
+async function saveClient(id) {
+  const name = document.getElementById('cName').value.trim();
+  if (!name) { showToast(lang === 'he' ? 'שם חובה' : 'Name required', 'err'); return; }
+
+  const data = {
+    name,
+    phone: document.getElementById('cPhone').value.trim(),
+    email: document.getElementById('cEmail').value.trim(),
+    address: document.getElementById('cAddr').value.trim(),
+    city: document.getElementById('cCity').value.trim(),
+    source: document.getElementById('cSource').value.trim(),
+    notes: document.getElementById('cNotes').value.trim(),
+    tags: Array.from(document.querySelectorAll('.ctag:checked')).map(c => c.value)
+  };
+
+  try {
+    if (id) {
+      const updated = await Biz.update('clients', id, data);
+      const idx = clients.findIndex(c => c.id === id);
+      if (idx !== -1) clients[idx] = updated;
+    } else {
+      const created = await Biz.create('clients', data);
+      clients.unshift(created);
+    }
+    document.querySelector('.modal-overlay')?.remove();
+    render();
+    showToast(lang === 'he' ? 'נשמר' : 'Saved', 'ok');
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+function viewClient(id) {
+  const c = clients.find(x => x.id === id);
+  if (!c) return;
+  const projects = bprojects.filter(p => p.clientId === id);
+  const s = clientStats(c);
+  const h = lang === 'he';
+  const lastContact = c.lastContactDate ? new Date(c.lastContactDate) : null;
+  const monthsAgo = lastContact ? Math.floor((Date.now() - lastContact) / (30 * 86400000)) : null;
+  const needsFollowup = monthsAgo !== null && monthsAgo >= 6;
+
+  const m = document.createElement('div');
+  m.className = 'modal-overlay';
+  m.innerHTML = `
+    <div class="modal-card" style="max-width:560px;max-height:90vh;overflow-y:auto;">
+      <div style="display:flex;gap:12px;margin-bottom:14px;">
+        <div class="c-avatar" style="width:56px;height:56px;font-size:24px;">${(c.name || '?').split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase()}</div>
+        <div style="flex:1;">
+          <h3 style="font-size:20px;">${escHtml(c.name || 'Unnamed')}</h3>
+          <p style="color:var(--txd);font-size:13px;">${escHtml(c.phone || c.email || '')}</p>
+        </div>
+      </div>
+      ${needsFollowup ? `<div style="background:rgba(255,159,67,.1);border:1px solid rgba(255,159,67,.3);padding:10px;border-radius:8px;font-size:13px;margin-bottom:12px;color:#ff9f43;">⏰ ${monthsAgo} ${h ? 'חודשים ללא קשר' : 'months since last contact'} — ${h ? 'זמן לעדכון' : 'time to follow up'}</div>` : ''}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+        <div style="background:var(--bg);padding:10px;border-radius:8px;"><div style="font-size:11px;color:var(--txd);">${h ? 'סה״כ לאורך זמן' : 'Lifetime Value'}</div><div style="font-size:18px;font-weight:800;color:var(--grn);">${fmtMoney(s.totalSpent)}</div></div>
+        <div style="background:var(--bg);padding:10px;border-radius:8px;"><div style="font-size:11px;color:var(--txd);">${h ? 'פרויקטים' : 'Projects'}</div><div style="font-size:18px;font-weight:800;color:var(--ac);">${s.projectCount}</div></div>
+      </div>
+      ${c.address ? `<div style="margin-bottom:8px;font-size:13px;"><strong>${h ? 'כתובת' : 'Address'}:</strong> ${escHtml(c.address)}${c.city ? ', ' + escHtml(c.city) : ''}</div>` : ''}
+      ${c.source ? `<div style="margin-bottom:8px;font-size:13px;"><strong>${h ? 'מקור' : 'Source'}:</strong> ${escHtml(c.source)}</div>` : ''}
+      ${c.notes ? `<div style="margin-bottom:12px;font-size:13px;background:var(--bg);padding:10px;border-radius:8px;white-space:pre-wrap;">${escHtml(c.notes)}</div>` : ''}
+      ${projects.length > 0 ? `<h4 style="margin-bottom:6px;font-size:14px;">${h ? 'פרויקטים' : 'Projects'}</h4>
+        <div style="margin-bottom:14px;">
+          ${projects.slice(0,5).map(p => `<div style="padding:8px;border:1px solid var(--bd);border-radius:8px;margin-bottom:6px;font-size:13px;display:flex;justify-content:space-between;">
+            <span>${escHtml(p.name || 'Project')}</span>
+            <span style="font-weight:700;color:var(--ac);">${fmtMoney(p.value)}</span>
+          </div>`).join('')}
+        </div>` : ''}
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+        ${c.phone ? `<a href="tel:${escHtml(c.phone)}" class="btn btn-sm" style="flex:1;">📞 ${h ? 'התקשר' : 'Call'}</a>` : ''}
+        ${c.phone ? `<a href="sms:${escHtml(c.phone)}" class="btn btn-sm" style="flex:1;">💬 SMS</a>` : ''}
+        ${c.email ? `<a href="mailto:${escHtml(c.email)}" class="btn btn-sm" style="flex:1;">📧 Email</a>` : ''}
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn" style="flex:1;" onclick="this.closest('.modal-overlay').remove();showAddForm(${JSON.stringify(c).replace(/"/g,'&quot;')})">✏️ ${h ? 'ערוך' : 'Edit'}</button>
+        <button class="btn" style="flex:1;color:var(--red);" onclick="deleteClient('${id}')">🗑️ ${h ? 'מחק' : 'Delete'}</button>
+        <button class="btn btn-primary" style="flex:2;" onclick="markContacted('${id}')">✓ ${h ? 'סמן יצרתי קשר' : 'Mark Contacted'}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(m);
+  requestAnimationFrame(() => m.classList.add('open'));
+  m.onclick = e => { if (e.target === m) m.remove(); };
+}
+
+async function markContacted(id) {
+  try {
+    const updated = await Biz.update('clients', id, { lastContactDate: new Date().toISOString() });
+    const idx = clients.findIndex(c => c.id === id);
+    if (idx !== -1) clients[idx] = updated;
+    document.querySelector('.modal-overlay')?.remove();
+    showToast(lang === 'he' ? '✓ נרשם' : '✓ Recorded', 'ok');
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+async function deleteClient(id) {
+  if (!confirmDelete('this client')) return;
+  try {
+    await Biz.delete('clients', id);
+    clients = clients.filter(c => c.id !== id);
+    document.querySelector('.modal-overlay')?.remove();
+    render();
+    showToast(lang === 'he' ? 'נמחק' : 'Deleted', 'ok');
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+function exportAll() {
+  exportCSV('clients.csv', clients, [
+    { label: 'Name', key: 'name' },
+    { label: 'Phone', key: 'phone' },
+    { label: 'Email', key: 'email' },
+    { label: 'Address', key: 'address' },
+    { label: 'City', key: 'city' },
+    { label: 'Source', key: 'source' },
+    { label: 'Tags', key: c => (c.tags || []).join('; ') },
+    { label: 'Lifetime Value', key: c => clientStats(c).totalSpent },
+    { label: 'Projects', key: c => clientStats(c).projectCount },
+    { label: 'Notes', key: 'notes' }
+  ]);
+}
+
+init();
+</script>
+</body>
+</html>

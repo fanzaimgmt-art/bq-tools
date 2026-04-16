@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Equipment</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  body { display: flex; flex-direction: column; }
+  .eq-bar { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .eq-bar input, .eq-bar select { padding: 8px 12px; border: 1px solid var(--bd); border-radius: 8px; background: var(--bg); color: var(--tx); font-family: inherit; font-size: 13px; min-height: 38px; }
+
+  .eq-tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+  .eq-tab { padding: 10px 14px; background: none; border: 1px solid var(--bd); border-radius: 8px; color: var(--txd); cursor: pointer; font-family: inherit; font-size: 13px; }
+  .eq-tab.on { background: var(--acd); border-color: var(--ac); color: var(--ac); font-weight: 700; }
+
+  .eq-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+  .eq-card {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 12px;
+    padding: 14px; cursor: pointer; transition: all .2s; position: relative;
+  }
+  .eq-card:hover { border-color: var(--ac); }
+  .eq-photo { width: 100%; height: 120px; border-radius: 8px; background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 40px; overflow: hidden; margin-bottom: 10px; }
+  .eq-photo img { width: 100%; height: 100%; object-fit: cover; }
+  .eq-name { font-size: 14px; font-weight: 700; }
+  .eq-meta { font-size: 11px; color: var(--txd); margin-top: 2px; }
+  .eq-status {
+    position: absolute; top: 8px; right: 8px; padding: 2px 8px; border-radius: 6px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+  }
+  .st-Available { background: rgba(81,207,102,.15); color: var(--grn); }
+  .st-In-Use { background: rgba(116,185,255,.15); color: var(--blu); }
+  .st-Repair { background: rgba(255,159,67,.15); color: var(--orange, #ff9f43); }
+  .st-Lost { background: rgba(255,107,107,.15); color: var(--red); }
+
+  .empty-state { text-align: center; padding: 40px; color: var(--txd); grid-column: 1/-1; }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+
+  .maint-warning { background: rgba(255,159,67,.1); border: 1px solid rgba(255,159,67,.3); color: var(--orange, #ff9f43); padding: 3px 8px; border-radius: 6px; font-size: 11px; margin-top: 4px; display: inline-block; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/home.html" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/business.html" class="nav-link" data-en="Business" data-he="עסק">Business</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <a href="/business.html" class="page-back" data-en="← Business Hub" data-he="← מרכז עסקי">← Business Hub</a>
+  <h1 class="page-title" data-en="🛠️ Equipment" data-he="🛠️ ציוד">🛠️ Equipment</h1>
+  <p class="page-sub" data-en="Every tool, every vehicle, always know who has what." data-he="כל כלי, כל רכב, תמיד יודע מי לקח מה.">Every tool, every vehicle, always know who has what.</p>
+
+  <div id="hiw-eq"></div>
+  <script>
+    const HIW_EQ = {
+      steps: [
+        { icon: '➕', en: 'Add each tool with photo + serial #', he: 'הוסף כל כלי עם תמונה ומספר סידורי' },
+        { icon: '👷', en: 'Assign to worker or project when it leaves the shop', he: 'הקצה לעובד או פרויקט כשזה יוצא מהמחסן' },
+        { icon: '🔔', en: 'Get maintenance reminders before tools break', he: 'קבל תזכורות תחזוקה לפני שכלים מתקלקלים' },
+      ],
+      example: {
+        en: 'Drill #3 with John on Johnson Kitchen → never lose a $200 tool again.',
+        he: 'מקדחה #3 עם ג׳ון ב-Johnson Kitchen → לעולם לא תאבד כלי של $200 שוב.'
+      }
+    };
+    document.addEventListener('DOMContentLoaded',()=>{if(typeof buildHowItWorks==='function')buildHowItWorks('hiw-eq',HIW_EQ)});
+  </script>
+
+  <div class="eq-tabs">
+    <button class="eq-tab on" data-cat="" onclick="setCat('')"><span data-en="All" data-he="הכל">All</span></button>
+    <button class="eq-tab" data-cat="tool" onclick="setCat('tool')">🛠️ <span data-en="Tools" data-he="כלים">Tools</span></button>
+    <button class="eq-tab" data-cat="vehicle" onclick="setCat('vehicle')">🚗 <span data-en="Vehicles" data-he="כלי רכב">Vehicles</span></button>
+  </div>
+
+  <div class="eq-bar">
+    <input type="text" id="fSearch" placeholder="Search..." oninput="render()" style="flex:1;min-width:140px;">
+    <select id="fStatus" onchange="render()">
+      <option value="">All Status</option>
+      <option>Available</option><option>In Use</option><option>Repair</option><option>Lost</option>
+    </select>
+    <button class="btn btn-primary" onclick="showAddForm()">+ <span data-en="Add Item" data-he="הוסף פריט">Add Item</span></button>
+  </div>
+
+  <div class="eq-grid" id="list"></div>
+</div>
+
+<script src="../js/ai.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/crypto.js"></script>
+<script src="../js/common.js"></script>
+<script src="../js/business.js"></script>
+<script>
+if (!isLoggedIn()) window.location.replace('/auth.html');
+
+let equipment = [];
+let bprojects = [];
+let activeCat = '';
+
+async function init() {
+  try {
+    [equipment, bprojects] = await Promise.all([Biz.list('equipment'), Biz.list('bprojects')]);
+    render();
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+function setCat(cat) {
+  activeCat = cat;
+  document.querySelectorAll('.eq-tab').forEach(t => t.classList.toggle('on', t.dataset.cat === cat));
+  render();
+}
+
+function needsService(e) {
+  if (!e.nextService) return false;
+  const due = new Date(e.nextService);
+  return (due - Date.now()) < 30 * 86400000;
+}
+
+function render() {
+  const search = document.getElementById('fSearch').value.toLowerCase();
+  const status = document.getElementById('fStatus').value;
+  let list = equipment.slice();
+  if (activeCat) list = list.filter(e => (e.category || 'tool') === activeCat);
+  if (search) list = list.filter(e => (e.name + ' ' + (e.brand || '') + ' ' + (e.serial || '')).toLowerCase().includes(search));
+  if (status) list = list.filter(e => e.status === status);
+
+  const el = document.getElementById('list');
+  if (list.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="icon">📭</div>
+      <p>${lang === 'he' ? 'אין ציוד עדיין' : 'No equipment yet'}</p></div>`;
+    return;
+  }
+
+  el.innerHTML = list.map(e => {
+    const icon = e.category === 'vehicle' ? '🚗' : '🛠️';
+    const st = (e.status || 'Available').replace(/\s/g, '-');
+    const project = bprojects.find(p => p.id === e.projectId);
+    return `<div class="eq-card" onclick="viewItem('${e.id}')">
+      <span class="eq-status st-${st}">${escHtml(e.status || 'Available')}</span>
+      <div class="eq-photo">${e.photo ? `<img src="${e.photo}" alt="">` : icon}</div>
+      <div class="eq-name">${escHtml(e.name || 'Unnamed')}</div>
+      <div class="eq-meta">${escHtml(e.brand || '')} ${e.model ? '· ' + escHtml(e.model) : ''}</div>
+      ${project ? `<div class="eq-meta">📋 ${escHtml(project.name)}</div>` : ''}
+      ${e.assignedTo ? `<div class="eq-meta">👷 ${escHtml(e.assignedTo)}</div>` : ''}
+      ${needsService(e) ? `<div class="maint-warning">⚠️ ${lang === 'he' ? 'תחזוקה בקרוב' : 'Service due'}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function showAddForm(item) {
+  const isEdit = !!item;
+  const e = item || { category: 'tool' };
+  const h = lang === 'he';
+  const projOpts = `<option value="">${h ? 'ללא' : 'None'}</option>` + bprojects.map(p => `<option value="${p.id}" ${e.projectId === p.id ? 'selected' : ''}>${escHtml(p.name)}</option>`).join('');
+
+  const m = document.createElement('div');
+  m.className = 'modal-overlay';
+  m.innerHTML = `
+    <div class="modal-card" style="max-width:460px;max-height:90vh;overflow-y:auto;">
+      <h3 style="margin-bottom:14px;">${isEdit ? (h ? 'ערוך' : 'Edit') : (h ? 'הוסף ציוד' : 'Add Equipment')}</h3>
+      <label class="input-label">${h ? 'סוג' : 'Type'}</label>
+      <select class="input" id="eCat" style="margin-bottom:8px;">
+        <option value="tool" ${e.category === 'tool' ? 'selected' : ''}>🛠️ Tool</option>
+        <option value="vehicle" ${e.category === 'vehicle' ? 'selected' : ''}>🚗 Vehicle</option>
+      </select>
+      <label class="input-label">${h ? 'שם' : 'Name'} *</label>
+      <input class="input" id="eName" value="${escHtml(e.name || '')}" placeholder="DeWalt Drill" style="margin-bottom:8px;">
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <div style="flex:1;"><label class="input-label">${h ? 'מותג' : 'Brand'}</label><input class="input" id="eBrand" value="${escHtml(e.brand || '')}"></div>
+        <div style="flex:1;"><label class="input-label">${h ? 'דגם' : 'Model'}</label><input class="input" id="eModel" value="${escHtml(e.model || '')}"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <div style="flex:1;"><label class="input-label">Serial #</label><input class="input" id="eSerial" value="${escHtml(e.serial || '')}"></div>
+        <div style="flex:1;"><label class="input-label">${h ? 'עלות' : 'Cost'}</label><input class="input" id="eCost" type="number" step="0.01" value="${e.cost || ''}"></div>
+      </div>
+      <label class="input-label">${h ? 'סטטוס' : 'Status'}</label>
+      <select class="input" id="eStatus" style="margin-bottom:8px;">
+        ${['Available','In Use','Repair','Lost'].map(s => `<option ${e.status === s ? 'selected' : ''}>${s}</option>`).join('')}
+      </select>
+      <label class="input-label">${h ? 'מיקום' : 'Location'}</label>
+      <input class="input" id="eLoc" value="${escHtml(e.location || '')}" placeholder="Shop / Truck #2" style="margin-bottom:8px;">
+      <label class="input-label">${h ? 'הוקצה ל' : 'Assigned To'}</label>
+      <input class="input" id="eAssigned" value="${escHtml(e.assignedTo || '')}" placeholder="Worker name" style="margin-bottom:8px;">
+      <label class="input-label">${h ? 'פרויקט' : 'Project'}</label>
+      <select class="input" id="eProj" style="margin-bottom:8px;">${projOpts}</select>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <div style="flex:1;"><label class="input-label">${h ? 'תחזוקה אחרונה' : 'Last Service'}</label><input class="input" id="eLast" type="date" value="${e.lastService || ''}"></div>
+        <div style="flex:1;"><label class="input-label">${h ? 'תחזוקה הבאה' : 'Next Service'}</label><input class="input" id="eNext" type="date" value="${e.nextService || ''}"></div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn" style="flex:1;" onclick="this.closest('.modal-overlay').remove()">${h ? 'ביטול' : 'Cancel'}</button>
+        <button class="btn btn-primary" style="flex:1;" onclick="saveItem(${isEdit ? `'${e.id}'` : 'null'})">${h ? 'שמור' : 'Save'}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(m);
+  requestAnimationFrame(() => m.classList.add('open'));
+  m.onclick = ev => { if (ev.target === m) m.remove(); };
+}
+
+async function saveItem(id) {
+  const name = document.getElementById('eName').value.trim();
+  if (!name) { showToast(lang === 'he' ? 'שם חובה' : 'Name required', 'err'); return; }
+  const data = {
+    name,
+    category: document.getElementById('eCat').value,
+    brand: document.getElementById('eBrand').value.trim(),
+    model: document.getElementById('eModel').value.trim(),
+    serial: document.getElementById('eSerial').value.trim(),
+    cost: parseFloat(document.getElementById('eCost').value) || 0,
+    status: document.getElementById('eStatus').value,
+    location: document.getElementById('eLoc').value.trim(),
+    assignedTo: document.getElementById('eAssigned').value.trim(),
+    projectId: document.getElementById('eProj').value || null,
+    lastService: document.getElementById('eLast').value,
+    nextService: document.getElementById('eNext').value
+  };
+  try {
+    if (id) {
+      const updated = await Biz.update('equipment', id, data);
+      const idx = equipment.findIndex(e => e.id === id);
+      if (idx !== -1) equipment[idx] = updated;
+    } else {
+      const created = await Biz.create('equipment', data);
+      equipment.unshift(created);
+    }
+    document.querySelector('.modal-overlay')?.remove();
+    render();
+    showToast(lang === 'he' ? 'נשמר' : 'Saved', 'ok');
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+function viewItem(id) {
+  const e = equipment.find(x => x.id === id);
+  if (e) showAddForm(e);
+}
+
+async function deleteItem(id) {
+  if (!confirmDelete('this item')) return;
+  try {
+    await Biz.delete('equipment', id);
+    equipment = equipment.filter(x => x.id !== id);
+    render();
+    showToast(lang === 'he' ? 'נמחק' : 'Deleted', 'ok');
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+init();
+</script>
+</body>
+</html>

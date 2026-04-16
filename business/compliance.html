@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Compliance</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  body { display: flex; flex-direction: column; }
+
+  .co-tabs { display: flex; gap: 6px; margin-bottom: 14px; border-bottom: 1px solid var(--bd); overflow-x: auto; }
+  .co-tab { padding: 10px 14px; background: none; border: none; color: var(--txd); cursor: pointer; font-family: inherit; font-size: 13px; white-space: nowrap; border-bottom: 2px solid transparent; font-weight: 600; }
+  .co-tab.on { color: var(--ac); border-bottom-color: var(--ac); }
+
+  .co-alert {
+    background: rgba(255,107,107,.1); border: 1px solid rgba(255,107,107,.3);
+    border-radius: 10px; padding: 12px 16px; margin-bottom: 14px;
+    font-size: 13px; color: var(--red); display: none;
+  }
+  .co-alert.show { display: block; }
+
+  .co-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+  .co-card {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 12px;
+    padding: 16px; position: relative; transition: all .2s;
+  }
+  .co-card.urgent { border-color: var(--red); background: linear-gradient(135deg, rgba(255,107,107,.05), var(--sf)); }
+  .co-card.warning { border-color: var(--orange, #ff9f43); }
+  .co-card.ok { border-color: var(--grn); }
+  .co-card:hover { transform: translateY(-2px); }
+  .co-name { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .co-type { display: inline-block; padding: 2px 8px; border-radius: 6px; background: var(--acd); color: var(--ac); font-size: 11px; font-weight: 600; margin-bottom: 8px; }
+  .co-exp { font-size: 12px; color: var(--txd); margin-bottom: 10px; }
+  .co-days { font-weight: 800; font-size: 18px; }
+  .co-days.urgent { color: var(--red); }
+  .co-days.warning { color: var(--orange, #ff9f43); }
+  .co-days.ok { color: var(--grn); }
+
+  .co-actions { display: flex; gap: 6px; margin-top: 8px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.04); }
+  [data-theme="light"] .co-actions { border-top-color: rgba(0,0,0,.06); }
+
+  .co-bar { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .co-bar input, .co-bar select { padding: 8px 10px; border: 1px solid var(--bd); border-radius: 8px; background: var(--bg); color: var(--tx); font-family: inherit; font-size: 13px; min-height: 38px; }
+
+  .empty-state { text-align: center; padding: 40px; color: var(--txd); grid-column: 1/-1; }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+
+  .incident-card {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 10px;
+    padding: 14px; margin-bottom: 10px;
+  }
+  .incident-card h4 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/home.html" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/business.html" class="nav-link" data-en="Business" data-he="עסק">Business</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <a href="/business.html" class="page-back" data-en="← Business Hub" data-he="← מרכז עסקי">← Business Hub</a>
+  <h1 class="page-title" data-en="📜 Compliance" data-he="📜 תאימות">📜 Compliance</h1>
+  <p class="page-sub" data-en="Never miss a license renewal or a permit deadline." data-he="לעולם אל תפספס חידוש רישיון או היתר.">Never miss a license renewal or a permit deadline.</p>
+
+  <div id="hiw-co"></div>
+  <script>
+    const HIW_CO = {
+      steps: [
+        { icon: '📝', en: 'Add licenses, insurance, certifications with expiration dates', he: 'הוסף רישיונות, ביטוח, הסמכות עם תאריכי תוקף' },
+        { icon: '🚥', en: 'See color-coded urgency (green/yellow/red)', he: 'ראה דחיפות בצבעים (ירוק/צהוב/אדום)' },
+        { icon: '🔔', en: 'Get reminders 90/60/30 days before expiration', he: 'קבל תזכורות 90/60/30 יום לפני תום תוקף' },
+      ],
+      example: {
+        en: 'Your CSLB license expires May 15. Green today (150 days out), yellow at 90 days, red at 30.',
+        he: 'רישיון CSLB שלך פג 15 במאי. ירוק היום (150 יום), צהוב ב-90 יום, אדום ב-30.'
+      }
+    };
+    document.addEventListener('DOMContentLoaded',()=>{if(typeof buildHowItWorks==='function')buildHowItWorks('hiw-co',HIW_CO)});
+  </script>
+
+  <div class="co-alert" id="alert"></div>
+
+  <div class="co-tabs">
+    <button class="co-tab on" data-sec="documents" onclick="setSec('documents')">📄 <span data-en="Documents" data-he="מסמכים">Documents</span></button>
+    <button class="co-tab" data-sec="permits" onclick="setSec('permits')">🏛️ <span data-en="Permits" data-he="היתרים">Permits</span></button>
+    <button class="co-tab" data-sec="incidents" onclick="setSec('incidents')">⚠️ <span data-en="Incidents" data-he="אירועים">Incidents</span></button>
+  </div>
+
+  <div class="co-bar">
+    <input type="text" id="fSearch" placeholder="Search..." oninput="render()" style="flex:1;">
+    <button class="btn btn-primary" onclick="showAddForm()" id="addBtn">+ <span data-en="Add" data-he="הוסף">Add</span></button>
+  </div>
+
+  <div class="co-grid" id="list"></div>
+</div>
+
+<script src="../js/ai.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/crypto.js"></script>
+<script src="../js/common.js"></script>
+<script src="../js/business.js"></script>
+<script>
+if (!isLoggedIn()) window.location.replace('/auth.html');
+
+let items = [];
+let bprojects = [];
+let activeSec = 'documents';
+
+async function init() {
+  try {
+    [items, bprojects] = await Promise.all([Biz.list('compliance'), Biz.list('bprojects')]);
+    render();
+    checkAlerts();
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+function setSec(sec) {
+  activeSec = sec;
+  document.querySelectorAll('.co-tab').forEach(t => t.classList.toggle('on', t.dataset.sec === sec));
+  render();
+}
+
+function daysUntil(dateStr) {
+  if (!dateStr) return null;
+  return Math.floor((new Date(dateStr) - Date.now()) / 86400000);
+}
+
+function urgencyClass(days) {
+  if (days === null) return '';
+  if (days < 30) return 'urgent';
+  if (days < 90) return 'warning';
+  return 'ok';
+}
+
+function checkAlerts() {
+  const alerts = items.filter(i => {
+    const d = daysUntil(i.expirationDate);
+    return d !== null && d < 30 && d >= 0 && (i.type !== 'permit' && i.type !== 'incident');
+  });
+  const alertEl = document.getElementById('alert');
+  if (alerts.length > 0) {
+    alertEl.classList.add('show');
+    alertEl.innerHTML = `🚨 <strong>${alerts.length} ${lang === 'he' ? 'פריטים פגים ב-30 יום:' : 'items expiring in 30 days:'}</strong> ${alerts.map(a => escHtml(a.name)).join(', ')}`;
+  } else {
+    alertEl.classList.remove('show');
+  }
+}
+
+function render() {
+  const search = document.getElementById('fSearch').value.toLowerCase();
+  let list;
+
+  if (activeSec === 'documents') {
+    list = items.filter(i => !i.type || ['license', 'insurance', 'certification', 'bond'].includes(i.type));
+  } else if (activeSec === 'permits') {
+    list = items.filter(i => i.type === 'permit');
+  } else {
+    list = items.filter(i => i.type === 'incident');
+  }
+
+  if (search) list = list.filter(i => JSON.stringify(i).toLowerCase().includes(search));
+
+  const el = document.getElementById('list');
+  if (list.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="icon">📭</div>
+      <p>${lang === 'he' ? 'אין פריטים עדיין' : 'Nothing here yet'}</p></div>`;
+    return;
+  }
+
+  if (activeSec === 'incidents') {
+    el.style.display = 'block';
+    el.innerHTML = list.map(i => `
+      <div class="incident-card">
+        <h4>${escHtml(i.name || i.incidentType || 'Incident')}</h4>
+        <p style="font-size:12px;color:var(--txd);margin-bottom:6px;">${fmtDate(i.incidentDate || i.createdAt)}</p>
+        <p style="font-size:13px;margin-bottom:6px;">${escHtml(i.description || '')}</p>
+        ${i.action ? `<p style="font-size:12px;background:var(--bg);padding:6px 10px;border-radius:6px;"><strong>${lang === 'he' ? 'פעולה:' : 'Action:'}</strong> ${escHtml(i.action)}</p>` : ''}
+        <button class="btn btn-sm" style="margin-top:8px;color:var(--red);" onclick="deleteItem('${i.id}')">🗑️</button>
+      </div>`).join('');
+    return;
+  }
+
+  el.style.display = 'grid';
+  el.innerHTML = list.map(i => {
+    const days = daysUntil(i.expirationDate);
+    const urgency = urgencyClass(days);
+    const project = bprojects.find(p => p.id === i.projectId);
+    return `<div class="co-card ${urgency}">
+      <div class="co-name">${escHtml(i.name || 'Unnamed')}</div>
+      ${i.type ? `<span class="co-type">${escHtml(i.type)}</span>` : ''}
+      ${project ? `<div style="font-size:11px;color:var(--txd);margin-bottom:6px;">📋 ${escHtml(project.name)}</div>` : ''}
+      ${i.expirationDate ? `<div class="co-exp">${lang === 'he' ? 'פג תוקף:' : 'Expires:'} ${fmtDate(i.expirationDate)}</div>` : ''}
+      ${days !== null ? `<div class="co-days ${urgency}">${days < 0 ? (lang === 'he' ? 'פג!' : 'EXPIRED!') : days + (lang === 'he' ? ' ימים' : ' days left')}</div>` : ''}
+      ${i.cost ? `<div style="font-size:12px;color:var(--txd);margin-top:4px;">${lang === 'he' ? 'עלות' : 'Cost'}: ${fmtMoney(i.cost)}</div>` : ''}
+      <div class="co-actions">
+        <button class="btn btn-sm" style="flex:1;" onclick="editItem('${i.id}')">✏️</button>
+        <button class="btn btn-sm" style="color:var(--red);" onclick="deleteItem('${i.id}')">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function showAddForm(item) {
+  const isEdit = !!item;
+  const i = item || {};
+  const h = lang === 'he';
+  const sec = activeSec;
+
+  const projOpts = `<option value="">${h ? 'ללא' : 'None'}</option>` + bprojects.map(p => `<option value="${p.id}" ${i.projectId === p.id ? 'selected' : ''}>${escHtml(p.name)}</option>`).join('');
+
+  let body = '';
+  if (sec === 'incidents') {
+    body = `
+      <label class="input-label">${h ? 'סוג אירוע' : 'Incident Type'} *</label>
+      <input class="input" id="iType" value="${escHtml(i.incidentType || i.name || '')}" placeholder="Injury, Property Damage, etc." style="margin-bottom:8px;">
+      <label class="input-label">${h ? 'תאריך' : 'Date'}</label>
+      <input class="input" id="iDate" type="date" value="${i.incidentDate || new Date().toISOString().split('T')[0]}" style="margin-bottom:8px;">
+      <label class="input-label">${h ? 'פרויקט' : 'Project'}</label>
+      <select class="input" id="iProj" style="margin-bottom:8px;">${projOpts}</select>
+      <label class="input-label">${h ? 'תיאור' : 'Description'} *</label>
+      <textarea class="textarea" id="iDesc" rows="3" style="margin-bottom:8px;">${escHtml(i.description || '')}</textarea>
+      <label class="input-label">${h ? 'פעולה שננקטה' : 'Action Taken'}</label>
+      <textarea class="textarea" id="iAction" rows="2" style="margin-bottom:12px;">${escHtml(i.action || '')}</textarea>`;
+  } else if (sec === 'permits') {
+    body = `
+      <label class="input-label">${h ? 'שם היתר' : 'Permit Name'} *</label>
+      <input class="input" id="iName" value="${escHtml(i.name || '')}" placeholder="Building Permit #12345" style="margin-bottom:8px;">
+      <label class="input-label">${h ? 'פרויקט' : 'Project'}</label>
+      <select class="input" id="iProj" style="margin-bottom:8px;">${projOpts}</select>
+      <label class="input-label">${h ? 'רשות מנפיקה' : 'Issuing Authority'}</label>
+      <input class="input" id="iAuth" value="${escHtml(i.issuingAuthority || '')}" placeholder="LADBS" style="margin-bottom:8px;">
+      <label class="input-label">${h ? 'סטטוס' : 'Status'}</label>
+      <select class="input" id="iStatus" style="margin-bottom:8px;">
+        ${['Applied', 'Approved', 'Closed', 'Denied'].map(s => `<option ${i.status === s ? 'selected' : ''}>${s}</option>`).join('')}
+      </select>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <div style="flex:1;"><label class="input-label">${h ? 'תאריך הוצאה' : 'Issue Date'}</label><input class="input" id="iIssue" type="date" value="${i.issueDate || ''}"></div>
+        <div style="flex:1;"><label class="input-label">${h ? 'עלות' : 'Cost'}</label><input class="input" id="iCost" type="number" step="0.01" value="${i.cost || ''}"></div>
+      </div>
+      <label class="input-label">${h ? 'הערות' : 'Notes'}</label>
+      <textarea class="textarea" id="iNotes" rows="2" style="margin-bottom:12px;">${escHtml(i.notes || '')}</textarea>`;
+  } else {
+    body = `
+      <label class="input-label">${h ? 'שם' : 'Name'} *</label>
+      <input class="input" id="iName" value="${escHtml(i.name || '')}" placeholder="CSLB License" style="margin-bottom:8px;">
+      <label class="input-label">${h ? 'סוג' : 'Type'}</label>
+      <select class="input" id="iType" style="margin-bottom:8px;">
+        ${['license', 'insurance', 'certification', 'bond'].map(t => `<option value="${t}" ${i.type === t ? 'selected' : ''}>${t.charAt(0).toUpperCase() + t.slice(1)}</option>`).join('')}
+      </select>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <div style="flex:1;"><label class="input-label">${h ? 'תאריך הוצאה' : 'Issue Date'}</label><input class="input" id="iIssue" type="date" value="${i.issueDate || ''}"></div>
+        <div style="flex:1;"><label class="input-label">${h ? 'פג תוקף' : 'Expiration'} *</label><input class="input" id="iExp" type="date" value="${i.expirationDate || ''}"></div>
+      </div>
+      <label class="input-label">${h ? 'רשות' : 'Authority'}</label>
+      <input class="input" id="iAuth" value="${escHtml(i.issuingAuthority || '')}" placeholder="CSLB, State of CA..." style="margin-bottom:8px;">
+      <label class="input-label">${h ? 'הערות' : 'Notes'}</label>
+      <textarea class="textarea" id="iNotes" rows="2" style="margin-bottom:12px;">${escHtml(i.notes || '')}</textarea>`;
+  }
+
+  const m = document.createElement('div');
+  m.className = 'modal-overlay';
+  m.innerHTML = `
+    <div class="modal-card" style="max-width:460px;max-height:90vh;overflow-y:auto;">
+      <h3 style="margin-bottom:14px;">${isEdit ? (h ? 'ערוך' : 'Edit') : (h ? 'הוסף' : 'Add')} ${sec}</h3>
+      ${body}
+      <div style="display:flex;gap:8px;">
+        <button class="btn" style="flex:1;" onclick="this.closest('.modal-overlay').remove()">${h ? 'ביטול' : 'Cancel'}</button>
+        <button class="btn btn-primary" style="flex:1;" onclick="saveItem(${isEdit ? `'${i.id}'` : 'null'})">${h ? 'שמור' : 'Save'}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(m);
+  requestAnimationFrame(() => m.classList.add('open'));
+  m.onclick = e => { if (e.target === m) m.remove(); };
+}
+
+async function saveItem(id) {
+  let data = {};
+  if (activeSec === 'incidents') {
+    const desc = document.getElementById('iDesc').value.trim();
+    if (!desc) { showToast(lang === 'he' ? 'תיאור חובה' : 'Description required', 'err'); return; }
+    data = {
+      type: 'incident',
+      incidentType: document.getElementById('iType').value.trim(),
+      name: document.getElementById('iType').value.trim(),
+      incidentDate: document.getElementById('iDate').value,
+      projectId: document.getElementById('iProj').value || null,
+      description: desc,
+      action: document.getElementById('iAction').value.trim()
+    };
+  } else if (activeSec === 'permits') {
+    const name = document.getElementById('iName').value.trim();
+    if (!name) { showToast(lang === 'he' ? 'שם חובה' : 'Name required', 'err'); return; }
+    data = {
+      type: 'permit',
+      name,
+      projectId: document.getElementById('iProj').value || null,
+      issuingAuthority: document.getElementById('iAuth').value.trim(),
+      status: document.getElementById('iStatus').value,
+      issueDate: document.getElementById('iIssue').value,
+      cost: parseFloat(document.getElementById('iCost').value) || 0,
+      notes: document.getElementById('iNotes').value.trim()
+    };
+  } else {
+    const name = document.getElementById('iName').value.trim();
+    if (!name) { showToast(lang === 'he' ? 'שם חובה' : 'Name required', 'err'); return; }
+    data = {
+      name,
+      type: document.getElementById('iType').value,
+      issueDate: document.getElementById('iIssue').value,
+      expirationDate: document.getElementById('iExp').value,
+      issuingAuthority: document.getElementById('iAuth').value.trim(),
+      notes: document.getElementById('iNotes').value.trim()
+    };
+  }
+
+  try {
+    if (id) {
+      const updated = await Biz.update('compliance', id, data);
+      const idx = items.findIndex(i => i.id === id);
+      if (idx !== -1) items[idx] = updated;
+    } else {
+      const created = await Biz.create('compliance', data);
+      items.unshift(created);
+    }
+    document.querySelector('.modal-overlay')?.remove();
+    render();
+    checkAlerts();
+    showToast(lang === 'he' ? 'נשמר' : 'Saved', 'ok');
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+function editItem(id) {
+  const i = items.find(x => x.id === id);
+  if (i) showAddForm(i);
+}
+
+async function deleteItem(id) {
+  if (!confirmDelete('this item')) return;
+  try {
+    await Biz.delete('compliance', id);
+    items = items.filter(i => i.id !== id);
+    render();
+    checkAlerts();
+    showToast(lang === 'he' ? 'נמחק' : 'Deleted', 'ok');
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+init();
+</script>
+</body>
+</html>

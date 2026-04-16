@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Time Tracking</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  body { display: flex; flex-direction: column; }
+
+  .clock-box {
+    background: linear-gradient(135deg, var(--acd), var(--sf));
+    border: 1px solid var(--ac); border-radius: 16px; padding: 24px; margin-bottom: 20px;
+    text-align: center;
+  }
+  .clock-timer { font-size: 48px; font-weight: 900; font-family: monospace; color: var(--ac); margin-bottom: 8px; letter-spacing: 2px; }
+  .clock-status { font-size: 13px; color: var(--txd); margin-bottom: 16px; }
+  .clock-btn {
+    padding: 18px 32px; border: none; border-radius: 12px; font-family: 'Heebo', sans-serif;
+    font-size: 18px; font-weight: 800; cursor: pointer; transition: all .2s;
+    min-height: 60px; min-width: 200px;
+  }
+  .clock-btn.in { background: var(--grn); color: #fff; }
+  .clock-btn.out { background: var(--red); color: #fff; }
+  .clock-btn:hover { transform: scale(1.03); filter: brightness(1.1); }
+  .clock-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .clock-inputs { display: flex; gap: 8px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
+  .clock-inputs select, .clock-inputs input {
+    padding: 8px 10px; border: 1px solid var(--bd); border-radius: 8px;
+    background: var(--bg); color: var(--tx); font-family: inherit; font-size: 13px; min-height: 40px;
+  }
+
+  .t-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px; }
+  .t-sum { background: var(--sf); border: 1px solid var(--bd); border-radius: 10px; padding: 12px; text-align: center; }
+  .t-sum .n { font-size: 20px; font-weight: 900; color: var(--ac); }
+  .t-sum .l { font-size: 11px; color: var(--txd); }
+
+  .t-bar { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .t-bar input, .t-bar select { padding: 8px 10px; border: 1px solid var(--bd); border-radius: 8px; background: var(--bg); color: var(--tx); font-family: inherit; font-size: 13px; min-height: 38px; }
+
+  .t-list { background: var(--sf); border: 1px solid var(--bd); border-radius: 12px; overflow: hidden; }
+  .t-row { display: grid; grid-template-columns: 80px 1fr 1fr 80px 80px 30px; gap: 10px; padding: 12px; border-bottom: 1px solid rgba(255,255,255,.04); font-size: 13px; align-items: center; }
+  [data-theme="light"] .t-row { border-bottom-color: rgba(0,0,0,.06); }
+  .t-row:last-child { border-bottom: none; }
+  .t-row.header { background: var(--bg); font-size: 11px; color: var(--txd); text-transform: uppercase; font-weight: 600; }
+
+  .empty-state { text-align: center; padding: 40px; color: var(--txd); }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+
+  @media (max-width: 600px) { .t-row { grid-template-columns: 1fr 1fr; } .t-row .c-hide { display: none; } }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/home.html" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/business.html" class="nav-link" data-en="Business" data-he="עסק">Business</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <a href="/business.html" class="page-back" data-en="← Business Hub" data-he="← מרכז עסקי">← Business Hub</a>
+  <h1 class="page-title" data-en="⏱️ Time Tracking" data-he="⏱️ מעקב זמן">⏱️ Time Tracking</h1>
+  <p class="page-sub" data-en="Clock in and clock out. Know exactly how many hours go into each job." data-he="היכנס ויצא. דע בדיוק כמה שעות נכנסות לכל עבודה.">Clock in and clock out. Know exactly how many hours go into each job.</p>
+
+  <div id="hiw-t"></div>
+  <script>
+    const HIW_T = {
+      steps: [
+        { icon: '▶️', en: 'Tap Clock In, pick a project', he: 'לחץ כניסה, בחר פרויקט' },
+        { icon: '💼', en: 'Do your work', he: 'עבוד' },
+        { icon: '⏹️', en: 'Tap Clock Out → hours × rate = pay', he: 'לחץ יציאה → שעות × תעריף = שכר' },
+      ],
+      example: {
+        en: 'You worked 8.5 hours at $45/hour on Johnson Kitchen = $382.50 labor cost for that day.',
+        he: 'עבדת 8.5 שעות ב-$45/שעה ב-Johnson Kitchen = $382.50 עלות עבודה ליום זה.'
+      }
+    };
+    document.addEventListener('DOMContentLoaded',()=>{if(typeof buildHowItWorks==='function')buildHowItWorks('hiw-t',HIW_T)});
+  </script>
+
+  <!-- Clock -->
+  <div class="clock-box">
+    <div class="clock-timer" id="timer">00:00:00</div>
+    <div class="clock-status" id="status" data-en="Ready to clock in" data-he="מוכן להיכנס">Ready to clock in</div>
+    <button class="clock-btn in" id="clockBtn" onclick="clockToggle()">▶️ <span data-en="Clock In" data-he="כניסה">Clock In</span></button>
+    <div class="clock-inputs">
+      <select id="cProject"><option value="">Select project</option></select>
+      <input type="text" id="cTask" placeholder="Task (e.g. Install cabinets)" style="min-width:200px;">
+      <input type="number" id="cRate" placeholder="$ / hour" step="0.01" style="width:120px;">
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="t-summary">
+    <div class="t-sum"><div class="n" id="sToday">0</div><div class="l" data-en="Hours Today" data-he="שעות היום">Hours Today</div></div>
+    <div class="t-sum"><div class="n" id="sWeek">0</div><div class="l" data-en="Hours This Week" data-he="שעות השבוע">Hours This Week</div></div>
+    <div class="t-sum"><div class="n" id="sPay">$0</div><div class="l" data-en="Est. Pay This Week" data-he="שכר משוער השבוע">Est. Pay This Week</div></div>
+  </div>
+
+  <!-- Filters -->
+  <div class="t-bar">
+    <select id="fProj" onchange="render()"><option value="">All Projects</option></select>
+    <select id="fPeriod" onchange="render()">
+      <option value="week">This Week</option>
+      <option value="month">This Month</option>
+      <option value="all">All Time</option>
+    </select>
+    <button class="btn btn-sm" onclick="exportAll()">📥 CSV</button>
+  </div>
+
+  <!-- Table -->
+  <div class="t-list">
+    <div class="t-row header">
+      <div>Date</div>
+      <div>Project</div>
+      <div class="c-hide">Task</div>
+      <div class="c-hide">Hours</div>
+      <div>Pay</div>
+      <div></div>
+    </div>
+    <div id="rows"></div>
+  </div>
+</div>
+
+<script src="../js/ai.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/crypto.js"></script>
+<script src="../js/common.js"></script>
+<script src="../js/business.js"></script>
+<script>
+if (!isLoggedIn()) window.location.replace('/auth.html');
+
+let timelogs = [];
+let bprojects = [];
+let activeLog = null;
+let timerInterval = null;
+
+async function init() {
+  try {
+    [timelogs, bprojects] = await Promise.all([Biz.list('timelogs'), Biz.list('bprojects')]);
+
+    // Find any open log
+    activeLog = timelogs.find(t => t.status === 'open');
+    if (activeLog) startTimer();
+
+    fillProjects();
+    render();
+    loadSavedInputs();
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+function fillProjects() {
+  const opts = `<option value="">Select project</option>` + bprojects.map(p => `<option value="${p.id}">${escHtml(p.name)}</option>`).join('');
+  document.getElementById('cProject').innerHTML = opts;
+  document.getElementById('fProj').innerHTML = `<option value="">All Projects</option>` + bprojects.map(p => `<option value="${p.id}">${escHtml(p.name)}</option>`).join('');
+}
+
+function loadSavedInputs() {
+  const saved = JSON.parse(localStorage.getItem('bq_time_inputs') || '{}');
+  if (saved.project) document.getElementById('cProject').value = saved.project;
+  if (saved.task) document.getElementById('cTask').value = saved.task;
+  if (saved.rate) document.getElementById('cRate').value = saved.rate;
+}
+
+function saveInputs() {
+  localStorage.setItem('bq_time_inputs', JSON.stringify({
+    project: document.getElementById('cProject').value,
+    task: document.getElementById('cTask').value,
+    rate: document.getElementById('cRate').value
+  }));
+}
+
+function startTimer() {
+  if (!activeLog) return;
+  const btn = document.getElementById('clockBtn');
+  btn.className = 'clock-btn out';
+  btn.innerHTML = '⏹️ <span>' + (lang === 'he' ? 'יציאה' : 'Clock Out') + '</span>';
+  document.getElementById('status').textContent = (lang === 'he' ? 'עובד מאז: ' : 'Working since: ') + new Date(activeLog.clockIn).toLocaleTimeString();
+
+  const start = new Date(activeLog.clockIn);
+  timerInterval = setInterval(() => {
+    const diff = Math.floor((Date.now() - start) / 1000);
+    const h = Math.floor(diff / 3600);
+    const m = Math.floor((diff % 3600) / 60);
+    const s = diff % 60;
+    document.getElementById('timer').textContent =
+      `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }, 1000);
+}
+
+function stopTimer() {
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = null;
+  document.getElementById('timer').textContent = '00:00:00';
+  document.getElementById('status').textContent = lang === 'he' ? 'מוכן להיכנס' : 'Ready to clock in';
+  const btn = document.getElementById('clockBtn');
+  btn.className = 'clock-btn in';
+  btn.innerHTML = '▶️ <span>' + (lang === 'he' ? 'כניסה' : 'Clock In') + '</span>';
+}
+
+async function clockToggle() {
+  if (activeLog) {
+    // Clock out
+    const clockOut = new Date().toISOString();
+    const hours = (new Date(clockOut) - new Date(activeLog.clockIn)) / 3600000;
+    try {
+      const updated = await Biz.update('timelogs', activeLog.id, {
+        clockOut,
+        hours: Math.round(hours * 100) / 100,
+        status: 'closed'
+      });
+      const idx = timelogs.findIndex(t => t.id === activeLog.id);
+      if (idx !== -1) timelogs[idx] = updated;
+      activeLog = null;
+      stopTimer();
+      render();
+      showToast(`✓ ${hours.toFixed(2)} ${lang === 'he' ? 'שעות נרשמו' : 'hours logged'}`, 'ok');
+    } catch (err) { showToast(err.message, 'err'); }
+  } else {
+    // Clock in
+    const projectId = document.getElementById('cProject').value;
+    if (!projectId) { showToast(lang === 'he' ? 'בחר פרויקט' : 'Select a project', 'err'); return; }
+    saveInputs();
+    const project = bprojects.find(p => p.id === projectId);
+    try {
+      const created = await Biz.create('timelogs', {
+        clockIn: new Date().toISOString(),
+        projectId,
+        projectName: project?.name || '',
+        task: document.getElementById('cTask').value.trim(),
+        hourlyRate: parseFloat(document.getElementById('cRate').value) || 0,
+        date: new Date().toISOString().split('T')[0],
+        status: 'open'
+      });
+      timelogs.unshift(created);
+      activeLog = created;
+      startTimer();
+      showToast('▶️ ' + (lang === 'he' ? 'נכנסת' : 'Clocked in'), 'ok');
+    } catch (err) { showToast(err.message, 'err'); }
+  }
+}
+
+function render() {
+  const period = document.getElementById('fPeriod').value;
+  const projFilter = document.getElementById('fProj').value;
+  const now = new Date();
+  const todayStart = new Date(now); todayStart.setHours(0,0,0,0);
+  const weekStart = new Date(now); weekStart.setDate(now.getDate() - 7);
+  const mStart = monthStart();
+
+  let items = timelogs.filter(t => t.status !== 'open');
+  if (projFilter) items = items.filter(t => t.projectId === projFilter);
+
+  // Summary
+  const todayItems = items.filter(t => new Date(t.date || t.clockIn) >= todayStart);
+  const weekItems = items.filter(t => new Date(t.date || t.clockIn) >= weekStart);
+  document.getElementById('sToday').textContent = todayItems.reduce((s, t) => s + (parseFloat(t.hours) || 0), 0).toFixed(1);
+  document.getElementById('sWeek').textContent = weekItems.reduce((s, t) => s + (parseFloat(t.hours) || 0), 0).toFixed(1);
+  const weekPay = weekItems.reduce((s, t) => s + ((parseFloat(t.hours) || 0) * (parseFloat(t.hourlyRate) || 0)), 0);
+  document.getElementById('sPay').textContent = fmtMoney(weekPay);
+
+  // Period filter
+  if (period === 'week') items = items.filter(t => new Date(t.date || t.clockIn) >= weekStart);
+  else if (period === 'month') items = items.filter(t => new Date(t.date || t.clockIn) >= mStart);
+
+  const rowsEl = document.getElementById('rows');
+  if (items.length === 0) {
+    rowsEl.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>${lang === 'he' ? 'אין רישומי זמן' : 'No time logs'}</p></div>`;
+    return;
+  }
+
+  rowsEl.innerHTML = items.slice(0, 200).map(t => {
+    const p = bprojects.find(x => x.id === t.projectId);
+    const pay = (parseFloat(t.hours) || 0) * (parseFloat(t.hourlyRate) || 0);
+    return `<div class="t-row">
+      <div style="color:var(--txd);">${fmtDateShort(t.date || t.clockIn)}</div>
+      <div>${escHtml(p?.name || t.projectName || '—')}</div>
+      <div class="c-hide" style="color:var(--txd);">${escHtml(t.task || '')}</div>
+      <div class="c-hide" style="font-weight:700;">${(parseFloat(t.hours) || 0).toFixed(2)}h</div>
+      <div style="font-weight:700;color:var(--ac);">${fmtMoney(pay)}</div>
+      <div><button onclick="deleteLog('${t.id}')" style="background:none;border:none;color:var(--red);cursor:pointer;">🗑️</button></div>
+    </div>`;
+  }).join('');
+}
+
+async function deleteLog(id) {
+  if (!confirmDelete('this time log')) return;
+  try {
+    await Biz.delete('timelogs', id);
+    timelogs = timelogs.filter(t => t.id !== id);
+    render();
+    showToast(lang === 'he' ? 'נמחק' : 'Deleted', 'ok');
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+function exportAll() {
+  exportCSV('timelogs.csv', timelogs.filter(t => t.status !== 'open'), [
+    { label: 'Date', key: 'date' },
+    { label: 'Project', key: t => {
+      const p = bprojects.find(x => x.id === t.projectId);
+      return p ? p.name : t.projectName;
+    }},
+    { label: 'Task', key: 'task' },
+    { label: 'Clock In', key: 'clockIn' },
+    { label: 'Clock Out', key: 'clockOut' },
+    { label: 'Hours', key: 'hours' },
+    { label: 'Rate', key: 'hourlyRate' },
+    { label: 'Pay', key: t => ((parseFloat(t.hours) || 0) * (parseFloat(t.hourlyRate) || 0)).toFixed(2) },
+    { label: 'Worker', key: 'workerName' }
+  ]);
+}
+
+init();
+</script>
+</body>
+</html>

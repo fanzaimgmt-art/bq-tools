@@ -879,11 +879,12 @@ function requireOnline() {
 // ── Routing ──
 const _SKIP_PAGES = ['/admin.html', '/auth.html', '/onboarding.html'];
 const _LANDING_PAGES = ['/', '/index.html'];
-const _APP_PAGES = ['/home.html', '/profile.html', '/dashboard.html', '/gallery.html', '/directory.html', '/directory-profile.html', '/chat.html', '/affiliate.html', '/memories.html', '/news.html', '/training.html'];
+const _APP_PAGES = ['/home.html', '/profile.html', '/dashboard.html', '/gallery.html', '/directory.html', '/directory-profile.html', '/chat.html', '/affiliate.html', '/memories.html', '/news.html', '/training.html', '/business.html'];
+const _BUSINESS_PAGES = ['/business/receipts.html', '/business/clients.html', '/business/expenses.html', '/business/projects.html', '/business/suppliers.html', '/business/equipment.html', '/business/time.html', '/business/compliance.html'];
 
 function _isAppPage() {
   const p = window.location.pathname;
-  return p.startsWith('/tools/') || _APP_PAGES.includes(p);
+  return p.startsWith('/tools/') || p.startsWith('/business/') || _APP_PAGES.includes(p);
 }
 
 function _routingCheck() {
@@ -922,10 +923,10 @@ function buildAppNav() {
   // Build nav links
   const links = [
     { href: '/home.html', en: 'Tools', he: 'כלים', match: ['/home.html'] },
+    { href: '/business.html', en: 'Business', he: 'עסק', match: ['/business.html'] },
     { href: '/news.html', en: 'News', he: 'חדשות', match: ['/news.html'] },
     { href: '/directory.html', en: 'Directory', he: 'ספר עסקים', match: ['/directory.html', '/directory-profile.html'] },
     { href: '/dashboard.html', en: 'Dashboard', he: 'דשבורד', match: ['/dashboard.html'] },
-    { href: '/gallery.html', en: 'Projects', he: 'פרויקטים', match: ['/gallery.html'] },
   ];
 
   const linksHtml = links.map(l => {

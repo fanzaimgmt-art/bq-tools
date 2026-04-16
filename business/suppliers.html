@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Suppliers</title>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  body { display: flex; flex-direction: column; }
+  .s-bar { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .s-bar input, .s-bar select { padding: 8px 12px; border: 1px solid var(--bd); border-radius: 8px; background: var(--bg); color: var(--tx); font-family: inherit; font-size: 13px; min-height: 38px; }
+  .s-bar input { flex: 1; min-width: 160px; }
+
+  .s-tabs { display: flex; gap: 6px; margin-bottom: 12px; border-bottom: 1px solid var(--bd); }
+  .s-tab { padding: 10px 14px; background: none; border: none; color: var(--txd); cursor: pointer; font-family: inherit; font-size: 13px; border-bottom: 2px solid transparent; }
+  .s-tab.on { color: var(--ac); border-bottom-color: var(--ac); }
+
+  .s-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+  .s-card {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 12px;
+    padding: 16px; cursor: pointer; transition: all .2s;
+  }
+  .s-card:hover { border-color: var(--ac); transform: translateY(-2px); }
+  .s-name { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .s-type { display: inline-block; padding: 2px 8px; border-radius: 6px; background: var(--acd); color: var(--ac); font-size: 11px; font-weight: 600; margin-bottom: 6px; }
+  .s-meta { font-size: 12px; color: var(--txd); line-height: 1.5; margin-bottom: 8px; }
+  .s-footer { display: flex; justify-content: space-between; font-size: 12px; color: var(--txd); border-top: 1px solid rgba(255,255,255,.04); padding-top: 8px; }
+  [data-theme="light"] .s-footer { border-top-color: rgba(0,0,0,.06); }
+
+  #mapView { height: 500px; border-radius: 12px; overflow: hidden; }
+
+  .empty-state { text-align: center; padding: 40px; color: var(--txd); grid-column: 1/-1; }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/home.html" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/business.html" class="nav-link" data-en="Business" data-he="עסק">Business</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <a href="/business.html" class="page-back" data-en="← Business Hub" data-he="← מרכז עסקי">← Business Hub</a>
+  <h1 class="page-title" data-en="🚚 Suppliers" data-he="🚚 ספקים">🚚 Suppliers</h1>
+  <p class="page-sub" data-en="All your vendors in one place. Compare prices automatically from your receipts." data-he="כל הספקים שלך במקום אחד. השווה מחירים אוטומטית מהקבלות.">All your vendors in one place. Compare prices automatically from your receipts.</p>
+
+  <div id="hiw-sup"></div>
+  <script>
+    const HIW_SUP = {
+      steps: [
+        { icon: '➕', en: 'Add suppliers with address + phone', he: 'הוסף ספקים עם כתובת וטלפון' },
+        { icon: '📸', en: 'Scan their receipts — prices auto-tracked', he: 'סרוק את הקבלות שלהם — מחירים נרשמים אוטומטית' },
+        { icon: '📊', en: 'Compare prices across suppliers over time', he: 'השווה מחירים בין ספקים לאורך זמן' },
+      ],
+      example: {
+        en: 'Home Depot lumber was $4.50 in Jan, $5.10 in Apr → 13% increase. Time to try another supplier.',
+        he: 'עץ ב-Home Depot היה $4.50 בינואר, $5.10 באפריל → עלייה של 13%. אולי זמן לנסות ספק אחר.'
+      }
+    };
+    document.addEventListener('DOMContentLoaded',()=>{if(typeof buildHowItWorks==='function')buildHowItWorks('hiw-sup',HIW_SUP)});
+  </script>
+
+  <div class="s-bar">
+    <input type="text" id="fSearch" placeholder="Search..." oninput="render()">
+    <select id="fType" onchange="render()">
+      <option value="">All Types</option>
+      <option>Lumber</option><option>Tile</option><option>Hardware</option><option>Paint</option>
+      <option>Electrical</option><option>Plumbing</option><option>Roofing</option><option>Concrete</option><option>Other</option>
+    </select>
+    <button class="btn btn-primary" onclick="showAddForm()">+ <span data-en="Add Supplier" data-he="הוסף ספק">Add Supplier</span></button>
+  </div>
+
+  <div class="s-tabs">
+    <button class="s-tab on" onclick="setView('grid')">📋 <span data-en="Cards" data-he="כרטיסים">Cards</span></button>
+    <button class="s-tab" onclick="setView('map')">🗺️ <span data-en="Map" data-he="מפה">Map</span></button>
+  </div>
+
+  <div class="s-grid" id="list"></div>
+  <div id="mapView" style="display:none;"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="../js/ai.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/crypto.js"></script>
+<script src="../js/common.js"></script>
+<script src="../js/business.js"></script>
+<script>
+if (!isLoggedIn()) window.location.replace('/auth.html');
+
+let suppliers = [];
+let receipts = [];
+let currentView = 'grid';
+let map = null;
+
+async function init() {
+  try {
+    [suppliers, receipts] = await Promise.all([Biz.list('suppliers'), Biz.list('receipts')]);
+    render();
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+function setView(v) {
+  currentView = v;
+  document.querySelectorAll('.s-tab').forEach((t, i) => t.classList.toggle('on', (v === 'grid' && i === 0) || (v === 'map' && i === 1)));
+  document.getElementById('list').style.display = v === 'grid' ? 'grid' : 'none';
+  document.getElementById('mapView').style.display = v === 'map' ? 'block' : 'none';
+  if (v === 'map') initMap();
+}
+
+function supplierStats(s) {
+  const matching = receipts.filter(r => r.vendor && s.name && r.vendor.toLowerCase().includes(s.name.toLowerCase()));
+  const totalSpent = matching.reduce((sum, r) => sum + (parseFloat(r.total) || 0), 0);
+  return { receiptCount: matching.length, totalSpent, lastPurchase: matching[0]?.date };
+}
+
+function render() {
+  const search = document.getElementById('fSearch').value.toLowerCase();
+  const type = document.getElementById('fType').value;
+  let list = suppliers.slice();
+  if (search) list = list.filter(s => (s.name + ' ' + (s.type || '')).toLowerCase().includes(search));
+  if (type) list = list.filter(s => s.type === type);
+
+  const el = document.getElementById('list');
+  if (list.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="icon">📭</div>
+      <p>${lang === 'he' ? 'אין ספקים עדיין' : 'No suppliers yet'}</p></div>`;
+    return;
+  }
+
+  el.innerHTML = list.map(s => {
+    const stats = supplierStats(s);
+    return `<div class="s-card" onclick="viewSupplier('${s.id}')">
+      <div class="s-name">${escHtml(s.name || 'Unnamed')}</div>
+      ${s.type ? `<span class="s-type">${escHtml(s.type)}</span>` : ''}
+      <div class="s-meta">
+        ${s.phone ? '📞 ' + escHtml(s.phone) + '<br>' : ''}
+        ${s.address ? '📍 ' + escHtml(s.address) : ''}
+      </div>
+      <div class="s-footer">
+        <span>${stats.receiptCount} ${lang === 'he' ? 'קבלות' : 'receipts'}</span>
+        <span style="font-weight:700;color:var(--ac);">${fmtMoney(stats.totalSpent)}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function initMap() {
+  if (map) return;
+  map = L.map('mapView').setView([34.0522, -118.2437], 10);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
+  }).addTo(map);
+
+  suppliers.forEach(s => {
+    if (s.lat && s.lng) {
+      L.marker([s.lat, s.lng]).addTo(map)
+        .bindPopup(`<b>${escHtml(s.name)}</b><br>${escHtml(s.address || '')}<br>${s.phone ? '📞 ' + escHtml(s.phone) : ''}`);
+    }
+  });
+}
+
+function showAddForm(sup) {
+  const isEdit = !!sup;
+  const s = sup || {};
+  const h = lang === 'he';
+  const m = document.createElement('div');
+  m.className = 'modal-overlay';
+  m.innerHTML = `
+    <div class="modal-card" style="max-width:460px;max-height:90vh;overflow-y:auto;">
+      <h3 style="margin-bottom:14px;">${isEdit ? (h ? 'ערוך ספק' : 'Edit Supplier') : (h ? 'הוסף ספק' : 'Add Supplier')}</h3>
+      <label class="input-label">${h ? 'שם' : 'Name'} *</label>
+      <input class="input" id="sName" value="${escHtml(s.name || '')}" placeholder="Home Depot" style="margin-bottom:8px;">
+      <label class="input-label">${h ? 'סוג' : 'Type'}</label>
+      <select class="input" id="sType" style="margin-bottom:8px;">
+        ${['','Lumber','Tile','Hardware','Paint','Electrical','Plumbing','Roofing','Concrete','Other'].map(t => `<option ${s.type === t ? 'selected' : ''}>${t}</option>`).join('')}
+      </select>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <div style="flex:1;"><label class="input-label">${h ? 'טלפון' : 'Phone'}</label><input class="input" id="sPhone" value="${escHtml(s.phone || '')}"></div>
+        <div style="flex:1;"><label class="input-label">Email</label><input class="input" id="sEmail" type="email" value="${escHtml(s.email || '')}"></div>
+      </div>
+      <label class="input-label">${h ? 'כתובת' : 'Address'}</label>
+      <input class="input" id="sAddr" value="${escHtml(s.address || '')}" style="margin-bottom:8px;">
+      <label class="input-label">${h ? 'שעות' : 'Hours'}</label>
+      <input class="input" id="sHours" value="${escHtml(s.hours || '')}" placeholder="Mon-Fri 6am-9pm" style="margin-bottom:8px;">
+      <label class="input-label">Website</label>
+      <input class="input" id="sWeb" value="${escHtml(s.website || '')}" style="margin-bottom:8px;">
+      <label class="input-label">${h ? 'הערות' : 'Notes'}</label>
+      <textarea class="textarea" id="sNotes" rows="2" style="margin-bottom:12px;">${escHtml(s.notes || '')}</textarea>
+      <div style="display:flex;gap:8px;">
+        <button class="btn" style="flex:1;" onclick="this.closest('.modal-overlay').remove()">${h ? 'ביטול' : 'Cancel'}</button>
+        <button class="btn btn-primary" style="flex:1;" onclick="saveSupplier(${isEdit ? `'${s.id}'` : 'null'})">${h ? 'שמור' : 'Save'}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(m);
+  requestAnimationFrame(() => m.classList.add('open'));
+  m.onclick = e => { if (e.target === m) m.remove(); };
+}
+
+async function saveSupplier(id) {
+  const name = document.getElementById('sName').value.trim();
+  if (!name) { showToast(lang === 'he' ? 'שם חובה' : 'Name required', 'err'); return; }
+
+  const data = {
+    name,
+    type: document.getElementById('sType').value,
+    phone: document.getElementById('sPhone').value.trim(),
+    email: document.getElementById('sEmail').value.trim(),
+    address: document.getElementById('sAddr').value.trim(),
+    hours: document.getElementById('sHours').value.trim(),
+    website: document.getElementById('sWeb').value.trim(),
+    notes: document.getElementById('sNotes').value.trim()
+  };
+
+  // Geocode address if provided
+  if (data.address) {
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(data.address)}`);
+      const r = await res.json();
+      if (r[0]) { data.lat = parseFloat(r[0].lat); data.lng = parseFloat(r[0].lon); }
+    } catch {}
+  }
+
+  try {
+    if (id) {
+      const updated = await Biz.update('suppliers', id, data);
+      const idx = suppliers.findIndex(s => s.id === id);
+      if (idx !== -1) suppliers[idx] = updated;
+    } else {
+      const created = await Biz.create('suppliers', data);
+      suppliers.unshift(created);
+    }
+    document.querySelector('.modal-overlay')?.remove();
+    render();
+    showToast(lang === 'he' ? 'נשמר' : 'Saved', 'ok');
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+function viewSupplier(id) {
+  const s = suppliers.find(x => x.id === id);
+  if (!s) return;
+  const stats = supplierStats(s);
+  const matching = receipts.filter(r => r.vendor && s.name && r.vendor.toLowerCase().includes(s.name.toLowerCase()));
+  const h = lang === 'he';
+
+  // Build price history
+  const priceHistory = {};
+  matching.forEach(r => {
+    (r.items || []).forEach(item => {
+      if (!item.name) return;
+      const key = item.name.toLowerCase();
+      if (!priceHistory[key]) priceHistory[key] = [];
+      priceHistory[key].push({ date: r.date, price: item.price || 0, name: item.name });
+    });
+  });
+
+  const m = document.createElement('div');
+  m.className = 'modal-overlay';
+  m.innerHTML = `
+    <div class="modal-card" style="max-width:560px;max-height:90vh;overflow-y:auto;">
+      <h3 style="font-size:20px;margin-bottom:4px;">${escHtml(s.name)}</h3>
+      ${s.type ? `<span class="s-type">${escHtml(s.type)}</span>` : ''}
+      <div style="margin:14px 0;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div style="background:var(--bg);padding:10px;border-radius:8px;"><div style="font-size:11px;color:var(--txd);">${h ? 'קבלות' : 'Receipts'}</div><div style="font-size:18px;font-weight:800;">${stats.receiptCount}</div></div>
+        <div style="background:var(--bg);padding:10px;border-radius:8px;"><div style="font-size:11px;color:var(--txd);">${h ? 'סה״כ הוצאה' : 'Total Spent'}</div><div style="font-size:18px;font-weight:800;color:var(--ac);">${fmtMoney(stats.totalSpent)}</div></div>
+      </div>
+      <div style="font-size:13px;line-height:1.8;">
+        ${s.phone ? `<div>📞 <a href="tel:${escHtml(s.phone)}">${escHtml(s.phone)}</a></div>` : ''}
+        ${s.email ? `<div>📧 <a href="mailto:${escHtml(s.email)}">${escHtml(s.email)}</a></div>` : ''}
+        ${s.address ? `<div>📍 ${escHtml(s.address)}</div>` : ''}
+        ${s.hours ? `<div>🕒 ${escHtml(s.hours)}</div>` : ''}
+        ${s.website ? `<div>🌐 <a href="${escHtml(s.website)}" target="_blank">${escHtml(s.website)}</a></div>` : ''}
+      </div>
+      ${s.notes ? `<div style="background:var(--bg);padding:10px;border-radius:8px;margin-top:12px;font-size:13px;white-space:pre-wrap;">${escHtml(s.notes)}</div>` : ''}
+
+      ${Object.keys(priceHistory).length > 0 ? `<h4 style="margin:14px 0 8px;font-size:14px;">📊 ${h ? 'היסטוריית מחירים' : 'Price History'}</h4>
+        <div style="max-height:200px;overflow-y:auto;">
+        ${Object.entries(priceHistory).slice(0, 20).map(([k, arr]) => {
+          const first = arr[0]; const last = arr[arr.length - 1];
+          const trend = last.price > first.price ? '↗' : last.price < first.price ? '↘' : '→';
+          return `<div style="padding:6px;font-size:12px;border-bottom:1px solid var(--bd);">
+            <strong>${escHtml(first.name)}:</strong> ${arr.map(p => fmtMoney(p.price)).join(' → ')} ${trend}
+          </div>`;
+        }).join('')}
+        </div>` : ''}
+
+      <div style="display:flex;gap:8px;margin-top:14px;">
+        <button class="btn btn-sm" style="flex:1;" onclick="this.closest('.modal-overlay').remove();showAddForm(${JSON.stringify(s).replace(/"/g,'&quot;')})">✏️ ${h ? 'ערוך' : 'Edit'}</button>
+        <button class="btn btn-sm" style="color:var(--red);" onclick="deleteSupplier('${id}')">🗑️</button>
+        <button class="btn btn-primary btn-sm" style="flex:1;" onclick="this.closest('.modal-overlay').remove()">${h ? 'סגור' : 'Close'}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(m);
+  requestAnimationFrame(() => m.classList.add('open'));
+  m.onclick = e => { if (e.target === m) m.remove(); };
+}
+
+async function deleteSupplier(id) {
+  if (!confirmDelete('this supplier')) return;
+  try {
+    await Biz.delete('suppliers', id);
+    suppliers = suppliers.filter(s => s.id !== id);
+    document.querySelector('.modal-overlay')?.remove();
+    render();
+    showToast(lang === 'he' ? 'נמחק' : 'Deleted', 'ok');
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+init();
+</script>
+</body>
+</html>

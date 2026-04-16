@@ -578,6 +578,100 @@ async function loadTrainingStatus() {
 
 loadQuotes();
 loadTrainingStatus();
+
+// ── Business Ops Stats ──
+async function loadBusinessStats() {
+  try {
+    const [receipts, clients, expenses, bprojects, timelogs, compliance] = await Promise.all([
+      apiCall('/api/receipts').then(d => d.items || []).catch(() => []),
+      apiCall('/api/clients').then(d => d.items || []).catch(() => []),
+      apiCall('/api/expenses').then(d => d.items || []).catch(() => []),
+      apiCall('/api/bprojects').then(d => d.items || []).catch(() => []),
+      apiCall('/api/timelogs').then(d => d.items || []).catch(() => []),
+      apiCall('/api/compliance').then(d => d.items || []).catch(() => []),
+    ]);
+
+    // Skip if nothing to show
+    const total = receipts.length + clients.length + expenses.length + bprojects.length;
+    if (total === 0) return;
+
+    const mStart = new Date(); mStart.setDate(1); mStart.setHours(0,0,0,0);
+
+    // Month revenue (sum of active projects created this month)
+    const monthRevenue = bprojects.filter(p => new Date(p.createdAt) >= mStart).reduce((s, p) => s + (parseFloat(p.value) || 0), 0);
+    // Month expenses
+    const monthReceipts = receipts.filter(r => new Date(r.date || r.createdAt) >= mStart).reduce((s, r) => s + (parseFloat(r.total) || 0), 0);
+    const monthManual = expenses.filter(e => new Date(e.date || e.createdAt) >= mStart).reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
+    const monthExp = monthReceipts + monthManual;
+    const profit = monthRevenue - monthExp;
+
+    const activeProjects = bprojects.filter(p => (p.status || 'Active') === 'Active').length;
+
+    // Top client (by lifetime value)
+    const clientValues = {};
+    bprojects.forEach(p => {
+      const id = p.clientId;
+      if (!id) return;
+      clientValues[id] = (clientValues[id] || 0) + (parseFloat(p.value) || 0);
+    });
+    let topClient = '—', topValue = 0;
+    for (const [id, v] of Object.entries(clientValues)) {
+      if (v > topValue) {
+        const c = clients.find(x => x.id === id);
+        if (c) { topClient = c.name; topValue = v; }
+      }
+    }
+
+    // Licenses expiring soon
+    const expiringSoon = compliance.filter(c => {
+      if (!c.expirationDate || c.type === 'permit' || c.type === 'incident') return false;
+      const days = (new Date(c.expirationDate) - Date.now()) / 86400000;
+      return days >= 0 && days < 60;
+    });
+
+    // Inject card into dashboard before footer
+    const existing = document.getElementById('bizOpsCard');
+    if (existing) existing.remove();
+
+    const bizCard = document.createElement('div');
+    bizCard.id = 'bizOpsCard';
+    bizCard.className = 'dash-card full';
+    bizCard.style.cssText = 'margin-top:12px;';
+    bizCard.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+        <h3 style="font-size:16px;font-weight:800;">💼 <span data-en="Business Operations" data-he="פעילות עסקית">Business Operations</span></h3>
+        <a href="/business.html" class="btn btn-sm btn-primary" data-en="Open Suite →" data-he="פתח חבילה →">Open Suite →</a>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;">
+        <div style="background:var(--bg);padding:12px;border-radius:10px;text-align:center;">
+          <div style="font-size:18px;font-weight:900;color:var(--grn);">${fmtMoney(monthRevenue)}</div>
+          <div style="font-size:11px;color:var(--txd);">${lang === 'he' ? 'הכנסה החודש' : 'Revenue (month)'}</div>
+        </div>
+        <div style="background:var(--bg);padding:12px;border-radius:10px;text-align:center;">
+          <div style="font-size:18px;font-weight:900;color:var(--orange,#ff9f43);">${fmtMoney(monthExp)}</div>
+          <div style="font-size:11px;color:var(--txd);">${lang === 'he' ? 'הוצאות' : 'Expenses'}</div>
+        </div>
+        <div style="background:var(--bg);padding:12px;border-radius:10px;text-align:center;">
+          <div style="font-size:18px;font-weight:900;color:${profit >= 0 ? 'var(--ac)' : 'var(--red)'};">${fmtMoney(profit)}</div>
+          <div style="font-size:11px;color:var(--txd);">${lang === 'he' ? 'רווח' : 'Profit'}</div>
+        </div>
+        <div style="background:var(--bg);padding:12px;border-radius:10px;text-align:center;">
+          <div style="font-size:18px;font-weight:900;color:var(--blu);">${activeProjects}</div>
+          <div style="font-size:11px;color:var(--txd);">${lang === 'he' ? 'פעילים' : 'Active Projects'}</div>
+        </div>
+      </div>
+      ${topClient !== '—' ? `<div style="background:var(--acd);padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:8px;">🏆 <strong>${lang === 'he' ? 'לקוח מוביל:' : 'Top client:'}</strong> ${escHtml(topClient)} — ${fmtMoney(topValue)} ${lang === 'he' ? 'לאורך זמן' : 'lifetime'}</div>` : ''}
+      ${expiringSoon.length > 0 ? `<div style="background:rgba(255,159,67,.1);border:1px solid rgba(255,159,67,.3);padding:10px 14px;border-radius:8px;font-size:13px;color:#ff9f43;">⚠️ ${expiringSoon.length} ${lang === 'he' ? 'רישיונות פגים בחודשיים' : 'document(s) expiring in 60 days'} — <a href="/business/compliance.html" style="color:#ff9f43;text-decoration:underline;">${lang === 'he' ? 'בדוק' : 'Review'}</a></div>` : ''}`;
+
+    // Insert before the My Quotes card
+    const quotesCard = document.getElementById('quotes');
+    if (quotesCard) quotesCard.parentNode.insertBefore(bizCard, quotesCard);
+  } catch (err) { /* silent */ }
+}
+
+function fmtMoney(n) { return '$' + (parseFloat(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 }); }
+
+loadBusinessStats();
 </script>
 </body>
 </html>

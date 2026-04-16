@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Expenses</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  body { display: flex; flex-direction: column; }
+
+  .e-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 20px; }
+  .e-sum { background: var(--sf); border: 1px solid var(--bd); border-radius: 10px; padding: 14px; text-align: center; }
+  .e-sum .n { font-size: 20px; font-weight: 900; color: var(--ac); }
+  .e-sum .l { font-size: 11px; color: var(--txd); margin-top: 2px; }
+  .e-sum.month .n { color: var(--orange, #ff9f43); }
+  .e-sum.year .n { color: var(--grn); }
+
+  .e-charts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+  .e-chart { background: var(--sf); border: 1px solid var(--bd); border-radius: 12px; padding: 16px; }
+  .e-chart h3 { font-size: 14px; font-weight: 700; margin-bottom: 12px; }
+
+  /* Pie chart (CSS conic-gradient) */
+  .pie-wrap { display: flex; align-items: center; gap: 14px; }
+  .pie { width: 120px; height: 120px; border-radius: 50%; flex-shrink: 0; }
+  .pie-legend { flex: 1; font-size: 12px; }
+  .pie-legend .pl-row { display: flex; align-items: center; gap: 6px; padding: 3px 0; }
+  .pie-legend .pl-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+  /* Bar chart */
+  .bars { display: flex; align-items: flex-end; gap: 3px; height: 120px; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 10px; color: var(--txd); }
+  .bar { width: 100%; background: var(--ac); border-radius: 3px 3px 0 0; min-height: 2px; transition: all .3s; }
+  .bar-col .bar-lbl { font-size: 9px; }
+
+  .e-bar { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .e-bar input, .e-bar select { padding: 8px 10px; border: 1px solid var(--bd); border-radius: 8px; background: var(--bg); color: var(--tx); font-family: inherit; font-size: 13px; min-height: 38px; }
+  .e-bar .spacer { flex: 1; }
+
+  .e-table { width: 100%; border-collapse: collapse; }
+  .e-table th { text-align: left; padding: 10px 8px; font-size: 11px; color: var(--txd); text-transform: uppercase; border-bottom: 1px solid var(--bd); background: var(--sf); }
+  .e-table td { padding: 10px 8px; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,.04); }
+  [data-theme="light"] .e-table td { border-bottom-color: rgba(0,0,0,.06); }
+  .e-table tbody tr:hover { background: rgba(255,255,255,.02); }
+  [data-theme="light"] .e-table tbody tr:hover { background: rgba(0,0,0,.02); }
+
+  .cat-pill { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+
+  .empty-state { padding: 40px; text-align: center; color: var(--txd); }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+
+  @media (max-width: 800px) { .e-summary { grid-template-columns: 1fr 1fr; } .e-charts { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/home.html" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/business.html" class="nav-link" data-en="Business" data-he="עסק">Business</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <a href="/business.html" class="page-back" data-en="← Business Hub" data-he="← מרכז עסקי">← Business Hub</a>
+  <h1 class="page-title" data-en="💰 Expenses" data-he="💰 הוצאות">💰 Expenses</h1>
+  <p class="page-sub" data-en="See where every dollar goes. Know your profit per project." data-he="ראה לאן כל דולר הולך. דע את הרווח שלך בכל פרויקט.">See where every dollar goes. Know your profit per project.</p>
+
+  <div id="hiw-exp"></div>
+  <script>
+    const HIW_EXP = {
+      steps: [
+        { icon: '📸', en: 'Scan receipts — they auto-add as expenses', he: 'סרוק קבלות — הן נוספות כהוצאות' },
+        { icon: '✏️', en: 'Or add manual expenses (rent, insurance, etc.)', he: 'או הוסף הוצאות ידנית (שכירות, ביטוח)' },
+        { icon: '📊', en: 'See charts, tag expenses to projects, export for accountant', he: 'ראה גרפים, תייג הוצאות לפרויקטים, ייצא לרו״ח' },
+      ],
+      example: {
+        en: 'Tag $400 Home Depot receipt to "Johnson Kitchen" → know you spent $4,200 on materials out of $12K project.',
+        he: 'תייג קבלה של $400 מ-Home Depot ל"Johnson Kitchen" → דע שהוצאת $4,200 על חומרים בפרויקט של $12K.'
+      }
+    };
+    document.addEventListener('DOMContentLoaded',()=>{if(typeof buildHowItWorks==='function')buildHowItWorks('hiw-exp',HIW_EXP)});
+  </script>
+
+  <!-- Summary -->
+  <div class="e-summary">
+    <div class="e-sum month"><div class="n" id="sMonth">$0</div><div class="l" data-en="This Month" data-he="החודש">This Month</div></div>
+    <div class="e-sum year"><div class="n" id="sYear">$0</div><div class="l" data-en="This Year" data-he="השנה">This Year</div></div>
+    <div class="e-sum"><div class="n" id="sCount">0</div><div class="l" data-en="Total Expenses" data-he="סה״כ הוצאות">Total Expenses</div></div>
+    <div class="e-sum"><div class="n" id="sTaxDed">$0</div><div class="l" data-en="Tax Deductible" data-he="מע״מ">Tax Deductible</div></div>
+  </div>
+
+  <!-- Charts -->
+  <div class="e-charts">
+    <div class="e-chart">
+      <h3 data-en="By Category" data-he="לפי קטגוריה">By Category</h3>
+      <div class="pie-wrap">
+        <div class="pie" id="pie"></div>
+        <div class="pie-legend" id="pieLegend"></div>
+      </div>
+    </div>
+    <div class="e-chart">
+      <h3 data-en="Last 6 Months" data-he="6 חודשים אחרונים">Last 6 Months</h3>
+      <div class="bars" id="bars"></div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="e-bar">
+    <input type="text" id="fSearch" placeholder="Search..." oninput="render()">
+    <select id="fCat" onchange="render()">
+      <option value="">All Categories</option>
+      <option>Materials</option><option>Tools</option><option>Fuel</option><option>Vehicle</option>
+      <option>Insurance</option><option>Marketing</option><option>Labor</option><option>Office</option><option>Permits</option><option>Other</option>
+    </select>
+    <select id="fProj" onchange="render()"><option value="">All Projects</option></select>
+    <span class="spacer"></span>
+    <button class="btn btn-primary" onclick="showAddForm()">+ <span data-en="Add Expense" data-he="הוסף הוצאה">Add Expense</span></button>
+    <button class="btn btn-sm" onclick="exportAll()">📥 CSV</button>
+  </div>
+
+  <!-- Table -->
+  <div style="background:var(--sf);border:1px solid var(--bd);border-radius:12px;overflow:hidden;overflow-x:auto;">
+    <table class="e-table" id="table">
+      <thead><tr>
+        <th>Date</th><th>Vendor</th><th>Category</th><th>Project</th><th style="text-align:right;">Amount</th><th></th>
+      </tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script src="../js/ai.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/crypto.js"></script>
+<script src="../js/common.js"></script>
+<script src="../js/business.js"></script>
+<script>
+if (!isLoggedIn()) window.location.replace('/auth.html');
+
+let expenses = [];
+let receipts = [];
+let bprojects = [];
+
+const CAT_COLORS = {
+  Materials: '#e8c547', Tools: '#74b9ff', Fuel: '#ff9f43', Vehicle: '#ff6b6b',
+  Insurance: '#51cf66', Marketing: '#b266ff', Labor: '#ffa502',
+  Office: '#63cdda', Permits: '#ff6b81', Other: '#888'
+};
+
+async function init() {
+  try {
+    [expenses, receipts, bprojects] = await Promise.all([
+      Biz.list('expenses'), Biz.list('receipts'), Biz.list('bprojects')
+    ]);
+    fillProjFilter();
+    render();
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+function fillProjFilter() {
+  const h = lang === 'he';
+  const opts = `<option value="">${h ? 'כל הפרויקטים' : 'All Projects'}</option>` +
+    bprojects.map(p => `<option value="${p.id}">${escHtml(p.name || 'Unnamed')}</option>`).join('');
+  document.getElementById('fProj').innerHTML = opts;
+}
+
+// Combine receipts + expenses
+function allItems() {
+  const fromReceipts = receipts.map(r => ({
+    id: 'r-' + r.id, source: 'receipt', sourceId: r.id,
+    date: r.date || r.createdAt, vendor: r.vendor, category: r.category,
+    amount: r.total, projectId: r.projectId, notes: r.notes, tax: r.tax
+  }));
+  const fromManual = expenses.map(e => ({ ...e, source: 'manual' }));
+  return [...fromReceipts, ...fromManual].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+}
+
+function render() {
+  const items = allItems();
+  const search = document.getElementById('fSearch').value.toLowerCase();
+  const cat = document.getElementById('fCat').value;
+  const proj = document.getElementById('fProj').value;
+
+  let filtered = items;
+  if (search) filtered = filtered.filter(i => JSON.stringify(i).toLowerCase().includes(search));
+  if (cat) filtered = filtered.filter(i => i.category === cat);
+  if (proj) filtered = filtered.filter(i => i.projectId === proj);
+
+  // Summary
+  const mStart = monthStart();
+  const yStart = new Date(new Date().getFullYear(), 0, 1);
+  const monthTotal = items.filter(i => new Date(i.date) >= mStart).reduce((s, i) => s + (parseFloat(i.amount) || 0), 0);
+  const yearTotal = items.filter(i => new Date(i.date) >= yStart).reduce((s, i) => s + (parseFloat(i.amount) || 0), 0);
+  const taxDed = items.filter(i => i.taxDeductible !== false).reduce((s, i) => s + (parseFloat(i.amount) || 0), 0);
+
+  document.getElementById('sMonth').textContent = fmtMoney(monthTotal);
+  document.getElementById('sYear').textContent = fmtMoney(yearTotal);
+  document.getElementById('sCount').textContent = items.length;
+  document.getElementById('sTaxDed').textContent = fmtMoney(taxDed);
+
+  renderPie(items);
+  renderBars(items);
+  renderTable(filtered);
+}
+
+function renderPie(items) {
+  const byCat = {};
+  items.forEach(i => {
+    const c = i.category || 'Other';
+    byCat[c] = (byCat[c] || 0) + (parseFloat(i.amount) || 0);
+  });
+  const total = Object.values(byCat).reduce((s, v) => s + v, 0);
+  const pie = document.getElementById('pie');
+  const legend = document.getElementById('pieLegend');
+
+  if (total === 0) {
+    pie.style.background = 'var(--bd)';
+    legend.innerHTML = `<div style="color:var(--txd);font-size:12px;">${lang === 'he' ? 'אין נתונים' : 'No data'}</div>`;
+    return;
+  }
+
+  const sorted = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
+  let cumulative = 0;
+  const segments = sorted.map(([c, v]) => {
+    const pct = (v / total) * 100;
+    const color = CAT_COLORS[c] || '#888';
+    const seg = `${color} ${cumulative}% ${cumulative + pct}%`;
+    cumulative += pct;
+    return { c, v, pct, color, seg };
+  });
+  pie.style.background = `conic-gradient(${segments.map(s => s.seg).join(', ')})`;
+
+  legend.innerHTML = segments.map(s => `
+    <div class="pl-row">
+      <span class="pl-dot" style="background:${s.color}"></span>
+      <span style="flex:1;">${escHtml(s.c)}</span>
+      <span style="color:var(--txd);">${fmtMoney(s.v)}</span>
+    </div>`).join('');
+}
+
+function renderBars(items) {
+  const months = [];
+  const now = new Date();
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push({ date: d, label: d.toLocaleDateString('en', { month: 'short' }), total: 0 });
+  }
+  items.forEach(i => {
+    const d = new Date(i.date);
+    const m = months.find(mo => mo.date.getMonth() === d.getMonth() && mo.date.getFullYear() === d.getFullYear());
+    if (m) m.total += parseFloat(i.amount) || 0;
+  });
+  const max = Math.max(...months.map(m => m.total), 1);
+  document.getElementById('bars').innerHTML = months.map(m => `
+    <div class="bar-col">
+      <div class="bar" style="height:${(m.total / max) * 90}px;" title="${fmtMoney(m.total)}"></div>
+      <div class="bar-lbl">${m.label}</div>
+    </div>`).join('');
+}
+
+function renderTable(items) {
+  if (items.length === 0) {
+    document.getElementById('tbody').innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="icon">📭</div><p>${lang === 'he' ? 'אין הוצאות עדיין' : 'No expenses yet'}</p></div></td></tr>`;
+    return;
+  }
+  document.getElementById('tbody').innerHTML = items.slice(0, 200).map(i => {
+    const p = bprojects.find(x => x.id === i.projectId);
+    const color = CAT_COLORS[i.category] || '#888';
+    const sourceIcon = i.source === 'receipt' ? '📸' : '✏️';
+    return `<tr>
+      <td style="white-space:nowrap;color:var(--txd);">${fmtDateShort(i.date)}</td>
+      <td>${sourceIcon} ${escHtml(i.vendor || '—')}</td>
+      <td><span class="cat-pill" style="background:${color}22;color:${color};">${escHtml(i.category || 'Other')}</span></td>
+      <td style="color:var(--txd);">${p ? escHtml(p.name) : '—'}</td>
+      <td style="text-align:right;font-weight:700;color:var(--ac);">${fmtMoney(i.amount)}</td>
+      <td>${i.source === 'manual' ? `<button onclick="deleteExpense('${i.id}')" style="background:none;border:none;color:var(--red);cursor:pointer;">🗑️</button>` : ''}</td>
+    </tr>`;
+  }).join('');
+}
+
+function showAddForm() {
+  const h = lang === 'he';
+  const projOpts = `<option value="">${h ? 'ללא' : 'None'}</option>` + bprojects.map(p => `<option value="${p.id}">${escHtml(p.name || 'Unnamed')}</option>`).join('');
+  const m = document.createElement('div');
+  m.className = 'modal-overlay';
+  m.innerHTML = `
+    <div class="modal-card" style="max-width:420px;">
+      <h3 style="margin-bottom:14px;">${h ? 'הוסף הוצאה' : 'Add Expense'}</h3>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <div style="flex:1;"><label class="input-label">${h ? 'סכום' : 'Amount'} *</label><input class="input" id="eAmount" type="number" step="0.01" placeholder="0.00"></div>
+        <div style="flex:1;"><label class="input-label">${h ? 'תאריך' : 'Date'}</label><input class="input" id="eDate" type="date" value="${new Date().toISOString().split('T')[0]}"></div>
+      </div>
+      <label class="input-label">${h ? 'ספק' : 'Vendor'}</label>
+      <input class="input" id="eVendor" placeholder="Home Depot" style="margin-bottom:8px;">
+      <label class="input-label">${h ? 'קטגוריה' : 'Category'}</label>
+      <select class="input" id="eCat" style="margin-bottom:8px;">
+        ${['Materials','Tools','Fuel','Vehicle','Insurance','Marketing','Labor','Office','Permits','Other'].map(c => `<option>${c}</option>`).join('')}
+      </select>
+      <label class="input-label">${h ? 'פרויקט' : 'Project'}</label>
+      <select class="input" id="eProj" style="margin-bottom:8px;">${projOpts}</select>
+      <label class="input-label">${h ? 'תיאור' : 'Description'}</label>
+      <input class="input" id="eDesc" style="margin-bottom:8px;">
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;margin-bottom:12px;">
+        <input type="checkbox" id="eRec" style="accent-color:var(--ac);"> ${h ? 'הוצאה חוזרת (חודשית)' : 'Recurring monthly'}
+      </label>
+      <div style="display:flex;gap:8px;">
+        <button class="btn" style="flex:1;" onclick="this.closest('.modal-overlay').remove()">${h ? 'ביטול' : 'Cancel'}</button>
+        <button class="btn btn-primary" style="flex:1;" onclick="saveExpense()">${h ? 'שמור' : 'Save'}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(m);
+  requestAnimationFrame(() => m.classList.add('open'));
+  m.onclick = e => { if (e.target === m) m.remove(); };
+}
+
+async function saveExpense() {
+  const amount = parseFloat(document.getElementById('eAmount').value);
+  if (!amount || amount <= 0) { showToast(lang === 'he' ? 'סכום חובה' : 'Amount required', 'err'); return; }
+  try {
+    const data = {
+      amount,
+      date: document.getElementById('eDate').value,
+      vendor: document.getElementById('eVendor').value.trim(),
+      category: document.getElementById('eCat').value,
+      projectId: document.getElementById('eProj').value || null,
+      description: document.getElementById('eDesc').value.trim(),
+      recurring: document.getElementById('eRec').checked
+    };
+    const created = await Biz.create('expenses', data);
+    expenses.unshift(created);
+    document.querySelector('.modal-overlay')?.remove();
+    render();
+    showToast(lang === 'he' ? 'נוסף' : 'Added', 'ok');
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+async function deleteExpense(id) {
+  if (!confirmDelete('this expense')) return;
+  try {
+    await Biz.delete('expenses', id);
+    expenses = expenses.filter(e => e.id !== id);
+    render();
+    showToast(lang === 'he' ? 'נמחק' : 'Deleted', 'ok');
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+function exportAll() {
+  exportCSV('expenses.csv', allItems(), [
+    { label: 'Date', key: 'date' },
+    { label: 'Vendor', key: 'vendor' },
+    { label: 'Category', key: 'category' },
+    { label: 'Amount', key: 'amount' },
+    { label: 'Tax', key: 'tax' },
+    { label: 'Project', key: e => {
+      const p = bprojects.find(x => x.id === e.projectId);
+      return p ? p.name : '';
+    } },
+    { label: 'Source', key: 'source' },
+    { label: 'Notes', key: e => e.description || e.notes }
+  ]);
+}
+
+init();
+</script>
+</body>
+</html>

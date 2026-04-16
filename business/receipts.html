@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Receipt Scanner</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  body { display: flex; flex-direction: column; }
+
+  .snap-zone {
+    background: linear-gradient(135deg, var(--sf), var(--bg));
+    border: 2px dashed var(--ac); border-radius: 16px; padding: 32px 20px;
+    text-align: center; cursor: pointer; transition: all .25s; margin-bottom: 20px;
+    position: relative;
+  }
+  .snap-zone:hover { background: var(--acd); border-style: solid; }
+  .snap-zone.processing { border-color: var(--grn); background: rgba(81,207,102,.08); }
+  .snap-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .snap-zone .big-btn { font-size: 54px; margin-bottom: 8px; display: block; }
+  .snap-zone h3 { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+  .snap-zone p { font-size: 13px; color: var(--txd); }
+  .snap-zone .chip-row { display: flex; gap: 6px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+  .snap-zone .chip { padding: 3px 10px; background: var(--bg); border: 1px solid var(--bd); border-radius: 6px; font-size: 11px; color: var(--txd); }
+
+  /* Stats bar */
+  .r-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 16px; }
+  .r-stat { background: var(--sf); border: 1px solid var(--bd); border-radius: 10px; padding: 12px; text-align: center; }
+  .r-stat .sn { font-size: 20px; font-weight: 900; color: var(--ac); }
+  .r-stat .sl { font-size: 11px; color: var(--txd); margin-top: 2px; }
+
+  /* Filters */
+  .r-filters { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .r-filters input, .r-filters select {
+    padding: 8px 10px; border: 1px solid var(--bd); border-radius: 8px;
+    background: var(--bg); color: var(--tx); font-family: inherit; font-size: 13px; min-height: 38px;
+  }
+  .r-filters .spacer { flex: 1; }
+
+  /* Receipt cards */
+  .r-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+  .r-card {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 12px;
+    padding: 14px; display: flex; gap: 12px; transition: all .2s;
+  }
+  .r-card:hover { border-color: var(--ac); }
+  .r-thumb {
+    width: 60px; height: 60px; border-radius: 8px; background: var(--bg);
+    display: flex; align-items: center; justify-content: center; font-size: 24px;
+    flex-shrink: 0; overflow: hidden;
+  }
+  .r-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .r-body { flex: 1; min-width: 0; }
+  .r-vendor { font-weight: 700; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .r-meta { font-size: 12px; color: var(--txd); margin-top: 2px; }
+  .r-total { font-weight: 800; color: var(--ac); font-size: 16px; text-align: right; white-space: nowrap; }
+  .r-cat {
+    display: inline-block; padding: 2px 6px; border-radius: 6px; font-size: 10px;
+    font-weight: 700; text-transform: uppercase; margin-top: 6px;
+  }
+  .r-cat-materials { background: rgba(232,197,71,.15); color: var(--ac); }
+  .r-cat-tools { background: rgba(116,185,255,.15); color: var(--blu); }
+  .r-cat-fuel { background: rgba(255,159,67,.15); color: var(--orange, #ff9f43); }
+  .r-cat-food { background: rgba(81,207,102,.15); color: var(--grn); }
+  .r-cat-other { background: rgba(255,255,255,.06); color: var(--txd); }
+  .r-actions { display: flex; gap: 4px; margin-top: 6px; }
+  .r-actions button { background: none; border: 1px solid var(--bd); border-radius: 6px; padding: 3px 8px; color: var(--txd); cursor: pointer; font-size: 11px; transition: all .15s; }
+  .r-actions button:hover { border-color: var(--ac); color: var(--ac); }
+  .r-actions .del:hover { border-color: var(--red); color: var(--red); }
+
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--txd); }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/home.html" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/business.html" class="nav-link" data-en="Business" data-he="עסק">Business</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <a href="/business.html" class="page-back" data-en="← Business Hub" data-he="← מרכז עסקי">← Business Hub</a>
+  <h1 class="page-title" data-en="📸 Receipt Scanner" data-he="📸 סורק קבלות">📸 Receipt Scanner</h1>
+  <p class="page-sub" data-en="Snap a photo, AI fills in everything." data-he="צלם תמונה, AI ממלא הכל.">Snap a photo, AI fills in everything.</p>
+
+  <div id="hiw-receipts"></div>
+  <script>
+    const HIW_RECEIPTS = {
+      steps: [
+        { icon: '📸', en: 'Snap a photo of your receipt', he: 'צלם את הקבלה' },
+        { icon: '🤖', en: 'AI reads vendor, total, items, tax automatically', he: 'AI קורא ספק, סה״כ, פריטים, ומע״מ אוטומטית' },
+        { icon: '💾', en: 'Saved. Tag to a project. Export for accountant later.', he: 'נשמר. תייג לפרויקט. ייצא לרו״ח בהמשך.' },
+      ],
+      example: {
+        en: 'Scan a Home Depot receipt → AI detects: Home Depot, $247.83, Materials, 5 items, $22.30 tax.',
+        he: 'סרוק קבלה מ-Home Depot → AI מזהה: Home Depot, $247.83, חומרים, 5 פריטים, $22.30 מע״מ.'
+      }
+    };
+    document.addEventListener('DOMContentLoaded',()=>{if(typeof buildHowItWorks==='function')buildHowItWorks('hiw-receipts',HIW_RECEIPTS)});
+  </script>
+
+  <!-- Snap zone -->
+  <label class="snap-zone" id="snapZone">
+    <input type="file" accept="image/*" capture="environment" id="fileInput" onchange="handleSnap(event)">
+    <span class="big-btn">📸</span>
+    <h3 data-en="Snap a Receipt" data-he="צלם קבלה">Snap a Receipt</h3>
+    <p data-en="Tap to take a photo or choose from gallery" data-he="לחץ לצילום או בחר מהגלריה">Tap to take a photo or choose from gallery</p>
+    <div class="chip-row">
+      <span class="chip" data-en="📷 Camera or Gallery" data-he="📷 מצלמה או גלריה">📷 Camera or Gallery</span>
+      <span class="chip">⚡ 1 credit</span>
+    </div>
+  </label>
+
+  <!-- Stats -->
+  <div class="r-stats">
+    <div class="r-stat"><div class="sn" id="rCount">0</div><div class="sl" data-en="This Month" data-he="החודש">This Month</div></div>
+    <div class="r-stat"><div class="sn" id="rTotal">$0</div><div class="sl" data-en="Total Spent" data-he="סה״כ הוצאה">Total Spent</div></div>
+    <div class="r-stat"><div class="sn" id="rTax">$0</div><div class="sl" data-en="Tax Deductible" data-he="מע״מ זיכוי">Tax Deductible</div></div>
+  </div>
+
+  <!-- Filters -->
+  <div class="r-filters">
+    <input type="text" id="fSearch" placeholder="Search..." oninput="render()">
+    <select id="fCategory" onchange="render()">
+      <option value="">All Categories</option>
+      <option>Materials</option><option>Tools</option><option>Fuel</option>
+      <option>Food</option><option>Office</option><option>Vehicle</option><option>Other</option>
+    </select>
+    <select id="fProject" onchange="render()">
+      <option value="">All Projects</option>
+    </select>
+    <span class="spacer"></span>
+    <button class="btn btn-sm" onclick="exportAll()">📥 <span data-en="Export CSV" data-he="ייצוא CSV">Export CSV</span></button>
+  </div>
+
+  <!-- List -->
+  <div class="r-list" id="list"></div>
+</div>
+
+<!-- Edit modal placeholder -->
+<div id="editModal"></div>
+
+<script src="../js/ai.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/crypto.js"></script>
+<script src="../js/common.js"></script>
+<script src="../js/business.js"></script>
+<script>
+if (!isLoggedIn()) window.location.replace('/auth.html');
+
+let receipts = [];
+let bprojects = [];
+
+async function init() {
+  try {
+    receipts = await Biz.list('receipts');
+    bprojects = await Biz.list('bprojects');
+    fillProjectFilter();
+    render();
+  } catch (err) {
+    showToast(err.message, 'err');
+  }
+}
+
+function fillProjectFilter() {
+  const sel = document.getElementById('fProject');
+  sel.innerHTML = `<option value="">${lang === 'he' ? 'כל הפרויקטים' : 'All Projects'}</option>` +
+    bprojects.map(p => `<option value="${p.id}">${escHtml(p.name || 'Unnamed')}</option>`).join('');
+}
+
+function render() {
+  const search = document.getElementById('fSearch').value.toLowerCase();
+  const cat = document.getElementById('fCategory').value;
+  const proj = document.getElementById('fProject').value;
+
+  let filtered = receipts.slice();
+  if (search) filtered = filtered.filter(r => JSON.stringify(r).toLowerCase().includes(search));
+  if (cat) filtered = filtered.filter(r => r.category === cat);
+  if (proj) filtered = filtered.filter(r => r.projectId === proj);
+
+  // Stats for this month
+  const mStart = monthStart();
+  const monthItems = receipts.filter(r => new Date(r.date || r.createdAt) >= mStart);
+  document.getElementById('rCount').textContent = monthItems.length;
+  document.getElementById('rTotal').textContent = fmtMoney(monthItems.reduce((s, r) => s + (parseFloat(r.total) || 0), 0));
+  document.getElementById('rTax').textContent = fmtMoney(monthItems.reduce((s, r) => s + (parseFloat(r.tax) || 0), 0));
+
+  const list = document.getElementById('list');
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">
+      <div class="icon">📭</div>
+      <p>${lang === 'he' ? 'אין קבלות עדיין. צלם את הראשונה למעלה.' : 'No receipts yet. Snap your first above.'}</p>
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(r => {
+    const catClass = 'r-cat-' + (r.category || 'other').toLowerCase();
+    const project = bprojects.find(p => p.id === r.projectId);
+    return `<div class="r-card">
+      <div class="r-thumb">${r.thumbnail ? `<img src="${r.thumbnail}" alt="">` : '📄'}</div>
+      <div class="r-body">
+        <div class="r-vendor">${escHtml(r.vendor || 'Unknown vendor')}</div>
+        <div class="r-meta">${fmtDate(r.date)}${project ? ' · ' + escHtml(project.name) : ''}</div>
+        <span class="r-cat ${catClass}">${escHtml(r.category || 'Other')}</span>
+        <div class="r-actions">
+          <button onclick="editReceipt('${r.id}')">✏️ Edit</button>
+          <button class="del" onclick="deleteReceipt('${r.id}')">🗑️</button>
+        </div>
+      </div>
+      <div class="r-total">${fmtMoney(r.total)}</div>
+    </div>`;
+  }).join('');
+}
+
+async function handleSnap(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const credits = getCredits();
+  if (credits < 1) { showNoCreditModal(); return; }
+
+  const ok = await confirmCredit(lang === 'he' ? 'סריקת קבלה' : 'Scan Receipt');
+  if (!ok) { document.getElementById('fileInput').value = ''; return; }
+
+  const zone = document.getElementById('snapZone');
+  zone.classList.add('processing');
+  zone.querySelector('.big-btn').textContent = '⏳';
+  zone.querySelector('h3').textContent = lang === 'he' ? 'מעבד עם AI...' : 'Processing with AI...';
+
+  try {
+    const reader = new FileReader();
+    reader.onload = async ev => {
+      try {
+        const fullImage = ev.target.result;
+        const base64 = await resizeForAPI(fullImage);
+        const thumbnail = await makeThumbnail(fullImage);
+
+        // Extract via Worker AI
+        const result = await apiCall('/api/receipts/extract', {
+          method: 'POST',
+          body: { image: base64 }
+        });
+
+        const extracted = result.data;
+
+        // Update credits
+        const user = getCachedUser();
+        if (user && result.credits !== undefined) {
+          user.credits = result.credits;
+          setCachedUser(user);
+          if (typeof updateCreditDisplay === 'function') updateCreditDisplay();
+        }
+
+        // Save receipt
+        const newReceipt = await Biz.create('receipts', {
+          vendor: extracted.vendor || 'Unknown',
+          date: extracted.date || new Date().toISOString().split('T')[0],
+          total: extracted.total || 0,
+          tax: extracted.tax || 0,
+          items: extracted.items || [],
+          category: extracted.category || 'Other',
+          rawText: (extracted.rawText || '').substring(0, 2000),
+          thumbnail
+        });
+
+        receipts.unshift(newReceipt);
+        render();
+        showToast(lang === 'he' ? `✓ ${extracted.vendor || 'קבלה'} — ${fmtMoney(extracted.total)}` : `✓ ${extracted.vendor || 'Receipt'} — ${fmtMoney(extracted.total)}`, 'ok');
+        resetZone();
+      } catch (err) {
+        showToast(err.message || 'Scan failed', 'err');
+        resetZone();
+      }
+    };
+    reader.readAsDataURL(file);
+  } catch (err) {
+    showToast(err.message, 'err');
+    resetZone();
+  }
+}
+
+function resetZone() {
+  const zone = document.getElementById('snapZone');
+  zone.classList.remove('processing');
+  zone.querySelector('.big-btn').textContent = '📸';
+  zone.querySelector('h3').textContent = lang === 'he' ? 'צלם קבלה' : 'Snap a Receipt';
+  document.getElementById('fileInput').value = '';
+}
+
+async function deleteReceipt(id) {
+  if (!confirmDelete('receipt')) return;
+  try {
+    await Biz.delete('receipts', id);
+    receipts = receipts.filter(r => r.id !== id);
+    render();
+    showToast(lang === 'he' ? 'נמחק' : 'Deleted', 'ok');
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+function editReceipt(id) {
+  const r = receipts.find(x => x.id === id);
+  if (!r) return;
+  const h = lang === 'he';
+  const projectOpts = `<option value="">${h ? 'ללא פרויקט' : 'No project'}</option>` +
+    bprojects.map(p => `<option value="${p.id}" ${r.projectId === p.id ? 'selected' : ''}>${escHtml(p.name || 'Unnamed')}</option>`).join('');
+
+  const m = document.createElement('div');
+  m.className = 'modal-overlay';
+  m.innerHTML = `
+    <div class="modal-card" style="max-width:480px;max-height:90vh;overflow-y:auto;">
+      <h3 style="margin-bottom:14px;">${h ? 'ערוך קבלה' : 'Edit Receipt'}</h3>
+      ${r.thumbnail ? `<img src="${r.thumbnail}" style="max-width:100%;border-radius:8px;margin-bottom:12px;">` : ''}
+      <label class="input-label">${h ? 'ספק' : 'Vendor'}</label>
+      <input class="input" id="eVendor" value="${escHtml(r.vendor || '')}" style="margin-bottom:8px;">
+      <label class="input-label">${h ? 'תאריך' : 'Date'}</label>
+      <input class="input" id="eDate" type="date" value="${r.date || ''}" style="margin-bottom:8px;">
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <div style="flex:1;"><label class="input-label">${h ? 'סה״כ' : 'Total'}</label><input class="input" id="eTotal" type="number" step="0.01" value="${r.total || 0}"></div>
+        <div style="flex:1;"><label class="input-label">${h ? 'מע״מ' : 'Tax'}</label><input class="input" id="eTax" type="number" step="0.01" value="${r.tax || 0}"></div>
+      </div>
+      <label class="input-label">${h ? 'קטגוריה' : 'Category'}</label>
+      <select class="input" id="eCat" style="margin-bottom:8px;">
+        ${['Materials','Tools','Fuel','Food','Office','Vehicle','Other'].map(c => `<option ${r.category === c ? 'selected' : ''}>${c}</option>`).join('')}
+      </select>
+      <label class="input-label">${h ? 'פרויקט' : 'Project'}</label>
+      <select class="input" id="eProj" style="margin-bottom:8px;">${projectOpts}</select>
+      <label class="input-label">${h ? 'הערות' : 'Notes'}</label>
+      <textarea class="textarea" id="eNotes" rows="2" style="margin-bottom:12px;">${escHtml(r.notes || '')}</textarea>
+      <div style="display:flex;gap:8px;">
+        <button class="btn" style="flex:1;" onclick="this.closest('.modal-overlay').remove()">${h ? 'ביטול' : 'Cancel'}</button>
+        <button class="btn btn-primary" style="flex:1;" onclick="saveReceipt('${id}')">${h ? 'שמור' : 'Save'}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(m);
+  requestAnimationFrame(() => m.classList.add('open'));
+  m.onclick = e => { if (e.target === m) m.remove(); };
+}
+
+async function saveReceipt(id) {
+  try {
+    const updates = {
+      vendor: document.getElementById('eVendor').value,
+      date: document.getElementById('eDate').value,
+      total: parseFloat(document.getElementById('eTotal').value) || 0,
+      tax: parseFloat(document.getElementById('eTax').value) || 0,
+      category: document.getElementById('eCat').value,
+      projectId: document.getElementById('eProj').value || null,
+      notes: document.getElementById('eNotes').value
+    };
+    const updated = await Biz.update('receipts', id, updates);
+    const idx = receipts.findIndex(r => r.id === id);
+    if (idx !== -1) receipts[idx] = updated;
+    document.querySelector('.modal-overlay')?.remove();
+    render();
+    showToast(lang === 'he' ? 'נשמר' : 'Saved', 'ok');
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+function exportAll() {
+  exportCSV('receipts.csv', receipts, [
+    { label: 'Date', key: 'date' },
+    { label: 'Vendor', key: 'vendor' },
+    { label: 'Total', key: 'total' },
+    { label: 'Tax', key: 'tax' },
+    { label: 'Category', key: 'category' },
+    { label: 'Project', key: r => {
+      const p = bprojects.find(x => x.id === r.projectId);
+      return p ? p.name : '';
+    } },
+    { label: 'Notes', key: 'notes' }
+  ]);
+  showToast('Exported', 'ok');
+}
+
+init();
+</script>
+</body>
+</html>

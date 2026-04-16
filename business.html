@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Business Operations</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  body { display: flex; flex-direction: column; }
+
+  .biz-hero {
+    background: linear-gradient(135deg, var(--acd), rgba(81,207,102,.08));
+    border: 1px solid var(--ac); border-radius: 16px; padding: 28px 22px;
+    margin-bottom: 24px; text-align: center;
+  }
+  .biz-hero h1 { font-size: 26px; font-weight: 900; margin-bottom: 6px; }
+  .biz-hero h1 .accent { color: var(--ac); }
+  .biz-hero p { color: var(--txd); font-size: 14px; line-height: 1.6; max-width: 620px; margin: 0 auto; }
+
+  .biz-stats {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 24px;
+  }
+  .biz-stat {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 12px;
+    padding: 14px 12px; text-align: center;
+  }
+  .biz-stat .stat-num { font-size: 22px; font-weight: 900; color: var(--ac); }
+  .biz-stat .stat-lbl { font-size: 11px; color: var(--txd); margin-top: 2px; }
+  .biz-stat.rev .stat-num { color: var(--grn); }
+  .biz-stat.exp .stat-num { color: var(--orange, #ff9f43); }
+
+  .biz-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px;
+  }
+  .biz-card {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 16px;
+    padding: 22px 18px; text-decoration: none; color: var(--tx);
+    transition: all .25s cubic-bezier(.4,0,.2,1); cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+    gap: 8px; position: relative; overflow: hidden;
+  }
+  .biz-card:hover {
+    border-color: var(--ac); transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(232,197,71,.12); opacity: 1;
+  }
+  .biz-card::after {
+    content: ''; position: absolute; inset: 0; background: radial-gradient(circle at top, var(--acd), transparent 70%);
+    opacity: 0; transition: opacity .3s; pointer-events: none;
+  }
+  .biz-card:hover::after { opacity: 0.4; }
+  .biz-card .bc-icon { font-size: 38px; margin-bottom: 4px; z-index: 1; }
+  .biz-card .bc-name { font-size: 15px; font-weight: 800; z-index: 1; }
+  .biz-card .bc-desc { font-size: 12px; color: var(--txd); line-height: 1.5; z-index: 1; }
+  .biz-card .bc-count {
+    position: absolute; top: 10px; right: 10px;
+    background: var(--acd); color: var(--ac); font-size: 11px; font-weight: 700;
+    padding: 2px 8px; border-radius: 6px; z-index: 2;
+  }
+
+  @media (max-width: 900px) {
+    .biz-grid { grid-template-columns: repeat(2, 1fr); }
+    .biz-stats { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 500px) {
+    .biz-hero h1 { font-size: 22px; }
+    .biz-grid { gap: 10px; }
+    .biz-card { padding: 18px 12px; }
+    .biz-card .bc-icon { font-size: 32px; }
+    .biz-card .bc-name { font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/home.html" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/home.html" class="nav-link" data-en="Tools" data-he="כלים">Tools</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="biz-hero">
+    <h1>💼 <span class="accent" data-en="Run Your Business" data-he="נהל את העסק שלך">Run Your Business</span></h1>
+    <p data-en="Everything you need to run a construction business: track receipts, manage clients, monitor projects, and stay compliant — all in one place." data-he="כל מה שצריך לנהל עסק בנייה: מעקב קבלות, ניהול לקוחות, פרויקטים, ותאימות — הכל במקום אחד.">Everything you need to run a construction business: track receipts, manage clients, monitor projects, and stay compliant — all in one place.</p>
+  </div>
+
+  <!-- Stats -->
+  <div class="biz-stats">
+    <div class="biz-stat rev">
+      <div class="stat-num" id="statRevenue">$0</div>
+      <div class="stat-lbl" data-en="This Month Revenue" data-he="הכנסה החודש">This Month Revenue</div>
+    </div>
+    <div class="biz-stat exp">
+      <div class="stat-num" id="statExpenses">$0</div>
+      <div class="stat-lbl" data-en="This Month Expenses" data-he="הוצאות החודש">This Month Expenses</div>
+    </div>
+    <div class="biz-stat">
+      <div class="stat-num" id="statProjects">0</div>
+      <div class="stat-lbl" data-en="Active Projects" data-he="פרויקטים פעילים">Active Projects</div>
+    </div>
+    <div class="biz-stat">
+      <div class="stat-num" id="statClients">0</div>
+      <div class="stat-lbl" data-en="Clients" data-he="לקוחות">Clients</div>
+    </div>
+  </div>
+
+  <!-- 8 Tools Grid -->
+  <div class="biz-grid">
+    <a href="/business/receipts.html" class="biz-card">
+      <span class="bc-count" id="cReceipts">0</span>
+      <span class="bc-icon">📸</span>
+      <span class="bc-name" data-en="Receipt Scanner" data-he="סורק קבלות">Receipt Scanner</span>
+      <span class="bc-desc" data-en="Snap a receipt, AI extracts everything" data-he="צלם קבלה, AI מוציא הכל">Snap a receipt, AI extracts everything</span>
+    </a>
+    <a href="/business/clients.html" class="biz-card">
+      <span class="bc-count" id="cClients">0</span>
+      <span class="bc-icon">👥</span>
+      <span class="bc-name" data-en="Clients" data-he="לקוחות">Clients</span>
+      <span class="bc-desc" data-en="Track all your clients and their history" data-he="עקוב אחרי לקוחות וההיסטוריה שלהם">Track all your clients and their history</span>
+    </a>
+    <a href="/business/expenses.html" class="biz-card">
+      <span class="bc-count" id="cExpenses">0</span>
+      <span class="bc-icon">💰</span>
+      <span class="bc-name" data-en="Expenses" data-he="הוצאות">Expenses</span>
+      <span class="bc-desc" data-en="See where your money goes" data-he="ראה לאן הכסף הולך">See where your money goes</span>
+    </a>
+    <a href="/business/projects.html" class="biz-card">
+      <span class="bc-count" id="cBProjects">0</span>
+      <span class="bc-icon">📋</span>
+      <span class="bc-name" data-en="Projects Log" data-he="יומן פרויקטים">Projects Log</span>
+      <span class="bc-desc" data-en="Manage jobs, daily logs, punch lists" data-he="נהל עבודות, יומן יומי, משימות">Manage jobs, daily logs, punch lists</span>
+    </a>
+    <a href="/business/suppliers.html" class="biz-card">
+      <span class="bc-count" id="cSuppliers">0</span>
+      <span class="bc-icon">🚚</span>
+      <span class="bc-name" data-en="Suppliers" data-he="ספקים">Suppliers</span>
+      <span class="bc-desc" data-en="Track suppliers, prices, past orders" data-he="עקוב אחרי ספקים, מחירים, הזמנות">Track suppliers, prices, past orders</span>
+    </a>
+    <a href="/business/equipment.html" class="biz-card">
+      <span class="bc-count" id="cEquipment">0</span>
+      <span class="bc-icon">🛠️</span>
+      <span class="bc-name" data-en="Equipment" data-he="ציוד">Equipment</span>
+      <span class="bc-desc" data-en="Inventory of tools and vehicles" data-he="מלאי כלים וכלי רכב">Inventory of tools and vehicles</span>
+    </a>
+    <a href="/business/time.html" class="biz-card">
+      <span class="bc-count" id="cTimelogs">0</span>
+      <span class="bc-icon">⏱️</span>
+      <span class="bc-name" data-en="Time Tracking" data-he="מעקב זמן">Time Tracking</span>
+      <span class="bc-desc" data-en="Clock in/out, payroll made easy" data-he="שעון נוכחות, שכר פשוט">Clock in/out, payroll made easy</span>
+    </a>
+    <a href="/business/compliance.html" class="biz-card">
+      <span class="bc-count" id="cCompliance">0</span>
+      <span class="bc-icon">📜</span>
+      <span class="bc-name" data-en="Compliance" data-he="תאימות">Compliance</span>
+      <span class="bc-desc" data-en="Licenses, insurance, permits, safety" data-he="רישיונות, ביטוח, היתרים, בטיחות">Licenses, insurance, permits, safety</span>
+    </a>
+  </div>
+</div>
+
+<script src="js/ai.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/crypto.js"></script>
+<script src="js/common.js"></script>
+<script>
+if (!isLoggedIn()) window.location.replace('/auth.html');
+
+async function loadStats() {
+  // Fetch counts in parallel
+  const endpoints = [
+    { key: 'cReceipts', url: '/api/receipts' },
+    { key: 'cClients', url: '/api/clients' },
+    { key: 'cExpenses', url: '/api/expenses' },
+    { key: 'cBProjects', url: '/api/bprojects' },
+    { key: 'cSuppliers', url: '/api/suppliers' },
+    { key: 'cEquipment', url: '/api/equipment' },
+    { key: 'cTimelogs', url: '/api/timelogs' },
+    { key: 'cCompliance', url: '/api/compliance' },
+  ];
+
+  const results = await Promise.allSettled(endpoints.map(e => apiCall(e.url)));
+  const data = {};
+  results.forEach((r, i) => {
+    const el = document.getElementById(endpoints[i].key);
+    if (r.status === 'fulfilled' && r.value) {
+      const arr = r.value.items || r.value.data || [];
+      data[endpoints[i].key] = arr;
+      if (el) el.textContent = arr.length;
+    } else {
+      if (el) el.textContent = '0';
+    }
+  });
+
+  // Calculate this month revenue (from projects) and expenses
+  const monthStart = new Date();
+  monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
+
+  const expenses = data.cExpenses || [];
+  const monthExpenses = expenses.filter(e => new Date(e.date || e.createdAt) >= monthStart)
+    .reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+  document.getElementById('statExpenses').textContent = '$' + Math.round(monthExpenses).toLocaleString();
+
+  const bprojects = data.cBProjects || [];
+  const activeCount = bprojects.filter(p => p.status === 'Active' || !p.status).length;
+  document.getElementById('statProjects').textContent = activeCount;
+
+  document.getElementById('statClients').textContent = (data.cClients || []).length;
+
+  const monthRevenue = bprojects.filter(p => new Date(p.createdAt) >= monthStart)
+    .reduce((sum, p) => sum + (parseFloat(p.value) || 0), 0);
+  document.getElementById('statRevenue').textContent = '$' + Math.round(monthRevenue).toLocaleString();
+}
+
+loadStats();
+</script>
+</body>
+</html>
