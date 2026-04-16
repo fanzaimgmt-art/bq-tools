@@ -227,6 +227,11 @@
     <input type="date" id="archiveDate" onchange="loadArchive()">
     <button class="news-card-btn" style="flex:0 0 auto;" onclick="loadNews()" data-en="← Today" data-he="← היום">← Today</button>
   </div>
+
+  <!-- Amazon Associates Disclaimer (FTC required) -->
+  <div style="margin-top:20px;padding:14px 16px;background:var(--sf);border:1px solid var(--bd);border-radius:10px;font-size:12px;color:var(--txd);line-height:1.6;text-align:center;">
+    <span data-en="As an Amazon Associate, BQ Tools earns from qualifying purchases." data-he="As an Amazon Associate, BQ Tools earns from qualifying purchases.">As an Amazon Associate, BQ Tools earns from qualifying purchases.</span>
+  </div>
 </div>
 
 <script src="js/ai.js"></script>
@@ -401,8 +406,8 @@ function renderCategory(id) {
     if (item.amazonUrl) {
       // Note: Add ?tag=YOUR_AMAZON_TAG here when ready for affiliate
       const amazonUrl = item.amazonUrl.includes('?')
-        ? item.amazonUrl + '&tag=bqtools-20'
-        : item.amazonUrl + '?tag=bqtools-20';
+        ? item.amazonUrl + '&tag=bqtools20-20'
+        : item.amazonUrl + '?tag=bqtools20-20';
       actionsHtml += `<a href="${escHtml(amazonUrl)}" target="_blank" rel="noopener" class="news-card-btn amazon">🛒 ${h ? 'קנה באמזון' : 'Buy on Amazon'}</a>`;
     }
 
