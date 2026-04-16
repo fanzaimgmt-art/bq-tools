@@ -34,6 +34,12 @@ export default {
       if (path === '/api/ai/chat' && request.method === 'POST') {
         return corsResponse(env, await handleAIChat(request, env));
       }
+      if (path === '/api/social/analyze' && request.method === 'POST') {
+        return corsResponse(env, await handleSocialAnalyze(request, env));
+      }
+      if (path === '/api/admin/scrape-directory' && request.method === 'POST') {
+        return corsResponse(env, await handleAdminScrapeDirectory(request, env));
+      }
       if (path === '/api/credits/add' && request.method === 'POST') {
         return corsResponse(env, await handleAddCredits(request, env));
       }
@@ -1170,5 +1176,301 @@ async function handleReferralLink(request, env) {
   return json({
     ok: true,
     link: `${origin}/?ref=${encodeURIComponent(user.email)}`
+  });
+}
+
+// ── Social Analysis (Apify + AI) ──
+
+async function handleSocialAnalyze(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  if (!(await checkRateLimit(user.email, env))) {
+    return json({ error: 'Rate limit exceeded' }, 429);
+  }
+
+  const updated = checkMonthlyReset(user);
+  if (updated.credits < 2) {
+    return json({ error: 'Need 2 credits', credits: updated.credits }, 402);
+  }
+
+  const { platform, username, context } = await request.json();
+  if (!username) return json({ error: 'username required' }, 400);
+
+  const apifyToken = env.APIFY_TOKEN;
+  if (!apifyToken) return json({ error: 'Apify not configured' }, 500);
+
+  // Clean username
+  const cleanUser = username.replace(/^@/, '').replace(/^https?:\/\/(www\.)?(instagram|facebook)\.com\//, '').replace(/\/$/, '').split('?')[0];
+
+  let profileData = null;
+
+  if (platform === 'instagram') {
+    try {
+      // Start Apify Instagram scraper
+      const runRes = await fetch(`https://api.apify.com/v2/acts/apify~instagram-profile-scraper/runs?token=${apifyToken}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          usernames: [cleanUser],
+          resultsLimit: 12
+        })
+      });
+      const runData = await runRes.json();
+      const runId = runData.data?.id;
+      if (!runId) throw new Error('Failed to start scraper');
+
+      // Poll for results (max 30 seconds)
+      let attempts = 0;
+      while (attempts < 15) {
+        await new Promise(r => setTimeout(r, 2000));
+        const statusRes = await fetch(`https://api.apify.com/v2/actor-runs/${runId}?token=${apifyToken}`);
+        const statusData = await statusRes.json();
+        if (statusData.data?.status === 'SUCCEEDED') break;
+        if (statusData.data?.status === 'FAILED' || statusData.data?.status === 'ABORTED') {
+          throw new Error('Scraper failed');
+        }
+        attempts++;
+      }
+
+      // Get results
+      const dataRes = await fetch(`https://api.apify.com/v2/actor-runs/${runId}/dataset/items?token=${apifyToken}`);
+      const items = await dataRes.json();
+      if (items.length > 0) {
+        profileData = items[0];
+      }
+    } catch (e) {
+      console.error('Apify error:', e);
+      // Fall back to AI-only analysis
+    }
+  }
+
+  // Build analysis prompt
+  let dataSection = '';
+  if (profileData) {
+    dataSection = `
+REAL INSTAGRAM DATA:
+- Username: ${profileData.username || cleanUser}
+- Full Name: ${profileData.fullName || 'N/A'}
+- Bio: ${profileData.biography || 'N/A'}
+- Followers: ${profileData.followersCount || 0}
+- Following: ${profileData.followsCount || 0}
+- Posts: ${profileData.postsCount || 0}
+- Profile Pic: ${profileData.profilePicUrl ? 'Yes' : 'No'}
+- Is Business: ${profileData.isBusinessAccount || false}
+- Is Verified: ${profileData.verified || false}
+- External URL: ${profileData.externalUrl || 'None'}
+- Recent posts engagement: ${JSON.stringify((profileData.latestPosts || []).slice(0, 6).map(p => ({
+      likes: p.likesCount, comments: p.commentsCount, type: p.type
+    })))}
+
+Analyze this REAL data. Use actual numbers, not estimates.`;
+  } else {
+    dataSection = `
+Profile: @${cleanUser} on ${platform || 'instagram'}
+(Could not scrape live data — analyze based on best practices for contractor accounts)`;
+  }
+
+  const prompt = `You are an expert social media analyst for construction/remodeling businesses.
+
+${dataSection}
+Business context: ${context || 'contractor/remodeler'}
+
+Provide a detailed analysis. Respond JSON only:
+{
+  "profile_name": "@${cleanUser}",
+  "followers": ${profileData?.followersCount || 'null'},
+  "following": ${profileData?.followsCount || 'null'},
+  "posts_count": ${profileData?.postsCount || 'null'},
+  "bio_text": ${JSON.stringify(profileData?.biography || '')},
+  "overall_score": 1-100,
+  "bio_score": 1-10,
+  "content_score": 1-10,
+  "engagement_score": 1-10,
+  "consistency_score": 1-10,
+  "hashtag_score": 1-10,
+  "engagement_rate": "X.X%",
+  "post_frequency": "X posts/week",
+  "content_breakdown": {"before_after":20,"project_photos":30,"videos_reels":15,"testimonials":5,"behind_scenes":10,"educational":10,"other":10},
+  "strengths": ["str1","str2"],
+  "weaknesses": ["weak1","weak2"],
+  "recommendations": [{"title":"title","description":"desc","priority":"high/medium/low"}],
+  "quick_wins": ["win1","win2","win3"],
+  "competitor_tip": "one sentence"
+}`;
+
+  let aiResponse;
+  try {
+    aiResponse = await callClaudeAPI(env, prompt, []);
+  } catch (e) {
+    try {
+      aiResponse = await callGeminiAPI(env, prompt, []);
+    } catch (e2) {
+      return json({ error: 'AI analysis failed: ' + e.message }, 502);
+    }
+  }
+
+  // Deduct 2 credits
+  updated.credits -= 2;
+  updated.creditsUsedThisMonth = (updated.creditsUsedThisMonth || 0) + 2;
+  await env.BQ_USERS.put(`user:${updated.email}`, JSON.stringify(updated));
+  await logCreditUsage(updated.email, 'social-analysis', '@' + cleanUser, env);
+
+  // Parse AI response
+  let analysis;
+  try {
+    analysis = JSON.parse(aiResponse.replace(/```json|```/g, '').trim());
+  } catch {
+    analysis = { raw: aiResponse };
+  }
+
+  return json({
+    ok: true,
+    analysis,
+    profileData: profileData ? {
+      username: profileData.username,
+      fullName: profileData.fullName,
+      biography: profileData.biography,
+      followersCount: profileData.followersCount,
+      followsCount: profileData.followsCount,
+      postsCount: profileData.postsCount,
+      profilePicUrl: profileData.profilePicUrl,
+      isBusinessAccount: profileData.isBusinessAccount,
+      verified: profileData.verified,
+      externalUrl: profileData.externalUrl
+    } : null,
+    credits: updated.credits
+  });
+}
+
+// ── Google Maps Directory Scraper (Admin only) ──
+
+async function handleAdminScrapeDirectory(request, env) {
+  if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
+
+  const apifyToken = env.APIFY_TOKEN;
+  if (!apifyToken) return json({ error: 'Apify not configured' }, 500);
+
+  const { query, maxResults } = await request.json();
+  if (!query) return json({ error: 'query required' }, 400);
+  const max = Math.min(Math.max(parseInt(maxResults) || 20, 5), 100);
+
+  // Start Google Maps scraper
+  let runId;
+  try {
+    const runRes = await fetch(`https://api.apify.com/v2/acts/compass~crawler-google-places/runs?token=${apifyToken}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        searchStringsArray: [query],
+        maxCrawledPlaces: max,
+        language: 'en',
+        maxReviews: 0,
+        maxImages: 0
+      })
+    });
+    const runData = await runRes.json();
+    runId = runData.data?.id;
+    if (!runId) throw new Error('Failed to start scraper: ' + JSON.stringify(runData));
+  } catch (e) {
+    return json({ error: 'Scraper start failed: ' + e.message }, 502);
+  }
+
+  // Poll for results (max 60 seconds)
+  let attempts = 0;
+  while (attempts < 30) {
+    await new Promise(r => setTimeout(r, 2000));
+    const statusRes = await fetch(`https://api.apify.com/v2/actor-runs/${runId}?token=${apifyToken}`);
+    const statusData = await statusRes.json();
+    const status = statusData.data?.status;
+    if (status === 'SUCCEEDED') break;
+    if (status === 'FAILED' || status === 'ABORTED') {
+      return json({ error: 'Scraper failed: ' + status }, 502);
+    }
+    attempts++;
+  }
+
+  // Get results
+  const dataRes = await fetch(`https://api.apify.com/v2/actor-runs/${runId}/dataset/items?token=${apifyToken}`);
+  const items = await dataRes.json();
+
+  // Import each result as a free directory listing
+  let imported = 0;
+  const skipped = [];
+
+  for (const item of items) {
+    if (!item.title) continue;
+
+    // Generate a fake email key from business name (no real email)
+    const slug = item.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').substring(0, 40);
+    const fakeEmail = `maps-${slug}@directory.bqtools`;
+
+    // Check if already exists
+    const existing = await env.BQ_USERS.get(`directory:${fakeEmail}`);
+    if (existing) { skipped.push(item.title); continue; }
+
+    // Guess business type from category
+    const cat = (item.categoryName || '').toLowerCase();
+    let bizType = 'Other';
+    if (cat.includes('general contractor') || cat.includes('contractor')) bizType = 'General Contractor';
+    else if (cat.includes('remodel')) bizType = 'Remodeler';
+    else if (cat.includes('paint')) bizType = 'Painter';
+    else if (cat.includes('roof')) bizType = 'Roofer';
+    else if (cat.includes('landscape') || cat.includes('lawn')) bizType = 'Landscaper';
+    else if (cat.includes('interior') || cat.includes('design')) bizType = 'Interior Designer';
+    else if (cat.includes('plumb')) bizType = 'Other';
+    else if (cat.includes('electric')) bizType = 'Other';
+
+    const listing = {
+      email: fakeEmail,
+      businessName: item.title,
+      type: bizType,
+      phone: item.phone || '',
+      contactEmail: '',
+      logo: '',
+      description: (item.categoryName || '') + (item.address ? ' — ' + item.address : ''),
+      photos: [],
+      reviews: [],
+      locations: [],
+      tier: 'free',
+      whatsappGroup: '',
+      website: item.website || '',
+      facebook: '',
+      instagram: '',
+      youtube: '',
+      licenseNumber: '',
+      yearsInBusiness: '',
+      rating: item.totalScore || 0,
+      reviewCount: item.reviewsCount || 0,
+      scrapedFrom: 'google-maps',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    // Add location if coordinates available
+    if (item.location?.lat && item.location?.lng) {
+      listing.locations.push({
+        address: item.address || query,
+        lat: item.location.lat,
+        lng: item.location.lng,
+        projectTitle: '',
+        thumbnail: '',
+        addedAt: new Date().toISOString()
+      });
+    }
+
+    await env.BQ_USERS.put(`directory:${fakeEmail}`, JSON.stringify(listing));
+    await updateDirectoryIndex(fakeEmail, listing, env);
+    imported++;
+  }
+
+  return json({
+    ok: true,
+    query,
+    total: items.length,
+    imported,
+    skipped: skipped.length,
+    skippedNames: skipped.slice(0, 10)
   });
 }

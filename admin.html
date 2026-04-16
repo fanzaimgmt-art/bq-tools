@@ -149,6 +149,24 @@
     </div>
   </div>
 
+  <!-- Directory Scraper -->
+  <div class="admin-section">
+    <h3>🗺️ Scrape Directory (Google Maps)</h3>
+    <p style="font-size:13px;color:var(--txd);margin-bottom:12px;">Import real contractors from Google Maps into the directory. Uses Apify credits (~$0.04 per business).</p>
+    <div class="add-credits-form">
+      <div class="field" style="flex:2;">
+        <label>Search Query</label>
+        <input type="text" id="scrapeQuery" placeholder="contractor Los Angeles">
+      </div>
+      <div class="field" style="max-width:100px;">
+        <label>Max Results</label>
+        <input type="number" id="scrapeMax" value="20" min="5" max="100">
+      </div>
+      <button class="btn btn-primary" style="min-height:44px;" onclick="scrapeDirectory()" id="scrapeBtn">Scrape & Import</button>
+    </div>
+    <div id="scrapeResult" style="margin-top:8px;font-size:13px;"></div>
+  </div>
+
   <!-- Errors -->
   <div class="admin-section">
     <h3>Error Reports</h3>
@@ -282,6 +300,33 @@ async function loadErrors() {
   } catch {
     document.getElementById('errorList').innerHTML = '<div style="color:var(--txd);text-align:center;">Failed to load</div>';
   }
+}
+
+async function scrapeDirectory() {
+  const query = document.getElementById('scrapeQuery').value.trim();
+  const max = parseInt(document.getElementById('scrapeMax').value) || 20;
+  const result = document.getElementById('scrapeResult');
+  const btn = document.getElementById('scrapeBtn');
+
+  if (!query) { result.innerHTML = '<span style="color:var(--red);">Enter a search query</span>'; return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Scraping...';
+  result.innerHTML = '<span style="color:var(--ac);">⏳ Running Google Maps scraper... this may take 30-60 seconds.</span>';
+
+  try {
+    const data = await adminCall('/api/admin/scrape-directory', {
+      method: 'POST',
+      body: { query, maxResults: max }
+    });
+    result.innerHTML = `<span style="color:var(--grn);">✓ Found ${data.total} businesses. Imported ${data.imported}, skipped ${data.skipped} (already existed).</span>`;
+    loadAdminData(); // Refresh user list
+  } catch (err) {
+    result.innerHTML = `<span style="color:var(--red);">✗ ${err.message}</span>`;
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Scrape & Import';
 }
 </script>
 </body>

@@ -22,38 +22,111 @@ function setLang(l) {
   });
 }
 
-// ── Profile Avatar Dropdown ──
+// ── Profile Dropdown (rewritten — appended to body, not nav) ──
 
-function _avatarInner(user) {
-  if (user.picture) return `<img src="${user.picture}" alt="">`;
-  if (user.logo) return `<img src="${user.logo}" alt="">`;
-  return (user.businessName || user.email || '?')[0].toUpperCase();
-}
-
-function _escHtml(s) {
+function _esc(s) {
   const d = document.createElement('span');
   d.textContent = s || '';
   return d.innerHTML;
 }
 
-function _planBadge(user) {
-  if (user.isPro === true) return '<span class="nav-dd-badge badge-pro">PRO</span>';
-  return '<span class="nav-dd-badge badge-free">FREE</span>';
+function _avatarHTML(user) {
+  if (user.picture) return `<img src="${user.picture}" alt="" style="width:100%;height:100%;object-fit:cover;">`;
+  if (user.logo) return `<img src="${user.logo}" alt="" style="width:100%;height:100%;object-fit:cover;">`;
+  return (user.businessName || user.email || '?')[0].toUpperCase();
 }
 
-function _toggleDropdown(open) {
+function _openDropdown() {
   const dd = document.getElementById('navDropdown');
   const bd = document.getElementById('navDdBackdrop');
   if (!dd) return;
-  if (open === undefined) open = !dd.classList.contains('open');
-  dd.classList.toggle('open', open);
-  if (bd) bd.classList.toggle('open', open);
-  // Only lock scroll on mobile when dropdown is full-screen
-  if (window.innerWidth <= 600) {
-    document.body.style.overflow = open ? 'hidden' : '';
-  } else {
-    document.body.style.overflow = '';
+  // Position dropdown below avatar
+  const av = document.getElementById('navAvatar');
+  if (av) {
+    const r = av.getBoundingClientRect();
+    dd.style.top = (r.bottom + 8) + 'px';
+    if (document.documentElement.dir === 'rtl') {
+      dd.style.left = r.left + 'px';
+      dd.style.right = 'auto';
+    } else {
+      dd.style.right = (window.innerWidth - r.right) + 'px';
+      dd.style.left = 'auto';
+    }
   }
+  dd.classList.add('open');
+  if (bd) bd.classList.add('open');
+  if (window.innerWidth <= 600) document.body.style.overflow = 'hidden';
+}
+
+function _closeDropdown() {
+  const dd = document.getElementById('navDropdown');
+  const bd = document.getElementById('navDdBackdrop');
+  if (dd) dd.classList.remove('open');
+  if (bd) bd.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function _toggleDD() {
+  const dd = document.getElementById('navDropdown');
+  if (dd && dd.classList.contains('open')) _closeDropdown();
+  else _openDropdown();
+}
+
+// Build the dropdown HTML (pure <a> and <button> elements)
+function _ddHTML(user) {
+  const credits = user.credits || 0;
+  const max = user.isPro ? 50 : 5;
+  const pct = Math.min(100, Math.round((credits / max) * 100));
+  const name = _esc(user.businessName || user.email.split('@')[0]);
+  const email = _esc(user.email);
+  const badge = user.isPro === true
+    ? '<span class="nav-dd-badge badge-pro">PRO</span>'
+    : '<span class="nav-dd-badge badge-free">FREE</span>';
+  const h = lang === 'he';
+
+  return `
+    <div class="nav-dd-header">
+      <div class="nav-dd-top">
+        <div class="nav-dd-avatar">${_avatarHTML(user)}</div>
+        <div>
+          <div class="nav-dd-name">${name}</div>
+          <div class="nav-dd-email">${email}</div>
+          ${badge}
+        </div>
+      </div>
+    </div>
+    <div class="nav-dd-credits-row">
+      <div class="nav-dd-credits-top">
+        <span class="nav-dd-credits-label">⚡ ${h ? 'קרדיטים' : 'Credits'}</span>
+        <span class="nav-dd-credits-val">${credits}</span>
+      </div>
+      <div class="nav-dd-credits-bar"><div class="nav-dd-credits-fill${pct < 20 ? ' low' : ''}" style="width:${pct}%"></div></div>
+    </div>
+    <a href="/profile.html" class="nav-dd-item"><span class="dd-icon">🏢</span>${h ? 'פרופיל עסקי' : 'Business Profile'}</a>
+    <a href="/dashboard.html" class="nav-dd-item"><span class="dd-icon">📊</span>${h ? 'דשבורד' : 'Dashboard'}</a>
+    <a href="/gallery.html" class="nav-dd-item"><span class="dd-icon">📁</span>${h ? 'הפרויקטים שלי' : 'My Projects'}</a>
+    <a href="/directory-profile.html?email=${encodeURIComponent(user.email)}" class="nav-dd-item"><span class="dd-icon">📋</span>${h ? 'רישום Directory' : 'Directory Listing'}</a>
+    <div class="nav-dd-divider"></div>
+    <div class="nav-dd-lang">
+      <button class="nav-dd-lang-btn${lang === 'en' ? ' on' : ''}" onclick="setLang('en');_rebuildDropdown()">🇺🇸 EN</button>
+      <button class="nav-dd-lang-btn${lang === 'he' ? ' on' : ''}" onclick="setLang('he');_rebuildDropdown()">🇮🇱 עב</button>
+    </div>
+    <button class="nav-dd-item" onclick="showReferralLink()"><span class="dd-icon">🎁</span>${h ? 'הזמן חבר' : 'Refer a Friend'}</button>
+    <a href="https://www.paypal.com/ncp/payment/2LA7B7PZTHN54" target="_blank" rel="noopener" class="nav-dd-item accent"><span class="dd-icon">🛒</span>${h ? 'קנה קרדיטים' : 'Buy Credits'}</a>
+    ${!user.isPro ? `<a href="/auth.html" class="nav-dd-item green"><span class="dd-icon">⭐</span>${h ? 'שדרג ל-Pro' : 'Upgrade to Pro'}</a>` : ''}
+    <div class="nav-dd-divider"></div>
+    <button class="nav-dd-item danger" onclick="doLogout()"><span class="dd-icon">🚪</span>${h ? 'התנתק' : 'Sign Out'}</button>`;
+}
+
+function _rebuildDropdown() {
+  const user = typeof getCachedUser === 'function' ? getCachedUser() : null;
+  if (!user) return;
+  const dd = document.getElementById('navDropdown');
+  if (dd) dd.innerHTML = _ddHTML(user);
+  // Re-bind close on item click
+  if (dd) dd.querySelectorAll('a.nav-dd-item').forEach(a => {
+    a.addEventListener('click', _closeDropdown);
+  });
 }
 
 function injectProfileAvatar() {
@@ -66,20 +139,21 @@ function injectProfileAvatar() {
     const href = b.getAttribute('href') || '';
     if (href.includes('auth') || href.includes('dashboard') || b.id === 'navSignInBtn') b.remove();
   });
-  const oldWrap = navRight.querySelector('.nav-avatar-wrap');
-  if (oldWrap) oldWrap.remove();
-  const oldBackdrop = document.getElementById('navDdBackdrop');
-  if (oldBackdrop) oldBackdrop.remove();
-  // Also remove old standalone lang-toggle (dropdown has its own)
+  const oldAvatar = document.getElementById('navAvatar');
+  if (oldAvatar) oldAvatar.remove();
+  const oldDd = document.getElementById('navDropdown');
+  if (oldDd) oldDd.remove();
+  const oldBd = document.getElementById('navDdBackdrop');
+  if (oldBd) oldBd.remove();
+
   const langToggle = navRight.querySelector('.lang-toggle');
 
   if (!loggedIn) {
+    if (langToggle) langToggle.style.display = '';
     const signIn = document.createElement('a');
     signIn.href = '/auth.html';
     signIn.className = 'btn btn-sm';
     signIn.id = 'navSignInBtn';
-    signIn.setAttribute('data-en', 'Sign In');
-    signIn.setAttribute('data-he', 'התחבר');
     signIn.textContent = lang === 'he' ? 'התחבר' : 'Sign In';
     if (langToggle) navRight.insertBefore(signIn, langToggle);
     else navRight.appendChild(signIn);
@@ -89,122 +163,45 @@ function injectProfileAvatar() {
   const user = typeof getCachedUser === 'function' ? getCachedUser() : null;
   if (!user) return;
 
-  // Hide standalone lang toggle — dropdown has its own
+  // Hide standalone lang toggle
   if (langToggle) langToggle.style.display = 'none';
 
-  const credits = user.credits || 0;
-  const maxCredits = user.isPro ? 50 : 5;
-  const pct = Math.min(100, Math.round((credits / maxCredits) * 100));
-  const name = user.businessName || user.email.split('@')[0];
-  const isHe = lang === 'he';
-
-  // Backdrop for mobile
-  const backdrop = document.createElement('div');
-  backdrop.className = 'nav-dd-backdrop';
-  backdrop.id = 'navDdBackdrop';
-  backdrop.onclick = () => _toggleDropdown(false);
-  document.body.appendChild(backdrop);
-
-  const wrap = document.createElement('div');
-  wrap.className = 'nav-avatar-wrap';
-
+  // Avatar button — goes inside nav
   const avatar = document.createElement('div');
   avatar.className = 'nav-avatar';
   avatar.id = 'navAvatar';
-  avatar.innerHTML = _avatarInner(user);
-  avatar.onclick = (e) => { e.stopPropagation(); _toggleDropdown(); };
+  avatar.innerHTML = _avatarHTML(user);
+  avatar.addEventListener('click', (e) => { e.stopPropagation(); _toggleDD(); });
+  if (langToggle) navRight.insertBefore(avatar, langToggle);
+  else navRight.appendChild(avatar);
 
+  // Backdrop — appended to body (outside nav stacking context)
+  const backdrop = document.createElement('div');
+  backdrop.className = 'nav-dd-backdrop';
+  backdrop.id = 'navDdBackdrop';
+  backdrop.addEventListener('click', _closeDropdown);
+  document.body.appendChild(backdrop);
+
+  // Dropdown — appended to body (outside nav stacking context!)
   const dd = document.createElement('div');
   dd.className = 'nav-dropdown';
   dd.id = 'navDropdown';
-  // Allow clicks on links/buttons inside to work normally
-  dd.addEventListener('click', (e) => {
-    // Only stop propagation if clicking the dropdown background itself
-    if (e.target === dd) e.stopPropagation();
+  dd.innerHTML = _ddHTML(user);
+  document.body.appendChild(dd);
+
+  // Close dropdown when clicking any <a> item (navigation happens naturally)
+  dd.querySelectorAll('a.nav-dd-item').forEach(a => {
+    a.addEventListener('click', _closeDropdown);
   });
 
-  dd.innerHTML = `
-    <div class="nav-dd-header">
-      <div class="nav-dd-top">
-        <div class="nav-dd-avatar">${_avatarInner(user)}</div>
-        <div>
-          <div class="nav-dd-name">${_escHtml(name)}</div>
-          <div class="nav-dd-email">${_escHtml(user.email)}</div>
-          ${_planBadge(user)}
-        </div>
-      </div>
-    </div>
-
-    <div class="nav-dd-credits-row">
-      <div class="nav-dd-credits-top">
-        <span class="nav-dd-credits-label">⚡ ${isHe ? 'קרדיטים' : 'Credits'}</span>
-        <span class="nav-dd-credits-val">${credits}</span>
-      </div>
-      <div class="nav-dd-credits-bar">
-        <div class="nav-dd-credits-fill${pct < 20 ? ' low' : ''}" style="width:${pct}%"></div>
-      </div>
-    </div>
-
-    <a href="/profile.html" class="nav-dd-item" onclick="_toggleDropdown(false)">
-      <span class="dd-icon">🏢</span><span class="dd-label">${isHe ? 'פרופיל עסקי' : 'Business Profile'}</span>
-    </a>
-    <a href="/dashboard.html" class="nav-dd-item" onclick="_toggleDropdown(false)">
-      <span class="dd-icon">📊</span><span class="dd-label">${isHe ? 'דשבורד' : 'Dashboard'}</span>
-    </a>
-    <a href="/gallery.html" class="nav-dd-item" onclick="_toggleDropdown(false)">
-      <span class="dd-icon">📁</span><span class="dd-label">${isHe ? 'הפרויקטים שלי' : 'My Projects'}</span>
-    </a>
-    <a href="/directory-profile.html?email=${encodeURIComponent(user.email)}" class="nav-dd-item" onclick="_toggleDropdown(false)">
-      <span class="dd-icon">📋</span><span class="dd-label">${isHe ? 'רישום Directory' : 'Directory Listing'}</span>
-    </a>
-
-    <div class="nav-dd-divider"></div>
-
-    <div class="nav-dd-lang">
-      <button class="nav-dd-lang-btn${lang === 'en' ? ' on' : ''}" onclick="setLang('en');injectProfileAvatar()">🇺🇸 EN</button>
-      <button class="nav-dd-lang-btn${lang === 'he' ? ' on' : ''}" onclick="setLang('he');injectProfileAvatar()">🇮🇱 עב</button>
-    </div>
-
-    <button class="nav-dd-item" onclick="showReferralLink()">
-      <span class="dd-icon">🎁</span><span class="dd-label">${isHe ? 'הזמן חבר' : 'Refer a Friend'}</span>
-    </button>
-    <a href="https://www.paypal.com/ncp/payment/2LA7B7PZTHN54" target="_blank" rel="noopener" class="nav-dd-item accent" onclick="_toggleDropdown(false)">
-      <span class="dd-icon">🛒</span><span class="dd-label">${isHe ? 'קנה קרדיטים' : 'Buy Credits'}</span>
-    </a>
-    ${!user.isPro ? `<a href="/auth.html" class="nav-dd-item green" onclick="_toggleDropdown(false)">
-      <span class="dd-icon">⭐</span><span class="dd-label">${isHe ? 'שדרג ל-Pro' : 'Upgrade to Pro'}</span>
-    </a>` : ''}
-
-    <div class="nav-dd-divider"></div>
-
-    <button class="nav-dd-item danger" onclick="doLogout()">
-      <span class="dd-icon">🚪</span><span class="dd-label">${isHe ? 'התנתק' : 'Sign Out'}</span>
-    </button>
-  `;
-
-  wrap.appendChild(avatar);
-  wrap.appendChild(dd);
-
-  // Make all nav-dd-item links close dropdown on click
-  dd.querySelectorAll('.nav-dd-item').forEach(item => {
-    item.addEventListener('click', () => _toggleDropdown(false));
+  // Close on outside click
+  document.addEventListener('click', (e) => {
+    const d = document.getElementById('navDropdown');
+    const a = document.getElementById('navAvatar');
+    if (!d || !d.classList.contains('open')) return;
+    if (d.contains(e.target) || (a && a.contains(e.target))) return;
+    _closeDropdown();
   });
-
-  // Insert before lang toggle (which is now hidden) or at end
-  if (langToggle) navRight.insertBefore(wrap, langToggle);
-  else navRight.appendChild(wrap);
-
-  // Close on outside click (desktop)
-  document.addEventListener('click', _closeDropdownOutside);
-}
-
-function _closeDropdownOutside(e) {
-  const dd = document.getElementById('navDropdown');
-  const av = document.getElementById('navAvatar');
-  if (!dd || !dd.classList.contains('open')) return;
-  // Don't close if clicking inside dropdown or avatar
-  if (dd.contains(e.target) || (av && av.contains(e.target))) return;
-  _toggleDropdown(false);
 }
 
 function doLogout() {
@@ -437,94 +434,47 @@ function buildAppNav() {
 }
 
 function _buildDropdownInto(wrap, user) {
-  const credits = user.credits || 0;
-  const maxCredits = user.isPro ? 50 : 5;
-  const pct = Math.min(100, Math.round((credits / maxCredits) * 100));
-  const name = user.businessName || user.email.split('@')[0];
-  const isHe = lang === 'he';
-
-  // Backdrop
+  // Clean old
+  const oldDd = document.getElementById('navDropdown');
+  if (oldDd) oldDd.remove();
   const oldBd = document.getElementById('navDdBackdrop');
   if (oldBd) oldBd.remove();
-  const backdrop = document.createElement('div');
-  backdrop.className = 'nav-dd-backdrop';
-  backdrop.id = 'navDdBackdrop';
-  backdrop.onclick = () => _toggleDropdown(false);
-  document.body.appendChild(backdrop);
 
+  // Avatar in nav
   const avatar = document.createElement('div');
   avatar.className = 'nav-avatar';
   avatar.id = 'navAvatar';
-  avatar.innerHTML = _avatarInner(user);
-  avatar.onclick = (e) => { e.stopPropagation(); _toggleDropdown(); };
+  avatar.innerHTML = _avatarHTML(user);
+  avatar.addEventListener('click', (e) => { e.stopPropagation(); _toggleDD(); });
+  wrap.appendChild(avatar);
 
+  // Backdrop in body
+  const backdrop = document.createElement('div');
+  backdrop.className = 'nav-dd-backdrop';
+  backdrop.id = 'navDdBackdrop';
+  backdrop.addEventListener('click', _closeDropdown);
+  document.body.appendChild(backdrop);
+
+  // Dropdown in body (not inside nav!)
   const dd = document.createElement('div');
   dd.className = 'nav-dropdown';
   dd.id = 'navDropdown';
-  // Allow clicks on links/buttons inside to work normally
-  dd.addEventListener('click', (e) => {
-    // Only stop propagation if clicking the dropdown background itself
-    if (e.target === dd) e.stopPropagation();
+  dd.innerHTML = _ddHTML(user);
+  document.body.appendChild(dd);
+
+  // Close on <a> click
+  dd.querySelectorAll('a.nav-dd-item').forEach(a => {
+    a.addEventListener('click', _closeDropdown);
   });
 
-  dd.innerHTML = `
-    <div class="nav-dd-header">
-      <div class="nav-dd-top">
-        <div class="nav-dd-avatar">${_avatarInner(user)}</div>
-        <div>
-          <div class="nav-dd-name">${_escHtml(name)}</div>
-          <div class="nav-dd-email">${_escHtml(user.email)}</div>
-          ${_planBadge(user)}
-        </div>
-      </div>
-    </div>
-    <div class="nav-dd-credits-row">
-      <div class="nav-dd-credits-top">
-        <span class="nav-dd-credits-label">⚡ ${isHe ? 'קרדיטים' : 'Credits'}</span>
-        <span class="nav-dd-credits-val">${credits}</span>
-      </div>
-      <div class="nav-dd-credits-bar">
-        <div class="nav-dd-credits-fill${pct < 20 ? ' low' : ''}" style="width:${pct}%"></div>
-      </div>
-    </div>
-    <a href="/profile.html" class="nav-dd-item" onclick="_toggleDropdown(false)">
-      <span class="dd-icon">🏢</span><span class="dd-label">${isHe ? 'פרופיל עסקי' : 'Business Profile'}</span>
-    </a>
-    <a href="/dashboard.html" class="nav-dd-item" onclick="_toggleDropdown(false)">
-      <span class="dd-icon">📊</span><span class="dd-label">${isHe ? 'דשבורד' : 'Dashboard'}</span>
-    </a>
-    <a href="/gallery.html" class="nav-dd-item" onclick="_toggleDropdown(false)">
-      <span class="dd-icon">📁</span><span class="dd-label">${isHe ? 'הפרויקטים שלי' : 'My Projects'}</span>
-    </a>
-    <a href="/directory-profile.html?email=${encodeURIComponent(user.email)}" class="nav-dd-item" onclick="_toggleDropdown(false)">
-      <span class="dd-icon">📋</span><span class="dd-label">${isHe ? 'רישום Directory' : 'Directory Listing'}</span>
-    </a>
-    <div class="nav-dd-divider"></div>
-    <div class="nav-dd-lang">
-      <button class="nav-dd-lang-btn${lang === 'en' ? ' on' : ''}" onclick="setLang('en');buildAppNav()">🇺🇸 EN</button>
-      <button class="nav-dd-lang-btn${lang === 'he' ? ' on' : ''}" onclick="setLang('he');buildAppNav()">🇮🇱 עב</button>
-    </div>
-    <a href="https://www.paypal.com/ncp/payment/2LA7B7PZTHN54" target="_blank" rel="noopener" class="nav-dd-item accent" onclick="_toggleDropdown(false)">
-      <span class="dd-icon">🛒</span><span class="dd-label">${isHe ? 'קנה קרדיטים' : 'Buy Credits'}</span>
-    </a>
-    ${!user.isPro ? `<a href="/auth.html" class="nav-dd-item green" onclick="_toggleDropdown(false)">
-      <span class="dd-icon">⭐</span><span class="dd-label">${isHe ? 'שדרג ל-Pro' : 'Upgrade to Pro'}</span>
-    </a>` : ''}
-    <div class="nav-dd-divider"></div>
-    <button class="nav-dd-item danger" onclick="doLogout()">
-      <span class="dd-icon">🚪</span><span class="dd-label">${isHe ? 'התנתק' : 'Sign Out'}</span>
-    </button>`;
-
-  wrap.appendChild(avatar);
-  wrap.appendChild(dd);
-
-  // Make all nav-dd-item links close dropdown on click
-  dd.querySelectorAll('.nav-dd-item').forEach(item => {
-    item.addEventListener('click', () => _toggleDropdown(false));
+  // Close on outside click
+  document.addEventListener('click', (e) => {
+    const d = document.getElementById('navDropdown');
+    const a = document.getElementById('navAvatar');
+    if (!d || !d.classList.contains('open')) return;
+    if (d.contains(e.target) || (a && a.contains(e.target))) return;
+    _closeDropdown();
   });
-
-  document.removeEventListener('click', _closeDropdownOutside);
-  document.addEventListener('click', _closeDropdownOutside);
 }
 
 // ── Init on load ──

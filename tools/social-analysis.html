@@ -84,7 +84,15 @@
 
   <button class="btn btn-primary btn-large" style="width:100%;" onclick="analyzeSocial()" id="analyzeBtn" data-en="🧠 Analyze Profile" data-he="🧠 נתח פרופיל">🧠 Analyze Profile</button>
 
+  <!-- Loading -->
+  <div id="loadingSection" style="display:none;text-align:center;padding:40px 0;">
+    <div class="dots"><span></span><span></span><span></span></div>
+    <p style="margin-top:12px;color:var(--txd);font-size:14px;" id="loadingText">Fetching real data from Instagram...</p>
+  </div>
+
   <div class="result-section" id="resultSection">
+    <!-- Real data header -->
+    <div id="realDataHeader"></div>
     <div class="score-grid" id="scoreGrid"></div>
     <div id="breakdownSection"></div>
     <div id="recsSection"></div>
@@ -104,6 +112,7 @@
 <script>
 let platform = 'instagram';
 let lastResult = null;
+let lastProfileData = null;
 
 function setPlatform(el, p) {
   platform = p;
@@ -121,7 +130,9 @@ async function analyzeSocial() {
   if (!url) { showToast(lang === 'he' ? 'הכנס URL או שם משתמש' : 'Enter a URL or username', 'err'); return; }
 
   const credits = getCredits();
-  // Custom 2-credit confirmation
+  if (credits < 2) { showNoCreditModal(); return; }
+
+  // 2-credit confirmation
   const ok = await new Promise(resolve => {
     const m = document.createElement('div');
     m.className = 'modal-overlay';
@@ -147,54 +158,37 @@ async function analyzeSocial() {
   btn.disabled = true;
   btn.textContent = lang === 'he' ? '⏳ מנתח...' : '⏳ Analyzing...';
 
+  const loadingEl = document.getElementById('loadingSection');
+  const loadingText = document.getElementById('loadingText');
+  loadingEl.style.display = 'block';
+  document.getElementById('resultSection').classList.remove('on');
+
   const biz = document.getElementById('bizContext').value.trim();
 
   try {
-    const prompt = `You are an expert social media analyst for construction and remodeling businesses. Analyze this ${platform} profile and give a comprehensive report.
+    loadingText.textContent = lang === 'he' ? '...מביא נתונים אמיתיים מאינסטגרם' : 'Fetching real data from Instagram...';
 
-Profile: ${url}
-Platform: ${platform}
-Business context: ${biz || 'contractor/remodeler'}
+    const data = await apiCall('/api/social/analyze', {
+      method: 'POST',
+      body: { platform, username: url, context: biz }
+    });
 
-Based on what you know about best practices for contractor social media accounts, provide:
+    loadingEl.style.display = 'none';
 
-Respond JSON only:
-{
-  "profile_name": "the handle/name",
-  "overall_score": 1-100,
-  "bio_score": 1-10,
-  "content_score": 1-10,
-  "engagement_score": 1-10,
-  "consistency_score": 1-10,
-  "hashtag_score": 1-10,
-  "content_breakdown": {
-    "before_after": 20,
-    "project_photos": 30,
-    "videos_reels": 15,
-    "testimonials": 5,
-    "behind_scenes": 10,
-    "educational": 10,
-    "other": 10
-  },
-  "strengths": ["strength 1", "strength 2"],
-  "weaknesses": ["weakness 1", "weakness 2"],
-  "recommendations": [
-    {"title": "rec title", "description": "detailed recommendation", "priority": "high/medium/low"},
-    {"title": "rec title", "description": "detailed recommendation", "priority": "high/medium/low"}
-  ],
-  "quick_wins": ["quick win 1", "quick win 2", "quick win 3"],
-  "competitor_tip": "one sentence about what top contractors do differently"
-}`;
+    // Update cached credits
+    const u = getCachedUser();
+    if (u && data.credits !== undefined) {
+      u.credits = data.credits;
+      setCachedUser(u);
+      if (typeof updateCreditDisplay === 'function') updateCreditDisplay();
+    }
 
-    // Uses 2 credits — call twice via the standard endpoint
-    const text = await callWorkerAI('social-analysis', prompt, [], url.substring(0, 50));
-    // Deduct extra credit (first one deducted by callWorkerAI)
-    await apiCall('/api/ai', { method: 'POST', body: { action: 'social-analysis-2', prompt: 'credit deduction', images: [] } }).catch(() => {});
-
-    lastResult = parseAIJSON(text);
-    renderResults(lastResult);
+    lastResult = data.analysis;
+    lastProfileData = data.profileData;
+    renderResults(lastResult, data.profileData);
 
   } catch (err) {
+    loadingEl.style.display = 'none';
     showToast('Error: ' + err.message, 'err');
   }
 
@@ -202,8 +196,35 @@ Respond JSON only:
   btn.textContent = lang === 'he' ? '🧠 נתח פרופיל' : '🧠 Analyze Profile';
 }
 
-function renderResults(r) {
+function renderResults(r, pd) {
   document.getElementById('resultSection').classList.add('on');
+
+  // Real data header
+  const hdr = document.getElementById('realDataHeader');
+  if (pd) {
+    const engRate = r.engagement_rate || '—';
+    const freq = r.post_frequency || '—';
+    hdr.innerHTML = `
+      <div class="card" style="margin-bottom:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+        ${pd.profilePicUrl ? `<img src="${pd.profilePicUrl}" style="width:56px;height:56px;border-radius:50%;border:2px solid var(--ac);object-fit:cover;">` : ''}
+        <div style="flex:1;min-width:140px;">
+          <div style="font-size:16px;font-weight:700;">@${pd.username || ''} ${pd.verified ? '✓' : ''}</div>
+          <div style="font-size:13px;color:var(--txd);">${pd.fullName || ''} ${pd.isBusinessAccount ? '• Business' : ''}</div>
+          ${pd.biography ? `<div style="font-size:12px;color:var(--txd);margin-top:4px;line-height:1.4;">${pd.biography.substring(0, 120)}</div>` : ''}
+        </div>
+        <div style="display:flex;gap:16px;text-align:center;">
+          <div><div style="font-size:20px;font-weight:900;color:var(--ac);">${formatNum(pd.followersCount)}</div><div style="font-size:11px;color:var(--txd);">Followers</div></div>
+          <div><div style="font-size:20px;font-weight:900;">${formatNum(pd.followsCount)}</div><div style="font-size:11px;color:var(--txd);">Following</div></div>
+          <div><div style="font-size:20px;font-weight:900;">${formatNum(pd.postsCount)}</div><div style="font-size:11px;color:var(--txd);">Posts</div></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;">
+        <div class="card" style="flex:1;text-align:center;padding:12px;"><div style="font-size:18px;font-weight:800;color:var(--ac);">${engRate}</div><div style="font-size:11px;color:var(--txd);">Engagement Rate</div></div>
+        <div class="card" style="flex:1;text-align:center;padding:12px;"><div style="font-size:18px;font-weight:800;">${freq}</div><div style="font-size:11px;color:var(--txd);">Post Frequency</div></div>
+      </div>`;
+  } else {
+    hdr.innerHTML = '<div class="card" style="margin-bottom:14px;text-align:center;padding:12px;color:var(--txd);font-size:13px;">Analysis based on best practices (live data unavailable)</div>';
+  }
 
   // Scores
   const scoreColor = s => s >= 7 ? 'var(--grn)' : s >= 4 ? 'var(--ac)' : 'var(--red)';
@@ -251,6 +272,13 @@ function renderResults(r) {
     ${r.competitor_tip ? `<div class="card" style="background:var(--acd);border-color:rgba(232,197,71,.2);"><p style="font-size:14px;color:var(--ac);">💡 ${r.competitor_tip}</p></div>` : ''}`;
 
   setLang(lang);
+}
+
+function formatNum(n) {
+  if (!n) return '—';
+  if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+  return String(n);
 }
 
 function exportAnalysis() {
