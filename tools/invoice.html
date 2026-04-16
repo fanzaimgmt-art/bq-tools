@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Invoice Generator</title>
+<link rel="stylesheet" href="../style.css">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#e8c547">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="BQ Tools">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png">
+<style>
+  body { display: flex; flex-direction: column; }
+
+  .qp-diff {
+    background: var(--acd); border: 1px solid var(--ac); border-radius: 10px;
+    padding: 12px 16px; font-size: 13px; margin-bottom: 16px;
+  }
+  .qp-diff strong { color: var(--ac); }
+
+  /* Status chips */
+  .st-chip { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+  .st-Draft { background: rgba(136,136,136,.15); color: var(--txd); }
+  .st-Sent { background: rgba(116,185,255,.15); color: var(--blu); }
+  .st-Viewed { background: rgba(232,197,71,.15); color: var(--ac); }
+  .st-Paid { background: rgba(81,207,102,.15); color: var(--grn); }
+  .st-Overdue { background: rgba(255,107,107,.15); color: var(--red); animation: pulse 1.5s ease infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+
+  /* Invoice preview (similar style to quote) */
+  .inv-preview {
+    background: #fff; color: #222; border-radius: 12px; padding: 32px;
+    margin-top: 20px; font-family: var(--font-en); display: none;
+  }
+  .inv-preview.show { display: block; animation: fadeInUp .5s; }
+  .ip-header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 20px; border-bottom: 2px solid #e8c547; margin-bottom: 20px; }
+  .ip-business .biz-logo { max-width: 80px; max-height: 80px; margin-bottom: 8px; }
+  .ip-business h2 { font-size: 22px; font-weight: 900; margin-bottom: 4px; }
+  .ip-business p { font-size: 12px; color: #666; line-height: 1.5; }
+  .ip-meta { text-align: right; font-size: 13px; color: #444; }
+  .ip-meta .inv-label { font-size: 28px; font-weight: 900; color: #b8860b; letter-spacing: -0.01em; margin-bottom: 4px; line-height: 1; }
+  .ip-meta .inv-num { font-size: 14px; font-weight: 700; color: #b8860b; }
+  [dir="rtl"] .ip-meta { text-align: left; }
+
+  .ip-client { background: #faf8f0; padding: 14px 18px; border-radius: 8px; margin-bottom: 20px; }
+  .ip-client .cl-label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: .5px; }
+  .ip-client .cl-name { font-size: 16px; font-weight: 700; margin-top: 2px; }
+
+  .ip-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 13px; }
+  .ip-table th { background: #f0edd8; text-align: left; padding: 10px; font-size: 12px; color: #444; border-bottom: 1px solid #ddd; }
+  .ip-table td { padding: 10px; border-bottom: 1px solid #eee; }
+  .ip-table td.num, .ip-table th.num { text-align: right; }
+
+  .ip-totals { margin-left: auto; width: 280px; padding: 12px 14px; background: #faf8f0; border-radius: 8px; margin-bottom: 16px; }
+  .ip-totals .t-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; }
+  .ip-totals .t-row.final { border-top: 2px solid #b8860b; margin-top: 6px; padding-top: 8px; font-size: 18px; font-weight: 700; color: #b8860b; }
+  .ip-totals .t-row.due { color: #d63031; font-weight: 700; }
+
+  .ip-payment { background: #eaf4ff; border: 1px solid #b4d4f0; border-radius: 8px; padding: 12px; font-size: 12px; color: #444; margin-bottom: 14px; }
+  .ip-footer { text-align: center; margin-top: 24px; padding-top: 14px; border-top: 1px solid #eee; font-size: 10px; color: #999; }
+
+  .actions-row { display: flex; gap: 8px; margin-top: 20px; flex-wrap: wrap; }
+  .actions-row .btn { flex: 1; min-width: 140px; }
+
+  @media print {
+    nav, .page > *:not(.inv-preview), .actions-row, footer { display: none !important; }
+    body { background: white; }
+    .inv-preview { box-shadow: none; border-radius: 0; padding: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/home.html" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/home.html" class="nav-link" data-en="Tools" data-he="כלים" data-es="Herramientas">Tools</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <a href="/home.html" class="page-back" data-en="← All Tools" data-he="כל הכלים →" data-es="← Todas las Herramientas">← All Tools</a>
+  <h1 class="page-title" data-en="🧾 Invoice Generator" data-he="🧾 יצירת חשבונית" data-es="🧾 Generador de Facturas">🧾 Invoice Generator</h1>
+  <p class="page-sub" data-en="Send professional invoices and track payment status." data-he="שלח חשבוניות מקצועיות ועקוב אחרי תשלומים." data-es="Envía facturas profesionales y rastrea el estado de pago.">Send professional invoices and track payment status.</p>
+
+  <div class="qp-diff">
+    <strong data-en="Quote vs Invoice:" data-he="הצעה מול חשבונית:" data-es="Cotización vs Factura:">Quote vs Invoice:</strong>
+    <span data-en="Use Quote BEFORE starting work. Use Invoice DURING or AFTER to collect payment." data-he="השתמש בהצעת מחיר לפני תחילת העבודה. השתמש בחשבונית במהלך או אחרי כדי לגבות תשלום." data-es="Usa Cotización ANTES de empezar el trabajo. Usa Factura DURANTE o DESPUÉS para cobrar.">
+      Use Quote BEFORE starting work. Use Invoice DURING or AFTER to collect payment.
+    </span>
+    <a href="/tools/quote.html" style="color:var(--ac);white-space:nowrap;margin-inline-start:6px;" data-en="→ Need a Quote?" data-he="→ צריך הצעה?" data-es="→ ¿Necesitas Cotización?">→ Need a Quote?</a>
+  </div>
+
+  <!-- Outstanding summary -->
+  <div id="outstandingBar" style="display:none;background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+    <div>
+      <div style="font-size:11px;color:var(--txd);text-transform:uppercase;letter-spacing:.5px;" data-en="Outstanding Invoices" data-he="חשבוניות לתשלום" data-es="Facturas Pendientes">Outstanding Invoices</div>
+      <div style="font-size:22px;font-weight:900;color:var(--ac);" id="outstandingAmount">$0</div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:11px;color:var(--txd);" id="outstandingCount">0 invoices</div>
+      <a href="#history" style="font-size:12px;color:var(--ac);" data-en="View history →" data-he="ראה היסטוריה →" data-es="Ver historial →">View history →</a>
+    </div>
+  </div>
+
+  <!-- Inputs -->
+  <div class="card" style="margin-bottom:14px;">
+    <label class="input-label" data-en="Client" data-he="לקוח" data-es="Cliente">Client</label>
+    <select class="input" id="clientSelect" onchange="fillClient()" style="margin-bottom:8px;">
+      <option value="">Pick a client or enter manually</option>
+    </select>
+
+    <div style="display:flex;gap:8px;margin-bottom:8px;">
+      <div style="flex:1;">
+        <label class="input-label" data-en="Client Name" data-he="שם לקוח" data-es="Nombre del Cliente">Client Name</label>
+        <input class="input" id="clientName" placeholder="Sarah Johnson">
+      </div>
+      <div style="flex:1;">
+        <label class="input-label" data-en="Client Email" data-he="אימייל לקוח" data-es="Email del Cliente">Client Email</label>
+        <input class="input" id="clientEmail" type="email" placeholder="sarah@example.com">
+      </div>
+    </div>
+
+    <label class="input-label" data-en="Client Address" data-he="כתובת" data-es="Dirección">Client Address</label>
+    <input class="input" id="clientAddress" placeholder="123 Main St, Los Angeles, CA" style="margin-bottom:8px;">
+
+    <label class="input-label" data-en="Project" data-he="פרויקט" data-es="Proyecto">Project</label>
+    <select class="input" id="projectSelect" onchange="fillProject()" style="margin-bottom:8px;">
+      <option value="">Pick a project (optional)</option>
+    </select>
+
+    <label class="input-label" data-en="Project Title" data-he="שם הפרויקט" data-es="Título del Proyecto">Project Title</label>
+    <input class="input" id="projectTitle" placeholder="Kitchen Remodel" style="margin-bottom:8px;">
+
+    <div style="display:flex;gap:8px;margin-bottom:8px;">
+      <div style="flex:1;">
+        <label class="input-label" data-en="Issue Date" data-he="תאריך" data-es="Fecha de Emisión">Issue Date</label>
+        <input class="input" id="issueDate" type="date">
+      </div>
+      <div style="flex:1;">
+        <label class="input-label" data-en="Payment Terms" data-he="תנאי תשלום" data-es="Términos de Pago">Payment Terms</label>
+        <select class="input" id="paymentTerms" onchange="updateDueDate()">
+          <option value="Due on receipt">Due on receipt</option>
+          <option value="Net 7">Net 7 (7 days)</option>
+          <option value="Net 15" selected>Net 15 (15 days)</option>
+          <option value="Net 30">Net 30 (30 days)</option>
+          <option value="Net 60">Net 60 (60 days)</option>
+        </select>
+      </div>
+      <div style="flex:1;">
+        <label class="input-label" data-en="Due Date" data-he="תאריך יעד" data-es="Fecha de Vencimiento">Due Date</label>
+        <input class="input" id="dueDate" type="date">
+      </div>
+    </div>
+  </div>
+
+  <!-- Line items -->
+  <div class="card" style="margin-bottom:14px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <label class="input-label" style="margin:0;" data-en="Line Items" data-he="פריטים" data-es="Conceptos">Line Items</label>
+      <button class="btn btn-sm" onclick="addItem()">+ <span data-en="Add Item" data-he="הוסף" data-es="Agregar">Add Item</span></button>
+    </div>
+    <div id="items"></div>
+
+    <div style="display:flex;justify-content:space-between;padding:12px 0;border-top:1px solid var(--bd);margin-top:10px;">
+      <span data-en="Subtotal" data-he="סיכום ביניים" data-es="Subtotal">Subtotal</span>
+      <strong id="subtotal">$0.00</strong>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:6px 0;align-items:center;">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span data-en="Tax" data-he="מס" data-es="Impuesto">Tax</span>
+        <input class="input" id="taxRate" type="number" step="0.01" value="9.5" style="width:70px;padding:4px 8px;min-height:32px;font-size:13px;" onchange="calcTotals()">
+        <span>%</span>
+      </div>
+      <strong id="taxAmount">$0.00</strong>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:10px 0;border-top:2px solid var(--ac);margin-top:8px;font-size:18px;">
+      <strong data-en="Total" data-he="סה״כ" data-es="Total">Total</strong>
+      <strong id="total" style="color:var(--ac);">$0.00</strong>
+    </div>
+  </div>
+
+  <!-- Notes -->
+  <div class="card" style="margin-bottom:14px;">
+    <label class="input-label" data-en="Notes / Payment Instructions" data-he="הערות / הוראות תשלום" data-es="Notas / Instrucciones de Pago">Notes / Payment Instructions</label>
+    <textarea class="textarea" id="notes" rows="3" placeholder="Payment via Zelle, check, or PayPal. Thank you for your business!"></textarea>
+  </div>
+
+  <div class="actions-row">
+    <button class="btn btn-primary btn-large" style="flex:2;" onclick="saveInvoice('Draft')" id="saveDraftBtn">💾 <span data-en="Save Draft" data-he="שמור טיוטה" data-es="Guardar Borrador">Save Draft</span></button>
+    <button class="btn btn-primary btn-large" style="flex:2;" onclick="saveInvoice('Sent')">📧 <span data-en="Save & Mark Sent" data-he="שמור וסמן נשלח" data-es="Guardar y Marcar como Enviado">Save & Mark Sent</span></button>
+  </div>
+
+  <!-- Preview -->
+  <div class="inv-preview" id="preview"></div>
+  <div class="actions-row" id="previewActions" style="display:none;">
+    <button class="btn" onclick="window.print()">🖨️ <span data-en="Print / PDF" data-he="הדפס / PDF" data-es="Imprimir / PDF">Print / PDF</span></button>
+    <button class="btn" onclick="emailInvoice()">📧 <span data-en="Email" data-he="מייל" data-es="Enviar por Email">Email</span></button>
+    <button class="btn btn-primary" onclick="markPaid()" id="markPaidBtn">✅ <span data-en="Mark as Paid" data-he="סמן כשולם" data-es="Marcar Pagada">Mark as Paid</span></button>
+  </div>
+
+  <!-- Invoice history -->
+  <div id="history" style="margin-top:32px;">
+    <h2 style="font-size:20px;margin-bottom:14px;" data-en="Invoice History" data-he="היסטוריה" data-es="Historial de Facturas">Invoice History</h2>
+    <div id="historyList" style="background:var(--sf);border:1px solid var(--bd);border-radius:12px;overflow:hidden;">
+      <p style="padding:20px;text-align:center;color:var(--txd);font-size:14px;">Loading...</p>
+    </div>
+  </div>
+</div>
+
+<script src="../js/ai.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/crypto.js"></script>
+<script src="../js/common.js"></script>
+<script src="../js/business.js"></script>
+<script>
+if (!isLoggedIn()) window.location.replace('/auth.html');
+
+let invoices = [];
+let clients = [];
+let bprojects = [];
+let currentId = null;
+let items = [];
+
+function newId() { return Date.now().toString(36) + Math.random().toString(36).substring(2, 6); }
+
+async function init() {
+  try {
+    [invoices, clients, bprojects] = await Promise.all([
+      Biz.list('invoices'), Biz.list('clients'), Biz.list('bprojects')
+    ]);
+  } catch (err) { showToast(err.message, 'err'); }
+
+  // Fill dropdowns
+  const cSel = document.getElementById('clientSelect');
+  cSel.innerHTML = `<option value="">${lang === 'he' ? 'בחר לקוח' : 'Pick a client'}</option>` +
+    clients.map(c => `<option value="${c.id}">${escHtml(c.name)}</option>`).join('');
+  const pSel = document.getElementById('projectSelect');
+  pSel.innerHTML = `<option value="">${lang === 'he' ? 'ללא פרויקט' : 'No project'}</option>` +
+    bprojects.map(p => `<option value="${p.id}">${escHtml(p.name)}</option>`).join('');
+
+  // Defaults
+  document.getElementById('issueDate').value = new Date().toISOString().split('T')[0];
+  updateDueDate();
+  addItem();
+
+  renderHistory();
+  renderOutstanding();
+}
+
+function fillClient() {
+  const id = document.getElementById('clientSelect').value;
+  const c = clients.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('clientName').value = c.name || '';
+  document.getElementById('clientEmail').value = c.email || '';
+  document.getElementById('clientAddress').value = (c.address || '') + (c.city ? ', ' + c.city : '');
+}
+
+function fillProject() {
+  const id = document.getElementById('projectSelect').value;
+  const p = bprojects.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('projectTitle').value = p.name || '';
+  // Also fill client if not already set
+  if (p.clientId && !document.getElementById('clientSelect').value) {
+    document.getElementById('clientSelect').value = p.clientId;
+    fillClient();
+  }
+  // If project has a value and no items yet, add it as a line item
+  if (p.value && items.length === 1 && !items[0].description) {
+    items[0] = { description: p.name || 'Project', quantity: 1, unitPrice: parseFloat(p.value) || 0, total: parseFloat(p.value) || 0 };
+    renderItems();
+    calcTotals();
+  }
+}
+
+function updateDueDate() {
+  const issue = document.getElementById('issueDate').value || new Date().toISOString().split('T')[0];
+  const terms = document.getElementById('paymentTerms').value;
+  const days = terms === 'Net 7' ? 7 : terms === 'Net 15' ? 15 : terms === 'Net 30' ? 30 : terms === 'Net 60' ? 60 : 0;
+  const due = new Date(issue);
+  due.setDate(due.getDate() + days);
+  document.getElementById('dueDate').value = due.toISOString().split('T')[0];
+}
+document.getElementById('issueDate').addEventListener('change', updateDueDate);
+
+function addItem() {
+  items.push({ description: '', quantity: 1, unitPrice: 0, total: 0 });
+  renderItems();
+}
+
+function removeItem(i) {
+  items.splice(i, 1);
+  renderItems();
+  calcTotals();
+}
+
+function renderItems() {
+  const el = document.getElementById('items');
+  el.innerHTML = items.map((it, i) => `
+    <div style="display:flex;gap:6px;margin-bottom:6px;">
+      <input class="input" style="flex:2;" placeholder="${lang === 'he' ? 'תיאור' : 'Description'}" value="${escHtml(it.description)}" onchange="items[${i}].description=this.value;calcTotals()">
+      <input class="input" type="number" step="0.01" style="width:80px;" placeholder="Qty" value="${it.quantity}" onchange="items[${i}].quantity=parseFloat(this.value)||0;calcLine(${i});calcTotals()">
+      <input class="input" type="number" step="0.01" style="width:110px;" placeholder="Unit $" value="${it.unitPrice}" onchange="items[${i}].unitPrice=parseFloat(this.value)||0;calcLine(${i});calcTotals()">
+      <div class="input" style="width:110px;display:flex;align-items:center;justify-content:flex-end;background:var(--bg);">$${it.total.toFixed(2)}</div>
+      <button class="btn btn-sm" style="color:var(--red);" onclick="removeItem(${i})">✕</button>
+    </div>`).join('');
+}
+
+function calcLine(i) {
+  const it = items[i];
+  it.total = (parseFloat(it.quantity) || 0) * (parseFloat(it.unitPrice) || 0);
+}
+
+function calcTotals() {
+  items.forEach((_, i) => calcLine(i));
+  const sub = items.reduce((s, it) => s + (parseFloat(it.total) || 0), 0);
+  const taxRate = parseFloat(document.getElementById('taxRate').value) || 0;
+  const tax = sub * (taxRate / 100);
+  const total = sub + tax;
+  document.getElementById('subtotal').textContent = fmtMoney(sub);
+  document.getElementById('taxAmount').textContent = fmtMoney(tax);
+  document.getElementById('total').textContent = fmtMoney(total);
+  renderItems();
+}
+
+async function saveInvoice(status) {
+  const name = document.getElementById('clientName').value.trim();
+  if (!name) { showToast(lang === 'he' ? 'שם לקוח חובה' : 'Client name required', 'err'); return; }
+  if (!items.some(it => it.description && it.total > 0)) {
+    showToast(lang === 'he' ? 'הוסף לפחות פריט אחד' : 'Add at least one line item', 'err');
+    return;
+  }
+  const validItems = items.filter(it => it.description);
+  const sub = validItems.reduce((s, it) => s + (parseFloat(it.total) || 0), 0);
+  const taxRate = parseFloat(document.getElementById('taxRate').value) || 0;
+  const tax = sub * (taxRate / 100);
+  const total = sub + tax;
+
+  // Generate invoice number
+  const year = new Date().getFullYear();
+  const num = String(invoices.length + 1).padStart(4, '0');
+
+  const data = {
+    invoiceNumber: currentId ? invoices.find(x => x.id === currentId)?.invoiceNumber : `INV-${year}-${num}`,
+    clientId: document.getElementById('clientSelect').value || null,
+    clientName: name,
+    clientAddress: document.getElementById('clientAddress').value,
+    projectId: document.getElementById('projectSelect').value || null,
+    projectTitle: document.getElementById('projectTitle').value,
+    issueDate: document.getElementById('issueDate').value,
+    dueDate: document.getElementById('dueDate').value,
+    paymentTerms: document.getElementById('paymentTerms').value,
+    lineItems: validItems,
+    subtotal: sub,
+    tax,
+    total,
+    amountPaid: 0,
+    status,
+    notes: document.getElementById('notes').value,
+    sentDate: status === 'Sent' ? new Date().toISOString() : null
+  };
+
+  try {
+    let saved;
+    if (currentId) {
+      saved = await Biz.update('invoices', currentId, data);
+      const idx = invoices.findIndex(i => i.id === currentId);
+      if (idx !== -1) invoices[idx] = saved;
+    } else {
+      saved = await Biz.create('invoices', data);
+      invoices.unshift(saved);
+    }
+    currentId = saved.id;
+    renderPreview(saved);
+    renderHistory();
+    renderOutstanding();
+    showToast('✓ ' + (status === 'Draft' ? (lang === 'he' ? 'טיוטה נשמרה' : 'Draft saved') : (lang === 'he' ? 'נשלח' : 'Marked as sent')), 'ok');
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+function renderPreview(inv) {
+  const user = getCachedUser() || {};
+  const h = lang === 'he';
+
+  const itemsHtml = (inv.lineItems || []).map(it => `
+    <tr>
+      <td>${escHtml(it.description)}</td>
+      <td class="num">${it.quantity || 1}</td>
+      <td class="num">$${(parseFloat(it.unitPrice) || 0).toFixed(2)}</td>
+      <td class="num">$${(parseFloat(it.total) || 0).toFixed(2)}</td>
+    </tr>`).join('');
+
+  const daysTilDue = inv.dueDate ? Math.ceil((new Date(inv.dueDate) - Date.now()) / 86400000) : null;
+  const isOverdue = inv.status !== 'Paid' && daysTilDue !== null && daysTilDue < 0;
+  const effectiveStatus = isOverdue ? 'Overdue' : inv.status;
+
+  document.getElementById('preview').innerHTML = `
+    <div class="ip-header">
+      <div class="ip-business">
+        ${user.logo ? `<img src="${user.logo}" class="biz-logo" alt="">` : ''}
+        <h2>${escHtml(user.businessName || 'Your Business')}</h2>
+        <p>${user.phone ? '📞 ' + escHtml(user.phone) + '<br>' : ''}📧 ${escHtml(user.email || '')}</p>
+      </div>
+      <div class="ip-meta">
+        <div class="inv-label">INVOICE</div>
+        <div class="inv-num">${inv.invoiceNumber}</div>
+        <div><span class="st-chip st-${effectiveStatus}">${effectiveStatus}</span></div>
+        <div style="margin-top:6px;">${h ? 'תאריך' : 'Issued'}: ${fmtDate(inv.issueDate)}</div>
+        <div>${h ? 'תאריך יעד' : 'Due'}: <strong>${fmtDate(inv.dueDate)}</strong></div>
+      </div>
+    </div>
+    <div class="ip-client">
+      <div class="cl-label">${h ? 'חשבונית עבור' : 'Bill To'}</div>
+      <div class="cl-name">${escHtml(inv.clientName)}</div>
+      ${inv.clientAddress ? `<div style="font-size:13px;color:#666;">${escHtml(inv.clientAddress)}</div>` : ''}
+    </div>
+    ${inv.projectTitle ? `<h3 style="font-size:16px;margin-bottom:10px;">${escHtml(inv.projectTitle)}</h3>` : ''}
+    <table class="ip-table">
+      <thead><tr><th>${h ? 'תיאור' : 'Description'}</th><th class="num">${h ? 'כמות' : 'Qty'}</th><th class="num">${h ? 'מחיר' : 'Unit'}</th><th class="num">${h ? 'סה״כ' : 'Total'}</th></tr></thead>
+      <tbody>${itemsHtml}</tbody>
+    </table>
+    <div class="ip-totals">
+      <div class="t-row"><span>${h ? 'סיכום ביניים' : 'Subtotal'}</span><span>$${(inv.subtotal || 0).toFixed(2)}</span></div>
+      <div class="t-row"><span>${h ? 'מס' : 'Tax'}</span><span>$${(inv.tax || 0).toFixed(2)}</span></div>
+      <div class="t-row final"><span>${h ? 'סה״כ' : 'TOTAL'}</span><span>$${(inv.total || 0).toFixed(2)}</span></div>
+      ${inv.amountPaid ? `<div class="t-row" style="color:#2d9a43;"><span>${h ? 'שולם' : 'Paid'}</span><span>-$${inv.amountPaid.toFixed(2)}</span></div>` : ''}
+      ${inv.status !== 'Paid' ? `<div class="t-row due"><span>${h ? 'חוב' : 'Amount Due'}</span><span>$${((inv.total || 0) - (inv.amountPaid || 0)).toFixed(2)}</span></div>` : ''}
+    </div>
+    <div class="ip-payment">
+      <strong>${h ? 'תנאי תשלום' : 'Payment Terms'}:</strong> ${inv.paymentTerms || 'Net 15'}
+      ${inv.notes ? `<div style="margin-top:6px;">${escHtml(inv.notes).replace(/\n/g, '<br>')}</div>` : ''}
+    </div>
+    <div class="ip-footer">Powered by BQ Tools · bqtools.dev</div>`;
+  document.getElementById('preview').classList.add('show');
+  document.getElementById('previewActions').style.display = 'flex';
+  document.getElementById('markPaidBtn').style.display = inv.status === 'Paid' ? 'none' : 'flex';
+}
+
+function loadInvoice(id) {
+  const inv = invoices.find(x => x.id === id);
+  if (!inv) return;
+  currentId = id;
+  document.getElementById('clientSelect').value = inv.clientId || '';
+  document.getElementById('clientName').value = inv.clientName || '';
+  document.getElementById('clientAddress').value = inv.clientAddress || '';
+  document.getElementById('projectSelect').value = inv.projectId || '';
+  document.getElementById('projectTitle').value = inv.projectTitle || '';
+  document.getElementById('issueDate').value = inv.issueDate || '';
+  document.getElementById('dueDate').value = inv.dueDate || '';
+  document.getElementById('paymentTerms').value = inv.paymentTerms || 'Net 15';
+  document.getElementById('notes').value = inv.notes || '';
+  items = (inv.lineItems || []).slice();
+  if (items.length === 0) items.push({ description: '', quantity: 1, unitPrice: 0, total: 0 });
+  renderItems();
+  calcTotals();
+  renderPreview(inv);
+  document.getElementById('preview').scrollIntoView({ behavior: 'smooth' });
+}
+
+async function markPaid() {
+  if (!currentId) return;
+  const inv = invoices.find(x => x.id === currentId);
+  if (!inv) return;
+  try {
+    const updated = await Biz.update('invoices', currentId, {
+      status: 'Paid',
+      amountPaid: inv.total,
+      paidDate: new Date().toISOString()
+    });
+    const idx = invoices.findIndex(x => x.id === currentId);
+    if (idx !== -1) invoices[idx] = updated;
+    renderPreview(updated);
+    renderHistory();
+    renderOutstanding();
+    showToast('✅ ' + (lang === 'he' ? 'סומן כשולם' : 'Marked as paid'), 'ok');
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+function emailInvoice() {
+  const inv = invoices.find(x => x.id === currentId);
+  if (!inv) return;
+  const subject = encodeURIComponent(`Invoice ${inv.invoiceNumber} — ${(getCachedUser()||{}).businessName || ''}`);
+  const body = encodeURIComponent(
+    `Hi ${inv.clientName},\n\n` +
+    `Please find invoice ${inv.invoiceNumber} attached.\n\n` +
+    `Amount due: $${inv.total.toFixed(2)}\n` +
+    `Due date: ${fmtDate(inv.dueDate)}\n` +
+    `Terms: ${inv.paymentTerms || 'Net 15'}\n\n` +
+    `${inv.notes || ''}\n\n` +
+    `Thank you for your business!\n${(getCachedUser()||{}).businessName || ''}`
+  );
+  window.location.href = `mailto:${encodeURIComponent(document.getElementById('clientEmail').value || '')}?subject=${subject}&body=${body}`;
+  // Mark as sent if it's a draft
+  if (inv.status === 'Draft') {
+    Biz.update('invoices', inv.id, { status: 'Sent', sentDate: new Date().toISOString() }).catch(() => {});
+  }
+}
+
+function renderOutstanding() {
+  const outstanding = invoices.filter(i => i.status !== 'Paid' && i.status !== 'Draft');
+  if (outstanding.length === 0) {
+    document.getElementById('outstandingBar').style.display = 'none';
+    return;
+  }
+  const total = outstanding.reduce((s, i) => s + (parseFloat(i.total) - parseFloat(i.amountPaid || 0)), 0);
+  document.getElementById('outstandingBar').style.display = 'flex';
+  document.getElementById('outstandingAmount').textContent = fmtMoney(total);
+  document.getElementById('outstandingCount').textContent = outstanding.length + (lang === 'he' ? ' חשבוניות' : ' invoice' + (outstanding.length !== 1 ? 's' : ''));
+}
+
+function renderHistory() {
+  const el = document.getElementById('historyList');
+  if (invoices.length === 0) {
+    el.innerHTML = `<p style="padding:24px;text-align:center;color:var(--txd);font-size:14px;">${lang === 'he' ? 'אין חשבוניות עדיין' : 'No invoices yet'}</p>`;
+    return;
+  }
+  el.innerHTML = invoices.slice(0, 30).map(inv => {
+    const days = inv.dueDate ? Math.ceil((new Date(inv.dueDate) - Date.now()) / 86400000) : null;
+    const isOverdue = inv.status !== 'Paid' && inv.status !== 'Draft' && days !== null && days < 0;
+    const st = isOverdue ? 'Overdue' : inv.status;
+    return `<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;" onclick="loadInvoice('${inv.id}')">
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:700;font-size:14px;">${escHtml(inv.invoiceNumber)}</div>
+        <div style="font-size:12px;color:var(--txd);">${escHtml(inv.clientName || '')} · ${fmtDate(inv.issueDate)}</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-weight:700;color:var(--ac);">${fmtMoney(inv.total)}</div>
+        <span class="st-chip st-${st}">${st}</span>
+      </div>
+      <button style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;" onclick="event.stopPropagation();deleteInvoice('${inv.id}')">🗑️</button>
+    </div>`;
+  }).join('');
+}
+
+async function deleteInvoice(id) {
+  if (!confirmDelete('this invoice')) return;
+  try {
+    await Biz.delete('invoices', id);
+    invoices = invoices.filter(x => x.id !== id);
+    renderHistory();
+    renderOutstanding();
+    showToast(lang === 'he' ? 'נמחק' : 'Deleted', 'ok');
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+init();
+</script>
+</body>
+</html>

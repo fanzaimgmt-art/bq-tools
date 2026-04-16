@@ -183,7 +183,7 @@ export default {
 
       // ── Business Operations Suite ──
       // Generic CRUD for: receipts, clients, expenses, bprojects, suppliers, equipment, timelogs, compliance
-      const businessMatch = path.match(/^\/api\/(receipts|clients|expenses|bprojects|suppliers|equipment|timelogs|compliance)(\/[^\/]+)?$/);
+      const businessMatch = path.match(/^\/api\/(receipts|clients|expenses|bprojects|suppliers|equipment|timelogs|compliance|invoices|taxes|doorknockers|doorbookings|jobs|workers)(\/[^\/]+)?$/);
       if (businessMatch) {
         const collection = businessMatch[1];
         const itemId = businessMatch[2] ? businessMatch[2].slice(1) : null;
@@ -2538,6 +2538,12 @@ const BUSINESS_COLLECTIONS = {
   equipment: { allowed: ['name', 'brand', 'model', 'serial', 'purchaseDate', 'cost', 'location', 'photo', 'status', 'category', 'assignedTo', 'projectId', 'lastService', 'nextService', 'mileage', 'fuelLogs'] },
   timelogs: { allowed: ['date', 'clockIn', 'clockOut', 'hours', 'projectId', 'projectName', 'task', 'workerName', 'workerEmail', 'hourlyRate', 'gps', 'notes', 'status'] },
   compliance: { allowed: ['name', 'type', 'expirationDate', 'issueDate', 'file', 'projectId', 'status', 'cost', 'issuingAuthority', 'notes', 'documentUrl', 'incidentType', 'incidentDate', 'description', 'action'] },
+  invoices: { allowed: ['invoiceNumber', 'clientId', 'clientName', 'clientAddress', 'projectId', 'projectTitle', 'issueDate', 'dueDate', 'paymentTerms', 'lineItems', 'subtotal', 'tax', 'total', 'amountPaid', 'status', 'notes', 'sentDate', 'viewedDate', 'paidDate'] },
+  taxes: { allowed: ['year', 'quarter', 'type', 'amount', 'dueDate', 'paidDate', 'status', 'category', 'notes', 'miles', 'startLocation', 'endLocation', 'purpose'] },
+  doorknockers: { allowed: ['name', 'phone', 'email', 'city', 'areas', 'languages', 'rating', 'ratePerDoor', 'experience', 'photo', 'bio', 'verified', 'available', 'lat', 'lng'] },
+  doorbookings: { allowed: ['knockerId', 'knockerName', 'contractorEmail', 'date', 'area', 'doors', 'ratePerDoor', 'total', 'status', 'notes'] },
+  jobs: { allowed: ['title', 'type', 'skills', 'location', 'rate', 'rateType', 'description', 'postedBy', 'contactPhone', 'contactEmail', 'status', 'applicants', 'featured'] },
+  workers: { allowed: ['name', 'phone', 'email', 'skills', 'location', 'rate', 'rateType', 'languages', 'licenseNumber', 'bio', 'photo', 'available', 'rating', 'featured', 'yearsExperience'] },
 };
 
 async function handleBusinessCRUD(request, env, collection, itemId) {

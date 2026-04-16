@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Tax Tracker</title>
+<link rel="stylesheet" href="../style.css">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#e8c547">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="BQ Tools">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png">
+<style>
+  body { display: flex; flex-direction: column; }
+  .tax-hero {
+    background: linear-gradient(135deg, rgba(81,207,102,.08), rgba(232,197,71,.08));
+    border: 1px solid var(--ac); border-radius: 14px; padding: 18px 22px; margin-bottom: 20px;
+  }
+  .tax-hero h2 { font-size: 16px; font-weight: 800; margin-bottom: 6px; }
+  .tax-hero p { font-size: 13px; color: var(--txd); line-height: 1.5; }
+
+  .tax-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 20px; }
+  .tax-card { background: var(--sf); border: 1px solid var(--bd); border-radius: 12px; padding: 14px; text-align: center; }
+  .tax-card .n { font-size: 22px; font-weight: 900; color: var(--ac); }
+  .tax-card.owed .n { color: var(--red); }
+  .tax-card.ded .n { color: var(--grn); }
+  .tax-card .l { font-size: 11px; color: var(--txd); margin-top: 2px; }
+
+  .tax-tabs { display: flex; gap: 6px; margin-bottom: 14px; border-bottom: 1px solid var(--bd); overflow-x: auto; }
+  .tax-tab { padding: 10px 14px; background: none; border: none; color: var(--txd); cursor: pointer; font-family: inherit; font-size: 13px; white-space: nowrap; border-bottom: 2px solid transparent; font-weight: 600; }
+  .tax-tab.on { color: var(--ac); border-bottom-color: var(--ac); }
+
+  .quarter-card {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 12px;
+    padding: 16px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px;
+  }
+  .quarter-card.upcoming { border-color: var(--orange, #ff9f43); }
+  .quarter-card.overdue { border-color: var(--red); }
+  .quarter-card.paid { opacity: 0.7; }
+  .q-date { font-size: 14px; font-weight: 700; min-width: 100px; }
+  .q-status { padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+  .q-status.upcoming { background: rgba(255,159,67,.15); color: var(--orange, #ff9f43); }
+  .q-status.paid { background: rgba(81,207,102,.15); color: var(--grn); }
+  .q-status.overdue { background: rgba(255,107,107,.15); color: var(--red); }
+
+  .mileage-row { display: flex; gap: 8px; align-items: center; padding: 10px; background: var(--bg); border-radius: 8px; margin-bottom: 6px; font-size: 13px; }
+  .mileage-row .route { flex: 1; min-width: 0; }
+
+  @media (max-width: 700px) { .tax-grid { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/home.html" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/business.html" class="nav-link" data-en="Business" data-he="עסק" data-es="Negocio">Business</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <a href="/business.html" class="page-back" data-en="← Business Hub" data-he="← מרכז עסקי" data-es="← Centro de Negocio">← Business Hub</a>
+  <h1 class="page-title" data-en="💵 Tax Tracker" data-he="💵 מעקב מסים" data-es="💵 Registro de Impuestos">💵 Tax Tracker</h1>
+  <p class="page-sub" data-en="Stay ahead of the IRS. Know what you owe, when, and what you can deduct." data-he="הקדם את רשות המסים. דע כמה אתה חייב, מתי, ומה אתה יכול להפחית." data-es="Mantente al día con el IRS. Sabe cuánto debes, cuándo, y qué puedes deducir.">Stay ahead of the IRS. Know what you owe, when, and what you can deduct.</p>
+
+  <div class="tax-hero">
+    <h2>📅 <span data-en="Quarterly Federal Tax Deadlines" data-he="תאריכי תשלום מסים פדרליים" data-es="Fechas de Impuestos Trimestrales Federales">Quarterly Federal Tax Deadlines</span></h2>
+    <p data-en="As a self-employed contractor, the IRS expects you to pay estimated taxes 4 times a year. Miss them and you'll owe penalties + interest." data-he="כקבלן עצמאי, רשות המסים דורשת תשלום משוער 4 פעמים בשנה. פספוס = קנסות וריבית." data-es="Como contratista por cuenta propia, el IRS espera que pagues impuestos estimados 4 veces al año. Si los saltas, deberás multas e intereses.">As a self-employed contractor, the IRS expects you to pay estimated taxes 4 times a year. Miss them and you'll owe penalties + interest.</p>
+  </div>
+
+  <!-- Stats -->
+  <div class="tax-grid">
+    <div class="tax-card"><div class="n" id="tIncome">$0</div><div class="l" data-en="YTD Income" data-he="הכנסה שנתית" data-es="Ingresos del Año">YTD Income</div></div>
+    <div class="tax-card ded"><div class="n" id="tDed">$0</div><div class="l" data-en="Tax Deductions" data-he="ניכויים" data-es="Deducciones">Tax Deductions</div></div>
+    <div class="tax-card owed"><div class="n" id="tOwed">$0</div><div class="l" data-en="Est. Tax Owed" data-he="חוב משוער" data-es="Impuesto Estimado">Est. Tax Owed</div></div>
+    <div class="tax-card"><div class="n" id="tMiles">0</div><div class="l" data-en="Miles Tracked" data-he="קילומטרים" data-es="Millas Registradas">Miles Tracked</div></div>
+  </div>
+
+  <div class="tax-tabs">
+    <button class="tax-tab on" data-sec="quarterly" onclick="setSec('quarterly')">📅 <span data-en="Quarterly" data-he="רבעוני" data-es="Trimestral">Quarterly</span></button>
+    <button class="tax-tab" data-sec="mileage" onclick="setSec('mileage')">🚗 <span data-en="Mileage" data-he="קילומטרים" data-es="Millaje">Mileage</span></button>
+    <button class="tax-tab" data-sec="summary" onclick="setSec('summary')">📊 <span data-en="Annual Summary" data-he="סיכום שנתי" data-es="Resumen Anual">Annual Summary</span></button>
+  </div>
+
+  <!-- Quarterly -->
+  <div id="sec-quarterly" class="tax-pane">
+    <div id="quartersList"></div>
+    <div style="background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-top:14px;font-size:12px;color:var(--txd);line-height:1.6;">
+      💡 <strong data-en="Tip:" data-he="טיפ:" data-es="Tip:">Tip:</strong>
+      <span data-en="Set aside 25-30% of every payment for taxes. If you haven't paid taxes in years, call a CPA TODAY. Back taxes get worse with time." data-he="הפרש 25-30% מכל תשלום למסים. אם לא שילמת מסים שנים, התקשר לרו״ח היום. חוב לרשות המסים גדל עם הזמן." data-es="Aparta 25-30% de cada pago para impuestos. Si no has pagado impuestos en años, llama a un CPA HOY. Los impuestos atrasados empeoran con el tiempo.">Set aside 25-30% of every payment for taxes. If you haven't paid taxes in years, call a CPA TODAY. Back taxes get worse with time.</span>
+    </div>
+  </div>
+
+  <!-- Mileage -->
+  <div id="sec-mileage" class="tax-pane" style="display:none;">
+    <div class="card" style="margin-bottom:14px;">
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <div style="flex:1;"><label class="input-label" data-en="Date" data-he="תאריך" data-es="Fecha">Date</label><input class="input" id="mDate" type="date" value=""></div>
+        <div style="flex:1;"><label class="input-label" data-en="Miles" data-he="קילומטרים" data-es="Millas">Miles</label><input class="input" id="mMiles" type="number" step="0.1" placeholder="15.5"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <div style="flex:1;"><label class="input-label" data-en="From" data-he="מ" data-es="Desde">From</label><input class="input" id="mFrom" placeholder="Shop"></div>
+        <div style="flex:1;"><label class="input-label" data-en="To" data-he="ל" data-es="Hasta">To</label><input class="input" id="mTo" placeholder="Johnson site"></div>
+      </div>
+      <label class="input-label" data-en="Purpose" data-he="מטרה" data-es="Propósito">Purpose</label>
+      <input class="input" id="mPurpose" placeholder="Kitchen remodel — materials pickup" style="margin-bottom:10px;">
+      <button class="btn btn-primary" onclick="addMileage()" style="width:100%;">+ <span data-en="Log Trip" data-he="רשום נסיעה" data-es="Registrar Viaje">Log Trip</span></button>
+    </div>
+
+    <div id="mileageList"></div>
+    <div style="background:var(--acd);border-radius:8px;padding:10px 14px;margin-top:10px;font-size:12px;color:var(--ac);">
+      💰 <span data-en="2026 IRS business rate: $0.67 per mile. Track every work trip — it adds up fast." data-he="תעריף רשות המסים 2026: $0.67 לקילומטר. רשום כל נסיעה — זה מצטבר." data-es="Tarifa IRS 2026 para negocios: $0.67 por milla. Registra cada viaje — se acumula rápido.">2026 IRS business rate: $0.67 per mile. Track every work trip — it adds up fast.</span>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div id="sec-summary" class="tax-pane" style="display:none;">
+    <div class="card" style="margin-bottom:14px;">
+      <h3 style="font-size:16px;margin-bottom:10px;">📋 <span data-en="Annual Summary" data-he="סיכום שנתי" data-es="Resumen Anual">Annual Summary</span></h3>
+      <div id="summaryBody"></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:12px;" onclick="exportTaxReport()">📥 <span data-en="Export Report for CPA" data-he="ייצא דוח לרו״ח" data-es="Exportar Reporte para CPA">Export Report for CPA</span></button>
+      <button class="btn" style="width:100%;margin-top:6px;" onclick="emailCPA()">📧 <span data-en="Send to CPA via Email" data-he="שלח לרו״ח" data-es="Enviar al CPA por Email">Send to CPA via Email</span></button>
+    </div>
+
+    <div class="card">
+      <label class="input-label" data-en="Your CPA's Email" data-he="אימייל רו״ח" data-es="Email de tu CPA">Your CPA's Email</label>
+      <input class="input" id="cpaEmail" placeholder="cpa@example.com" value="">
+    </div>
+  </div>
+</div>
+
+<script src="../js/ai.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/crypto.js"></script>
+<script src="../js/common.js"></script>
+<script src="../js/business.js"></script>
+<script>
+if (!isLoggedIn()) window.location.replace('/auth.html');
+
+let invoices = [];
+let expenses = [];
+let receipts = [];
+let taxes = [];
+let mileage = [];
+
+async function init() {
+  try {
+    [invoices, expenses, receipts, taxes] = await Promise.all([
+      Biz.list('invoices'), Biz.list('expenses'), Biz.list('receipts'), Biz.list('taxes')
+    ]);
+    mileage = taxes.filter(t => t.type === 'mileage');
+    document.getElementById('mDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('cpaEmail').value = localStorage.getItem('bq_cpa_email') || '';
+    renderStats();
+    renderQuarters();
+    renderMileage();
+    renderSummary();
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+function setSec(s) {
+  document.querySelectorAll('.tax-tab').forEach(t => t.classList.toggle('on', t.dataset.sec === s));
+  document.querySelectorAll('.tax-pane').forEach(p => p.style.display = 'none');
+  document.getElementById('sec-' + s).style.display = 'block';
+}
+
+function calcTotals() {
+  const year = new Date().getFullYear();
+  const yearStart = new Date(year, 0, 1);
+  const paidInvoices = invoices.filter(i => i.status === 'Paid' && new Date(i.paidDate || i.issueDate) >= yearStart);
+  const income = paidInvoices.reduce((s, i) => s + (parseFloat(i.total) || 0), 0);
+
+  const allDeductibleExpenses = [
+    ...expenses.filter(e => new Date(e.date || e.createdAt) >= yearStart && e.taxDeductible !== false).map(e => parseFloat(e.amount) || 0),
+    ...receipts.filter(r => new Date(r.date || r.createdAt) >= yearStart).map(r => parseFloat(r.total) || 0)
+  ];
+  const deductions = allDeductibleExpenses.reduce((s, a) => s + a, 0);
+
+  const mileageDeduction = mileage.filter(m => new Date(m.dueDate || m.createdAt) >= yearStart).reduce((s, m) => s + (parseFloat(m.miles) || 0), 0) * 0.67;
+
+  const taxableIncome = Math.max(0, income - deductions - mileageDeduction);
+  // Federal self-employment tax: 15.3% + income tax bracket (~22% for middle bracket)
+  // Rough estimate: 30% of taxable income for sole proprietors
+  const estimatedTax = taxableIncome * 0.30;
+
+  return { income, deductions: deductions + mileageDeduction, taxableIncome, estimatedTax, totalMiles: Math.round(mileageDeduction / 0.67) };
+}
+
+function renderStats() {
+  const t = calcTotals();
+  document.getElementById('tIncome').textContent = fmtMoney(t.income);
+  document.getElementById('tDed').textContent = fmtMoney(t.deductions);
+  document.getElementById('tOwed').textContent = fmtMoney(t.estimatedTax);
+  document.getElementById('tMiles').textContent = t.totalMiles.toLocaleString();
+}
+
+function renderQuarters() {
+  const year = new Date().getFullYear();
+  const quarterDates = [
+    { q: 'Q1', due: new Date(year, 3, 15), label: 'Jan–Mar' }, // April 15
+    { q: 'Q2', due: new Date(year, 5, 15), label: 'Apr–May' }, // June 15
+    { q: 'Q3', due: new Date(year, 8, 15), label: 'Jun–Aug' }, // Sept 15
+    { q: 'Q4', due: new Date(year + 1, 0, 15), label: 'Sept–Dec' }, // Jan 15 next year
+  ];
+
+  const now = Date.now();
+  const t = calcTotals();
+  const perQuarter = t.estimatedTax / 4;
+
+  document.getElementById('quartersList').innerHTML = quarterDates.map(q => {
+    const daysTilDue = Math.ceil((q.due - now) / 86400000);
+    const paid = taxes.find(x => x.type === 'quarterly' && x.year === year && x.quarter === q.q && x.status === 'paid');
+    let cls = 'upcoming';
+    let statusText = 'Upcoming';
+    if (paid) { cls = 'paid'; statusText = 'Paid'; }
+    else if (daysTilDue < 0) { cls = 'overdue'; statusText = 'OVERDUE'; }
+    else if (daysTilDue < 30) { cls = 'upcoming'; statusText = daysTilDue + ' days'; }
+    else { cls = ''; statusText = daysTilDue + ' days'; }
+
+    return `<div class="quarter-card ${cls}">
+      <div class="q-date">${q.q} ${year}</div>
+      <div style="flex:1;">
+        <div style="font-size:13px;">${q.label} ${year} · Due ${q.due.toLocaleDateString()}</div>
+        <div style="font-size:12px;color:var(--txd);margin-top:2px;">${lang === 'he' ? 'תשלום משוער:' : 'Est. payment:'} ${fmtMoney(perQuarter)}</div>
+      </div>
+      <div style="text-align:right;">
+        <span class="q-status ${cls}">${statusText}</span>
+        ${paid ? '' : `<button class="btn btn-sm" style="margin-top:6px;" onclick="markQuarterPaid('${q.q}', '${q.due.toISOString()}')">${lang === 'he' ? 'סמן שולם' : 'Mark Paid'}</button>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function markQuarterPaid(quarter, dueDate) {
+  try {
+    const created = await Biz.create('taxes', {
+      year: new Date().getFullYear(),
+      quarter,
+      type: 'quarterly',
+      dueDate,
+      paidDate: new Date().toISOString(),
+      status: 'paid'
+    });
+    taxes.unshift(created);
+    renderQuarters();
+    showToast('✓ ' + (lang === 'he' ? 'סומן כשולם' : 'Marked as paid'), 'ok');
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+async function addMileage() {
+  const miles = parseFloat(document.getElementById('mMiles').value);
+  if (!miles || miles <= 0) { showToast(lang === 'he' ? 'הכנס קילומטרים' : 'Enter miles', 'err'); return; }
+  try {
+    const created = await Biz.create('taxes', {
+      type: 'mileage',
+      dueDate: document.getElementById('mDate').value || new Date().toISOString().split('T')[0],
+      miles,
+      startLocation: document.getElementById('mFrom').value.trim(),
+      endLocation: document.getElementById('mTo').value.trim(),
+      purpose: document.getElementById('mPurpose').value.trim(),
+      status: 'logged'
+    });
+    taxes.unshift(created);
+    mileage.unshift(created);
+    document.getElementById('mMiles').value = '';
+    document.getElementById('mFrom').value = '';
+    document.getElementById('mTo').value = '';
+    document.getElementById('mPurpose').value = '';
+    renderMileage();
+    renderStats();
+    showToast('✓ ' + miles + ' miles logged', 'ok');
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+function renderMileage() {
+  const el = document.getElementById('mileageList');
+  if (mileage.length === 0) {
+    el.innerHTML = `<p style="text-align:center;padding:20px;color:var(--txd);font-size:13px;">${lang === 'he' ? 'אין נסיעות עדיין' : 'No trips logged yet'}</p>`;
+    return;
+  }
+  el.innerHTML = mileage.slice(0, 50).map(m => `
+    <div class="mileage-row">
+      <div class="route">
+        <div style="font-weight:600;">${escHtml(m.startLocation || '—')} → ${escHtml(m.endLocation || '—')}</div>
+        <div style="font-size:11px;color:var(--txd);">${fmtDate(m.dueDate)} · ${escHtml(m.purpose || '')}</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-weight:700;">${parseFloat(m.miles).toFixed(1)} mi</div>
+        <div style="font-size:11px;color:var(--grn);">$${(parseFloat(m.miles) * 0.67).toFixed(2)}</div>
+      </div>
+      <button style="background:none;border:none;color:var(--red);cursor:pointer;" onclick="deleteMileage('${m.id}')">🗑️</button>
+    </div>`).join('');
+}
+
+async function deleteMileage(id) {
+  if (!confirmDelete('this trip')) return;
+  try {
+    await Biz.delete('taxes', id);
+    taxes = taxes.filter(t => t.id !== id);
+    mileage = mileage.filter(t => t.id !== id);
+    renderMileage();
+    renderStats();
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+function renderSummary() {
+  const t = calcTotals();
+  const user = getCachedUser() || {};
+  const h = lang === 'he';
+  document.getElementById('summaryBody').innerHTML = `
+    <table style="width:100%;font-size:14px;">
+      <tr><td style="padding:8px 0;">${h ? 'עסק' : 'Business'}:</td><td style="text-align:right;font-weight:600;">${escHtml(user.businessName || '—')}</td></tr>
+      <tr><td style="padding:8px 0;">${h ? 'סוג' : 'Type'}:</td><td style="text-align:right;font-weight:600;">${escHtml(user.businessType || 'Self-employed')}</td></tr>
+      <tr style="border-top:1px solid var(--bd);"><td style="padding:8px 0;">${h ? 'הכנסה (שולם)' : 'Income (paid invoices)'}:</td><td style="text-align:right;font-weight:700;color:var(--grn);">${fmtMoney(t.income)}</td></tr>
+      <tr><td style="padding:8px 0;">${h ? 'ניכויים' : 'Deductions'} (${h ? 'הוצאות + ק״מ' : 'expenses + mileage'}):</td><td style="text-align:right;font-weight:700;color:var(--orange,#ff9f43);">-${fmtMoney(t.deductions)}</td></tr>
+      <tr style="border-top:1px solid var(--bd);"><td style="padding:8px 0;">${h ? 'הכנסה חייבת' : 'Taxable income'}:</td><td style="text-align:right;font-weight:700;">${fmtMoney(t.taxableIncome)}</td></tr>
+      <tr style="border-top:2px solid var(--ac);"><td style="padding:8px 0;font-size:16px;">${h ? 'חוב מס משוער (30%)' : 'Estimated tax owed (30%)'}:</td><td style="text-align:right;font-weight:900;color:var(--red);font-size:16px;">${fmtMoney(t.estimatedTax)}</td></tr>
+    </table>
+  `;
+}
+
+function exportTaxReport() {
+  const t = calcTotals();
+  const user = getCachedUser() || {};
+  const year = new Date().getFullYear();
+
+  const rows = [];
+  rows.push(['TAX REPORT', year, '', user.businessName || '']);
+  rows.push(['']);
+  rows.push(['INCOME (Paid Invoices)']);
+  rows.push(['Invoice #', 'Client', 'Date Paid', 'Amount']);
+  invoices.filter(i => i.status === 'Paid').forEach(i => {
+    rows.push([i.invoiceNumber, i.clientName, fmtDate(i.paidDate || i.issueDate), (i.total || 0).toFixed(2)]);
+  });
+  rows.push(['TOTAL INCOME', '', '', t.income.toFixed(2)]);
+  rows.push(['']);
+  rows.push(['DEDUCTIONS — Expenses']);
+  rows.push(['Date', 'Vendor', 'Category', 'Amount']);
+  [...receipts, ...expenses.filter(e => e.taxDeductible !== false)].forEach(e => {
+    rows.push([fmtDate(e.date), e.vendor || e.description || '', e.category, (e.total || e.amount || 0).toFixed(2)]);
+  });
+  rows.push(['']);
+  rows.push(['DEDUCTIONS — Mileage (2026 rate: $0.67/mile)']);
+  rows.push(['Date', 'From', 'To', 'Purpose', 'Miles', 'Deduction']);
+  mileage.forEach(m => {
+    rows.push([fmtDate(m.dueDate), m.startLocation, m.endLocation, m.purpose, m.miles, (parseFloat(m.miles) * 0.67).toFixed(2)]);
+  });
+  rows.push(['']);
+  rows.push(['SUMMARY']);
+  rows.push(['Total Income', t.income.toFixed(2)]);
+  rows.push(['Total Deductions', t.deductions.toFixed(2)]);
+  rows.push(['Taxable Income', t.taxableIncome.toFixed(2)]);
+  rows.push(['Estimated Tax Owed (30%)', t.estimatedTax.toFixed(2)]);
+
+  const csv = rows.map(r => r.map(c => {
+    const s = String(c || '');
+    return s.includes(',') || s.includes('"') ? `"${s.replace(/"/g, '""')}"` : s;
+  }).join(',')).join('\n');
+
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `tax-report-${year}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast(lang === 'he' ? 'ייוצא' : 'Exported', 'ok');
+}
+
+function emailCPA() {
+  const email = document.getElementById('cpaEmail').value.trim();
+  if (!email) { showToast(lang === 'he' ? 'הכנס אימייל רו״ח' : 'Enter CPA email', 'err'); return; }
+  localStorage.setItem('bq_cpa_email', email);
+  const t = calcTotals();
+  const user = getCachedUser() || {};
+  const year = new Date().getFullYear();
+  const subject = encodeURIComponent(`Tax summary ${year} — ${user.businessName || 'Self-employed'}`);
+  const body = encodeURIComponent(
+    `Hi,\n\nPlease find my ${year} tax summary:\n\n` +
+    `Business: ${user.businessName || 'Self-employed'}\n` +
+    `Income (YTD): $${t.income.toFixed(2)}\n` +
+    `Deductions (YTD): $${t.deductions.toFixed(2)}\n` +
+    `Taxable income: $${t.taxableIncome.toFixed(2)}\n` +
+    `Estimated tax (30%): $${t.estimatedTax.toFixed(2)}\n\n` +
+    `Full CSV report attached.\n\n` +
+    `Thanks,\n${user.email || ''}`
+  );
+  exportTaxReport();
+  setTimeout(() => {
+    window.location.href = `mailto:${encodeURIComponent(email)}?subject=${subject}&body=${body}`;
+  }, 300);
+}
+
+init();
+</script>
+</body>
+</html>

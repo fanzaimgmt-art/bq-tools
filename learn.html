@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Top 10 Best Practices</title>
+<link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#e8c547">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="BQ Tools">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png">
+<style>
+  body { display: flex; flex-direction: column; }
+
+  .learn-hero {
+    background: linear-gradient(135deg, var(--sf), var(--acd));
+    border: 1px solid var(--ac); border-radius: 16px; padding: 32px 24px;
+    margin-bottom: 24px; text-align: center;
+  }
+  .learn-hero h1 { font-size: 32px; font-weight: 900; margin-bottom: 8px; }
+  .learn-hero .accent { color: var(--ac); }
+  .learn-hero p { color: var(--txd); font-size: 15px; line-height: 1.6; max-width: 620px; margin: 0 auto; }
+
+  .practice {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 14px;
+    padding: 24px; margin-bottom: 16px; display: flex; gap: 18px;
+    transition: all .25s;
+  }
+  .practice:hover { border-color: var(--ac); }
+  .practice .num-circle {
+    width: 54px; height: 54px; border-radius: 50%;
+    background: var(--acd); color: var(--ac);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 900; flex-shrink: 0;
+    font-family: var(--font-display);
+  }
+  .practice .body { flex: 1; }
+  .practice h2 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+  .practice .tool-tag {
+    display: inline-block; padding: 2px 10px; border-radius: 6px;
+    background: var(--acd); color: var(--ac); font-size: 11px;
+    font-weight: 700; margin-bottom: 10px;
+  }
+  .practice p { color: var(--tx); font-size: 14px; line-height: 1.7; margin-bottom: 10px; }
+  .practice .example {
+    background: var(--bg); border-left: 3px solid var(--ac);
+    padding: 10px 14px; border-radius: 0 8px 8px 0; font-size: 13px;
+    color: var(--txd); line-height: 1.6; margin-bottom: 10px;
+  }
+  .practice .example strong { color: var(--ac); }
+  .practice .action-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 14px; background: var(--ac); color: var(--bg);
+    border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 13px;
+    transition: all .2s;
+  }
+  .practice .action-btn:hover { filter: brightness(1.1); opacity: 1; }
+
+  .stat-row {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+    margin-bottom: 20px;
+  }
+  .stat-box {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 12px;
+    padding: 14px; text-align: center;
+  }
+  .stat-box .n { font-size: 26px; font-weight: 900; color: var(--ac); font-family: var(--font-display); }
+  .stat-box .l { font-size: 11px; color: var(--txd); margin-top: 2px; }
+
+  .cta-bottom {
+    background: linear-gradient(135deg, var(--acd), rgba(81,207,102,.1));
+    border: 1px solid var(--ac); border-radius: 16px; padding: 32px;
+    text-align: center; margin-top: 24px;
+  }
+  .cta-bottom h2 { font-size: 24px; margin-bottom: 10px; }
+  .cta-bottom .btn { margin-top: 14px; min-width: 200px; font-size: 15px; }
+
+  @media (max-width: 700px) {
+    .stat-row { grid-template-columns: 1fr 1fr; }
+    .practice { flex-direction: column; padding: 18px; }
+    .learn-hero h1 { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/home.html" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/home.html" class="nav-link" data-en="Tools" data-he="כלים" data-es="Herramientas">Tools</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="learn-hero">
+    <h1>🏆 <span class="accent">Top 10 Best Practices</span></h1>
+    <p data-en="How top contractors use BQ Tools to grow their business faster than the competition. These 10 habits make the difference between a hustler and a CEO." data-he="איך קבלנים מובילים משתמשים ב-BQ Tools כדי לצמוח מהר יותר מהמתחרים. 10 ההרגלים האלה הם ההבדל בין מתחרה לבעלים של חברה." data-es="Cómo los contratistas top usan BQ Tools para crecer más rápido que la competencia. Estos 10 hábitos marcan la diferencia entre un trabajador y un dueño de negocio.">How top contractors use BQ Tools to grow their business faster than the competition. These 10 habits make the difference between a hustler and a CEO.</p>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat-box"><div class="n">3.2x</div><div class="l" data-en="Faster quotes" data-he="הצעות מחיר" data-es="Más rápido en cotizar">Faster quotes</div></div>
+    <div class="stat-box"><div class="n">47%</div><div class="l" data-en="More leads" data-he="יותר לידים" data-es="Más leads">More leads</div></div>
+    <div class="stat-box"><div class="n">28%</div><div class="l" data-en="Higher margins" data-he="שוליים גבוהים" data-es="Mayor margen">Higher margins</div></div>
+    <div class="stat-box"><div class="n">12hr</div><div class="l" data-en="Saved per week" data-he="נחסכים בשבוע" data-es="Ahorradas/semana">Saved per week</div></div>
+  </div>
+
+  <!-- 1 -->
+  <div class="practice">
+    <div class="num-circle">1</div>
+    <div class="body">
+      <span class="tool-tag">📸 COMPARE + SOCIAL POST</span>
+      <h2 data-en="Post every before/after within 24 hours" data-he="פרסם כל לפני/אחרי תוך 24 שעות" data-es="Publica cada antes/después en 24 horas">Post every before/after within 24 hours</h2>
+      <p data-en="The #1 lead-generator for contractors. Every finished job becomes a post. Top contractors post 5-8 times per week — not 1-2. Compare generates the image, Social Post writes the caption." data-he="מחולל הלידים #1 לקבלנים. כל עבודה גמורה = פוסט. קבלנים מובילים מפרסמים 5-8 פעמים בשבוע — לא 1-2. Compare מייצר את התמונה, Social Post כותב את הקפשן." data-es="El #1 generador de leads para contratistas. Cada trabajo terminado es un post. Los mejores publican 5-8 veces por semana — no 1-2. Compare genera la imagen, Social Post escribe el texto.">The #1 lead-generator for contractors. Every finished job becomes a post. Top contractors post 5-8 times per week — not 1-2. Compare generates the image, Social Post writes the caption.</p>
+      <div class="example"><strong>Example:</strong> A remodeler in Van Nuys went from 200 to 3,400 followers in 6 months. 2 posts/day. Booked 4 new jobs directly from Instagram DMs last month alone.</div>
+      <a href="/tools/compare.html" class="action-btn">🔀 Open Compare →</a>
+    </div>
+  </div>
+
+  <!-- 2 -->
+  <div class="practice">
+    <div class="num-circle">2</div>
+    <div class="body">
+      <span class="tool-tag">📸 RECEIPT SCANNER</span>
+      <h2 data-en="Scan every receipt the moment you get it" data-he="סרוק כל קבלה ברגע שקיבלת" data-es="Escanea cada recibo al momento">Scan every receipt the moment you get it</h2>
+      <p data-en="Receipts in your truck glove box cost you money — lost tax deductions, missed project cost tracking. Top contractors scan at the register, right there. 5 seconds saves hours at tax time." data-he="קבלות במכונית עולות לך כסף — ניכוי מס אבוד, מעקב עלויות פרויקט לא מדויק. קבלנים מובילים סורקים בקופה. 5 שניות חוסך שעות בזמן מס." data-es="Los recibos en tu camioneta te cuestan dinero — deducciones perdidas, seguimiento de costos inexacto. Los mejores escanean en la caja, ahí mismo. 5 segundos ahorran horas en impuestos.">Receipts in your truck glove box cost you money — lost tax deductions, missed project cost tracking. Top contractors scan at the register, right there. 5 seconds saves hours at tax time.</p>
+      <div class="example"><strong>Example:</strong> A roofer saved $8,400 in deductions his first year using BQ Tools. Previously he'd lose 30% of his receipts.</div>
+      <a href="/business/receipts.html" class="action-btn">📸 Open Scanner →</a>
+    </div>
+  </div>
+
+  <!-- 3 -->
+  <div class="practice">
+    <div class="num-circle">3</div>
+    <div class="body">
+      <span class="tool-tag">💰 SMART ESTIMATE + TRAINING</span>
+      <h2 data-en="Train the AI on YOUR past prices, never Google's" data-he="אמן את ה-AI על המחירים שלך, לא של גוגל" data-es="Entrena la IA con TUS precios, no los de Google">Train the AI on YOUR past prices, never Google's</h2>
+      <p data-en="Generic estimates lose bids. Your pricing wins them. Upload 5-10 past contracts → AI learns your exact markup, labor rates, material preferences. Every new estimate matches how YOU quote." data-he="הערכות גנריות מפסידות הצעות. המחירים שלך מנצחים. העלה 5-10 חוזים ישנים → AI לומד את ה-markup, שכר עבודה, חומרים. כל הערכה חדשה מתאימה לך." data-es="Los estimados genéricos pierden ofertas. Tus precios las ganan. Sube 5-10 contratos pasados → la IA aprende tu markup exacto, tarifas de mano de obra, materiales. Cada estimado coincide con cómo TÚ cotizas.">Generic estimates lose bids. Your pricing wins them. Upload 5-10 past contracts → AI learns your exact markup, labor rates, material preferences. Every new estimate matches how YOU quote.</p>
+      <div class="example"><strong>Example:</strong> A painter uploaded 12 past jobs. His estimates now match his typical pricing within 3% every time. Closes 2x more bids because prices are realistic, not random.</div>
+      <a href="/training.html" class="action-btn">🧠 Train Your AI →</a>
+    </div>
+  </div>
+
+  <!-- 4 -->
+  <div class="practice">
+    <div class="num-circle">4</div>
+    <div class="body">
+      <span class="tool-tag">📋 PROJECTS LOG</span>
+      <h2 data-en="Log every day — 30 seconds, every job" data-he="תעד כל יום — 30 שניות, כל עבודה" data-es="Registra cada día — 30 segundos, cada trabajo">Log every day — 30 seconds, every job</h2>
+      <p data-en="Daily logs protect you in disputes. When the client says 'you didn't do X', you have photos + notes from that Tuesday at 2pm. Also: you see exactly where your money is going per job, live." data-he="יומן יומי מגן עליך במחלוקות. כשהלקוח אומר 'לא עשית X', יש לך תמונות מיום שלישי ב-14:00. בנוסף: אתה רואה לאן הכסף הולך בפרויקט בזמן אמת." data-es="Las bitácoras diarias te protegen en disputas. Cuando el cliente dice 'no hiciste X', tienes fotos + notas de ese martes a las 2pm. Además: ves exactamente a dónde va tu dinero por trabajo, en vivo.">Daily logs protect you in disputes. When the client says 'you didn't do X', you have photos + notes from that Tuesday at 2pm. Also: you see exactly where your money is going per job, live.</p>
+      <div class="example"><strong>Example:</strong> One contractor won a $12K dispute because he had daily photo logs. Another caught a $3K labor overrun mid-project by watching his P&L update live.</div>
+      <a href="/business/projects.html" class="action-btn">📋 Open Projects →</a>
+    </div>
+  </div>
+
+  <!-- 5 -->
+  <div class="practice">
+    <div class="num-circle">5</div>
+    <div class="body">
+      <span class="tool-tag">📝 QUOTE + 🧾 INVOICE</span>
+      <h2 data-en="Send quote same day, invoice same day" data-he="שלח הצעת מחיר ואותה יום — חשבונית אותו יום" data-es="Envía cotización el mismo día, factura el mismo día">Send quote same day, invoice same day</h2>
+      <p data-en="Most contractors lose bids because they send quotes 2-3 days later. The client already hired someone else. With BQ Tools: you quote on site before you leave. Job done? Invoice on the spot, get paid 40% faster." data-he="קבלנים רוב מפסידים הצעות כי הם שולחים אחרי 2-3 ימים. הלקוח כבר שכר מישהו אחר. עם BQ Tools: הצעת מחיר באתר לפני שאתה יוצא. עבודה הסתיימה? חשבונית מיד, משלמים 40% יותר מהר." data-es="La mayoría pierde ofertas porque mandan cotizaciones 2-3 días después. El cliente ya contrató a alguien más. Con BQ Tools: cotizas en el sitio antes de irte. ¿Trabajo terminado? Factura al instante, cobras 40% más rápido.">Most contractors lose bids because they send quotes 2-3 days later. The client already hired someone else. With BQ Tools: you quote on site before you leave. Job done? Invoice on the spot, get paid 40% faster.</p>
+      <div class="example"><strong>Example:</strong> A plumber boosted close rate from 35% to 68% just by quoting on site. Customers sign before they call the next plumber.</div>
+      <a href="/tools/quote.html" class="action-btn">📝 Create Quote →</a>
+    </div>
+  </div>
+
+  <!-- 6 -->
+  <div class="practice">
+    <div class="num-circle">6</div>
+    <div class="body">
+      <span class="tool-tag">⭐ REVIEW REQUEST</span>
+      <h2 data-en="Ask for a review within 48 hours — every time" data-he="בקש ביקורת תוך 48 שעות — כל פעם" data-es="Pide una reseña en 48 horas — siempre">Ask for a review within 48 hours — every time</h2>
+      <p data-en="Reviews = free leads forever. The window to ask is small: 48 hours after job completion. BQ Tools generates the ask message personalized to each client with their Google review link. Top contractors get 40+ reviews/year." data-he="ביקורות = לידים חינם לנצח. החלון לבקש קצר: 48 שעות אחרי סיום עבודה. BQ Tools מייצר הודעת בקשה אישית עם לינק ביקורת Google. קבלנים מובילים מקבלים 40+ ביקורות בשנה." data-es="Reseñas = leads gratis para siempre. La ventana es corta: 48 horas después de terminar. BQ Tools genera el mensaje personalizado con el link de Google. Los mejores consiguen 40+ reseñas al año.">Reviews = free leads forever. The window to ask is small: 48 hours after job completion. BQ Tools generates the ask message personalized to each client with their Google review link. Top contractors get 40+ reviews/year.</p>
+      <div class="example"><strong>Example:</strong> A kitchen remodeler went from 8 to 73 Google reviews in a year. Now ranks #1 in his area. Leads come to him — no more chasing.</div>
+      <a href="/tools/review.html" class="action-btn">⭐ Send Review Request →</a>
+    </div>
+  </div>
+
+  <!-- 7 -->
+  <div class="practice">
+    <div class="num-circle">7</div>
+    <div class="body">
+      <span class="tool-tag">💵 TAX TRACKER</span>
+      <h2 data-en="Track mileage and deductions — weekly, not yearly" data-he="עקוב אחרי קילומטרים וניכויים — שבועי, לא שנתי" data-es="Rastrea millas y deducciones — semanal, no anual">Track mileage and deductions — weekly, not yearly</h2>
+      <p data-en="The IRS mileage deduction is $0.67/mile in 2026. If you drive 50 miles/day for work, that's $8,375 in deductions per year. Track it weekly — not at tax time when you've forgotten 70% of your trips." data-he="ניכוי קילומטרים של רשות המסים הוא $0.67 לק״מ ב-2026. אם אתה נוסע 50 ק״מ ביום לעבודה, זה $8,375 ניכויים בשנה. רשום שבועי — לא בזמן מס כשכבר שכחת 70% מהנסיעות." data-es="La deducción por millaje del IRS es $0.67/milla en 2026. Si manejas 50 millas/día por trabajo, son $8,375 en deducciones al año. Regístralo semanalmente — no al momento de declarar cuando ya olvidaste el 70%.">The IRS mileage deduction is $0.67/mile in 2026. If you drive 50 miles/day for work, that's $8,375 in deductions per year. Track it weekly — not at tax time when you've forgotten 70% of your trips.</p>
+      <div class="example"><strong>Example:</strong> One contractor owed $14K in back taxes. After 3 months of using BQ Tools tax tracking, he found $6,200 in previously-untracked mileage deductions — cut his tax bill in half.</div>
+      <a href="/business/taxes.html" class="action-btn">💵 Open Tax Tracker →</a>
+    </div>
+  </div>
+
+  <!-- 8 -->
+  <div class="practice">
+    <div class="num-circle">8</div>
+    <div class="body">
+      <span class="tool-tag">👷 JOBS PORTAL + 🚪 DOOR-KNOCKERS</span>
+      <h2 data-en="Never work short-staffed again" data-he="לעולם אל תעבוד במחסור בכוח אדם" data-es="Nunca trabajes con poco personal">Never work short-staffed again</h2>
+      <p data-en="Your crew bails, client is pressuring, you're stuck. Post a job in 60 seconds, reach 100+ workers instantly. Need leads instead? Hire vetted door-knockers who bring pre-qualified appointments — not cold numbers." data-he="הצוות שלך לא מגיע, הלקוח לוחץ, אתה תקוע. פרסם עבודה ב-60 שניות, הגע ל-100+ עובדים מיד. צריך לידים? שכור דופקי דלתות מאומתים שמביאים פגישות — לא מספרים קרים." data-es="Tu equipo no llega, el cliente presiona, estás atorado. Publica trabajo en 60 segundos, llega a 100+ trabajadores. ¿Necesitas leads? Contrata tocadores verificados que traen citas calificadas — no llamadas en frío.">Your crew bails, client is pressuring, you're stuck. Post a job in 60 seconds, reach 100+ workers instantly. Need leads instead? Hire vetted door-knockers who bring pre-qualified appointments — not cold numbers.</p>
+      <div class="example"><strong>Example:</strong> A roofing company hired 3 bilingual knockers through BQ Tools. $9,000 spent → $340,000 in closed jobs. 37x ROI.</div>
+      <a href="/business/jobs.html" class="action-btn">👷 Find Workers →</a>
+    </div>
+  </div>
+
+  <!-- 9 -->
+  <div class="practice">
+    <div class="num-circle">9</div>
+    <div class="body">
+      <span class="tool-tag">💬 AI CHAT + 🧠 MEMORIES</span>
+      <h2 data-en="Use the AI as your co-pilot, not a search engine" data-he="השתמש ב-AI כטייס משנה, לא מנוע חיפוש" data-es="Usa la IA como co-piloto, no como buscador">Use the AI as your co-pilot, not a search engine</h2>
+      <p data-en="Stuck on a permit question? Client arguing about scope? Need a fast contract clause? Ask BQ Assistant. It knows California code, OSHA rules, your pricing (when trained), and your preferences (memories). It's faster than Googling and more accurate." data-he="תקוע בשאלה על היתר? לקוח מתווכח על scope? צריך סעיף חוזה מהיר? שאל את BQ Assistant. יודע חוק קליפורניה, OSHA, המחירים שלך (כשמאומן), ההעדפות שלך. מהיר יותר מגוגל ומדויק יותר." data-es="¿Atascado en una pregunta de permiso? ¿Cliente discutiendo el alcance? ¿Necesitas una cláusula de contrato rápida? Pregunta a BQ Assistant. Sabe código de California, reglas OSHA, tus precios (cuando está entrenado) y tus preferencias. Más rápido que Google y más preciso.">Stuck on a permit question? Client arguing about scope? Need a fast contract clause? Ask BQ Assistant. It knows California code, OSHA rules, your pricing (when trained), and your preferences (memories). It's faster than Googling and more accurate.</p>
+      <div class="example"><strong>Example:</strong> A contractor saved $1,200 in legal fees by asking AI Chat to draft a change order clause. The lawyer reviewed in 15 minutes instead of writing from scratch.</div>
+      <a href="/chat.html" class="action-btn">💬 Open Chat →</a>
+    </div>
+  </div>
+
+  <!-- 10 -->
+  <div class="practice">
+    <div class="num-circle">10</div>
+    <div class="body">
+      <span class="tool-tag">📊 DASHBOARD</span>
+      <h2 data-en="Check the dashboard every Friday" data-he="בדוק את הדשבורד כל יום שישי" data-es="Revisa el panel cada viernes">Check the dashboard every Friday</h2>
+      <p data-en="15 minutes, every Friday. See this week's P&L. Which projects are bleeding money? Which clients aren't paying? Which tools are getting results? Top contractors are CEOs, not hustlers. They make decisions from data, not from gut feel." data-he="15 דקות כל יום שישי. ראה רווח והפסד השבועי. אילו פרויקטים מדממים כסף? אילו לקוחות לא משלמים? קבלנים מובילים הם בעלי חברה, לא רק עובדים. החלטות לפי נתונים." data-es="15 minutos, cada viernes. Mira P&L de la semana. ¿Qué proyectos pierden dinero? ¿Qué clientes no pagan? ¿Qué herramientas dan resultados? Los mejores son dueños de negocio, no solo trabajadores. Deciden con datos.">15 minutes, every Friday. See this week's P&L. Which projects are bleeding money? Which clients aren't paying? Which tools are getting results? Top contractors are CEOs, not hustlers. They make decisions from data, not from gut feel.</p>
+      <div class="example"><strong>Example:</strong> A general contractor spotted a 15% margin drop in 2 weeks using the dashboard. Traced it to one supplier's price hike — switched suppliers, restored profit.</div>
+      <a href="/dashboard.html" class="action-btn">📊 Open Dashboard →</a>
+    </div>
+  </div>
+
+  <!-- Final CTA -->
+  <div class="cta-bottom">
+    <h2 data-en="Which practice will you start with today?" data-he="באיזו פרקטיקה תתחיל היום?" data-es="¿Con qué práctica empiezas hoy?">Which practice will you start with today?</h2>
+    <p data-en="You don't have to do all 10 at once. Pick one. Make it a habit this week. Then add the next." data-he="אתה לא חייב לעשות את כל 10 בבת אחת. בחר אחת. הפוך להרגל השבוע. ואז תוסיף את הבא." data-es="No tienes que hacer las 10 de una vez. Elige una. Vuélvela hábito esta semana. Luego agrega la siguiente.">You don't have to do all 10 at once. Pick one. Make it a habit this week. Then add the next.</p>
+    <a href="/home.html" class="btn btn-primary">🚀 <span data-en="Go to My Tools" data-he="לך לכלים שלי" data-es="Ir a Mis Herramientas">Go to My Tools</span></a>
+  </div>
+</div>
+
+<script src="js/ai.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/crypto.js"></script>
+<script src="js/common.js"></script>
+</body>
+</html>

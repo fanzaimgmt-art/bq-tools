@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Jobs Portal</title>
+<link rel="stylesheet" href="../style.css">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#e8c547">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="BQ Tools">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png">
+<style>
+  body { display: flex; flex-direction: column; }
+  .j-tabs { display: flex; gap: 0; margin-bottom: 16px; border-bottom: 2px solid var(--bd); }
+  .j-tab { flex: 1; padding: 14px; background: none; border: none; color: var(--txd); cursor: pointer; font-family: inherit; font-size: 15px; font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+  .j-tab.on { color: var(--ac); border-bottom-color: var(--ac); }
+  .j-pane { display: none; }
+  .j-pane.on { display: block; animation: fadeInUp .3s; }
+
+  .j-filters { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .j-filters input, .j-filters select { padding: 8px 12px; border: 1px solid var(--bd); border-radius: 8px; background: var(--bg); color: var(--tx); font-family: inherit; font-size: 13px; min-height: 38px; }
+
+  .j-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+  .j-card {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 12px;
+    padding: 16px; transition: all .2s; position: relative;
+  }
+  .j-card:hover { border-color: var(--ac); transform: translateY(-2px); }
+  .j-card.featured { border-color: var(--ac); background: linear-gradient(135deg, var(--sf), var(--acd)); }
+  .j-card.featured::before { content: '⭐ FEATURED'; position: absolute; top: -8px; right: 12px; background: var(--ac); color: var(--bg); font-size: 10px; font-weight: 800; padding: 2px 10px; border-radius: 6px; letter-spacing: .5px; }
+  .j-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .j-meta { font-size: 12px; color: var(--txd); margin-bottom: 8px; }
+  .j-rate { color: var(--grn); font-weight: 700; }
+  .j-skills { display: flex; gap: 4px; flex-wrap: wrap; margin: 8px 0; }
+  .j-skill { padding: 2px 8px; background: var(--bg); border-radius: 6px; font-size: 11px; color: var(--txd); }
+  .j-desc { font-size: 13px; color: var(--tx); line-height: 1.5; margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .j-actions { display: flex; gap: 6px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.04); }
+  [data-theme="light"] .j-actions { border-top-color: rgba(0,0,0,.06); }
+
+  .w-card {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 12px;
+    padding: 16px; transition: all .2s;
+  }
+  .w-card:hover { border-color: var(--ac); }
+  .w-head { display: flex; gap: 12px; margin-bottom: 8px; }
+  .w-photo { width: 48px; height: 48px; border-radius: 50%; background: var(--acd); color: var(--ac); display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
+  .w-photo img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+  .w-name { font-size: 15px; font-weight: 700; }
+  .w-meta { font-size: 12px; color: var(--txd); }
+
+  .empty-state { text-align: center; padding: 40px; color: var(--txd); grid-column: 1/-1; }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+
+  .post-card { background: var(--sf); border: 1px solid var(--bd); border-radius: 14px; padding: 20px; max-width: 600px; margin: 0 auto; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/home.html" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/business.html" class="nav-link" data-en="Business" data-he="עסק" data-es="Negocio">Business</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <a href="/business.html" class="page-back" data-en="← Business Hub" data-he="← מרכז עסקי" data-es="← Centro de Negocio">← Business Hub</a>
+  <h1 class="page-title" data-en="👷 Jobs Portal" data-he="👷 פורטל עבודה" data-es="👷 Portal de Empleos">👷 Jobs Portal</h1>
+  <p class="page-sub" data-en="Connect contractors with runners, helpers, and specialists." data-he="חבר בין קבלנים לראנרים, עוזרים ומומחים." data-es="Conecta contratistas con ayudantes, runners y especialistas.">Connect contractors with runners, helpers, and specialists.</p>
+
+  <div class="j-tabs">
+    <button class="j-tab on" data-tab="jobs" onclick="setTab('jobs')">🔍 <span data-en="Find Work" data-he="חפש עבודה" data-es="Buscar Trabajo">Find Work</span></button>
+    <button class="j-tab" data-tab="workers" onclick="setTab('workers')">💼 <span data-en="Find Workers" data-he="חפש עובדים" data-es="Buscar Trabajadores">Find Workers</span></button>
+    <button class="j-tab" data-tab="post" onclick="setTab('post')">➕ <span data-en="Post Listing" data-he="פרסם" data-es="Publicar">Post Listing</span></button>
+  </div>
+
+  <!-- FIND WORK (jobs listings) -->
+  <div id="pane-jobs" class="j-pane on">
+    <div class="j-filters">
+      <input type="text" id="jSearch" placeholder="Search jobs..." oninput="renderJobs()" style="flex:1;min-width:180px;">
+      <select id="jSkill" onchange="renderJobs()">
+        <option value="">All Skills</option>
+        <option>General Labor</option>
+        <option>Carpentry</option>
+        <option>Electrical</option>
+        <option>Plumbing</option>
+        <option>Roofing</option>
+        <option>Painting</option>
+        <option>Flooring</option>
+        <option>Drywall</option>
+        <option>Runner / Driver</option>
+        <option>Sales / Door-to-Door</option>
+      </select>
+      <select id="jLoc" onchange="renderJobs()">
+        <option value="">All Locations</option>
+        <option>Los Angeles</option>
+        <option>San Fernando Valley</option>
+        <option>South LA</option>
+        <option>San Gabriel Valley</option>
+      </select>
+    </div>
+    <div id="jobsList" class="j-list"></div>
+  </div>
+
+  <!-- FIND WORKERS (worker profiles) -->
+  <div id="pane-workers" class="j-pane">
+    <div class="j-filters">
+      <input type="text" id="wSearch" placeholder="Search workers..." oninput="renderWorkers()" style="flex:1;min-width:180px;">
+      <select id="wSkill" onchange="renderWorkers()">
+        <option value="">All Skills</option>
+        <option>General Labor</option>
+        <option>Carpentry</option>
+        <option>Electrical</option>
+        <option>Plumbing</option>
+        <option>Roofing</option>
+        <option>Painting</option>
+        <option>Flooring</option>
+        <option>Drywall</option>
+        <option>Runner / Driver</option>
+      </select>
+      <select id="wLang" onchange="renderWorkers()">
+        <option value="">All Languages</option>
+        <option>English</option>
+        <option>Spanish</option>
+        <option>Hebrew</option>
+      </select>
+    </div>
+    <div id="workersList" class="j-list"></div>
+  </div>
+
+  <!-- POST -->
+  <div id="pane-post" class="j-pane">
+    <div style="display:flex;gap:8px;margin-bottom:14px;">
+      <button class="btn" id="postTypeJob" onclick="setPostType('job')" style="flex:1;background:var(--acd);border-color:var(--ac);color:var(--ac);font-weight:700;">💼 <span data-en="Post a Job" data-he="פרסם עבודה" data-es="Publicar Trabajo">Post a Job</span></button>
+      <button class="btn" id="postTypeWorker" onclick="setPostType('worker')" style="flex:1;">👷 <span data-en="List Yourself" data-he="רשום עצמך" data-es="Inscribirte">List Yourself</span></button>
+    </div>
+
+    <!-- Post a job form -->
+    <div class="post-card" id="formJob">
+      <h3 style="font-size:16px;margin-bottom:14px;" data-en="Post a job — free (contractors)" data-he="פרסם עבודה — חינם" data-es="Publicar trabajo — gratis">Post a job — free (contractors)</h3>
+      <label class="input-label" data-en="Job Title" data-he="כותרת" data-es="Título">Job Title *</label>
+      <input class="input" id="pTitle" placeholder="Framer needed — 2 weeks, Van Nuys" style="margin-bottom:10px;">
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <div style="flex:1;"><label class="input-label" data-en="Skill" data-he="מיומנות" data-es="Habilidad">Skill *</label>
+          <select class="input" id="pSkill">
+            <option>General Labor</option><option>Carpentry</option><option>Electrical</option>
+            <option>Plumbing</option><option>Roofing</option><option>Painting</option>
+            <option>Flooring</option><option>Drywall</option><option>Runner / Driver</option>
+            <option>Sales / Door-to-Door</option>
+          </select>
+        </div>
+        <div style="flex:1;"><label class="input-label" data-en="Location" data-he="מיקום" data-es="Ubicación">Location *</label><input class="input" id="pLoc" placeholder="Van Nuys, CA"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <div style="flex:2;"><label class="input-label" data-en="Rate" data-he="תעריף" data-es="Tarifa">Rate ($) *</label><input class="input" id="pRate" type="number" placeholder="35"></div>
+        <div style="flex:1;"><label class="input-label" data-en="Per" data-he="ליחידה" data-es="Por">Per</label>
+          <select class="input" id="pRateType"><option>hour</option><option>day</option><option>job</option></select>
+        </div>
+      </div>
+      <label class="input-label" data-en="Description" data-he="תיאור" data-es="Descripción">Description</label>
+      <textarea class="textarea" id="pDesc" rows="4" placeholder="Need framer for residential addition. Must have own tools. Spanish speakers welcome. 40hr/week for 2-3 weeks." style="margin-bottom:10px;"></textarea>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <div style="flex:1;"><label class="input-label">Phone</label><input class="input" id="pPhone" type="tel"></div>
+        <div style="flex:1;"><label class="input-label">Email</label><input class="input" id="pEmail" type="email"></div>
+      </div>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;margin-bottom:12px;">
+        <input type="checkbox" id="pFeatured" style="accent-color:var(--ac);"> <span data-en="Feature this post ($20)" data-he="פרסם מובילים ($20)" data-es="Destacar ($20)">Feature this post ($20)</span>
+      </label>
+      <button class="btn btn-primary" style="width:100%;" onclick="postJob()">💼 <span data-en="Post Job" data-he="פרסם" data-es="Publicar">Post Job</span></button>
+    </div>
+
+    <!-- List as worker form -->
+    <div class="post-card" id="formWorker" style="display:none;">
+      <h3 style="font-size:16px;margin-bottom:14px;" data-en="List yourself — workers, free" data-he="רשום את עצמך — חינם" data-es="Inscríbete — gratis">List yourself — workers, free</h3>
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <div style="flex:1;"><label class="input-label" data-en="Name" data-he="שם" data-es="Nombre">Name *</label><input class="input" id="wpName"></div>
+        <div style="flex:1;"><label class="input-label">Phone *</label><input class="input" id="wpPhone" type="tel"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <div style="flex:1;"><label class="input-label" data-en="Primary Skill" data-he="מיומנות עיקרית" data-es="Habilidad Principal">Primary Skill *</label>
+          <select class="input" id="wpSkill">
+            <option>General Labor</option><option>Carpentry</option><option>Electrical</option>
+            <option>Plumbing</option><option>Roofing</option><option>Painting</option>
+            <option>Flooring</option><option>Drywall</option><option>Runner / Driver</option>
+          </select>
+        </div>
+        <div style="flex:1;"><label class="input-label" data-en="Location" data-he="מיקום" data-es="Ubicación">Location *</label><input class="input" id="wpLoc" placeholder="Los Angeles"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <div style="flex:2;"><label class="input-label" data-en="Rate ($)" data-he="תעריף" data-es="Tarifa">Rate ($)</label><input class="input" id="wpRate" type="number" placeholder="25"></div>
+        <div style="flex:1;"><label class="input-label" data-en="Per" data-he="ליחידה" data-es="Por">Per</label>
+          <select class="input" id="wpRateType"><option>hour</option><option>day</option></select>
+        </div>
+        <div style="flex:1;"><label class="input-label" data-en="Years" data-he="שנות ניסיון" data-es="Años">Years exp</label><input class="input" id="wpExp" type="number" value="0"></div>
+      </div>
+      <label class="input-label" data-en="Languages" data-he="שפות" data-es="Idiomas">Languages</label>
+      <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+        <span class="chip on" data-lang="English" onclick="toggleChip(this)">🇺🇸 English</span>
+        <span class="chip" data-lang="Spanish" onclick="toggleChip(this)">🇲🇽 Spanish</span>
+        <span class="chip" data-lang="Hebrew" onclick="toggleChip(this)">🇮🇱 Hebrew</span>
+        <span class="chip" data-lang="Arabic" onclick="toggleChip(this)">🇸🇦 Arabic</span>
+        <span class="chip" data-lang="Russian" onclick="toggleChip(this)">🇷🇺 Russian</span>
+      </div>
+      <label class="input-label" data-en="License # (if applicable)" data-he="מס׳ רישיון" data-es="Licencia #">License # (optional)</label>
+      <input class="input" id="wpLic" style="margin-bottom:10px;">
+      <label class="input-label" data-en="About you" data-he="עליי" data-es="Sobre ti">About you</label>
+      <textarea class="textarea" id="wpBio" rows="3" placeholder="10 years carpentry in LA. Own tools and truck. Spanish native, English good. Available Monday-Saturday." style="margin-bottom:12px;"></textarea>
+      <button class="btn btn-primary" style="width:100%;" onclick="postWorker()">👷 <span data-en="List Me" data-he="רשום אותי" data-es="Inscríbeme">List Me</span></button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .chip { padding: 4px 10px; background: var(--bg); border: 1px solid var(--bd); border-radius: 6px; font-size: 12px; cursor: pointer; }
+  .chip.on { background: var(--acd); border-color: var(--ac); color: var(--ac); font-weight: 700; }
+</style>
+
+<script src="../js/ai.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/crypto.js"></script>
+<script src="../js/common.js"></script>
+<script src="../js/business.js"></script>
+<script>
+if (!isLoggedIn()) window.location.replace('/auth.html');
+
+let jobs = [];
+let workers = [];
+
+// Demo seed data for first visit
+const DEMO_JOBS = [
+  { id: 'dj-1', title: 'Framers needed — 2 weeks, Van Nuys', skill: 'Carpentry', location: 'Van Nuys, CA', rate: 35, rateType: 'hour', description: 'Residential addition. Bring own tools. 40hr/week. Spanish welcome.', postedBy: 'Gold Remodeling', contactPhone: '818-555-0120', featured: true, createdAt: new Date().toISOString() },
+  { id: 'dj-2', title: 'Runner for material pickup', skill: 'Runner / Driver', location: 'San Fernando Valley', rate: 180, rateType: 'day', description: 'Daily runs to Home Depot, lumber yards. Must have truck. 2-3 days/week.', postedBy: 'JB Construction', contactPhone: '818-555-0100', createdAt: new Date().toISOString() },
+  { id: 'dj-3', title: 'Door-to-door sales, Spanish + English', skill: 'Sales / Door-to-Door', location: 'South LA', rate: 100, rateType: 'job', description: 'Roofing company needs bilingual door-knockers. $100 per confirmed appointment. Commission + base.', postedBy: 'RoofPro LA', contactPhone: '323-555-0150', createdAt: new Date().toISOString() },
+  { id: 'dj-4', title: 'Electrician helper', skill: 'Electrical', location: 'Los Angeles', rate: 28, rateType: 'hour', description: 'Licensed electrician needs assistant. 2+ years experience. Long-term position.', postedBy: 'SparkCo Electric', contactPhone: '213-555-0190', createdAt: new Date().toISOString() }
+];
+
+const DEMO_WORKERS = [
+  { id: 'dw-1', name: 'Miguel Ramírez', skills: 'Carpentry, Framing', location: 'San Fernando Valley', rate: 32, rateType: 'hour', yearsExperience: 12, languages: ['Spanish', 'English'], rating: 4.9, bio: 'Master framer. Own truck and tools. Spanish native. References available.' },
+  { id: 'dw-2', name: 'Jose Hernández', skills: 'General Labor, Demo', location: 'Los Angeles', rate: 22, rateType: 'hour', yearsExperience: 8, languages: ['Spanish', 'English'], rating: 4.7, bio: 'Reliable, hard worker. Demo specialist. Show up on time every day.' },
+  { id: 'dw-3', name: 'David Kim', skills: 'Electrical', location: 'Los Angeles', rate: 40, rateType: 'hour', yearsExperience: 15, languages: ['English', 'Korean'], licenseNumber: 'C-10 1234567', rating: 5.0, bio: 'Licensed C-10 electrician. Commercial and residential. Clean background.' },
+  { id: 'dw-4', name: 'Ricardo Lopez', skills: 'Runner / Driver', location: 'Los Angeles', rate: 180, rateType: 'day', yearsExperience: 5, languages: ['Spanish', 'English'], rating: 4.8, bio: 'Own pickup truck. Know every lumber yard and supply house in LA. Daily runs $180, also do site prep.' }
+];
+
+async function init() {
+  try {
+    [jobs, workers] = await Promise.all([Biz.list('jobs'), Biz.list('workers')]);
+    if (jobs.length === 0) jobs = DEMO_JOBS;
+    if (workers.length === 0) workers = DEMO_WORKERS;
+    renderJobs();
+    renderWorkers();
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+function setTab(t) {
+  document.querySelectorAll('.j-tab').forEach(x => x.classList.toggle('on', x.dataset.tab === t));
+  document.querySelectorAll('.j-pane').forEach(x => x.classList.toggle('on', x.id === 'pane-' + t));
+}
+
+function setPostType(t) {
+  document.getElementById('formJob').style.display = t === 'job' ? 'block' : 'none';
+  document.getElementById('formWorker').style.display = t === 'worker' ? 'block' : 'none';
+  document.getElementById('postTypeJob').style.background = t === 'job' ? 'var(--acd)' : '';
+  document.getElementById('postTypeJob').style.borderColor = t === 'job' ? 'var(--ac)' : '';
+  document.getElementById('postTypeJob').style.color = t === 'job' ? 'var(--ac)' : '';
+  document.getElementById('postTypeWorker').style.background = t === 'worker' ? 'var(--acd)' : '';
+  document.getElementById('postTypeWorker').style.borderColor = t === 'worker' ? 'var(--ac)' : '';
+  document.getElementById('postTypeWorker').style.color = t === 'worker' ? 'var(--ac)' : '';
+}
+
+function renderJobs() {
+  const search = document.getElementById('jSearch').value.toLowerCase();
+  const skill = document.getElementById('jSkill').value;
+  const loc = document.getElementById('jLoc').value;
+
+  let list = jobs.slice();
+  if (search) list = list.filter(j => JSON.stringify(j).toLowerCase().includes(search));
+  if (skill) list = list.filter(j => j.skill === skill);
+  if (loc) list = list.filter(j => (j.location || '').toLowerCase().includes(loc.toLowerCase()));
+
+  // Featured first
+  list.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+
+  const el = document.getElementById('jobsList');
+  if (list.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>${lang === 'he' ? 'אין משרות' : 'No jobs match your filters'}</p></div>`;
+    return;
+  }
+
+  el.innerHTML = list.map(j => `
+    <div class="j-card${j.featured ? ' featured' : ''}">
+      <div class="j-title">${escHtml(j.title)}</div>
+      <div class="j-meta">📍 ${escHtml(j.location)} · 👷 ${escHtml(j.skill)}</div>
+      <div class="j-rate">💵 $${j.rate}/${escHtml(j.rateType)}</div>
+      <div class="j-desc">${escHtml(j.description || '')}</div>
+      <div style="font-size:11px;color:var(--txd);">${lang === 'he' ? 'פורסם על ידי' : 'Posted by'}: ${escHtml(j.postedBy || 'Contractor')}</div>
+      <div class="j-actions">
+        ${j.contactPhone ? `<a href="tel:${escHtml(j.contactPhone)}" class="btn btn-sm btn-primary" style="flex:1;">📞 ${lang === 'he' ? 'התקשר' : 'Call'}</a>` : ''}
+        ${j.contactPhone ? `<a href="sms:${escHtml(j.contactPhone)}?body=${encodeURIComponent('Hi — I saw your job post on BQ Tools: ' + j.title)}" class="btn btn-sm" style="flex:1;">💬 SMS</a>` : ''}
+        ${j.contactEmail ? `<a href="mailto:${escHtml(j.contactEmail)}" class="btn btn-sm" style="flex:1;">📧 Email</a>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+function renderWorkers() {
+  const search = document.getElementById('wSearch').value.toLowerCase();
+  const skill = document.getElementById('wSkill').value;
+  const langFilter = document.getElementById('wLang').value;
+
+  let list = workers.slice();
+  if (search) list = list.filter(w => JSON.stringify(w).toLowerCase().includes(search));
+  if (skill) list = list.filter(w => (w.skills || '').includes(skill));
+  if (langFilter) list = list.filter(w => (w.languages || []).includes(langFilter));
+
+  // Featured first
+  list.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+
+  const el = document.getElementById('workersList');
+  if (list.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="icon">👥</div><p>${lang === 'he' ? 'אין עובדים' : 'No workers match your filters'}</p></div>`;
+    return;
+  }
+
+  el.innerHTML = list.map(w => {
+    const initials = (w.name || '?').split(' ').map(x => x[0]).join('').substring(0, 2).toUpperCase();
+    return `<div class="w-card${w.featured ? ' featured' : ''}">
+      <div class="w-head">
+        <div class="w-photo">${w.photo ? `<img src="${w.photo}" alt="">` : initials}</div>
+        <div style="flex:1;min-width:0;">
+          <div class="w-name">${escHtml(w.name)}${w.rating ? ` <span style="color:var(--ac);">★ ${w.rating}</span>` : ''}</div>
+          <div class="w-meta">${escHtml(w.skills || '')} · ${escHtml(w.location || '')} · ${w.yearsExperience || 0}y</div>
+        </div>
+      </div>
+      <div style="font-size:13px;color:var(--txd);line-height:1.5;margin-bottom:8px;">${escHtml((w.bio || '').substring(0, 140))}</div>
+      <div style="font-size:12px;margin-bottom:8px;">💰 <span style="color:var(--grn);font-weight:700;">$${w.rate}/${escHtml(w.rateType || 'hour')}</span> · 🗣️ ${(w.languages || []).join(', ')}${w.licenseNumber ? ' · ✓ Licensed' : ''}</div>
+      <div class="j-actions">
+        ${w.phone ? `<a href="tel:${escHtml(w.phone)}" class="btn btn-sm btn-primary" style="flex:1;">📞 ${lang === 'he' ? 'התקשר' : 'Call'}</a>` : ''}
+        ${w.phone ? `<a href="sms:${escHtml(w.phone)}" class="btn btn-sm" style="flex:1;">💬 SMS</a>` : ''}
+        ${w.email ? `<a href="mailto:${escHtml(w.email)}" class="btn btn-sm" style="flex:1;">📧</a>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function postJob() {
+  const title = document.getElementById('pTitle').value.trim();
+  const skill = document.getElementById('pSkill').value;
+  const location = document.getElementById('pLoc').value.trim();
+  const rate = parseFloat(document.getElementById('pRate').value);
+  if (!title || !location || !rate) { showToast(lang === 'he' ? 'מלא שדות חובה' : 'Fill required fields', 'err'); return; }
+
+  const user = getCachedUser() || {};
+  const data = {
+    title,
+    skill,
+    location,
+    rate,
+    rateType: document.getElementById('pRateType').value,
+    description: document.getElementById('pDesc').value.trim(),
+    postedBy: user.businessName || user.email,
+    contactPhone: document.getElementById('pPhone').value.trim() || user.phone,
+    contactEmail: document.getElementById('pEmail').value.trim() || user.email,
+    featured: document.getElementById('pFeatured').checked,
+    status: 'active'
+  };
+
+  try {
+    const created = await Biz.create('jobs', data);
+    jobs.unshift(created);
+    document.getElementById('pTitle').value = '';
+    document.getElementById('pDesc').value = '';
+    document.getElementById('pFeatured').checked = false;
+    showToast('✓ ' + (lang === 'he' ? 'עבודה פורסמה' : 'Job posted'), 'ok');
+    setTab('jobs');
+    renderJobs();
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+async function postWorker() {
+  const name = document.getElementById('wpName').value.trim();
+  const phone = document.getElementById('wpPhone').value.trim();
+  const skill = document.getElementById('wpSkill').value;
+  const location = document.getElementById('wpLoc').value.trim();
+  if (!name || !phone || !location) { showToast(lang === 'he' ? 'מלא שדות חובה' : 'Fill required fields', 'err'); return; }
+
+  const langsActive = Array.from(document.querySelectorAll('#formWorker .chip.on')).map(c => c.dataset.lang);
+
+  const data = {
+    name,
+    phone,
+    skills: skill,
+    location,
+    rate: parseFloat(document.getElementById('wpRate').value) || 0,
+    rateType: document.getElementById('wpRateType').value,
+    yearsExperience: parseInt(document.getElementById('wpExp').value) || 0,
+    languages: langsActive,
+    licenseNumber: document.getElementById('wpLic').value.trim(),
+    bio: document.getElementById('wpBio').value.trim(),
+    email: (getCachedUser() || {}).email || '',
+    rating: 0,
+    available: true
+  };
+
+  try {
+    const created = await Biz.create('workers', data);
+    workers.unshift(created);
+    showToast('✓ ' + (lang === 'he' ? 'נרשמת כעובד' : 'Listed as worker'), 'ok');
+    setTab('workers');
+    renderWorkers();
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+function toggleChip(el) { el.classList.toggle('on'); }
+
+init();
+</script>
+</body>
+</html>

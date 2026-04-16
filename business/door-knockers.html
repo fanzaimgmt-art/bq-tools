@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Door-to-Door Knockers</title>
+<link rel="stylesheet" href="../style.css">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#e8c547">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="BQ Tools">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png">
+<style>
+  body { display: flex; flex-direction: column; }
+  .dk-tabs { display: flex; gap: 0; margin-bottom: 18px; border-bottom: 2px solid var(--bd); }
+  .dk-tab { flex: 1; padding: 14px; background: none; border: none; color: var(--txd); cursor: pointer; font-family: inherit; font-size: 15px; font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all .2s; }
+  .dk-tab.on { color: var(--ac); border-bottom-color: var(--ac); }
+
+  .dk-pane { display: none; }
+  .dk-pane.on { display: block; animation: fadeInUp .3s; }
+
+  .dk-hero { background: linear-gradient(135deg, var(--acd), rgba(116,185,255,.08)); border: 1px solid var(--ac); border-radius: 14px; padding: 20px; margin-bottom: 16px; }
+  .dk-hero h2 { font-size: 18px; font-weight: 800; margin-bottom: 6px; }
+  .dk-hero .price-big { font-size: 36px; font-weight: 900; color: var(--ac); margin: 8px 0; }
+  .dk-hero p { font-size: 13px; color: var(--txd); line-height: 1.5; }
+
+  .knocker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+  .k-card { background: var(--sf); border: 1px solid var(--bd); border-radius: 12px; padding: 16px; transition: all .2s; }
+  .k-card:hover { border-color: var(--ac); transform: translateY(-2px); }
+  .k-head { display: flex; gap: 12px; margin-bottom: 10px; }
+  .k-photo { width: 56px; height: 56px; border-radius: 50%; background: var(--acd); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; color: var(--ac); flex-shrink: 0; overflow: hidden; }
+  .k-photo img { width: 100%; height: 100%; object-fit: cover; }
+  .k-name { font-size: 16px; font-weight: 700; }
+  .k-meta { font-size: 12px; color: var(--txd); margin-top: 2px; }
+  .k-rating { color: var(--ac); font-weight: 700; }
+  .k-areas { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+  .k-area { padding: 2px 8px; background: var(--bg); border-radius: 6px; font-size: 11px; color: var(--txd); }
+  .k-langs { margin-top: 6px; font-size: 11px; color: var(--txd); }
+  .k-actions { display: flex; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.04); }
+
+  .verified { color: var(--grn); font-size: 11px; font-weight: 700; }
+
+  .empty-state { text-align: center; padding: 40px; color: var(--txd); grid-column: 1/-1; }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+
+  .signup-card { background: var(--sf); border: 1px solid var(--bd); border-radius: 14px; padding: 20px; max-width: 600px; margin: 0 auto; }
+  .chip-input { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .chip { padding: 4px 10px; background: var(--bg); border: 1px solid var(--bd); border-radius: 6px; font-size: 12px; cursor: pointer; }
+  .chip.on { background: var(--acd); border-color: var(--ac); color: var(--ac); font-weight: 700; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/home.html" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/business.html" class="nav-link" data-en="Business" data-he="עסק" data-es="Negocio">Business</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <a href="/business.html" class="page-back" data-en="← Business Hub" data-he="← מרכז עסקי" data-es="← Centro de Negocio">← Business Hub</a>
+  <h1 class="page-title" data-en="🚪 Door-to-Door Knockers" data-he="🚪 דופקים על דלתות" data-es="🚪 Tocadores de Puertas">🚪 Door-to-Door Knockers</h1>
+  <p class="page-sub" data-en="Hire reliable door-knockers or earn $100 per door you knock." data-he="שכור דופקי דלתות אמינים או תרוויח $100 לכל דלת שדפקת." data-es="Contrata tocadores de puertas confiables o gana $100 por cada puerta que toques.">Hire reliable door-knockers or earn $100 per door you knock.</p>
+
+  <div class="dk-tabs">
+    <button class="dk-tab on" data-tab="hire" onclick="setTab('hire')">🤝 <span data-en="Hire Knockers" data-he="שכור דופקים" data-es="Contratar Tocadores">Hire Knockers</span></button>
+    <button class="dk-tab" data-tab="become" onclick="setTab('become')">💰 <span data-en="Become a Knocker" data-he="הפוך לדופק" data-es="Ser Tocador">Become a Knocker</span></button>
+    <button class="dk-tab" data-tab="bookings" onclick="setTab('bookings')">📅 <span data-en="My Bookings" data-he="ההזמנות שלי" data-es="Mis Reservas">My Bookings</span></button>
+  </div>
+
+  <!-- HIRE -->
+  <div id="pane-hire" class="dk-pane on">
+    <div class="dk-hero">
+      <h2 data-en="🎯 Why door-to-door?" data-he="🎯 למה דופקים על דלתות?" data-es="🎯 ¿Por qué puerta a puerta?">🎯 Why door-to-door?</h2>
+      <div class="price-big">$100 <span style="font-size:18px;font-weight:400;color:var(--txd);" data-en="per door knocked" data-he="לדלת" data-es="por puerta tocada">per door knocked</span></div>
+      <p data-en="Door-to-door is the highest-converting lead source for contractors. One closed roof job ($15K-40K) pays for 150+ doors. Hire vetted knockers who speak Spanish, know your area, and bring you real appointments." data-he="דפיקה על דלתות = המקור הכי ממיר לקבלנים. עבודת גג אחת ($15K-40K) מחזירה 150+ דלתות. שכור דופקים מאומתים שדוברים ספרדית, מכירים את האזור, ומביאים לך פגישות אמיתיות." data-es="Puerta a puerta es la fuente de leads con mejor conversión para contratistas. Un techo cerrado ($15K-40K) paga por 150+ puertas. Contrata tocadores verificados que hablan español, conocen tu área, y te traen citas reales.">Door-to-door is the highest-converting lead source for contractors. One closed roof job ($15K-40K) pays for 150+ doors. Hire vetted knockers who speak Spanish, know your area, and bring you real appointments.</p>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+      <input type="text" id="fSearch" placeholder="Search by city or language..." oninput="renderKnockers()" style="flex:1;min-width:200px;padding:8px 12px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font-family:inherit;font-size:13px;min-height:38px;">
+      <select id="fLang" onchange="renderKnockers()" style="padding:8px 12px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font-family:inherit;font-size:13px;">
+        <option value="">All Languages</option>
+        <option>English</option>
+        <option>Spanish</option>
+        <option>Hebrew</option>
+      </select>
+    </div>
+
+    <div id="knockersList" class="knocker-grid"></div>
+  </div>
+
+  <!-- BECOME -->
+  <div id="pane-become" class="dk-pane">
+    <div class="dk-hero" style="text-align:center;">
+      <h2>💵 <span data-en="Earn $60-75 per door" data-he="תרוויח $60-75 לדלת" data-es="Gana $60-75 por puerta">Earn $60-75 per door</span></h2>
+      <p data-en="Contractors pay $100 per door. You keep $60-75 (BQ Tools takes a small fee). Work your own hours, your own area." data-he="קבלנים משלמים $100 לדלת. אתה שומר $60-75 (BQ Tools לוקח עמלה קטנה). עובד בשעות שלך, באזור שלך." data-es="Los contratistas pagan $100 por puerta. Tú te quedas con $60-75 (BQ Tools toma una pequeña comisión). Trabaja tus horas, tu área.">Contractors pay $100 per door. You keep $60-75 (BQ Tools takes a small fee). Work your own hours, your own area.</p>
+    </div>
+
+    <div class="signup-card">
+      <h3 style="font-size:16px;margin-bottom:14px;" data-en="Sign up as a knocker" data-he="הירשם כדופק" data-es="Regístrate como tocador">Sign up as a knocker</h3>
+
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <div style="flex:1;"><label class="input-label" data-en="Name" data-he="שם" data-es="Nombre">Name *</label><input class="input" id="kName"></div>
+        <div style="flex:1;"><label class="input-label" data-en="Phone" data-he="טלפון" data-es="Teléfono">Phone *</label><input class="input" id="kPhone" type="tel"></div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <div style="flex:1;"><label class="input-label" data-en="Email" data-es="Email">Email</label><input class="input" id="kEmail" type="email"></div>
+        <div style="flex:1;"><label class="input-label" data-en="City" data-he="עיר" data-es="Ciudad">City *</label><input class="input" id="kCity" placeholder="Los Angeles"></div>
+      </div>
+
+      <label class="input-label" data-en="Areas you can work" data-he="אזורים" data-es="Áreas donde trabajas">Areas you can work *</label>
+      <input class="input" id="kAreas" placeholder="Van Nuys, North Hollywood, Burbank, Glendale..." style="margin-bottom:10px;">
+
+      <label class="input-label" data-en="Languages" data-he="שפות" data-es="Idiomas">Languages *</label>
+      <div class="chip-input" id="kLangs">
+        <span class="chip on" data-lang="English" onclick="toggleChip(this)">🇺🇸 English</span>
+        <span class="chip" data-lang="Spanish" onclick="toggleChip(this)">🇲🇽 Spanish</span>
+        <span class="chip" data-lang="Hebrew" onclick="toggleChip(this)">🇮🇱 Hebrew</span>
+        <span class="chip" data-lang="Arabic" onclick="toggleChip(this)">🇸🇦 Arabic</span>
+        <span class="chip" data-lang="Russian" onclick="toggleChip(this)">🇷🇺 Russian</span>
+        <span class="chip" data-lang="Portuguese" onclick="toggleChip(this)">🇧🇷 Portuguese</span>
+      </div>
+
+      <label class="input-label" style="margin-top:10px;" data-en="Years of experience" data-he="ניסיון בשנים" data-es="Años de experiencia">Years of experience</label>
+      <input class="input" id="kExp" type="number" value="0" style="margin-bottom:10px;">
+
+      <label class="input-label" data-en="About you (short bio)" data-he="עליי" data-es="Sobre ti">About you (short bio)</label>
+      <textarea class="textarea" id="kBio" rows="3" placeholder="I worked in roofing sales for 5 years. I know Van Nuys and speak Spanish fluently. I close 3-4 appointments per 100 doors." style="margin-bottom:14px;"></textarea>
+
+      <button class="btn btn-primary" style="width:100%;font-size:15px;" onclick="signupKnocker()">💰 <span data-en="Join as Knocker" data-he="הצטרף" data-es="Unirme como Tocador">Join as Knocker</span></button>
+
+      <p style="font-size:11px;color:var(--txd);text-align:center;margin-top:10px;line-height:1.5;" data-en="Approval within 48h. We verify you're a real person. No upfront fees." data-he="אישור תוך 48 שעות. אנחנו מאמתים. אין דמי הרשמה." data-es="Aprobación en 48h. Verificamos que eres una persona real. Sin cuotas iniciales.">Approval within 48h. We verify you're a real person. No upfront fees.</p>
+    </div>
+  </div>
+
+  <!-- BOOKINGS -->
+  <div id="pane-bookings" class="dk-pane">
+    <div id="bookingsList"></div>
+  </div>
+</div>
+
+<!-- Booking modal placeholder -->
+<div id="bookingModal"></div>
+
+<script src="../js/ai.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/crypto.js"></script>
+<script src="../js/common.js"></script>
+<script src="../js/business.js"></script>
+<script>
+if (!isLoggedIn()) window.location.replace('/auth.html');
+
+let knockers = [];
+let bookings = [];
+
+async function init() {
+  try {
+    [knockers, bookings] = await Promise.all([Biz.list('doorknockers'), Biz.list('doorbookings')]);
+    // If no knockers yet, seed with sample data for demo (client-side only for UI)
+    if (knockers.length === 0) {
+      knockers = DEMO_KNOCKERS;
+    }
+    renderKnockers();
+    renderBookings();
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+// Seed demo knockers so the page doesn't look empty on first use
+const DEMO_KNOCKERS = [
+  { id: 'demo-1', name: 'Carlos Rodríguez', city: 'Los Angeles', areas: 'Van Nuys, Panorama City, Pacoima, Sylmar', languages: ['Spanish', 'English'], rating: 4.9, ratePerDoor: 100, experience: 7, verified: true, available: true, bio: 'Roofing sales pro. Spanish native. Closed 340+ appointments in LA County last year.' },
+  { id: 'demo-2', name: 'Miguel Santos', city: 'Los Angeles', areas: 'East LA, Boyle Heights, Montebello', languages: ['Spanish', 'English'], rating: 4.8, ratePerDoor: 100, experience: 4, verified: true, available: true, bio: 'Solar + roofing. Door-to-door since 2021. Fluent Spanish, strong English.' },
+  { id: 'demo-3', name: 'James Foster', city: 'Los Angeles', areas: 'Santa Monica, Venice, Mar Vista, Culver City', languages: ['English'], rating: 4.7, ratePerDoor: 100, experience: 5, verified: true, available: true, bio: 'Premium neighborhoods. High-end remodel leads. Professional appearance.' },
+  { id: 'demo-4', name: 'Ana Martínez', city: 'Los Angeles', areas: 'Downey, Whittier, Pico Rivera, Norwalk', languages: ['Spanish', 'English'], rating: 5.0, ratePerDoor: 100, experience: 3, verified: true, available: true, bio: 'Female knocker — opens more doors in traditional neighborhoods. Spanish native.' },
+  { id: 'demo-5', name: 'Dmitri Volkov', city: 'Los Angeles', areas: 'Fairfax, Beverly Hills, West Hollywood', languages: ['English', 'Russian', 'Hebrew'], rating: 4.6, ratePerDoor: 100, experience: 2, verified: true, available: true, bio: 'Multi-lingual. Jewish/Israeli/Russian communities. Perfect for specialty contractors.' }
+];
+
+function setTab(t) {
+  document.querySelectorAll('.dk-tab').forEach(x => x.classList.toggle('on', x.dataset.tab === t));
+  document.querySelectorAll('.dk-pane').forEach(x => x.classList.toggle('on', x.id === 'pane-' + t));
+}
+
+function renderKnockers() {
+  const search = document.getElementById('fSearch').value.toLowerCase();
+  const langFilter = document.getElementById('fLang').value;
+  let list = knockers.slice();
+  if (search) list = list.filter(k => (k.name + ' ' + k.city + ' ' + k.areas + ' ' + (k.languages || []).join(' ')).toLowerCase().includes(search));
+  if (langFilter) list = list.filter(k => (k.languages || []).includes(langFilter));
+
+  const el = document.getElementById('knockersList');
+  if (list.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="icon">🚪</div><p>${lang === 'he' ? 'לא נמצאו דופקים' : 'No knockers found'}</p></div>`;
+    return;
+  }
+
+  el.innerHTML = list.map(k => {
+    const initials = (k.name || '?').split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+    return `<div class="k-card">
+      <div class="k-head">
+        <div class="k-photo">${k.photo ? `<img src="${k.photo}" alt="">` : initials}</div>
+        <div style="flex:1;min-width:0;">
+          <div class="k-name">${escHtml(k.name)}${k.verified ? ' <span class="verified">✓</span>' : ''}</div>
+          <div class="k-meta"><span class="k-rating">★ ${k.rating || '—'}</span> · ${escHtml(k.city)} · ${k.experience || 0}y exp</div>
+        </div>
+      </div>
+      <div style="font-size:13px;line-height:1.5;color:var(--txd);margin-bottom:8px;">${escHtml((k.bio || '').substring(0, 140))}</div>
+      <div class="k-langs">🗣️ ${(k.languages || []).join(', ')}</div>
+      <div class="k-areas">${(k.areas || '').split(',').slice(0, 4).map(a => `<span class="k-area">${escHtml(a.trim())}</span>`).join('')}</div>
+      <div class="k-actions">
+        <button class="btn btn-primary btn-sm" style="flex:1;" onclick='bookKnocker(${JSON.stringify(k).replace(/'/g,"&#39;")})'>📅 ${lang === 'he' ? 'הזמן' : 'Book'}</button>
+        ${k.phone ? `<a href="tel:${escHtml(k.phone)}" class="btn btn-sm" style="flex:1;">📞 ${lang === 'he' ? 'התקשר' : 'Call'}</a>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function bookKnocker(k) {
+  const h = lang === 'he';
+  const m = document.createElement('div');
+  m.className = 'modal-overlay';
+  m.innerHTML = `
+    <div class="modal-card" style="max-width:420px;">
+      <h3 style="margin-bottom:6px;">${h ? 'הזמן את' : 'Book'} ${escHtml(k.name)}</h3>
+      <p style="font-size:13px;color:var(--txd);margin-bottom:14px;">${h ? 'מילוי פרטי ההזמנה' : 'Fill in booking details'}</p>
+      <label class="input-label">${h ? 'תאריך' : 'Date'}</label>
+      <input class="input" id="bDate" type="date" min="${new Date().toISOString().split('T')[0]}" value="${new Date(Date.now() + 86400000).toISOString().split('T')[0]}" style="margin-bottom:10px;">
+      <label class="input-label">${h ? 'אזור' : 'Area (neighborhood)'}</label>
+      <input class="input" id="bArea" placeholder="Van Nuys" value="${escHtml((k.areas || '').split(',')[0].trim())}" style="margin-bottom:10px;">
+      <label class="input-label">${h ? 'מספר דלתות' : 'Number of doors'}</label>
+      <input class="input" id="bDoors" type="number" value="100" min="20" style="margin-bottom:10px;">
+      <div style="background:var(--acd);padding:12px;border-radius:8px;margin-bottom:10px;display:flex;justify-content:space-between;font-size:14px;">
+        <span style="color:var(--ac);">${h ? 'סה״כ' : 'Total'}</span>
+        <strong style="color:var(--ac);font-size:18px;" id="bTotal">$10,000</strong>
+      </div>
+      <label class="input-label">${h ? 'הערות' : 'Notes for knocker'}</label>
+      <textarea class="textarea" id="bNotes" rows="2" placeholder="${h ? 'פרטים על השירות שלך...' : 'Details about your service — roofing, solar, remodel, etc.'}" style="margin-bottom:14px;"></textarea>
+      <div style="background:var(--bg);padding:10px;border-radius:8px;font-size:12px;color:var(--txd);margin-bottom:14px;line-height:1.5;">
+        💡 <span data-en="Payment happens offline — we just connect you. Discuss terms directly with the knocker." data-he="תשלום מחוץ למערכת — אנחנו רק מחברים אתכם. דונו בתנאים ישירות עם הדופק." data-es="El pago ocurre fuera de la plataforma — solo los conectamos. Discutan los términos directamente con el tocador.">Payment happens offline — we just connect you. Discuss terms directly with the knocker.</span>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn" style="flex:1;" onclick="this.closest('.modal-overlay').remove()">${h ? 'ביטול' : 'Cancel'}</button>
+        <button class="btn btn-primary" style="flex:2;" onclick='confirmBooking(${JSON.stringify(k).replace(/'/g,"&#39;")})'>${h ? 'אשר הזמנה' : 'Confirm Booking'}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(m);
+  requestAnimationFrame(() => m.classList.add('open'));
+  m.onclick = e => { if (e.target === m) m.remove(); };
+
+  const doorsEl = document.getElementById('bDoors');
+  const updateTotal = () => {
+    const doors = parseInt(doorsEl.value) || 0;
+    document.getElementById('bTotal').textContent = '$' + (doors * (k.ratePerDoor || 100)).toLocaleString();
+  };
+  doorsEl.addEventListener('input', updateTotal);
+}
+
+async function confirmBooking(k) {
+  const data = {
+    knockerId: k.id,
+    knockerName: k.name,
+    contractorEmail: (getCachedUser() || {}).email,
+    date: document.getElementById('bDate').value,
+    area: document.getElementById('bArea').value.trim(),
+    doors: parseInt(document.getElementById('bDoors').value) || 0,
+    ratePerDoor: k.ratePerDoor || 100,
+    total: (parseInt(document.getElementById('bDoors').value) || 0) * (k.ratePerDoor || 100),
+    status: 'requested',
+    notes: document.getElementById('bNotes').value.trim()
+  };
+  try {
+    const created = await Biz.create('doorbookings', data);
+    bookings.unshift(created);
+    document.querySelector('.modal-overlay')?.remove();
+    renderBookings();
+    setTab('bookings');
+    showToast(lang === 'he' ? '✓ הזמנה נשלחה. הדופק יצור קשר' : '✓ Booking sent. The knocker will contact you.', 'ok');
+    // Also suggest contacting directly
+    if (k.phone) {
+      setTimeout(() => {
+        if (confirm(lang === 'he' ? 'להתקשר לדופק עכשיו?' : 'Call knocker now?')) {
+          window.location.href = 'tel:' + k.phone;
+        }
+      }, 600);
+    }
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+async function signupKnocker() {
+  const name = document.getElementById('kName').value.trim();
+  const phone = document.getElementById('kPhone').value.trim();
+  const city = document.getElementById('kCity').value.trim();
+  const areas = document.getElementById('kAreas').value.trim();
+  const langsActive = Array.from(document.querySelectorAll('#kLangs .chip.on')).map(c => c.dataset.lang);
+
+  if (!name || !phone || !city || !areas) {
+    showToast(lang === 'he' ? 'מלא את כל השדות החובה' : 'Fill all required fields', 'err');
+    return;
+  }
+
+  const data = {
+    name,
+    phone,
+    email: document.getElementById('kEmail').value.trim(),
+    city,
+    areas,
+    languages: langsActive,
+    experience: parseInt(document.getElementById('kExp').value) || 0,
+    bio: document.getElementById('kBio').value.trim(),
+    rating: 0,
+    ratePerDoor: 100,
+    verified: false,
+    available: true
+  };
+
+  try {
+    const created = await Biz.create('doorknockers', data);
+    knockers.unshift(created);
+    showToast('✓ ' + (lang === 'he' ? 'הרשמה התקבלה — נוודא תוך 48 שעות' : 'Registration received — we verify within 48h'), 'ok');
+    // Clear form
+    document.getElementById('kName').value = '';
+    document.getElementById('kPhone').value = '';
+    document.getElementById('kEmail').value = '';
+    document.getElementById('kCity').value = '';
+    document.getElementById('kAreas').value = '';
+    document.getElementById('kExp').value = '0';
+    document.getElementById('kBio').value = '';
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+function toggleChip(el) { el.classList.toggle('on'); }
+
+function renderBookings() {
+  const el = document.getElementById('bookingsList');
+  if (bookings.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="icon">📅</div>
+      <p>${lang === 'he' ? 'אין הזמנות עדיין' : 'No bookings yet. Book a knocker from the Hire tab.'}</p>
+    </div>`;
+    return;
+  }
+  el.innerHTML = bookings.map(b => `
+    <div style="background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <strong>${escHtml(b.knockerName || 'Knocker')}</strong>
+        <span style="padding:2px 10px;border-radius:6px;font-size:11px;font-weight:700;background:var(--acd);color:var(--ac);">${escHtml(b.status || 'requested')}</span>
+      </div>
+      <div style="font-size:13px;color:var(--txd);margin-bottom:6px;">${fmtDate(b.date)} · ${escHtml(b.area || '')} · ${b.doors} doors</div>
+      <div style="font-size:14px;font-weight:700;color:var(--ac);">${fmtMoney(b.total)}</div>
+      ${b.notes ? `<div style="font-size:12px;color:var(--txd);margin-top:6px;padding:8px;background:var(--bg);border-radius:6px;">${escHtml(b.notes)}</div>` : ''}
+      <div style="margin-top:8px;display:flex;gap:6px;">
+        <button class="btn btn-sm" style="color:var(--red);" onclick="cancelBooking('${b.id}')">✕ ${lang === 'he' ? 'בטל' : 'Cancel'}</button>
+      </div>
+    </div>`).join('');
+}
+
+async function cancelBooking(id) {
+  if (!confirmDelete('this booking')) return;
+  try {
+    await Biz.delete('doorbookings', id);
+    bookings = bookings.filter(b => b.id !== id);
+    renderBookings();
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+init();
+</script>
+</body>
+</html>

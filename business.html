@@ -167,6 +167,24 @@
       <span class="bc-name" data-en="Compliance" data-es="Cumplimiento" data-he="תאימות">Compliance</span>
       <span class="bc-desc" data-en="Licenses, insurance, permits, safety" data-es="Licencias, seguros, permisos, seguridad" data-he="רישיונות, ביטוח, היתרים, בטיחות">Licenses, insurance, permits, safety</span>
     </a>
+    <a href="/business/taxes.html" class="biz-card" style="border-color:var(--red);">
+      <span class="bc-count" id="cTaxes">0</span>
+      <span class="bc-icon">💵</span>
+      <span class="bc-name" data-en="Tax Tracker" data-es="Registro de Impuestos" data-he="מעקב מסים">Tax Tracker</span>
+      <span class="bc-desc" data-en="Quarterly taxes, deductions, mileage, CPA export" data-es="Impuestos trimestrales, deducciones, millaje" data-he="מסים רבעוניים, ניכויים, קילומטרים">Quarterly taxes, deductions, mileage, CPA export</span>
+    </a>
+    <a href="/business/jobs.html" class="biz-card" style="border-color:var(--blu);">
+      <span class="bc-count" id="cJobs">0</span>
+      <span class="bc-icon">👷</span>
+      <span class="bc-name" data-en="Jobs Portal" data-es="Portal de Empleos" data-he="פורטל עבודה">Jobs Portal</span>
+      <span class="bc-desc" data-en="Find workers or post jobs, contractor to runner" data-es="Encuentra trabajadores o publica empleos" data-he="מצא עובדים או פרסם עבודות">Find workers or post jobs, contractor to runner</span>
+    </a>
+    <a href="/business/door-knockers.html" class="biz-card" style="border-color:var(--grn);">
+      <span class="bc-count" id="cKnockers">0</span>
+      <span class="bc-icon">🚪</span>
+      <span class="bc-name" data-en="Door Knockers" data-es="Tocadores de Puertas" data-he="דופקי דלתות">Door Knockers</span>
+      <span class="bc-desc" data-en="Hire door-to-door sales at $100/door or become one" data-es="Contrata ventas puerta a puerta a $100/puerta" data-he="שכור אנשי מכירות $100/דלת">Hire door-to-door sales at $100/door or become one</span>
+    </a>
   </div>
 </div>
 
@@ -182,6 +200,9 @@ async function loadStats() {
   const endpoints = [
     { key: 'cReceipts', url: '/api/receipts' },
     { key: 'cClients', url: '/api/clients' },
+    { key: 'cTaxes', url: '/api/taxes' },
+    { key: 'cJobs', url: '/api/jobs' },
+    { key: 'cKnockers', url: '/api/doorknockers' },
     { key: 'cExpenses', url: '/api/expenses' },
     { key: 'cBProjects', url: '/api/bprojects' },
     { key: 'cSuppliers', url: '/api/suppliers' },
