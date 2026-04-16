@@ -328,8 +328,8 @@ document.getElementById('logoInput').addEventListener('change', async function(e
   if (!file) return;
 
   // Check size
-  if (file.size > 2 * 1024 * 1024) {
-    showToast(lang === 'he' ? 'קובץ גדול מדי (מקס 2MB)' : 'File too large (max 2MB)', 'err');
+  if (file.size > 5 * 1024 * 1024) {
+    showToast(lang === 'he' ? 'קובץ גדול מדי (מקס 5MB)' : 'File too large (max 5MB)', 'err');
     return;
   }
 

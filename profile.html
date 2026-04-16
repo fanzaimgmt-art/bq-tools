@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — My Profile</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  body { display: flex; flex-direction: column; }
+
+  .profile-avatar {
+    width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--ac);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px; font-weight: 900; color: var(--bg); background: var(--ac);
+    margin: 0 auto 16px; overflow: hidden; position: relative;
+  }
+  .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .profile-avatar-edit {
+    position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,.6);
+    font-size: 11px; color: #fff; text-align: center; padding: 4px 0; cursor: pointer;
+  }
+
+  .profile-section {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 14px;
+    padding: 20px; margin-bottom: 14px;
+  }
+  .profile-section h3 {
+    font-size: 15px; font-weight: 700; color: var(--ac); margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .field-row { margin-bottom: 14px; }
+  .field-label {
+    font-size: 13px; font-weight: 700; color: var(--txd); margin-bottom: 4px; display: block;
+  }
+  .field-input {
+    width: 100%; padding: 12px 14px; border: 1px solid var(--bd); border-radius: var(--r);
+    background: var(--bg); color: var(--tx); font-family: 'Heebo', sans-serif; font-size: 16px;
+  }
+  .field-input:focus { outline: none; border-color: var(--ac); }
+  .field-select {
+    width: 100%; padding: 12px 14px; border: 1px solid var(--bd); border-radius: var(--r);
+    background: var(--bg); color: var(--tx); font-family: 'Heebo', sans-serif; font-size: 16px;
+    appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23888' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 14px center; background-size: 12px;
+  }
+  [dir="rtl"] .field-select { background-position: left 14px center; }
+
+  .logo-upload-area {
+    border: 2px dashed var(--bd); border-radius: 10px; padding: 20px;
+    text-align: center; cursor: pointer; transition: all .2s;
+    position: relative; background: var(--bg); margin-bottom: 8px;
+  }
+  .logo-upload-area:hover { border-color: var(--ac); }
+  .logo-upload-area input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .logo-upload-area img { width: 80px; height: 80px; border-radius: 10px; object-fit: cover; }
+  .logo-upload-area .logo-hint { font-size: 13px; color: var(--txd); margin-top: 6px; }
+
+  .lang-choice { display: flex; gap: 10px; }
+  .lang-opt {
+    flex: 1; padding: 14px; border: 1px solid var(--bd); border-radius: 10px;
+    text-align: center; cursor: pointer; transition: all .2s;
+    min-height: 52px; display: flex; align-items: center; justify-content: center;
+    gap: 8px; font-size: 15px; font-weight: 600;
+    background: none; color: var(--tx); font-family: inherit;
+  }
+  .lang-opt:hover { border-color: var(--ac); }
+  .lang-opt.selected { border-color: var(--ac); background: var(--acd); color: var(--ac); }
+
+  .data-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .data-row .btn { flex: 1; }
+
+  .danger-zone {
+    border-color: rgba(255,107,107,.2);
+  }
+  .danger-zone h3 { color: var(--red); }
+
+  .save-bar {
+    position: sticky; bottom: 0; background: var(--bg); border-top: 1px solid var(--bd);
+    padding: 14px 0; display: none; z-index: 50;
+  }
+  .save-bar.show { display: block; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/" class="nav-link" data-en="← Home" data-he="בית →">← Home</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <h1 class="page-title" data-en="My Profile" data-he="הפרופיל שלי">My Profile</h1>
+  <p class="page-sub" data-en="Edit your business info. This auto-fills into reports, exports, and your directory listing." data-he="ערוך את פרטי העסק שלך. הם ימלאו אוטומטית בדוחות, ייצוא וברישום ה-Directory.">Edit your business info. This auto-fills into reports, exports, and your directory listing.</p>
+
+  <!-- Avatar -->
+  <div class="profile-avatar" id="profileAvatar"></div>
+
+  <!-- Business Info -->
+  <div class="profile-section">
+    <h3>🏢 <span data-en="Business Info" data-he="פרטי עסק">Business Info</span></h3>
+
+    <div class="field-row">
+      <label class="field-label" data-en="Business Name" data-he="שם העסק">Business Name</label>
+      <input class="field-input" type="text" id="fBusinessName" placeholder="e.g. Gold Remodeling" autocomplete="organization">
+    </div>
+
+    <div class="field-row">
+      <label class="field-label" data-en="Business Type" data-he="סוג עסק">Business Type</label>
+      <select class="field-select" id="fBusinessType">
+        <option value="">—</option>
+        <option value="General Contractor">General Contractor</option>
+        <option value="Remodeler">Remodeler</option>
+        <option value="Painter">Painter</option>
+        <option value="Roofer">Roofer</option>
+        <option value="Landscaper">Landscaper</option>
+        <option value="Interior Designer">Interior Designer</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
+
+    <div class="field-row">
+      <label class="field-label" data-en="Phone" data-he="טלפון">Phone</label>
+      <input class="field-input" type="tel" id="fPhone" placeholder="+1 (555) 123-4567" autocomplete="tel">
+    </div>
+
+    <div class="field-row">
+      <label class="field-label" data-en="Logo" data-he="לוגו">Logo</label>
+      <div class="logo-upload-area" id="logoArea">
+        <div id="logoPreview"><span style="font-size:24px;opacity:.3;">📷</span></div>
+        <div class="logo-hint" data-en="Click to upload (max 5MB, resized to 200x200)" data-he="לחץ להעלאה (מקס 5MB, מוקטן ל-200x200)">Click to upload (max 5MB)</div>
+        <input type="file" accept="image/*" id="logoInput">
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings -->
+  <div class="profile-section" id="settings">
+    <h3>⚙️ <span data-en="Settings" data-he="הגדרות">Settings</span></h3>
+
+    <div class="field-row">
+      <label class="field-label" data-en="Language" data-he="שפה">Language</label>
+      <div class="lang-choice">
+        <button class="lang-opt" id="langEn" onclick="pickLang('en')">🇺🇸 English</button>
+        <button class="lang-opt" id="langHe" onclick="pickLang('he')">🇮🇱 עברית</button>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <label class="field-label" data-en="Email" data-he="אימייל">Email</label>
+      <input class="field-input" type="email" id="fEmail" disabled style="color:var(--txd);">
+    </div>
+  </div>
+
+  <!-- Save -->
+  <button class="btn btn-primary" style="width:100%;font-size:16px;margin-bottom:14px;" onclick="saveProfile()" id="saveBtn" data-en="Save Changes" data-he="שמור שינויים">Save Changes</button>
+
+  <!-- Data -->
+  <div class="profile-section">
+    <h3>📦 <span data-en="Data" data-he="מידע">Data</span></h3>
+    <div class="data-row">
+      <button class="btn" onclick="exportData()" data-en="Export JSON" data-he="ייצוא JSON">Export JSON</button>
+      <button class="btn" style="position:relative;" data-en="Import JSON" data-he="ייבוא JSON">
+        Import JSON
+        <input type="file" accept=".json" onchange="importData(event)" style="position:absolute;inset:0;opacity:0;cursor:pointer;">
+      </button>
+    </div>
+  </div>
+
+  <!-- Danger Zone -->
+  <div class="profile-section danger-zone">
+    <h3>⚠️ <span data-en="Danger Zone" data-he="אזור מסוכן">Danger Zone</span></h3>
+    <p style="font-size:14px;color:var(--txd);margin-bottom:14px;line-height:1.5;" data-en="This will permanently delete your account and all data. This action cannot be undone." data-he="פעולה זו תמחק את החשבון שלך ואת כל המידע לצמיתות. לא ניתן לבטל פעולה זו.">This will permanently delete your account and all data. This action cannot be undone.</p>
+    <button class="btn btn-danger" style="width:100%;" onclick="deleteAccount()" data-en="Delete Account" data-he="מחק חשבון">Delete Account</button>
+  </div>
+</div>
+
+<footer class="footer"><div class="footer-brand">Powered by BQ Tools — BQ Production LLC</div></footer>
+
+<script src="js/ai.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/crypto.js"></script>
+<script src="js/common.js"></script>
+<script src="js/assistant.js"></script>
+<script>
+// Redirect if not logged in
+if (!isLoggedIn()) {
+  window.location.href = '/auth.html';
+}
+
+let selectedLang = lang;
+let newLogo = null;
+
+// Load profile data
+function loadProfile() {
+  const user = getCachedUser();
+  if (!user) return;
+
+  document.getElementById('fBusinessName').value = user.businessName || '';
+  document.getElementById('fBusinessType').value = user.businessType || '';
+  document.getElementById('fPhone').value = user.phone || '';
+  document.getElementById('fEmail').value = user.email || '';
+
+  // Avatar
+  const av = document.getElementById('profileAvatar');
+  if (user.picture) {
+    av.innerHTML = `<img src="${user.picture}" alt="">`;
+  } else if (user.logo) {
+    av.innerHTML = `<img src="${user.logo}" alt="">`;
+  } else {
+    av.textContent = (user.businessName || user.email || '?')[0].toUpperCase();
+  }
+
+  // Logo preview
+  if (user.logo) {
+    document.getElementById('logoPreview').innerHTML = `<img src="${user.logo}" alt="">`;
+  }
+
+  // Language
+  selectedLang = user.language || lang;
+  document.getElementById('langEn').classList.toggle('selected', selectedLang === 'en');
+  document.getElementById('langHe').classList.toggle('selected', selectedLang === 'he');
+}
+
+function pickLang(l) {
+  selectedLang = l;
+  document.getElementById('langEn').classList.toggle('selected', l === 'en');
+  document.getElementById('langHe').classList.toggle('selected', l === 'he');
+}
+
+// Logo upload
+document.getElementById('logoInput').addEventListener('change', async function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) {
+    showToast(lang === 'he' ? 'קובץ גדול מדי (מקס 5MB)' : 'File too large (max 5MB)', 'err');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = async function(ev) {
+    const resized = await resizeForLogo(ev.target.result);
+    newLogo = resized;
+    document.getElementById('logoPreview').innerHTML = `<img src="${resized}" alt="">`;
+  };
+  reader.readAsDataURL(file);
+});
+
+function resizeForLogo(dataUrl) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const size = 200;
+      const c = document.createElement('canvas');
+      c.width = size; c.height = size;
+      const ctx = c.getContext('2d');
+      const s = Math.min(img.width, img.height);
+      const sx = (img.width - s) / 2;
+      const sy = (img.height - s) / 2;
+      ctx.drawImage(img, sx, sy, s, s, 0, 0, size, size);
+      resolve(c.toDataURL('image/jpeg', 0.8));
+    };
+    img.src = dataUrl;
+  });
+}
+
+// Save
+async function saveProfile() {
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true;
+  btn.textContent = '...';
+
+  const updates = {
+    businessName: document.getElementById('fBusinessName').value.trim(),
+    businessType: document.getElementById('fBusinessType').value,
+    phone: document.getElementById('fPhone').value.trim(),
+    language: selectedLang
+  };
+
+  if (newLogo) {
+    updates.logo = newLogo;
+  }
+
+  try {
+    await updateUserProfile(updates);
+    if (selectedLang !== lang) {
+      setLang(selectedLang);
+    }
+    showToast(lang === 'he' ? '✓ הפרופיל נשמר!' : '✓ Profile saved!', 'ok');
+    loadProfile();
+  } catch (err) {
+    showToast(err.message, 'err');
+  }
+
+  btn.disabled = false;
+  btn.textContent = lang === 'he' ? 'שמור שינויים' : 'Save Changes';
+}
+
+// Export/Import
+function exportData() {
+  const user = getCachedUser();
+  if (!user) return;
+  const blob = new Blob([JSON.stringify(user, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `bq-profile-${user.email.split('@')[0]}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast(lang === 'he' ? 'פרופיל יוצא!' : 'Profile exported!', 'ok');
+}
+
+async function importData(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    if (data.businessName) {
+      await updateUserProfile({
+        businessName: data.businessName,
+        phone: data.phone || '',
+        logo: data.logo || '',
+        businessType: data.businessType || '',
+        language: data.language || 'en'
+      });
+      loadProfile();
+      showToast(lang === 'he' ? 'פרופיל יובא!' : 'Profile imported!', 'ok');
+    }
+  } catch {
+    showToast(lang === 'he' ? 'קובץ לא תקין' : 'Invalid file', 'err');
+  }
+}
+
+// Delete Account
+function deleteAccount() {
+  const msg = lang === 'he'
+    ? 'האם אתה בטוח שאתה רוצה למחוק את החשבון? פעולה זו לא ניתנת לביטול.'
+    : 'Are you sure you want to delete your account? This cannot be undone.';
+
+  const m = document.createElement('div');
+  m.className = 'modal-overlay';
+  m.innerHTML = `
+    <div class="modal-card" style="max-width:380px;text-align:center;">
+      <div style="font-size:40px;margin-bottom:12px;">⚠️</div>
+      <h3 style="color:var(--red);margin-bottom:8px;" data-en="Delete Account?" data-he="למחוק חשבון?">${lang === 'he' ? 'למחוק חשבון?' : 'Delete Account?'}</h3>
+      <p style="font-size:14px;color:var(--txd);margin-bottom:20px;line-height:1.5;">${msg}</p>
+      <div style="display:flex;gap:8px;">
+        <button class="btn" style="flex:1;" onclick="this.closest('.modal-overlay').remove()" data-en="Cancel" data-he="ביטול">${lang === 'he' ? 'ביטול' : 'Cancel'}</button>
+        <button class="btn btn-danger" style="flex:1;" onclick="confirmDelete()" data-en="Delete" data-he="מחק">${lang === 'he' ? 'מחק' : 'Delete'}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(m);
+  requestAnimationFrame(() => m.classList.add('open'));
+  m.onclick = (e) => { if (e.target === m) m.remove(); };
+}
+
+function confirmDelete() {
+  // Clear all local data
+  localStorage.removeItem('bq_token');
+  localStorage.removeItem('bq_user');
+  localStorage.removeItem('bq_gallery');
+  localStorage.removeItem('bq_chat_history');
+  localStorage.removeItem('bq_lastAction');
+  localStorage.removeItem('bq_errors');
+  localStorage.removeItem('bq_chat_seen');
+  showToast(lang === 'he' ? 'החשבון נמחק' : 'Account deleted', 'ok');
+  setTimeout(() => { window.location.href = '/'; }, 800);
+}
+
+// Scroll to settings section if hash
+if (window.location.hash === '#settings') {
+  setTimeout(() => {
+    document.getElementById('settings').scrollIntoView({ behavior: 'smooth' });
+  }, 300);
+}
+
+loadProfile();
+</script>
+</body>
+</html>

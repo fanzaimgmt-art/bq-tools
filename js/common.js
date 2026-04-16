@@ -22,41 +22,108 @@ function setLang(l) {
   });
 }
 
-// ── Nav Builder ──
-function buildNav(activePage) {
-  const nav = document.createElement('nav');
-  nav.className = 'nav';
+// ── Profile Avatar Dropdown ──
+function getAvatarHTML(user) {
+  if (user.picture) return `<img src="${user.picture}" alt="">`;
+  if (user.logo) return `<img src="${user.logo}" alt="">`;
+  const initial = (user.businessName || user.email || '?')[0].toUpperCase();
+  return initial;
+}
+
+function injectProfileAvatar() {
+  const navRight = document.querySelector('.nav-right');
+  if (!navRight) return;
+  const loggedIn = typeof isLoggedIn === 'function' && isLoggedIn();
+
+  // Remove any existing auth buttons (.btn.btn-sm that link to auth/dashboard)
+  const oldBtns = navRight.querySelectorAll('.btn.btn-sm');
+  oldBtns.forEach(b => {
+    const href = b.getAttribute('href') || '';
+    if (href.includes('auth') || href.includes('dashboard')) b.remove();
+  });
+
+  // Remove old avatar wrap if re-injecting
+  const oldWrap = navRight.querySelector('.nav-avatar-wrap');
+  if (oldWrap) oldWrap.remove();
+
+  const langToggle = navRight.querySelector('.lang-toggle');
+
+  if (!loggedIn) {
+    const signIn = document.createElement('a');
+    signIn.href = '/auth.html';
+    signIn.className = 'btn btn-sm';
+    signIn.setAttribute('data-en', 'Sign In');
+    signIn.setAttribute('data-he', 'התחבר');
+    signIn.textContent = lang === 'he' ? 'התחבר' : 'Sign In';
+    signIn.id = 'navSignInBtn';
+    if (langToggle) navRight.insertBefore(signIn, langToggle);
+    else navRight.appendChild(signIn);
+    return;
+  }
 
   const user = typeof getCachedUser === 'function' ? getCachedUser() : null;
-  const loggedIn = typeof isLoggedIn === 'function' ? isLoggedIn() : false;
-  const credits = user ? user.credits : 0;
-  const pro = user ? user.isPro : false;
+  if (!user) return;
 
-  const authBtn = loggedIn
-    ? `<a href="/dashboard.html" class="btn btn-sm ${pro ? 'btn-pro-active' : ''}">${pro ? 'PRO' : 'Account'}</a>`
-    : `<a href="/auth.html" class="btn btn-sm" data-en="Login" data-he="התחבר">Login</a>`;
+  const wrap = document.createElement('div');
+  wrap.className = 'nav-avatar-wrap';
 
-  const creditBar = loggedIn
-    ? `<div class="credit-bar ${credits < 5 ? (credits === 0 ? 'credit-empty' : 'credit-low') : ''}" id="creditBar">
-        <span>⚡</span>
-        <span class="credit-count">${credits}</span>
-      </div>`
-    : '';
+  const avatar = document.createElement('div');
+  avatar.className = 'nav-avatar';
+  avatar.id = 'navAvatar';
+  avatar.innerHTML = getAvatarHTML(user);
+  avatar.onclick = function(e) {
+    e.stopPropagation();
+    const dd = document.getElementById('navDropdown');
+    dd.classList.toggle('open');
+  };
 
-  nav.innerHTML = `
-    <a href="/" class="nav-logo">BQ <span>Tools</span></a>
-    <div class="nav-right">
-      <a href="/#tools" class="nav-link" data-en="Tools" data-he="כלים">Tools</a>
-      <a href="/directory.html" class="nav-link" data-en="Directory" data-he="ספר עסקים">Directory</a>
-      <a href="/gallery.html" class="nav-link" data-en="Gallery" data-he="גלריה">Gallery</a>
-      ${creditBar}
-      ${authBtn}
-      <div class="lang-toggle">
-        <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
-        <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
-      </div>
-    </div>`;
-  document.body.prepend(nav);
+  const credits = user.credits || 0;
+  const name = user.businessName || user.email.split('@')[0];
+
+  const dd = document.createElement('div');
+  dd.className = 'nav-dropdown';
+  dd.id = 'navDropdown';
+  dd.innerHTML = `
+    <div class="nav-dd-header">
+      <div class="nav-dd-name">${escText(name)}</div>
+      <div class="nav-dd-email">${escText(user.email)}</div>
+      <div class="nav-dd-credits">⚡ <span id="ddCredits">${credits}</span> ${lang === 'he' ? 'קרדיטים' : 'credits'}</div>
+    </div>
+    <a href="/profile.html" class="nav-dd-item"><span class="dd-icon">🏢</span>${lang === 'he' ? 'הפרופיל שלי' : 'My Profile'}</a>
+    <a href="/dashboard.html" class="nav-dd-item"><span class="dd-icon">📊</span>${lang === 'he' ? 'דשבורד' : 'Dashboard'}</a>
+    <a href="/gallery.html" class="nav-dd-item"><span class="dd-icon">📁</span>${lang === 'he' ? 'הפרויקטים שלי' : 'My Projects'}</a>
+    <a href="/directory-profile.html?email=${encodeURIComponent(user.email)}" class="nav-dd-item"><span class="dd-icon">📋</span>${lang === 'he' ? 'הרישום שלי ב-Directory' : 'My Directory Listing'}</a>
+    <div class="nav-dd-divider"></div>
+    <a href="/profile.html#settings" class="nav-dd-item"><span class="dd-icon">⚙️</span>${lang === 'he' ? 'הגדרות' : 'Settings'}</a>
+    <div class="nav-dd-divider"></div>
+    <button class="nav-dd-item danger" onclick="doLogout()"><span class="dd-icon">🚪</span>${lang === 'he' ? 'התנתק' : 'Log Out'}</button>
+  `;
+
+  wrap.appendChild(avatar);
+  wrap.appendChild(dd);
+
+  if (langToggle) navRight.insertBefore(wrap, langToggle);
+  else navRight.appendChild(wrap);
+
+  // Close dropdown on outside click
+  document.addEventListener('click', function(e) {
+    const d = document.getElementById('navDropdown');
+    if (d && !d.contains(e.target) && e.target.id !== 'navAvatar') {
+      d.classList.remove('open');
+    }
+  });
+}
+
+function doLogout() {
+  localStorage.removeItem('bq_token');
+  localStorage.removeItem('bq_user');
+  window.location.href = '/';
+}
+
+function escText(s) {
+  const d = document.createElement('span');
+  d.textContent = s || '';
+  return d.innerHTML;
 }
 
 // ── Footer Builder ──
@@ -138,7 +205,7 @@ function requireOnline() {
 // ── Inject credit bar into navs that don't have one ──
 function injectCreditBar() {
   if (typeof isLoggedIn !== 'function' || !isLoggedIn()) return;
-  if (document.getElementById('creditBar')) return; // already has one
+  if (document.getElementById('creditBar')) return;
 
   const navRight = document.querySelector('.nav-right');
   if (!navRight) return;
@@ -151,12 +218,14 @@ function injectCreditBar() {
   bar.id = 'creditBar';
   bar.innerHTML = `<span>⚡</span><span class="credit-count">${credits}</span>`;
 
-  // Insert before the first button/link in nav-right
-  const firstBtn = navRight.querySelector('.btn');
-  if (firstBtn) {
-    navRight.insertBefore(bar, firstBtn);
+  // Insert before avatar or first button
+  const avatarWrap = navRight.querySelector('.nav-avatar-wrap');
+  if (avatarWrap) {
+    navRight.insertBefore(bar, avatarWrap);
   } else {
-    navRight.appendChild(bar);
+    const firstBtn = navRight.querySelector('.btn');
+    if (firstBtn) navRight.insertBefore(bar, firstBtn);
+    else navRight.appendChild(bar);
   }
 }
 
@@ -164,13 +233,21 @@ function injectCreditBar() {
 document.addEventListener('DOMContentLoaded', () => {
   setLang(lang);
 
-  // Inject credit bar on pages that don't have one
-  injectCreditBar();
+  // Skip avatar injection on admin page
+  if (window.location.pathname !== '/admin.html') {
+    injectProfileAvatar();
+    injectCreditBar();
+  }
 
   // Refresh user data from server if logged in
   if (typeof isLoggedIn === 'function' && isLoggedIn()) {
     fetchUser().then(() => {
       if (typeof updateCreditDisplay === 'function') updateCreditDisplay();
+      // Re-render avatar with fresh data
+      if (window.location.pathname !== '/admin.html') {
+        injectProfileAvatar();
+        injectCreditBar();
+      }
     }).catch(() => {});
   }
 });
