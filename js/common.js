@@ -799,6 +799,10 @@ const HIW_CONFIGS = {
       { icon: '⭐', en: 'Go Pro to add phone, photos, and reviews', he: 'שדרג ל-Pro כדי להוסיף טלפון, תמונות וביקורות' },
       { icon: '📍', en: 'Add your work locations to appear on the map', he: 'הוסף את מיקומי העבודה שלך כדי להופיע במפה' },
     ],
+    example: {
+      en: 'A Pro listing can include up to 20 photos, client reviews, and multiple work locations — all searchable on the map.',
+      he: 'רישום Pro יכול לכלול עד 20 תמונות, ביקורות לקוחות, ומספר מיקומי עבודה — הכל ניתן לחיפוש על המפה.'
+    }
   },
 };
 
