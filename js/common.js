@@ -699,7 +699,7 @@ function buildHowItWorks(containerId, config) {
             <p>${h ? s.he : s.en}</p>
           </div>`).join('')}
       </div>
-      <div class="hiw-example">${h ? config.example.he : config.example.en}</div>
+      ${config.example ? `<div class="hiw-example">${h ? config.example.he : config.example.en}</div>` : ''}
       ${videoHtml}
     </div>`;
 }
@@ -799,10 +799,6 @@ const HIW_CONFIGS = {
       { icon: '⭐', en: 'Go Pro to add phone, photos, and reviews', he: 'שדרג ל-Pro כדי להוסיף טלפון, תמונות וביקורות' },
       { icon: '📍', en: 'Add your work locations to appear on the map', he: 'הוסף את מיקומי העבודה שלך כדי להופיע במפה' },
     ],
-    example: {
-      en: 'Gold Remodeling: Pro listing with 12 photos, 8 reviews, and 5 work locations across LA',
-      he: 'Gold Remodeling: רישום Pro עם 12 תמונות, 8 ביקורות, ו-5 מיקומי עבודה ברחבי LA'
-    }
   },
 };
 
