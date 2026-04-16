@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Admin</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  body { display: flex; flex-direction: column; }
+
+  .admin-login {
+    max-width: 360px; margin: 60px auto; text-align: center;
+  }
+
+  .admin-content { display: none; }
+  .admin-content.show { display: block; }
+
+  .admin-stats {
+    display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .admin-stat {
+    flex: 1; min-width: 120px; background: var(--sf); border: 1px solid var(--bd);
+    border-radius: 10px; padding: 14px; text-align: center;
+  }
+  .admin-stat .num { font-size: 28px; font-weight: 900; color: var(--ac); }
+  .admin-stat .label { font-size: 12px; color: var(--txd); }
+
+  .admin-section {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 12px;
+    padding: 20px; margin-bottom: 16px;
+  }
+  .admin-section h3 {
+    font-size: 16px; font-weight: 700; margin-bottom: 12px; color: var(--ac);
+  }
+
+  .user-table { width: 100%; border-collapse: collapse; }
+  .user-table th {
+    text-align: left; font-size: 11px; color: var(--txd); font-weight: 700;
+    padding: 8px 6px; border-bottom: 1px solid var(--bd);
+  }
+  .user-table td {
+    font-size: 13px; padding: 8px 6px; border-bottom: 1px solid rgba(255,255,255,.03);
+  }
+  .user-table .pro-badge {
+    background: var(--acd); color: var(--ac); padding: 2px 8px;
+    border-radius: 4px; font-size: 11px; font-weight: 700;
+  }
+  .user-table .free-badge {
+    background: rgba(136,136,136,.1); color: var(--txd); padding: 2px 8px;
+    border-radius: 4px; font-size: 11px;
+  }
+
+  .add-credits-form {
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end;
+  }
+  .add-credits-form .field { flex: 1; min-width: 120px; }
+  .add-credits-form label {
+    font-size: 11px; color: var(--txd); font-weight: 700; display: block; margin-bottom: 4px;
+  }
+  .add-credits-form input {
+    width: 100%; padding: 10px; border: 1px solid var(--bd); border-radius: 8px;
+    background: var(--bg); color: var(--tx); font-family: 'Heebo', sans-serif; font-size: 14px;
+  }
+
+  .search-bar {
+    display: flex; gap: 8px; margin-bottom: 16px;
+  }
+  .search-bar input {
+    flex: 1; padding: 10px 14px; border: 1px solid var(--bd); border-radius: 8px;
+    background: var(--bg); color: var(--tx); font-family: 'Heebo', sans-serif; font-size: 14px;
+  }
+
+  .error-list { max-height: 300px; overflow-y: auto; }
+  .error-item {
+    padding: 8px; border-bottom: 1px solid rgba(255,255,255,.03); font-size: 13px;
+  }
+  .error-item .error-page { color: var(--ac); font-weight: 600; }
+  .error-item .error-msg { color: var(--red); }
+  .error-item .error-date { color: var(--txd); font-size: 11px; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo">BQ <span>Admin</span></a>
+  <div class="nav-right">
+    <a href="/" class="nav-link">← Home</a>
+  </div>
+</nav>
+
+<!-- Login -->
+<div class="page admin-login" id="adminLogin">
+  <h2 style="margin-bottom:16px;">Admin Access</h2>
+  <input type="password" class="ob-input" id="adminPwd" placeholder="Password" style="text-align:center;">
+  <button class="btn btn-primary" style="width:100%;" onclick="doAdminLogin()">Enter</button>
+</div>
+
+<!-- Admin Content -->
+<div class="page admin-content" id="adminContent">
+  <h1 class="page-title">Admin Panel</h1>
+
+  <!-- Stats -->
+  <div class="admin-stats" id="adminStats">
+    <div class="admin-stat"><div class="num" id="aTotalUsers">0</div><div class="label">Total Users</div></div>
+    <div class="admin-stat"><div class="num" id="aProUsers">0</div><div class="label">Pro Users</div></div>
+    <div class="admin-stat"><div class="num" id="aTotalCredits">0</div><div class="label">Total Credits Used</div></div>
+  </div>
+
+  <!-- Add Credits -->
+  <div class="admin-section">
+    <h3>Add Credits / Verify Payment</h3>
+    <div class="add-credits-form">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="acEmail" placeholder="user@email.com">
+      </div>
+      <div class="field" style="max-width:100px;">
+        <label>Credits</label>
+        <input type="number" id="acAmount" placeholder="25" value="25">
+      </div>
+      <div style="display:flex;gap:6px;align-items:flex-end;">
+        <button class="btn btn-primary" style="min-height:44px;" onclick="addCreditsAdmin()">Add</button>
+        <button class="btn" style="min-height:44px;" onclick="addCreditsAdmin(true)">+ Make Pro</button>
+      </div>
+    </div>
+    <div id="acResult" style="margin-top:8px;font-size:13px;"></div>
+  </div>
+
+  <!-- Users -->
+  <div class="admin-section">
+    <h3>Users</h3>
+    <div class="search-bar">
+      <input type="text" id="userSearch" placeholder="Search by email..." oninput="filterUsers()">
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="user-table">
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>Credits</th>
+            <th>Plan</th>
+            <th>Business</th>
+            <th>Used/Mo</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="userTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Errors -->
+  <div class="admin-section">
+    <h3>Error Reports</h3>
+    <div class="error-list" id="errorList">
+      <div style="color:var(--txd);text-align:center;padding:20px;">Loading...</div>
+    </div>
+  </div>
+</div>
+
+<script src="js/ai.js"></script>
+<script src="js/common.js"></script>
+<script>
+let adminPwd = '';
+let allUsers = [];
+
+function doAdminLogin() {
+  adminPwd = document.getElementById('adminPwd').value;
+  if (!adminPwd) return;
+  // Test with a request
+  loadAdminData();
+}
+
+document.getElementById('adminPwd').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doAdminLogin();
+});
+
+async function adminCall(path, opts = {}) {
+  opts.adminPassword = adminPwd;
+  return apiCall(path, opts);
+}
+
+async function loadAdminData() {
+  try {
+    const data = await adminCall('/api/admin/users');
+    allUsers = data.users || [];
+
+    document.getElementById('adminLogin').style.display = 'none';
+    document.getElementById('adminContent').classList.add('show');
+
+    // Stats
+    document.getElementById('aTotalUsers').textContent = allUsers.length;
+    document.getElementById('aProUsers').textContent = allUsers.filter(u => u.isPro).length;
+    document.getElementById('aTotalCredits').textContent = allUsers.reduce((s, u) => s + (u.creditsUsedThisMonth || 0), 0);
+
+    renderUsers(allUsers);
+    loadErrors();
+  } catch (err) {
+    showToast('Invalid password or API error', 'err');
+  }
+}
+
+function renderUsers(users) {
+  const tbody = document.getElementById('userTableBody');
+  if (users.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--txd);">No users</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = users.map(u => `
+    <tr>
+      <td style="font-size:12px;">${u.email}</td>
+      <td style="font-weight:700;">⚡ ${u.credits}</td>
+      <td><span class="${u.isPro ? 'pro-badge' : 'free-badge'}">${u.isPro ? 'PRO' : 'Free'}</span></td>
+      <td style="font-size:12px;">${u.businessName || '—'}</td>
+      <td>${u.creditsUsedThisMonth || 0}</td>
+      <td>
+        <button class="btn btn-sm" style="font-size:11px;min-height:32px;padding:4px 8px;" onclick="togglePro('${u.email}')">${u.isPro ? 'Remove Pro' : 'Make Pro'}</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function filterUsers() {
+  const q = document.getElementById('userSearch').value.toLowerCase();
+  const filtered = allUsers.filter(u => u.email.includes(q) || (u.businessName || '').toLowerCase().includes(q));
+  renderUsers(filtered);
+}
+
+async function addCreditsAdmin(makePro) {
+  const email = document.getElementById('acEmail').value.trim();
+  const amount = parseInt(document.getElementById('acAmount').value) || 0;
+  const result = document.getElementById('acResult');
+
+  if (!email || amount <= 0) {
+    result.innerHTML = '<span style="color:var(--red);">Enter email and amount</span>';
+    return;
+  }
+
+  try {
+    const data = await adminCall('/api/credits/add', {
+      method: 'POST',
+      body: { email, amount, makePro: !!makePro }
+    });
+    result.innerHTML = `<span style="color:var(--grn);">✓ ${email}: ${data.credits} credits${data.isPro ? ' (PRO)' : ''}</span>`;
+    loadAdminData(); // Refresh
+  } catch (err) {
+    result.innerHTML = `<span style="color:var(--red);">✗ ${err.message}</span>`;
+  }
+}
+
+async function togglePro(email) {
+  try {
+    const data = await adminCall('/api/admin/toggle-pro', {
+      method: 'POST',
+      body: { email }
+    });
+    showToast(`${email}: ${data.isPro ? 'PRO activated' : 'Pro removed'}`, 'ok');
+    loadAdminData();
+  } catch (err) {
+    showToast(err.message, 'err');
+  }
+}
+
+async function loadErrors() {
+  try {
+    const data = await adminCall('/api/admin/errors');
+    const list = document.getElementById('errorList');
+
+    if (!data.errors || data.errors.length === 0) {
+      list.innerHTML = '<div style="color:var(--grn);text-align:center;padding:20px;">✓ No errors</div>';
+      return;
+    }
+
+    list.innerHTML = data.errors.slice(0, 50).map(e => `
+      <div class="error-item">
+        <span class="error-date">${new Date(e.timestamp).toLocaleString()}</span>
+        <span class="error-page">${e.page || ''}</span>
+        <div class="error-msg">${e.error || ''}</div>
+      </div>
+    `).join('');
+  } catch {
+    document.getElementById('errorList').innerHTML = '<div style="color:var(--txd);text-align:center;">Failed to load</div>';
+  }
+}
+</script>
+</body>
+</html>
