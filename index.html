@@ -261,6 +261,33 @@
   }
   .waitlist-form input:focus { outline: none; border-color: var(--ac); }
 
+  /* ── Video Showcase ── */
+  .video-showcase {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+    max-width: 920px; margin: 0 auto 8px;
+  }
+  .vs-card {
+    border-radius: 12px; overflow: hidden; text-decoration: none; transition: all .2s;
+    border: 1px solid var(--bd);
+  }
+  .vs-card:hover { border-color: var(--ac); transform: translateY(-2px); opacity: 1; }
+  .vs-thumb {
+    aspect-ratio: 16/9; background: linear-gradient(135deg,#3a2d1f,#5a4a3a);
+    display: flex; align-items: center; justify-content: center; position: relative;
+  }
+  .vs-play {
+    width: 44px; height: 44px; border-radius: 50%; background: rgba(0,0,0,.5);
+    border: 2px solid rgba(255,255,255,.3); display: flex; align-items: center;
+    justify-content: center; font-size: 18px; color: #fff; transition: all .2s;
+    backdrop-filter: blur(4px);
+  }
+  .vs-card:hover .vs-play { background: var(--ac); color: var(--bg); border-color: var(--ac); }
+  .vs-label {
+    position: absolute; bottom: 8px; left: 8px; font-size: 11px; font-weight: 700;
+    color: #fff; background: rgba(0,0,0,.5); padding: 3px 8px; border-radius: 6px;
+    backdrop-filter: blur(4px);
+  }
+
   /* ── Social Proof ── */
   .proof {
     width: 92%;
@@ -298,6 +325,46 @@
   .cta-banner h3 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
   .cta-banner p { color: var(--txd); margin-bottom: 20px; }
 
+  /* ── Mega Footer ── */
+  .mega-footer {
+    width: 100%; margin-top: 0; padding: 60px 32px 24px;
+    background: #0d0d10; border-top: 1px solid var(--bd);
+  }
+  .mf-grid {
+    max-width: 1000px; margin: 0 auto;
+    display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 32px;
+    margin-bottom: 40px;
+  }
+  .mf-brand {
+    font-size: 20px; font-weight: 900; color: var(--ac); letter-spacing: 2px; margin-bottom: 8px;
+  }
+  .mf-brand span { color: var(--tx); font-weight: 300; }
+  .mf-desc { font-size: 14px; color: var(--txd); line-height: 1.6; }
+  .mf-col h4 {
+    font-size: 13px; font-weight: 700; color: var(--tx); letter-spacing: .5px;
+    margin-bottom: 12px; text-transform: uppercase;
+  }
+  .mf-col a {
+    display: block; font-size: 14px; color: var(--txd); text-decoration: none;
+    padding: 4px 0; transition: color .15s;
+  }
+  .mf-col a:hover { color: var(--ac); opacity: 1; }
+  .mf-bottom {
+    max-width: 1000px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    padding-top: 20px; border-top: 1px solid rgba(255,255,255,.05);
+    font-size: 12px; color: rgba(255,255,255,.25);
+  }
+  .mf-legal { display: flex; gap: 16px; }
+  .mf-legal a { color: rgba(255,255,255,.25); text-decoration: none; transition: color .15s; }
+  .mf-legal a:hover { color: var(--ac); opacity: 1; }
+
+  @media (max-width: 600px) {
+    .mega-footer { padding: 40px 20px 20px; }
+    .mf-grid { grid-template-columns: 1fr 1fr; gap: 24px; }
+    .mf-bottom { flex-direction: column; gap: 8px; text-align: center; }
+  }
+
   @media (max-width: 600px) {
     .hero { padding: 50px 16px 40px; }
     .hero h1 { font-size: 30px; }
@@ -306,6 +373,7 @@
     .pricing-grid { grid-template-columns: 1fr; }
     .price-card.recommended { transform: none; }
     .coming-soon-grid { grid-template-columns: 1fr; }
+    .video-showcase { grid-template-columns: repeat(2, 1fr); }
     .waitlist-form { flex-direction: column; }
     .section-title { font-size: 24px; }
     .proof blockquote { font-size: 14px; }
@@ -469,6 +537,30 @@
     </div>
   </div>
 
+  <!-- Video Showcase -->
+  <p style="font-size:16px;font-weight:700;text-align:center;margin-bottom:16px;color:var(--tx);" data-en="Watch AI videos we created for real contractors" data-he="צפה בסרטוני AI שיצרנו לקבלנים אמיתיים">Watch AI videos we created for real contractors</p>
+  <div class="video-showcase">
+    <a href="https://bqprod.pages.dev/?ref=bqtools" target="_blank" rel="noopener" class="vs-card">
+      <div class="vs-thumb"><div class="vs-play">▶</div><div class="vs-label">Kitchen Remodel</div></div>
+    </a>
+    <a href="https://bqprod.pages.dev/?ref=bqtools" target="_blank" rel="noopener" class="vs-card">
+      <div class="vs-thumb" style="background:linear-gradient(135deg,#2d5a7a,#3a7a9d);"><div class="vs-play">▶</div><div class="vs-label">Bathroom Reno</div></div>
+    </a>
+    <a href="https://bqprod.pages.dev/?ref=bqtools" target="_blank" rel="noopener" class="vs-card">
+      <div class="vs-thumb" style="background:linear-gradient(135deg,#5a3a2d,#7a5a3a);"><div class="vs-play">▶</div><div class="vs-label">Full House</div></div>
+    </a>
+    <a href="https://bqprod.pages.dev/?ref=bqtools" target="_blank" rel="noopener" class="vs-card">
+      <div class="vs-thumb" style="background:linear-gradient(135deg,#2d7a4f,#4f9d6a);"><div class="vs-play">▶</div><div class="vs-label">Landscape</div></div>
+    </a>
+    <a href="https://bqprod.pages.dev/?ref=bqtools" target="_blank" rel="noopener" class="vs-card">
+      <div class="vs-thumb" style="background:linear-gradient(135deg,#7a2d5a,#9d3a7a);"><div class="vs-play">▶</div><div class="vs-label">Commercial</div></div>
+    </a>
+    <a href="https://bqprod.pages.dev/?ref=bqtools" target="_blank" rel="noopener" class="vs-card">
+      <div class="vs-thumb" style="background:linear-gradient(135deg,#5a5a2d,#7a7a3a);"><div class="vs-play">▶</div><div class="vs-label">Roofing</div></div>
+    </a>
+  </div>
+  <p style="font-size:14px;color:var(--ac);text-align:center;margin:16px 0 24px;font-weight:600;" data-en="Want videos like these? BQ Production members get 10% OFF" data-he="רוצה סרטונים כאלה? חברי BQ Production מקבלים 10% הנחה">Want videos like these? BQ Production members get 10% OFF</p>
+
   <div style="text-align:center;">
     <p style="color:var(--txd);font-size:15px;margin-bottom:12px;" data-en="Be first to know when AI Video launches" data-he="היה הראשון לדעת כשוידאו AI יושק" id="waitlistAnchor">Be first to know when AI Video launches</p>
     <div class="waitlist-form" id="waitlistForm">
@@ -563,17 +655,43 @@
 </div>
 
 <!-- Footer -->
-<footer class="footer">
-  <div class="footer-brand">Powered by BQ Tools — BQ Production LLC</div>
-  <div class="footer-links">
-    <a href="https://bqprod.pages.dev" target="_blank">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/></svg>
-      bqprod.pages.dev
-    </a>
-    <a href="https://instagram.com/bq_music" target="_blank">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/></svg>
-      @bq_music
-    </a>
+<footer class="mega-footer">
+  <div class="mf-grid">
+    <div class="mf-col">
+      <div class="mf-brand">BQ <span>Tools</span></div>
+      <p class="mf-desc" data-en="AI-powered tools for contractors and remodelers. Make your work sell itself." data-he="כלי AI לקבלנים ושיפוצניקים. תן לעבודה שלך למכור את עצמה.">AI-powered tools for contractors and remodelers. Make your work sell itself.</p>
+    </div>
+    <div class="mf-col">
+      <h4 data-en="Tools" data-he="כלים">Tools</h4>
+      <a href="/tools/compare.html" data-en="Compare" data-he="השוואה">Compare</a>
+      <a href="/tools/compare.html" data-en="AI Analysis" data-he="ניתוח AI">AI Analysis</a>
+      <a href="/tools/report.html" data-en="Quick Report" data-he="דוח מהיר">Quick Report</a>
+      <a href="/tools/estimate.html" data-en="Smart Estimate" data-he="הערכת עלות">Smart Estimate</a>
+      <a href="/tools/social-post.html" data-en="Social Post" data-he="פוסט חברתי">Social Post</a>
+      <a href="/tools/review.html" data-en="Review Request" data-he="בקשת ביקורת">Review Request</a>
+      <a href="/tools/sketch.html" data-en="Quick Sketch" data-he="סקיצה מהירה">Quick Sketch</a>
+    </div>
+    <div class="mf-col">
+      <h4 data-en="BQ Tools" data-he="BQ Tools">BQ Tools</h4>
+      <a href="#pricing" data-en="Pricing" data-he="מחירים">Pricing</a>
+      <a href="/directory.html" data-en="Directory" data-he="ספר עסקים">Directory</a>
+      <a href="#" style="color:var(--txd);pointer-events:none;" data-en="Blog (coming soon)" data-he="בלוג (בקרוב)">Blog (coming soon)</a>
+      <a href="#" style="color:var(--txd);pointer-events:none;" data-en="Help Center (coming soon)" data-he="מרכז עזרה (בקרוב)">Help Center (coming soon)</a>
+      <a href="#" style="color:var(--txd);pointer-events:none;" data-en="API (coming soon)" data-he="API (בקרוב)">API (coming soon)</a>
+    </div>
+    <div class="mf-col">
+      <h4 data-en="Connect" data-he="התחבר">Connect</h4>
+      <a href="https://instagram.com/bq_music" target="_blank" rel="noopener">Instagram @bq_music</a>
+      <a href="https://bqprod.pages.dev" target="_blank" rel="noopener">bqprod.pages.dev</a>
+      <a href="mailto:fanzai.mgmt@gmail.com">fanzai.mgmt@gmail.com</a>
+    </div>
+  </div>
+  <div class="mf-bottom">
+    <span>2026 BQ Production LLC. All rights reserved.</span>
+    <div class="mf-legal">
+      <a href="#" data-en="Privacy" data-he="פרטיות">Privacy</a>
+      <a href="#" data-en="Terms" data-he="תנאים">Terms</a>
+    </div>
   </div>
 </footer>
 

@@ -88,9 +88,11 @@ async function registerEmail(email) {
 }
 
 async function verifyCode(email, code) {
+  // Pass referral if stored from URL param
+  const referredBy = localStorage.getItem('bq_referral') || '';
   const data = await apiCall('/api/auth/verify', {
     method: 'POST',
-    body: { email, code },
+    body: { email, code, referredBy },
     noRedirect: true
   });
   if (data.ok) {

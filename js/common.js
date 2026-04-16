@@ -50,8 +50,12 @@ function _toggleDropdown(open) {
   if (open === undefined) open = !dd.classList.contains('open');
   dd.classList.toggle('open', open);
   if (bd) bd.classList.toggle('open', open);
-  // Prevent body scroll on mobile when open
-  document.body.style.overflow = open ? 'hidden' : '';
+  // Only lock scroll on mobile when dropdown is full-screen
+  if (window.innerWidth <= 600) {
+    document.body.style.overflow = open ? 'hidden' : '';
+  } else {
+    document.body.style.overflow = '';
+  }
 }
 
 function injectProfileAvatar() {
@@ -159,11 +163,13 @@ function injectProfileAvatar() {
       <button class="nav-dd-lang-btn${lang === 'he' ? ' on' : ''}" onclick="setLang('he');injectProfileAvatar()">🇮🇱 עב</button>
     </div>
 
+    <button class="nav-dd-item" onclick="showReferralLink()">
+      <span class="dd-icon">🎁</span><span class="dd-label">${isHe ? 'הזמן חבר' : 'Refer a Friend'}</span>
+    </button>
     <a href="https://www.paypal.com/ncp/payment/2LA7B7PZTHN54" target="_blank" rel="noopener" class="nav-dd-item accent" onclick="_toggleDropdown(false)">
       <span class="dd-icon">🛒</span><span class="dd-label">${isHe ? 'קנה קרדיטים' : 'Buy Credits'}</span>
     </a>
-    ${!user.isPro ? `
-    <a href="/auth.html" class="nav-dd-item green" onclick="_toggleDropdown(false)">
+    ${!user.isPro ? `<a href="/auth.html" class="nav-dd-item green" onclick="_toggleDropdown(false)">
       <span class="dd-icon">⭐</span><span class="dd-label">${isHe ? 'שדרג ל-Pro' : 'Upgrade to Pro'}</span>
     </a>` : ''}
 
@@ -197,6 +203,67 @@ function doLogout() {
   localStorage.removeItem('bq_token');
   localStorage.removeItem('bq_user');
   window.location.href = '/';
+}
+
+// ── Referral Link Modal ──
+function showReferralLink() {
+  _toggleDropdown(false);
+  const user = typeof getCachedUser === 'function' ? getCachedUser() : null;
+  if (!user) return;
+  const isHe = lang === 'he';
+  const link = `${window.location.origin}/?ref=${encodeURIComponent(user.email)}`;
+
+  const m = document.createElement('div');
+  m.className = 'modal-overlay';
+  m.innerHTML = `
+    <div class="modal-card" style="max-width:420px;text-align:center;">
+      <div style="font-size:40px;margin-bottom:12px;">🎁</div>
+      <h3 style="margin-bottom:6px;">${isHe ? 'הזמן חבר' : 'Refer a Friend'}</h3>
+      <p style="font-size:14px;color:var(--txd);line-height:1.6;margin-bottom:16px;">${isHe
+        ? 'שתף את הלינק שלך. חברים שנרשמים מקבלים 10 קרדיטים חינם, ואתה מקבל 10% הנחה על הרכישה הבאה!'
+        : 'Share your link. Friends who sign up get 10 free credits, and you get 10% off your next purchase!'}</p>
+      <div style="display:flex;gap:6px;margin-bottom:16px;">
+        <input type="text" value="${link}" readonly id="refLinkInput" style="flex:1;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--ac);font-family:monospace;font-size:12px;overflow:hidden;text-overflow:ellipsis;">
+        <button class="btn btn-primary" style="min-width:70px;" onclick="navigator.clipboard.writeText(document.getElementById('refLinkInput').value);showToast('${isHe ? 'הועתק!' : 'Copied!'}','ok')">${isHe ? 'העתק' : 'Copy'}</button>
+      </div>
+      <div id="refStats" style="font-size:13px;color:var(--txd);margin-bottom:16px;"></div>
+      <button onclick="this.closest('.modal-overlay').remove()" class="btn" style="width:100%;">${isHe ? 'סגור' : 'Close'}</button>
+    </div>`;
+  document.body.appendChild(m);
+  requestAnimationFrame(() => m.classList.add('open'));
+  m.onclick = (e) => { if (e.target === m) m.remove(); };
+
+  // Load referral stats
+  if (typeof apiCall === 'function') {
+    apiCall('/api/referral/stats').then(data => {
+      if (data.ok) {
+        const el = document.getElementById('refStats');
+        if (el) el.textContent = isHe
+          ? `הפנית ${data.referrals} חברים${data.hasDiscount ? ' — יש לך 10% הנחה!' : ''}`
+          : `You referred ${data.referrals} friend${data.referrals !== 1 ? 's' : ''}${data.hasDiscount ? ' — you earned 10% off!' : ''}`;
+      }
+    }).catch(() => {});
+  }
+}
+
+// ── Cross-promo Banner ──
+function showPromoBanner() {
+  const ref = localStorage.getItem('bq_referral');
+  if (ref !== 'bqprod') return;
+  // Only show once
+  if (sessionStorage.getItem('bq_promo_seen')) return;
+  sessionStorage.setItem('bq_promo_seen', '1');
+
+  const isHe = lang === 'he';
+  const banner = document.createElement('div');
+  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:110;background:linear-gradient(90deg,rgba(232,197,71,.12),rgba(81,207,102,.12));border-bottom:1px solid rgba(232,197,71,.2);padding:10px 20px;text-align:center;font-size:14px;font-weight:600;color:var(--ac);display:flex;align-items:center;justify-content:center;gap:8px;';
+  banner.innerHTML = `
+    <span>${isHe ? '🎉 ברוכים הבאים מ-BQ Production! 10% הנחה על החודש הראשון' : '🎉 Welcome from BQ Production! 10% OFF your first month'}</span>
+    <button onclick="this.parentElement.remove();document.querySelector('.nav').style.top=''" style="background:none;border:none;color:var(--txd);cursor:pointer;font-size:18px;margin-inline-start:8px;">✕</button>`;
+  document.body.prepend(banner);
+  // Push nav down
+  const nav = document.querySelector('.nav');
+  if (nav) nav.style.top = banner.offsetHeight + 'px';
 }
 
 // ── Footer Builder ──
@@ -289,17 +356,19 @@ function _routingCheck() {
   const p = window.location.pathname;
   const loggedIn = typeof isLoggedIn === 'function' && isLoggedIn();
 
-  // Logged-in user hits landing → go to home
-  if (loggedIn && _LANDING_PAGES.includes(p)) {
-    window.location.replace('/home.html');
-    return true;
-  }
+  // Landing page: no redirect — logged-in users can still see pricing
+  // But show "Go to App" button via nav injection
 
   // Not logged in hits tool page → go to auth
-  if (!loggedIn && p.startsWith('/tools/')) {
+  // Exception: compare.html slider is free without login
+  if (!loggedIn && p.startsWith('/tools/') && !p.includes('compare.html')) {
     window.location.replace('/auth.html');
     return true;
   }
+
+  // Save referral param if present
+  const ref = new URLSearchParams(window.location.search).get('ref');
+  if (ref) localStorage.setItem('bq_referral', ref);
 
   return false;
 }
@@ -461,6 +530,9 @@ document.addEventListener('DOMContentLoaded', () => {
       buildAppNav();
     }
   }
+
+  // Cross-promo banner
+  showPromoBanner();
 
   // Refresh user data from server
   if (typeof isLoggedIn === 'function' && isLoggedIn()) {

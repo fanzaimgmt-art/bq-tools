@@ -83,11 +83,21 @@
   }
   .home-quick a:hover { border-color: var(--ac); color: var(--ac); opacity: 1; }
 
+  /* RTL fixes */
+  [dir="rtl"] .home-greeting { flex-direction: row-reverse; }
+  [dir="rtl"] .home-section { flex-direction: row-reverse; }
+  [dir="rtl"] .home-credit-badge,
+  [dir="rtl"] .hs-num { direction: ltr; unicode-bidi: isolate; }
+  [dir="rtl"] .home-recent-info { text-align: right; }
+  [dir="rtl"] .home-quick a { flex-direction: row-reverse; }
+
   @media (max-width: 600px) {
     .home-tools { grid-template-columns: repeat(2, 1fr); }
     .home-recent { grid-template-columns: 1fr; }
     .home-stats { flex-direction: column; }
     .home-greeting h1 { font-size: 22px; }
+    .home-greeting { flex-direction: column; align-items: flex-start; }
+    [dir="rtl"] .home-greeting { align-items: flex-end; }
   }
 </style>
 </head>

@@ -81,6 +81,12 @@ export default {
       if (path === '/api/waitlist/video' && request.method === 'POST') {
         return corsResponse(env, await handleVideoWaitlist(request, env));
       }
+      if (path === '/api/referral/stats' && request.method === 'GET') {
+        return corsResponse(env, await handleReferralStats(request, env));
+      }
+      if (path === '/api/referral/link' && request.method === 'GET') {
+        return corsResponse(env, await handleReferralLink(request, env));
+      }
 
       if (path === '/api/health') {
         return corsResponse(env, json({ ok: true, ts: Date.now() }));
@@ -194,7 +200,7 @@ async function handleRegister(request, env) {
 }
 
 async function handleVerify(request, env) {
-  const { email, code } = await request.json();
+  const { email, code, referredBy } = await request.json();
   if (!email || !code) return json({ error: 'Email and code required' }, 400);
 
   const emailLower = email.toLowerCase().trim();
@@ -225,7 +231,12 @@ async function handleVerify(request, env) {
   } else {
     // New user
     const token = generateToken();
-    const freeCredits = parseInt(env.FREE_CREDITS || '5');
+    const baseFree = parseInt(env.FREE_CREDITS || '5');
+    // Referral bonus: 10 credits instead of 5
+    const refEmail = (referredBy || '').toLowerCase().trim();
+    const hasReferral = refEmail && refEmail.includes('@') && refEmail !== emailLower;
+    const freeCredits = hasReferral ? baseFree + 5 : baseFree;
+
     user = {
       email: emailLower,
       userToken: token,
@@ -240,8 +251,19 @@ async function handleVerify(request, env) {
       businessType: '',
       language: 'en',
       lastLogin: new Date().toISOString(),
-      isNew: true
+      isNew: true,
+      referredBy: hasReferral ? refEmail : '',
+      referralSource: (referredBy === 'bqprod') ? 'bqprod' : ''
     };
+
+    // Track referral for the referrer
+    if (hasReferral) {
+      const refKey = `referrals:${refEmail}`;
+      const refRaw = await env.BQ_USERS.get(refKey);
+      const refs = refRaw ? JSON.parse(refRaw) : [];
+      refs.push({ email: emailLower, date: new Date().toISOString() });
+      await env.BQ_USERS.put(refKey, JSON.stringify(refs));
+    }
   }
 
   // Save user + token mapping
@@ -1013,4 +1035,35 @@ async function handleAdminDirectoryTier(request, env) {
   await updateDirectoryIndex(emailLower, listing, env);
 
   return json({ ok: true, tier: listing.tier });
+}
+
+// ── Referral ──
+
+async function handleReferralStats(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const refKey = `referrals:${user.email}`;
+  const raw = await env.BQ_USERS.get(refKey);
+  const refs = raw ? JSON.parse(raw) : [];
+
+  return json({
+    ok: true,
+    referrals: refs.length,
+    referralList: refs.slice(0, 20),
+    hasDiscount: refs.length > 0
+  });
+}
+
+async function handleReferralLink(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const origin = env.ALLOWED_ORIGIN || 'https://bq-tools.fanzai-mgmt.workers.dev';
+  return json({
+    ok: true,
+    link: `${origin}/?ref=${encodeURIComponent(user.email)}`
+  });
 }
