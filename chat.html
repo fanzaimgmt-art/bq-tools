@@ -17,7 +17,7 @@
   }
   .chat-sidebar .new-chat-btn {
     margin: 12px; padding: 12px; border-radius: 10px; border: 1px solid var(--bd);
-    background: var(--acd); color: var(--ac); font-family: 'Heebo', sans-serif;
+    background: var(--acd); color: var(--ac); font-family: var(--font-en);
     font-size: 14px; font-weight: 700; cursor: pointer; min-height: 48px;
     transition: all .15s; text-align: center;
   }
@@ -66,7 +66,7 @@
   .chat-topbar h2 { font-size: 16px; font-weight: 700; margin-right: auto; }
   .model-select {
     padding: 8px 12px; border: 1px solid var(--bd); border-radius: 8px;
-    background: var(--bg); color: var(--tx); font-family: 'Heebo', sans-serif;
+    background: var(--bg); color: var(--tx); font-family: var(--font-en);
     font-size: 13px; min-height: 40px;
   }
   .model-select:focus { outline: none; border-color: var(--ac); }
@@ -124,7 +124,7 @@
   }
   .chat-textarea {
     flex: 1; padding: 10px 14px; border: 1px solid var(--bd); border-radius: 12px;
-    background: var(--bg); color: var(--tx); font-family: 'Heebo', sans-serif;
+    background: var(--bg); color: var(--tx); font-family: var(--font-en);
     font-size: 15px; resize: none; min-height: 44px; max-height: 120px; line-height: 1.4;
     overflow-y: auto;
   }
@@ -192,6 +192,14 @@
     .chat-quick { display: none; }
   }
 </style>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#e8c547">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="BQ Tools">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png">
 </head>
 <body>
 
@@ -810,8 +818,7 @@ function exportChat() {
   if (!msgs.length) { showToast(lang === 'he' ? 'אין הודעות' : 'No messages', 'info'); return; }
   const w = window.open('', '_blank');
   w.document.write(`<html><head><title>BQ AI Chat Export</title>
-    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;700&display=swap" rel="stylesheet">
-    <style>body{font-family:'Heebo',sans-serif;padding:40px;max-width:700px;margin:0 auto;color:#222;}
+    <style>body{font-family:var(--font-en);padding:40px;max-width:700px;margin:0 auto;color:#222;}
     .user{background:#f5f0d0;padding:10px 14px;border-radius:10px;margin:8px 0;}
     .ai{background:#f0f0f0;padding:10px 14px;border-radius:10px;margin:8px 0;}
     .model{font-size:11px;color:#888;margin-bottom:4px;}

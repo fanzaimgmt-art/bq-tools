@@ -40,6 +40,7 @@ function setLang(l) {
   localStorage.setItem('bq_lang', l);
   document.documentElement.dir = l === 'he' ? 'rtl' : 'ltr';
   document.documentElement.lang = l;
+  if (document.body) document.body.setAttribute('lang', l);
   document.querySelectorAll('.lang-btn').forEach(btn => {
     btn.classList.toggle('on', btn.dataset.lang === l);
   });
@@ -1082,6 +1083,118 @@ function showCookieConsent() {
   document.body.appendChild(banner);
 }
 
+// ── PWA Service Worker ──
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js').catch(err => {
+      console.log('SW registration failed:', err);
+    });
+  });
+}
+
+// ── PWA Install Prompt ──
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  // Show install banner if not dismissed recently
+  const dismissed = localStorage.getItem('bq_pwa_dismissed');
+  if (dismissed) {
+    const daysSince = (Date.now() - parseInt(dismissed)) / 86400000;
+    if (daysSince < 30) return;
+  }
+  showInstallBanner();
+});
+
+function isStandalone() {
+  return window.matchMedia('(display-mode: standalone)').matches ||
+         window.navigator.standalone === true;
+}
+
+function isIOS() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+}
+
+function showInstallBanner() {
+  if (isStandalone()) return;
+  if (document.getElementById('pwaBanner')) return;
+
+  const banner = document.createElement('div');
+  banner.id = 'pwaBanner';
+  banner.style.cssText = `
+    position:fixed;bottom:20px;left:20px;right:20px;max-width:420px;margin:0 auto;
+    z-index:9500;background:var(--sf);border:1px solid var(--ac);border-radius:14px;
+    padding:14px 16px;display:flex;align-items:center;gap:12px;
+    box-shadow:0 8px 24px rgba(0,0,0,.4);animation:slideUp .35s ease;`;
+  banner.innerHTML = `
+    <img src="/img/icon-192.png" alt="" style="width:44px;height:44px;border-radius:10px;flex-shrink:0;">
+    <div style="flex:1;min-width:0;">
+      <div style="font-weight:700;font-size:14px;margin-bottom:2px;">${t({ en: 'Install BQ Tools', he: 'התקן BQ Tools', es: 'Instalar BQ Tools' })}</div>
+      <div style="font-size:12px;color:var(--txd);">${t({ en: 'Add to home screen for quick access', he: 'הוסף למסך הבית לגישה מהירה', es: 'Agrega a la pantalla de inicio para acceso rápido' })}</div>
+    </div>
+    <button id="pwaInstallBtn" class="btn btn-sm btn-primary" style="flex-shrink:0;">${t({ en: 'Install', he: 'התקן', es: 'Instalar' })}</button>
+    <button id="pwaCloseBtn" style="background:none;border:none;color:var(--txd);cursor:pointer;font-size:18px;flex-shrink:0;padding:0 4px;">✕</button>`;
+  document.body.appendChild(banner);
+
+  document.getElementById('pwaInstallBtn').onclick = async () => {
+    if (deferredInstallPrompt) {
+      deferredInstallPrompt.prompt();
+      const { outcome } = await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      banner.remove();
+      if (outcome !== 'accepted') {
+        localStorage.setItem('bq_pwa_dismissed', String(Date.now()));
+      }
+    } else if (isIOS()) {
+      showIOSInstallModal();
+      banner.remove();
+    }
+  };
+  document.getElementById('pwaCloseBtn').onclick = () => {
+    banner.remove();
+    localStorage.setItem('bq_pwa_dismissed', String(Date.now()));
+  };
+}
+
+function showIOSInstallModal() {
+  const h = lang === 'he';
+  const m = document.createElement('div');
+  m.className = 'modal-overlay';
+  m.innerHTML = `
+    <div class="modal-card" style="max-width:360px;text-align:center;">
+      <img src="/img/icon-192.png" alt="" style="width:72px;height:72px;border-radius:16px;margin:0 auto 12px;display:block;">
+      <h3 style="margin-bottom:6px;">${t({ en: 'Install BQ Tools', he: 'התקן BQ Tools', es: 'Instalar BQ Tools' })}</h3>
+      <p style="font-size:13px;color:var(--txd);line-height:1.6;margin-bottom:14px;">${t({
+        en: 'To install on iOS: tap the Share button <span style="display:inline-block;width:16px;height:16px;border:1px solid var(--txd);border-radius:3px;vertical-align:-3px;"></span>⬆️ then select "Add to Home Screen".',
+        he: 'להתקנה ב-iOS: לחץ על כפתור השיתוף ⬆️ ואז בחר "הוסף למסך הבית".',
+        es: 'Para instalar en iOS: toca el botón de Compartir ⬆️ y luego selecciona "Agregar a pantalla de inicio".'
+      })}</p>
+      <div style="background:var(--bg);border-radius:8px;padding:10px;font-size:12px;color:var(--txd);margin-bottom:14px;text-align:left;">
+        <div style="margin-bottom:6px;"><b>1.</b> ${t({ en: 'Tap the Share icon ⬆️ in Safari', he: 'לחץ על אייקון השיתוף ב-Safari', es: 'Toca el ícono de Compartir ⬆️ en Safari' })}</div>
+        <div style="margin-bottom:6px;"><b>2.</b> ${t({ en: 'Scroll and tap "Add to Home Screen"', he: 'גלול ולחץ "הוסף למסך הבית"', es: 'Desplázate y toca "Agregar a pantalla de inicio"' })}</div>
+        <div><b>3.</b> ${t({ en: 'Tap "Add" — BQ Tools is now on your home screen!', he: 'לחץ "הוסף" — BQ Tools עכשיו במסך הבית שלך', es: 'Toca "Agregar" — ¡BQ Tools ya está en tu pantalla!' })}</div>
+      </div>
+      <button class="btn" style="width:100%;" onclick="this.closest('.modal-overlay').remove();">${t({ en: 'Got it', he: 'הבנתי', es: 'Entendido' })}</button>
+    </div>`;
+  document.body.appendChild(m);
+  requestAnimationFrame(() => m.classList.add('open'));
+  m.onclick = e => { if (e.target === m) m.remove(); };
+}
+
+// For iOS (which doesn't fire beforeinstallprompt), show banner after some usage
+function maybeShowIOSInstallBanner() {
+  if (isStandalone() || !isIOS()) return;
+  const dismissed = localStorage.getItem('bq_pwa_dismissed');
+  if (dismissed) {
+    const daysSince = (Date.now() - parseInt(dismissed)) / 86400000;
+    if (daysSince < 30) return;
+  }
+  // Only show after they've browsed a few pages
+  const pageViews = parseInt(localStorage.getItem('bq_page_views') || '0') + 1;
+  localStorage.setItem('bq_page_views', String(pageViews));
+  if (pageViews >= 3) setTimeout(showInstallBanner, 3000);
+}
+
 // ── Init on load ──
 document.addEventListener('DOMContentLoaded', () => {
   // Routing check — may redirect and stop execution
@@ -1108,6 +1221,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Cookie consent
   showCookieConsent();
+
+  // PWA install prompt (iOS)
+  maybeShowIOSInstallBanner();
 
   // Refresh user data from server
   if (typeof isLoggedIn === 'function' && isLoggedIn()) {

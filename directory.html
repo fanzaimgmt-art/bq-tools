@@ -29,7 +29,7 @@
   .dir-search .input { flex: 1; min-width: 200px; }
   .dir-search select {
     padding: 12px 14px; border: 1px solid var(--bd); border-radius: var(--r);
-    background: var(--bg); color: var(--tx); font-family: 'Heebo', sans-serif;
+    background: var(--bg); color: var(--tx); font-family: var(--font-en);
     font-size: 16px; min-height: 48px; min-width: 180px;
   }
   .dir-search select:focus { outline: none; border-color: var(--ac); }
@@ -99,7 +99,7 @@
   /* Leaflet popup custom */
   .leaflet-popup-content-wrapper { background: var(--sf); color: var(--tx); border: 1px solid var(--bd); border-radius: 10px; }
   .leaflet-popup-tip { background: var(--sf); }
-  .leaflet-popup-content { margin: 10px 14px; font-family: 'Heebo', sans-serif; font-size: 13px; }
+  .leaflet-popup-content { margin: 10px 14px; font-family: var(--font-en); font-size: 13px; }
   .leaflet-popup-content a { color: var(--ac); }
   .popup-thumb { width: 120px; border-radius: 6px; margin-bottom: 6px; }
 
@@ -112,6 +112,14 @@
     .dir-search select { min-width: 100%; }
   }
 </style>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#e8c547">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="BQ Tools">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png">
 </head>
 <body>
 
@@ -326,7 +334,7 @@ async function loadMapMarkers() {
         // Create custom icon with profile initial
         const icon = L.divIcon({
           className: 'custom-marker',
-          html: `<div style="width:36px;height:36px;border-radius:50%;background:${l.tier === 'featured' ? 'var(--ac)' : 'var(--blu)'};border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:${l.tier === 'featured' ? '#0a0a0c' : '#fff'};font-family:Heebo,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.4);">${l.logo ? `<img src="${l.logo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">` : (l.businessName || '?')[0].toUpperCase()}</div>`,
+          html: `<div style="width:36px;height:36px;border-radius:50%;background:${l.tier === 'featured' ? 'var(--ac)' : 'var(--blu)'};border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:${l.tier === 'featured' ? '#0a0a0c' : '#fff'};font-family:Inter,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.4);">${l.logo ? `<img src="${l.logo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">` : (l.businessName || '?')[0].toUpperCase()}</div>`,
           iconSize: [36, 36],
           iconAnchor: [18, 18]
         });

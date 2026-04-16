@@ -10,7 +10,7 @@
   .platform-btns { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
   .plat-btn {
     padding: 10px 20px; border: 1px solid var(--bd); border-radius: 8px;
-    background: var(--sf); color: var(--txd); font-family: 'Heebo', sans-serif;
+    background: var(--sf); color: var(--txd); font-family: var(--font-en);
     font-size: 14px; cursor: pointer; transition: all .2s; min-height: 48px;
   }
   .plat-btn.on { border-color: var(--ac); color: var(--ac); background: var(--acd); }
@@ -40,6 +40,14 @@
   .upload-area input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
   .upload-area img { max-height: 200px; border-radius: 8px; }
 </style>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#e8c547">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="BQ Tools">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png">
 </head>
 <body>
 

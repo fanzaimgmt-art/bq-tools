@@ -110,7 +110,7 @@ When performing an action, include the ACTION: tag at the END of your response o
     }
     .chat-input {
       flex: 1; padding: 10px 14px; border: 1px solid var(--bd); border-radius: 10px;
-      background: var(--bg); color: var(--tx); font-family: 'Heebo', sans-serif;
+      background: var(--bg); color: var(--tx); font-family: var(--font-en);
       font-size: 14px; outline: none; min-height: 44px;
     }
     .chat-input:focus { border-color: var(--ac); }

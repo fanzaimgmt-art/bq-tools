@@ -23,7 +23,7 @@
   .tg { display: flex; gap: 1px; background: var(--bg); border-radius: 6px; padding: 2px; border: 1px solid var(--bd); }
   .tn {
     padding: 10px 14px; border: none; border-radius: 5px; background: transparent;
-    color: var(--txd); font-family: 'Heebo', sans-serif; font-size: 14px;
+    color: var(--txd); font-family: var(--font-en); font-size: 14px;
     cursor: pointer; transition: all .2s; display: flex; align-items: center; gap: 4px;
     min-height: 48px;
   }
@@ -175,6 +175,14 @@
     .tn { padding: 8px 10px; font-size: 14px; }
   }
 </style>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#e8c547">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="BQ Tools">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png">
 </head>
 <body>
 
@@ -465,7 +473,7 @@ function exportImage() {
 
   // Labels
   const fs = Math.max(14, Math.round(w * 0.016));
-  ctx.font = `bold ${fs}px Heebo, sans-serif`;
+  ctx.font = `bold ${fs}px Inter, sans-serif`;
   const pad = w * 0.012;
   // BEFORE
   ctx.fillStyle = 'rgba(0,0,0,0.6)';
@@ -480,7 +488,7 @@ function exportImage() {
 
   // Watermark
   const wmFs = Math.max(11, Math.round(w * 0.014));
-  ctx.font = `900 ${wmFs}px Heebo, sans-serif`;
+  ctx.font = `900 ${wmFs}px Inter, sans-serif`;
   ctx.fillStyle = 'rgba(232,197,71,0.45)';
   const wmText = 'Powered by BQ Tools | bqtools.dev';
   ctx.fillText(wmText, w - ctx.measureText(wmText).width - pad, h - pad);

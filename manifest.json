@@ -1,0 +1,50 @@
+{
+  "name": "BQ Tools — AI for Contractors",
+  "short_name": "BQ Tools",
+  "description": "AI-powered tools for contractors and remodelers: photo compare, reports, estimates, quotes, receipt scanner, and more.",
+  "start_url": "/home.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0c",
+  "theme_color": "#e8c547",
+  "orientation": "portrait-primary",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["business", "productivity", "utilities"],
+  "icons": [
+    { "src": "/img/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/img/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/img/icon-1024.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any" },
+    { "src": "/img/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Compare Photos",
+      "short_name": "Compare",
+      "description": "Before/after photo comparison",
+      "url": "/tools/compare.html",
+      "icons": [{ "src": "/img/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Receipt Scanner",
+      "short_name": "Receipts",
+      "description": "Scan receipts with AI",
+      "url": "/business/receipts.html",
+      "icons": [{ "src": "/img/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Quote Generator",
+      "short_name": "Quote",
+      "description": "Generate professional quotes",
+      "url": "/tools/quote.html",
+      "icons": [{ "src": "/img/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "AI Chat",
+      "short_name": "Chat",
+      "description": "Chat with BQ Assistant",
+      "url": "/chat.html",
+      "icons": [{ "src": "/img/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
