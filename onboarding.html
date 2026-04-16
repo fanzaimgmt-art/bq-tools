@@ -91,6 +91,9 @@
     background-position: right 14px center;
     background-size: 12px;
   }
+  [dir="rtl"] .ob-select {
+    background-position: left 14px center;
+  }
 
   .logo-upload {
     width: 100%;
@@ -199,7 +202,7 @@
       <input type="text" class="ob-input" id="obBusinessName" placeholder="e.g. Gold Remodeling" autocomplete="organization">
 
       <div class="ob-nav">
-        <button class="btn btn-primary" onclick="goStep(2)" data-en="Next →" data-he="הבא →">Next →</button>
+        <button class="btn btn-primary" onclick="goStep(2)" data-en="Next →" data-he="← הבא">Next →</button>
       </div>
     </div>
 
@@ -224,8 +227,8 @@
       <input type="tel" class="ob-input" id="obPhone" placeholder="+1 (555) 123-4567" autocomplete="tel">
 
       <div class="ob-nav">
-        <button class="btn" onclick="goStep(1)" data-en="← Back" data-he="← חזור">← Back</button>
-        <button class="btn btn-primary" onclick="goStep(3)" data-en="Next →" data-he="הבא →">Next →</button>
+        <button class="btn" onclick="goStep(1)" data-en="← Back" data-he="חזור →">← Back</button>
+        <button class="btn btn-primary" onclick="goStep(3)" data-en="Next →" data-he="← הבא">Next →</button>
       </div>
     </div>
 
@@ -243,8 +246,8 @@
       </div>
 
       <div class="ob-nav">
-        <button class="btn" onclick="goStep(2)" data-en="← Back" data-he="← חזור">← Back</button>
-        <button class="btn btn-primary" onclick="goStep(4)" data-en="Next →" data-he="הבא →">Next →</button>
+        <button class="btn" onclick="goStep(2)" data-en="← Back" data-he="חזור →">← Back</button>
+        <button class="btn btn-primary" onclick="goStep(4)" data-en="Next →" data-he="← הבא">Next →</button>
       </div>
       <button class="ob-skip" onclick="goStep(4)" data-en="Skip for now" data-he="דלג">Skip for now</button>
     </div>
@@ -264,7 +267,7 @@
       </div>
 
       <div class="ob-nav">
-        <button class="btn" onclick="goStep(3)" data-en="← Back" data-he="← חזור">← Back</button>
+        <button class="btn" onclick="goStep(3)" data-en="← Back" data-he="חזור →">← Back</button>
         <button class="btn btn-primary" onclick="finishOnboarding()" id="finishBtn" data-en="Finish Setup ✓" data-he="סיים הגדרה ✓">Finish Setup ✓</button>
       </div>
     </div>
