@@ -2,6 +2,11 @@
 // Cloudflare Worker that proxies AI calls, manages credits, auth, and admin.
 
 export default {
+  // ── Cron Trigger: daily news refresh ──
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(refreshNews(env));
+  },
+
   async fetch(request, env) {
     // CORS preflight
     if (request.method === 'OPTIONS') {
@@ -124,6 +129,17 @@ export default {
       }
       if (path === '/api/memories/generate' && request.method === 'POST') {
         return corsResponse(env, await handleGenerateMemories(request, env));
+      }
+
+      // ── News Routes ──
+      if (path === '/api/news/today' && request.method === 'GET') {
+        return corsResponse(env, await handleNewsToday(request, env));
+      }
+      if (path === '/api/news/archive' && request.method === 'GET') {
+        return corsResponse(env, await handleNewsArchive(request, env));
+      }
+      if (path === '/api/admin/news/refresh' && request.method === 'POST') {
+        return corsResponse(env, await handleAdminNewsRefresh(request, env));
       }
 
       if (path === '/api/health') {
@@ -1831,4 +1847,119 @@ async function handleAffiliateStats(request, env) {
     earnings: aff.earnings || 0,
     joinedAt: aff.joinedAt
   });
+}
+
+// ── Daily News ──
+
+const NEWS_CATEGORIES = [
+  {
+    id: 'industry',
+    label: 'Industry News',
+    icon: '🗞️',
+    prompt: 'Search for the latest construction and remodeling industry news in Los Angeles and nationwide from today. Return the top 5 stories as JSON array: [{"title":"...","summary":"2-3 sentences","source":"publication name","url":"source URL if known","image":null}]. Focus on: major projects, market trends, material prices, labor market. JSON only, no markdown.',
+  },
+  {
+    id: 'shops',
+    label: 'New Shops & Suppliers',
+    icon: '🏪',
+    prompt: 'List 3-5 notable construction supply stores, lumber yards, or building material suppliers in the Los Angeles area that contractors should know about. Include big-box stores with recent updates and specialty suppliers. Return as JSON array: [{"title":"store name","summary":"what they offer, location, why notable","source":"Google Maps","url":null,"image":null,"rating":"4.5/5"}]. JSON only.',
+  },
+  {
+    id: 'products',
+    label: 'New Products',
+    icon: '🔧',
+    prompt: 'What are 3 notable new construction products, tools, or building materials released or trending in 2026? Focus on things contractors and remodelers would actually use. Return as JSON array: [{"title":"product name","summary":"what it does, why it matters, price range","source":"manufacturer","url":null,"image":null}]. JSON only.',
+  },
+  {
+    id: 'tech',
+    label: 'New Technology',
+    icon: '🤖',
+    prompt: 'What are 3 recent construction technology developments? Include AI tools, drones, 3D printing, project management software, or smart building tech relevant to contractors. Return as JSON array: [{"title":"...","summary":"2-3 sentences","source":"...","url":null,"image":null}]. JSON only.',
+  },
+  {
+    id: 'law',
+    label: 'California Law Updates',
+    icon: '📋',
+    prompt: 'What are the most recent California construction law updates, building code changes, permit requirements, or OSHA regulation changes that affect contractors in 2026? Return 3-5 items as JSON array: [{"title":"law/code name","summary":"what changed, who it affects, deadline","source":"CA.gov or relevant authority","url":null,"image":null}]. JSON only.',
+  },
+  {
+    id: 'jobs',
+    label: 'Job Seekers',
+    icon: '👷',
+    prompt: 'Generate 5 realistic job seeker profiles for construction workers, helpers, and runners looking for work in Los Angeles. Make them realistic but fictional. Return as JSON array: [{"title":"Name — Role","summary":"experience, skills, availability, what they are looking for","source":"BQ Tools","url":null,"image":null}]. JSON only.',
+  },
+  {
+    id: 'tips',
+    label: 'Business Tips',
+    icon: '💡',
+    prompt: 'Give 3 actionable business tips for small construction/remodeling companies. Topics: getting more clients, managing projects, pricing, marketing, client relationships, or scaling. Make each tip specific and practical. Return as JSON array: [{"title":"tip title","summary":"detailed actionable advice in 2-3 sentences","source":"BQ Tools","url":null,"image":null}]. JSON only.',
+  },
+];
+
+async function refreshNews(env) {
+  const today = new Date().toISOString().split('T')[0];
+
+  // Check if already generated today
+  const existing = await env.BQ_USERS.get(`news:${today}`);
+  if (existing) return; // Already done
+
+  const results = {};
+
+  for (const cat of NEWS_CATEGORIES) {
+    try {
+      const aiResponse = await callClaudeAPI(env, cat.prompt, []);
+      let items;
+      try {
+        items = JSON.parse(aiResponse.replace(/```json|```/g, '').trim());
+      } catch {
+        items = [{ title: 'Update coming soon', summary: 'Check back later for ' + cat.label, source: 'BQ Tools', url: null, image: null }];
+      }
+      results[cat.id] = {
+        label: cat.label,
+        icon: cat.icon,
+        items: Array.isArray(items) ? items.slice(0, 5) : [items],
+      };
+    } catch (err) {
+      results[cat.id] = {
+        label: cat.label,
+        icon: cat.icon,
+        items: [{ title: 'Temporarily unavailable', summary: 'News will be updated shortly.', source: 'BQ Tools', url: null, image: null }],
+      };
+    }
+  }
+
+  const newsData = {
+    date: today,
+    generatedAt: new Date().toISOString(),
+    categories: results,
+  };
+
+  // Save today's news + archive
+  await env.BQ_USERS.put('news:today', JSON.stringify(newsData));
+  await env.BQ_USERS.put(`news:${today}`, JSON.stringify(newsData), { expirationTtl: 2592000 }); // 30 days
+}
+
+async function handleNewsToday(request, env) {
+  const raw = await env.BQ_USERS.get('news:today');
+  if (!raw) {
+    return json({ ok: true, news: null, message: 'No news yet. Check back tomorrow!' });
+  }
+  return json({ ok: true, news: JSON.parse(raw) });
+}
+
+async function handleNewsArchive(request, env) {
+  const url = new URL(request.url);
+  const date = url.searchParams.get('date');
+  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return json({ error: 'date param required (YYYY-MM-DD)' }, 400);
+  }
+  const raw = await env.BQ_USERS.get(`news:${date}`);
+  if (!raw) return json({ ok: true, news: null, message: 'No news for this date' });
+  return json({ ok: true, news: JSON.parse(raw) });
+}
+
+async function handleAdminNewsRefresh(request, env) {
+  if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
+  await refreshNews(env);
+  return json({ ok: true, message: 'News refreshed' });
 }

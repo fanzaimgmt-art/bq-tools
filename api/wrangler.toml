@@ -14,3 +14,7 @@ GOOGLE_CLIENT_ID = "704767034441-ljp9b1a874bdi9rqpodr8p4l5rmvbtdj.apps.googleuse
 [[kv_namespaces]]
 binding = "BQ_USERS"
 id = "e75722f0f0f44c1994c95bc98b4386a9"
+
+# Daily news cron — 8am PT = 16:00 UTC (requires Workers Paid $5/mo)
+[triggers]
+crons = ["0 16 * * *"]
