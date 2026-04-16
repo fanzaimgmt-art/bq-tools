@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Train Your AI</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  body { display: flex; flex-direction: column; }
+
+  .train-hero {
+    background: linear-gradient(135deg, var(--acd), rgba(81,207,102,.08));
+    border: 1px solid var(--ac); border-radius: 16px; padding: 28px 22px;
+    margin-bottom: 24px; text-align: center;
+  }
+  .train-hero h1 { font-size: 26px; font-weight: 900; margin-bottom: 6px; }
+  .train-hero h1 .accent { color: var(--ac); }
+  .train-hero p { color: var(--txd); font-size: 14px; line-height: 1.6; max-width: 560px; margin: 0 auto; }
+
+  .train-stats {
+    display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .train-stat {
+    flex: 1; min-width: 140px; background: var(--sf); border: 1px solid var(--bd);
+    border-radius: 12px; padding: 16px; text-align: center;
+  }
+  .train-stat .num {
+    font-size: 28px; font-weight: 900; color: var(--ac);
+  }
+  .train-stat .lbl { font-size: 12px; color: var(--txd); margin-top: 2px; }
+  .train-stat.trained { border-color: var(--grn); }
+  .train-stat.trained .num { color: var(--grn); }
+
+  .upload-zone {
+    background: var(--sf); border: 2px dashed var(--bd); border-radius: 14px;
+    padding: 32px 20px; text-align: center; cursor: pointer; transition: all .2s;
+    margin-bottom: 20px; position: relative;
+  }
+  .upload-zone:hover { border-color: var(--ac); background: var(--acd); }
+  .upload-zone.drag { border-color: var(--ac); background: var(--acd); }
+  .upload-zone .icon { font-size: 42px; margin-bottom: 8px; }
+  .upload-zone h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .upload-zone p { font-size: 13px; color: var(--txd); line-height: 1.5; }
+  .upload-zone input {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer;
+  }
+
+  .file-type-chips {
+    display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-top: 10px;
+  }
+  .file-chip {
+    padding: 3px 10px; background: var(--bg); border: 1px solid var(--bd);
+    border-radius: 6px; font-size: 11px; color: var(--txd);
+  }
+
+  .files-list {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 14px;
+    overflow: hidden; margin-bottom: 20px;
+  }
+  .files-list .list-header {
+    padding: 14px 18px; border-bottom: 1px solid var(--bd);
+    font-size: 14px; font-weight: 700;
+  }
+  .file-item {
+    display: flex; align-items: center; gap: 12px; padding: 12px 18px;
+    border-bottom: 1px solid rgba(255,255,255,.04);
+  }
+  [data-theme="light"] .file-item { border-bottom-color: rgba(0,0,0,.06); }
+  .file-item:last-child { border-bottom: none; }
+  .file-item .f-icon { font-size: 24px; flex-shrink: 0; }
+  .file-item .f-info { flex: 1; min-width: 0; }
+  .file-item .f-name { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .file-item .f-meta { font-size: 12px; color: var(--txd); margin-top: 2px; }
+  .file-item .f-del {
+    background: none; border: 1px solid var(--bd); border-radius: 8px; padding: 6px 10px;
+    color: var(--red); cursor: pointer; font-size: 13px; transition: all .15s;
+  }
+  .file-item .f-del:hover { border-color: var(--red); background: rgba(255,107,107,.1); }
+
+  .empty-state {
+    padding: 40px 20px; text-align: center; color: var(--txd);
+  }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+
+  .knowledge-panel {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 14px;
+    padding: 20px; margin-bottom: 20px;
+  }
+  .knowledge-panel h2 { font-size: 17px; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .knowledge-panel .k-row { padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.04); font-size: 14px; }
+  [data-theme="light"] .knowledge-panel .k-row { border-bottom-color: rgba(0,0,0,.06); }
+  .knowledge-panel .k-row:last-child { border-bottom: none; }
+  .knowledge-panel .k-label { font-size: 12px; color: var(--txd); margin-bottom: 2px; }
+  .knowledge-panel .k-val { color: var(--tx); line-height: 1.5; }
+
+  .train-actions { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .train-actions .btn { flex: 1; min-width: 140px; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/home.html" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/home.html" class="nav-link" data-en="Tools" data-he="כלים">Tools</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="train-hero">
+    <h1>🧠 <span class="accent" data-en="Train BQ Tools on YOUR Pricing" data-he="אמן את BQ Tools על המחירים שלך">Train BQ Tools on YOUR Pricing</span></h1>
+    <p data-en="Upload your past contracts, invoices, and price lists. AI will learn your rates and generate personalized estimates and quotes that match how YOU price jobs." data-he="העלה חוזים, חשבוניות, ומחירונים מהעבר. ה-AI ילמד את המחירים שלך וייצור הערכות והצעות מחיר אישיות שמתאימות בדיוק לאיך שאתה מתמחר.">Upload your past contracts, invoices, and price lists. AI will learn your rates and generate personalized estimates and quotes that match how YOU price jobs.</p>
+  </div>
+
+  <!-- Stats -->
+  <div class="train-stats">
+    <div class="train-stat" id="statFiles">
+      <div class="num" id="filesCount">0</div>
+      <div class="lbl" data-en="Training Files" data-he="קבצי אימון">Training Files</div>
+    </div>
+    <div class="train-stat" id="statTrained">
+      <div class="num" id="trainStatus">—</div>
+      <div class="lbl" data-en="AI Status" data-he="סטטוס AI">AI Status</div>
+    </div>
+    <div class="train-stat">
+      <div class="num" id="lastUpdate">—</div>
+      <div class="lbl" data-en="Last Updated" data-he="עודכן לאחרונה">Last Updated</div>
+    </div>
+  </div>
+
+  <!-- Upload zone -->
+  <label class="upload-zone" id="uploadZone">
+    <input type="file" accept="image/*,.pdf" id="fileInput" onchange="handleUpload(event)">
+    <div class="icon">📤</div>
+    <h3 data-en="Drop files here or click to upload" data-he="גרור קבצים או לחץ להעלאה">Drop files here or click to upload</h3>
+    <p data-en="Past contracts, invoices, quotes, price lists — any document with your pricing" data-he="חוזים, חשבוניות, הצעות מחיר, מחירונים — כל מסמך עם המחירים שלך">Past contracts, invoices, quotes, price lists — any document with your pricing</p>
+    <div class="file-type-chips">
+      <span class="file-chip">📄 PDF</span>
+      <span class="file-chip">🖼️ JPG/PNG</span>
+      <span class="file-chip">⚡ 1 credit per file</span>
+    </div>
+  </label>
+
+  <!-- Quick actions -->
+  <div class="train-actions">
+    <button class="btn" onclick="rebuildKnowledge()">🔄 <span data-en="Rebuild Knowledge" data-he="בנה מחדש ידע">Rebuild Knowledge</span></button>
+    <a href="/tools/quote.html" class="btn btn-primary">📝 <span data-en="Generate a Quote →" data-he="צור הצעת מחיר →">Generate a Quote →</span></a>
+  </div>
+
+  <!-- Files list -->
+  <div class="files-list">
+    <div class="list-header">
+      📁 <span data-en="Your Training Files" data-he="קבצי האימון שלך">Your Training Files</span>
+    </div>
+    <div id="filesBody">
+      <div class="empty-state">
+        <div class="icon">📭</div>
+        <p data-en="No files yet. Upload your first document above." data-he="אין קבצים עדיין. העלה את המסמך הראשון למעלה.">No files yet. Upload your first document above.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Knowledge Base Preview -->
+  <div class="knowledge-panel" id="knowledgePanel" style="display:none;">
+    <h2>📊 <span data-en="What AI Learned About Your Business" data-he="מה ה-AI למד על העסק שלך">What AI Learned About Your Business</span></h2>
+    <div id="knowledgeBody"></div>
+  </div>
+</div>
+
+<script src="js/ai.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/crypto.js"></script>
+<script src="js/common.js"></script>
+<script>
+if (!isLoggedIn()) window.location.replace('/auth.html');
+
+let files = [];
+
+async function loadFiles() {
+  try {
+    const data = await apiCall('/api/training');
+    files = data.files || [];
+    renderFiles();
+    updateStats();
+  } catch (err) {
+    showToast(err.message, 'err');
+  }
+}
+
+async function loadKnowledge() {
+  try {
+    const data = await apiCall('/api/training/knowledge');
+    renderKnowledge(data.knowledge);
+  } catch {}
+}
+
+function renderFiles() {
+  const body = document.getElementById('filesBody');
+  const h = lang === 'he';
+
+  if (files.length === 0) {
+    body.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>${h ? 'אין קבצים עדיין' : 'No files yet'}</p></div>`;
+    return;
+  }
+
+  body.innerHTML = files.map(f => {
+    const icon = f.type?.includes('contract') ? '📝' : f.type?.includes('invoice') ? '🧾' : '📄';
+    const date = new Date(f.uploadedAt).toLocaleDateString();
+    return `<div class="file-item">
+      <span class="f-icon">${icon}</span>
+      <div class="f-info">
+        <div class="f-name">${escHtml(f.filename)}</div>
+        <div class="f-meta">${f.type || 'document'} · ${date} · ${f.contentLength || 0} chars extracted</div>
+      </div>
+      <button class="f-del" onclick="deleteFile('${f.id}')" title="Delete">🗑️</button>
+    </div>`;
+  }).join('');
+}
+
+function renderKnowledge(k) {
+  if (!k || !k.trained) {
+    document.getElementById('knowledgePanel').style.display = 'none';
+    return;
+  }
+  document.getElementById('knowledgePanel').style.display = 'block';
+  const body = document.getElementById('knowledgeBody');
+  const h = lang === 'he';
+
+  const rows = [];
+  if (k.summary) rows.push({ label: h ? 'סיכום' : 'Summary', val: k.summary });
+  if (k.materials?.length) {
+    rows.push({
+      label: h ? 'חומרים' : 'Materials',
+      val: k.materials.map(m => `${m.name}: ${m.avgPrice} ${m.unit || ''}`).join(' · ')
+    });
+  }
+  if (k.labor?.length) {
+    rows.push({
+      label: h ? 'עבודה' : 'Labor Rates',
+      val: k.labor.map(l => `${l.task}: ${l.rate}`).join(' · ')
+    });
+  }
+  if (k.markupRange) rows.push({ label: h ? 'רווח (Markup)' : 'Markup Range', val: k.markupRange });
+  if (k.projectTypes?.length) rows.push({ label: h ? 'סוגי פרויקטים' : 'Project Types', val: k.projectTypes.join(', ') });
+  if (k.paymentStructure) rows.push({ label: h ? 'מבנה תשלום' : 'Payment Structure', val: k.paymentStructure });
+
+  body.innerHTML = rows.map(r => `
+    <div class="k-row">
+      <div class="k-label">${r.label}</div>
+      <div class="k-val">${escHtml(r.val)}</div>
+    </div>`).join('');
+}
+
+function updateStats() {
+  document.getElementById('filesCount').textContent = files.length;
+
+  const statTrained = document.getElementById('statTrained');
+  const trainStatus = document.getElementById('trainStatus');
+  if (files.length >= 3) {
+    statTrained.classList.add('trained');
+    trainStatus.textContent = '✓';
+  } else {
+    trainStatus.textContent = files.length > 0 ? '...' : '—';
+  }
+
+  const lastEl = document.getElementById('lastUpdate');
+  if (files.length > 0) {
+    const latest = files.reduce((a, b) => a.uploadedAt > b.uploadedAt ? a : b);
+    lastEl.textContent = new Date(latest.uploadedAt).toLocaleDateString();
+    lastEl.style.fontSize = '16px';
+  } else {
+    lastEl.textContent = '—';
+  }
+}
+
+async function handleUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  if (file.size > 10 * 1024 * 1024) {
+    showToast(lang === 'he' ? 'קובץ גדול מדי (מקס 10MB)' : 'File too large (max 10MB)', 'err');
+    return;
+  }
+
+  const credits = getCredits();
+  if (credits < 1) { showNoCreditModal(); return; }
+
+  const ok = await confirmCredit(lang === 'he' ? 'העלאת קובץ לאימון' : 'Upload Training File');
+  if (!ok) return;
+
+  // Guess type from filename
+  const name = file.name.toLowerCase();
+  let type = 'document';
+  if (name.includes('contract') || name.includes('חוזה')) type = 'contract';
+  else if (name.includes('invoice') || name.includes('חשבונית')) type = 'invoice';
+  else if (name.includes('quote') || name.includes('הצעה')) type = 'quote';
+  else if (name.includes('price')) type = 'price_list';
+
+  const zone = document.getElementById('uploadZone');
+  zone.querySelector('.icon').textContent = '⏳';
+  zone.querySelector('h3').textContent = lang === 'he' ? 'מעבד...' : 'Processing...';
+
+  try {
+    if (file.type === 'application/pdf') {
+      // PDF: send as text (we don't have PDF text extraction client-side easily)
+      // Simple fallback: convert first page to image via canvas not possible without pdf.js
+      // For now, try as image
+      showToast(lang === 'he' ? 'PDF: העלה תמונה של הדף במקום' : 'PDF: upload a photo of the page instead', 'info');
+      resetZone();
+      return;
+    }
+
+    // Image
+    const reader = new FileReader();
+    reader.onload = async ev => {
+      const base64 = await resizeForAPI(ev.target.result);
+      const data = await apiCall('/api/training/upload', {
+        method: 'POST',
+        body: { filename: file.name, type, imageBase64: base64 }
+      });
+      showToast(lang === 'he' ? '✓ נוסף לאימון' : '✓ Added to training', 'ok');
+
+      // Update credits
+      const user = getCachedUser();
+      if (user && data.credits !== undefined) {
+        user.credits = data.credits;
+        setCachedUser(user);
+        if (typeof updateCreditDisplay === 'function') updateCreditDisplay();
+      }
+
+      await loadFiles();
+      await loadKnowledge();
+      resetZone();
+    };
+    reader.readAsDataURL(file);
+  } catch (err) {
+    showToast(err.message, 'err');
+    resetZone();
+  }
+}
+
+function resetZone() {
+  const zone = document.getElementById('uploadZone');
+  zone.querySelector('.icon').textContent = '📤';
+  zone.querySelector('h3').textContent = lang === 'he' ? 'גרור קבצים או לחץ להעלאה' : 'Drop files here or click to upload';
+  document.getElementById('fileInput').value = '';
+}
+
+async function deleteFile(id) {
+  if (!confirm(lang === 'he' ? 'למחוק את הקובץ?' : 'Delete this file?')) return;
+  try {
+    await apiCall(`/api/training/${id}`, { method: 'DELETE' });
+    showToast(lang === 'he' ? 'נמחק' : 'Deleted', 'ok');
+    await loadFiles();
+    await loadKnowledge();
+  } catch (err) {
+    showToast(err.message, 'err');
+  }
+}
+
+async function rebuildKnowledge() {
+  showToast(lang === 'he' ? 'בונה מחדש...' : 'Rebuilding...', 'info');
+  // The knowledge endpoint rebuilds if cache is missing — clear by deleting/re-adding
+  await loadKnowledge();
+  showToast(lang === 'he' ? 'עודכן' : 'Updated', 'ok');
+}
+
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
+// Drag and drop
+const zone = document.getElementById('uploadZone');
+['dragenter', 'dragover'].forEach(ev => {
+  zone.addEventListener(ev, e => { e.preventDefault(); zone.classList.add('drag'); });
+});
+['dragleave', 'drop'].forEach(ev => {
+  zone.addEventListener(ev, e => { e.preventDefault(); zone.classList.remove('drag'); });
+});
+zone.addEventListener('drop', e => {
+  e.preventDefault();
+  const f = e.dataTransfer.files[0];
+  if (f) {
+    document.getElementById('fileInput').files = e.dataTransfer.files;
+    handleUpload({ target: { files: e.dataTransfer.files } });
+  }
+});
+
+// Init
+loadFiles().then(() => loadKnowledge());
+</script>
+</body>
+</html>

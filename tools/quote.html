@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Quote Generator</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  body { display: flex; flex-direction: column; }
+
+  .training-alert {
+    background: var(--acd); border: 1px solid var(--ac); border-radius: 10px;
+    padding: 10px 14px; margin-bottom: 16px; font-size: 13px; display: flex;
+    align-items: center; gap: 10px;
+  }
+  .training-alert.trained {
+    background: rgba(81,207,102,.08); border-color: var(--grn); color: var(--grn);
+  }
+  .training-alert.not-trained { color: var(--ac); }
+  .training-alert a { color: inherit; font-weight: 700; text-decoration: underline; }
+
+  .template-chips { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .template-chip {
+    flex: 1; min-width: 100px; padding: 12px; border: 1px solid var(--bd);
+    border-radius: 10px; background: var(--bg); color: var(--tx); cursor: pointer;
+    text-align: center; font-family: inherit; font-size: 13px; transition: all .2s;
+    min-height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  }
+  .template-chip:hover { border-color: var(--ac); }
+  .template-chip.on { border-color: var(--ac); background: var(--acd); color: var(--ac); font-weight: 700; }
+  .template-chip .chip-icon { font-size: 18px; }
+  .template-chip .chip-label { font-size: 13px; font-weight: 600; }
+  .template-chip .chip-desc { font-size: 11px; color: var(--txd); }
+
+  /* Quote preview */
+  .quote-preview {
+    background: #fff; color: #222; border-radius: 12px; padding: 32px;
+    margin-top: 20px; font-family: 'Heebo', sans-serif; display: none;
+  }
+  .quote-preview.show { display: block; animation: fadeInUp .5s; }
+  .qp-header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 20px; border-bottom: 2px solid #e8c547; margin-bottom: 20px; }
+  .qp-business .biz-logo { max-width: 80px; max-height: 80px; margin-bottom: 8px; }
+  .qp-business h2 { font-size: 22px; font-weight: 900; margin-bottom: 4px; }
+  .qp-business p { font-size: 12px; color: #666; line-height: 1.5; }
+  .qp-meta { text-align: right; font-size: 13px; color: #444; }
+  .qp-meta .q-num { font-size: 16px; font-weight: 700; color: #b8860b; margin-bottom: 4px; }
+  [dir="rtl"] .qp-meta { text-align: left; }
+
+  .qp-client { background: #faf8f0; padding: 14px 18px; border-radius: 8px; margin-bottom: 20px; }
+  .qp-client .client-label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: .5px; }
+  .qp-client .client-name { font-size: 16px; font-weight: 700; margin-top: 2px; }
+  .qp-client .client-addr { font-size: 13px; color: #666; }
+
+  .qp-project h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+  .qp-project p { font-size: 13px; color: #444; line-height: 1.6; margin-bottom: 16px; }
+
+  .qp-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 13px; }
+  .qp-table th { background: #f0edd8; text-align: left; padding: 10px; font-size: 12px; color: #444; border-bottom: 1px solid #ddd; }
+  .qp-table td { padding: 10px; border-bottom: 1px solid #eee; }
+  .qp-table td.num, .qp-table th.num { text-align: right; }
+
+  .qp-totals { margin-left: auto; width: 260px; padding: 12px 14px; background: #faf8f0; border-radius: 8px; margin-bottom: 16px; }
+  .qp-totals .t-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; }
+  .qp-totals .t-row.final { border-top: 2px solid #b8860b; margin-top: 6px; padding-top: 8px; font-size: 16px; font-weight: 700; color: #b8860b; }
+
+  .qp-terms { margin-top: 16px; font-size: 12px; color: #555; line-height: 1.6; }
+  .qp-terms h4 { font-size: 13px; font-weight: 700; margin-bottom: 6px; color: #333; }
+  .qp-footer { text-align: center; margin-top: 24px; padding-top: 14px; border-top: 1px solid #eee; font-size: 10px; color: #999; }
+
+  .qp-actions { display: flex; gap: 8px; margin-top: 20px; flex-wrap: wrap; }
+  .qp-actions .btn { flex: 1; min-width: 140px; }
+
+  @media print {
+    nav, .page > *:not(.quote-preview), .qp-actions, footer { display: none !important; }
+    body { background: white; }
+    .quote-preview { box-shadow: none; border-radius: 0; padding: 20px; margin: 0; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/home.html" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/home.html" class="nav-link" data-en="Tools" data-he="כלים">Tools</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <a href="/home.html" class="page-back" data-en="← All Tools" data-he="כל הכלים →">← All Tools</a>
+  <h1 class="page-title" data-en="📝 Quote Generator" data-he="📝 מחולל הצעות מחיר">📝 Quote Generator</h1>
+  <p class="page-sub" data-en="Generate professional quotes using YOUR pricing from trained data." data-he="צור הצעות מחיר מקצועיות עם המחירים שלך מנתוני אימון.">Generate professional quotes using YOUR pricing from trained data.</p>
+
+  <div id="hiw-quote"></div>
+  <script>
+    const QUOTE_HIW = {
+      steps: [
+        { icon: '🧠', en: 'Upload past contracts/invoices to train AI', he: 'העלה חוזים/חשבוניות לאימון' },
+        { icon: '✍️', en: 'Describe the new project', he: 'תאר את הפרויקט החדש' },
+        { icon: '📄', en: 'Download a professional quote PDF', he: 'הורד PDF מקצועי של הצעת מחיר' },
+      ],
+      example: {
+        en: 'Trained on 5 past jobs: AI generates a quote matching YOUR typical pricing for bathroom remodels — $8,500-12,000 range with your usual 35% markup.',
+        he: 'אומן על 5 עבודות עבר: ה-AI יוצר הצעה שמתאימה בדיוק למחירים שלך לשיפוץ אמבטיה — בטווח של $8,500-12,000 עם רווח של 35% כמו שאתה עובד.'
+      }
+    };
+    document.addEventListener('DOMContentLoaded',()=>{if(typeof buildHowItWorks==='function')buildHowItWorks('hiw-quote',QUOTE_HIW)});
+  </script>
+
+  <!-- Training alert -->
+  <div id="trainingAlert" class="training-alert not-trained" style="display:none;">
+    <span>💡</span>
+    <span id="trainingAlertText"></span>
+  </div>
+
+  <!-- Template selector -->
+  <div class="card" style="margin-bottom:14px;">
+    <label class="input-label" data-en="Quote Template" data-he="תבנית הצעה">Quote Template</label>
+    <div class="template-chips">
+      <button class="template-chip" data-tpl="quick" onclick="setTemplate('quick')">
+        <span class="chip-icon">⚡</span>
+        <span class="chip-label" data-en="Quick" data-he="מהיר">Quick</span>
+        <span class="chip-desc" data-en="Total only" data-he="רק סה״כ">Total only</span>
+      </button>
+      <button class="template-chip on" data-tpl="detailed" onclick="setTemplate('detailed')">
+        <span class="chip-icon">📋</span>
+        <span class="chip-label" data-en="Detailed" data-he="מפורט">Detailed</span>
+        <span class="chip-desc" data-en="Line items" data-he="סעיפים">Line items</span>
+      </button>
+      <button class="template-chip" data-tpl="premium" onclick="setTemplate('premium')">
+        <span class="chip-icon">⭐</span>
+        <span class="chip-label" data-en="Premium" data-he="פרימיום">Premium</span>
+        <span class="chip-desc" data-en="Full terms" data-he="תנאים מלאים">Full terms</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Inputs -->
+  <div class="card" style="margin-bottom:14px;">
+    <label class="input-label" data-en="Client Name" data-he="שם הלקוח">Client Name</label>
+    <input class="input" id="clientName" placeholder="Sarah Johnson" style="margin-bottom:10px;">
+
+    <label class="input-label" data-en="Client Address" data-he="כתובת הלקוח">Client Address</label>
+    <input class="input" id="clientAddress" placeholder="123 Main St, Los Angeles, CA" style="margin-bottom:10px;">
+
+    <label class="input-label" data-en="Project Description" data-he="תיאור הפרויקט">Project Description</label>
+    <textarea class="textarea" id="projectDesc" placeholder="Bathroom renovation, 60 sqft, replace tub with walk-in shower, new tile floor, new vanity" rows="4"></textarea>
+
+    <label class="input-label" style="margin-top:10px;" data-en="Location" data-he="מיקום">Location</label>
+    <input class="input" id="location" placeholder="Los Angeles, CA" value="Los Angeles, CA">
+  </div>
+
+  <button class="btn btn-primary btn-large" style="width:100%;" onclick="generateQuote()" id="genBtn">
+    📝 <span data-en="Generate Quote ⚡1" data-he="צור הצעת מחיר ⚡1">Generate Quote ⚡1</span>
+  </button>
+
+  <!-- Preview -->
+  <div class="quote-preview" id="quotePreview"></div>
+  <div class="qp-actions" id="qpActions" style="display:none;">
+    <button class="btn" onclick="window.print()">🖨️ <span data-en="Print / PDF" data-he="הדפס / PDF">Print / PDF</span></button>
+    <button class="btn" onclick="emailQuote()">📧 <span data-en="Email" data-he="מייל">Email</span></button>
+    <button class="btn btn-primary" onclick="saveQuote()">💾 <span data-en="Save" data-he="שמור">Save</span></button>
+    <a href="/dashboard.html#quotes" class="btn" data-en="📁 My Quotes" data-he="📁 ההצעות שלי">📁 My Quotes</a>
+  </div>
+</div>
+
+<script src="../js/ai.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/crypto.js"></script>
+<script src="../js/common.js"></script>
+<script>
+if (!isLoggedIn()) window.location.replace('/auth.html');
+
+let activeTemplate = 'detailed';
+let currentQuote = null;
+
+function setTemplate(t) {
+  activeTemplate = t;
+  document.querySelectorAll('.template-chip').forEach(c => c.classList.toggle('on', c.dataset.tpl === t));
+}
+
+// Check training status
+async function checkTraining() {
+  try {
+    const data = await apiCall('/api/training/knowledge');
+    const alert = document.getElementById('trainingAlert');
+    const text = document.getElementById('trainingAlertText');
+    const h = lang === 'he';
+    alert.style.display = 'flex';
+    if (data.knowledge?.trained) {
+      alert.className = 'training-alert trained';
+      alert.querySelector('span').textContent = '✓';
+      text.innerHTML = h
+        ? `<strong>AI מאומן</strong> על ${data.knowledge.fileCount} מסמכים. ההצעה תשתמש במחירים שלך.`
+        : `<strong>AI trained</strong> on ${data.knowledge.fileCount} documents. Quote will use your pricing.`;
+    } else {
+      alert.className = 'training-alert not-trained';
+      text.innerHTML = h
+        ? `💡 <strong>טיפ:</strong> <a href="/training.html">העלה חוזים ישנים</a> כדי ש-AI ייצר הצעות עם המחירים שלך.`
+        : `💡 <strong>Tip:</strong> <a href="/training.html">Upload past contracts</a> so AI generates quotes using YOUR pricing.`;
+    }
+  } catch {}
+}
+
+async function generateQuote() {
+  const desc = document.getElementById('projectDesc').value.trim();
+  if (!desc) { showToast(lang === 'he' ? 'תאר את הפרויקט' : 'Describe the project', 'err'); return; }
+
+  const credits = getCredits();
+  if (credits < 1) { showNoCreditModal(); return; }
+
+  const ok = await confirmCredit(lang === 'he' ? 'יצירת הצעת מחיר' : 'Generate Quote');
+  if (!ok) return;
+
+  const btn = document.getElementById('genBtn');
+  btn.disabled = true;
+  btn.innerHTML = '⏳ ' + (lang === 'he' ? 'מייצר...' : 'Generating...');
+
+  try {
+    const data = await apiCall('/api/quotes/generate', {
+      method: 'POST',
+      body: {
+        projectDescription: desc,
+        template: activeTemplate,
+        clientName: document.getElementById('clientName').value.trim(),
+        location: document.getElementById('location').value.trim()
+      }
+    });
+
+    currentQuote = data.quote;
+    renderPreview(currentQuote);
+    document.getElementById('qpActions').style.display = 'flex';
+
+    // Update credits
+    const user = getCachedUser();
+    if (user && data.credits !== undefined) {
+      user.credits = data.credits;
+      setCachedUser(user);
+      if (typeof updateCreditDisplay === 'function') updateCreditDisplay();
+    }
+
+    if (data.personalized) {
+      showToast(lang === 'he' ? `✓ הצעה אישית (מבוסס על ${data.fileCount} קבצים)` : `✓ Personalized (based on ${data.fileCount} files)`, 'ok');
+    } else {
+      showToast(lang === 'he' ? 'הצעה נוצרה' : 'Quote generated', 'ok');
+    }
+
+    document.getElementById('quotePreview').scrollIntoView({ behavior: 'smooth' });
+  } catch (err) {
+    showToast(err.message, 'err');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '📝 <span>' + (lang === 'he' ? 'צור הצעת מחיר ⚡1' : 'Generate Quote ⚡1') + '</span>';
+}
+
+function renderPreview(q) {
+  const user = getCachedUser() || {};
+  const h = lang === 'he';
+  const clientName = document.getElementById('clientName').value.trim() || '[Client Name]';
+  const clientAddr = document.getElementById('clientAddress').value.trim() || '';
+  const date = new Date().toLocaleDateString();
+  const validUntil = new Date(Date.now() + 30 * 86400000).toLocaleDateString();
+  const quoteNum = `BQ-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9999) + 1).padStart(4, '0')}`;
+
+  const itemsHtml = (q.lineItems || []).map(it => `
+    <tr>
+      <td>${escHtml(it.description || '')}</td>
+      <td class="num">${it.quantity || 1}</td>
+      <td class="num">$${(it.unitPrice || 0).toLocaleString()}</td>
+      <td class="num">$${(it.total || 0).toLocaleString()}</td>
+    </tr>`).join('');
+
+  const preview = document.getElementById('quotePreview');
+  preview.innerHTML = `
+    <div class="qp-header">
+      <div class="qp-business">
+        ${user.logo ? `<img src="${user.logo}" class="biz-logo" alt="">` : ''}
+        <h2>${escHtml(user.businessName || 'Your Business')}</h2>
+        <p>
+          ${user.phone ? '📞 ' + escHtml(user.phone) + '<br>' : ''}
+          📧 ${escHtml(user.email || '')}<br>
+          ${user.businessType || 'Licensed Contractor'}
+        </p>
+      </div>
+      <div class="qp-meta">
+        <div class="q-num">${quoteNum}</div>
+        <div>${h ? 'תאריך' : 'Date'}: ${date}</div>
+        <div>${h ? 'תקף עד' : 'Valid Until'}: ${validUntil}</div>
+      </div>
+    </div>
+
+    <div class="qp-client">
+      <div class="client-label">${h ? 'הצעת מחיר עבור' : 'Quote For'}</div>
+      <div class="client-name">${escHtml(clientName)}</div>
+      ${clientAddr ? `<div class="client-addr">${escHtml(clientAddr)}</div>` : ''}
+    </div>
+
+    <div class="qp-project">
+      <h3>${escHtml(q.projectTitle || 'Project')}</h3>
+      <p>${escHtml(q.summary || '')}</p>
+    </div>
+
+    ${itemsHtml ? `<table class="qp-table">
+      <thead><tr>
+        <th>${h ? 'תיאור' : 'Description'}</th>
+        <th class="num">${h ? 'כמות' : 'Qty'}</th>
+        <th class="num">${h ? 'מחיר יחידה' : 'Unit Price'}</th>
+        <th class="num">${h ? 'סה״כ' : 'Total'}</th>
+      </tr></thead>
+      <tbody>${itemsHtml}</tbody>
+    </table>` : ''}
+
+    <div class="qp-totals">
+      <div class="t-row"><span>${h ? 'סיכום ביניים' : 'Subtotal'}</span><span>$${(q.subtotal || 0).toLocaleString()}</span></div>
+      <div class="t-row"><span>${h ? 'מע״מ' : 'Tax'} (${q.taxRate || 9.5}%)</span><span>$${(q.tax || 0).toLocaleString()}</span></div>
+      <div class="t-row final"><span>${h ? 'סה״כ' : 'TOTAL'}</span><span>$${(q.total || 0).toLocaleString()}</span></div>
+    </div>
+
+    ${q.timeline ? `<div class="qp-terms"><h4>${h ? 'לוח זמנים' : 'Timeline'}</h4><p>${escHtml(q.timeline)}</p></div>` : ''}
+
+    ${q.terms ? `<div class="qp-terms"><h4>${h ? 'תנאים' : 'Terms & Conditions'}</h4><p style="white-space:pre-line;">${escHtml(q.terms)}</p></div>` : ''}
+
+    ${q.notes ? `<div class="qp-terms"><h4>${h ? 'הערות' : 'Notes'}</h4><p>${escHtml(q.notes)}</p></div>` : ''}
+
+    <div style="margin-top:24px;display:flex;gap:40px;font-size:12px;color:#555;">
+      <div style="flex:1;border-top:1px solid #333;padding-top:6px;">${h ? 'חתימת לקוח' : 'Client Signature'}</div>
+      <div style="flex:1;border-top:1px solid #333;padding-top:6px;">${h ? 'תאריך' : 'Date'}</div>
+    </div>
+
+    <div class="qp-footer">Powered by BQ Tools · bqtools.dev</div>
+  `;
+  preview.classList.add('show');
+}
+
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
+async function saveQuote() {
+  if (!currentQuote) return;
+  try {
+    const data = await apiCall('/api/quotes', {
+      method: 'POST',
+      body: {
+        clientName: document.getElementById('clientName').value.trim(),
+        clientAddress: document.getElementById('clientAddress').value.trim(),
+        projectTitle: currentQuote.projectTitle,
+        projectDescription: document.getElementById('projectDesc').value.trim(),
+        lineItems: currentQuote.lineItems,
+        subtotal: currentQuote.subtotal,
+        tax: currentQuote.tax,
+        total: currentQuote.total,
+        terms: currentQuote.terms,
+        template: activeTemplate,
+        status: 'Draft'
+      }
+    });
+    showToast(lang === 'he' ? `✓ נשמר (${data.quote.quoteNumber})` : `✓ Saved (${data.quote.quoteNumber})`, 'ok');
+  } catch (err) {
+    showToast(err.message, 'err');
+  }
+}
+
+function emailQuote() {
+  if (!currentQuote) return;
+  const client = document.getElementById('clientName').value.trim() || 'Client';
+  const subject = encodeURIComponent(`Quote — ${currentQuote.projectTitle || 'Project'}`);
+  const body = encodeURIComponent(`Hi ${client},\n\nPlease find your quote attached.\n\nProject: ${currentQuote.projectTitle}\nTotal: $${(currentQuote.total || 0).toLocaleString()}\n\nValid for 30 days.\n\nBest,\n${(getCachedUser() || {}).businessName || ''}`);
+  window.location.href = `mailto:?subject=${subject}&body=${body}`;
+}
+
+checkTraining();
+</script>
+</body>
+</html>

@@ -131,6 +131,45 @@ export default {
         return corsResponse(env, await handleGenerateMemories(request, env));
       }
 
+      // ── Training Routes ──
+      if (path === '/api/training' && request.method === 'GET') {
+        return corsResponse(env, await handleTrainingList(request, env));
+      }
+      if (path === '/api/training/upload' && request.method === 'POST') {
+        return corsResponse(env, await handleTrainingUpload(request, env));
+      }
+      if (path.startsWith('/api/training/') && request.method === 'DELETE') {
+        return corsResponse(env, await handleTrainingDelete(request, env, path));
+      }
+      if (path === '/api/training/knowledge' && request.method === 'GET') {
+        return corsResponse(env, await handleTrainingKnowledge(request, env));
+      }
+
+      // ── Quote Routes ──
+      if (path === '/api/quotes' && request.method === 'GET') {
+        return corsResponse(env, await handleQuoteList(request, env));
+      }
+      if (path === '/api/quotes' && request.method === 'POST') {
+        return corsResponse(env, await handleQuoteSave(request, env));
+      }
+      if (path === '/api/quotes/generate' && request.method === 'POST') {
+        return corsResponse(env, await handleQuoteGenerate(request, env));
+      }
+      if (path.startsWith('/api/quotes/') && request.method === 'PUT') {
+        return corsResponse(env, await handleQuoteUpdate(request, env, path));
+      }
+      if (path.startsWith('/api/quotes/') && request.method === 'DELETE') {
+        return corsResponse(env, await handleQuoteDelete(request, env, path));
+      }
+      if (path.startsWith('/api/quotes/') && request.method === 'GET') {
+        return corsResponse(env, await handleQuoteGet(request, env, path));
+      }
+
+      // ── Contract Routes ──
+      if (path === '/api/contracts/generate' && request.method === 'POST') {
+        return corsResponse(env, await handleContractGenerate(request, env));
+      }
+
       // ── News Routes ──
       if (path === '/api/news/today' && request.method === 'GET') {
         return corsResponse(env, await handleNewsToday(request, env));
@@ -502,14 +541,35 @@ async function handleAI(request, env) {
     return json({ error: 'action and prompt required' }, 400);
   }
 
+  // Inject personal knowledge base for estimate/quote/report actions
+  let finalPrompt = prompt;
+  if (action === 'estimate' || action === 'report') {
+    const knowledge = await buildKnowledgeBase(updated.email, env);
+    if (knowledge.trained) {
+      const context = `IMPORTANT — Use THIS CONTRACTOR'S actual pricing profile (learned from their past contracts/invoices):
+${knowledge.summary || ''}
+Materials they use: ${JSON.stringify(knowledge.materials || [])}
+Their labor rates: ${JSON.stringify(knowledge.labor || [])}
+Typical markup: ${knowledge.markupRange || 'standard'}
+Common project types: ${(knowledge.projectTypes || []).join(', ')}
+
+Use THESE rates whenever possible. If this project isn't covered by their history, use market-typical LA pricing.
+
+---
+
+`;
+      finalPrompt = context + prompt;
+    }
+  }
+
   let aiResponse;
   try {
     // Try Claude first
-    aiResponse = await callClaudeAPI(env, prompt, images || []);
+    aiResponse = await callClaudeAPI(env, finalPrompt, images || []);
   } catch (claudeErr) {
     console.error('Claude error, trying Gemini:', claudeErr.message);
     try {
-      aiResponse = await callGeminiAPI(env, prompt, images || []);
+      aiResponse = await callGeminiAPI(env, finalPrompt, images || []);
     } catch (geminiErr) {
       console.error('Gemini also failed:', geminiErr.message);
       return json({ error: `AI failed: ${claudeErr.message}` }, 502);
@@ -1976,4 +2036,462 @@ async function handleAdminNewsRefresh(request, env) {
   if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
   await refreshNews(env, true); // force refresh
   return json({ ok: true, message: 'News refreshed' });
+}
+
+// ── Training System ──
+
+async function handleTrainingList(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const raw = await env.BQ_USERS.get(`training:${user.email}`);
+  const files = raw ? JSON.parse(raw) : [];
+  // Don't send full content_text to list endpoint, just metadata
+  return json({
+    ok: true,
+    files: files.map(f => ({
+      id: f.id, filename: f.filename, type: f.type,
+      uploadedAt: f.uploadedAt, contentLength: (f.content_text || '').length
+    })),
+    count: files.length
+  });
+}
+
+async function handleTrainingUpload(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  if (!(await checkRateLimit(user.email, env))) {
+    return json({ error: 'Rate limit exceeded' }, 429);
+  }
+
+  const updated = checkMonthlyReset(user);
+  if (updated.credits < 1) {
+    return json({ error: 'Need 1 credit for training upload', credits: updated.credits }, 402);
+  }
+
+  const body = await request.json();
+  const { filename, type, imageBase64, textContent } = body;
+  if (!filename) return json({ error: 'filename required' }, 400);
+
+  // Extract text from image if image provided, else use textContent
+  let content_text = textContent || '';
+  if (imageBase64) {
+    const extractPrompt = 'Extract ALL text from this document (contract, invoice, price list, or quote). Preserve structure: line items, prices, dates, quantities. Return as plain text. If not readable, return "UNREADABLE".';
+    try {
+      content_text = await callClaudeAPI(env, extractPrompt, [imageBase64]);
+    } catch (e) {
+      return json({ error: 'Failed to extract text: ' + e.message }, 502);
+    }
+  }
+
+  if (!content_text || content_text.trim().length < 10) {
+    return json({ error: 'Could not extract usable content' }, 400);
+  }
+
+  // Limit content to 20KB per file
+  if (content_text.length > 20000) content_text = content_text.substring(0, 20000);
+
+  const key = `training:${user.email}`;
+  const raw = await env.BQ_USERS.get(key);
+  const files = raw ? JSON.parse(raw) : [];
+
+  // Max 20 files per user — auto-delete oldest
+  if (files.length >= 20) files.splice(0, files.length - 19);
+
+  const newFile = {
+    id: Date.now().toString(36) + Math.random().toString(36).substring(2, 6),
+    filename: filename.substring(0, 100),
+    type: type || 'document',
+    content_text,
+    uploadedAt: new Date().toISOString()
+  };
+  files.push(newFile);
+  await env.BQ_USERS.put(key, JSON.stringify(files));
+
+  // Invalidate knowledge cache so it rebuilds next time
+  await env.BQ_USERS.delete(`knowledge:${user.email}`);
+
+  // Deduct credit
+  updated.credits -= 1;
+  updated.creditsUsedThisMonth = (updated.creditsUsedThisMonth || 0) + 1;
+  await env.BQ_USERS.put(`user:${updated.email}`, JSON.stringify(updated));
+  await logCreditUsage(updated.email, 'training-upload', filename, env);
+
+  return json({ ok: true, file: { id: newFile.id, filename: newFile.filename }, count: files.length, credits: updated.credits });
+}
+
+async function handleTrainingDelete(request, env, path) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const id = path.split('/').pop();
+  const key = `training:${user.email}`;
+  const raw = await env.BQ_USERS.get(key);
+  const files = raw ? JSON.parse(raw) : [];
+
+  const filtered = files.filter(f => f.id !== id);
+  if (filtered.length === files.length) return json({ error: 'File not found' }, 404);
+
+  await env.BQ_USERS.put(key, JSON.stringify(filtered));
+  await env.BQ_USERS.delete(`knowledge:${user.email}`); // invalidate
+
+  return json({ ok: true, count: filtered.length });
+}
+
+async function handleTrainingKnowledge(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const knowledge = await buildKnowledgeBase(user.email, env);
+  return json({ ok: true, knowledge });
+}
+
+async function buildKnowledgeBase(email, env) {
+  // Try cache first
+  const cached = await env.BQ_USERS.get(`knowledge:${email}`);
+  if (cached) return JSON.parse(cached);
+
+  const raw = await env.BQ_USERS.get(`training:${email}`);
+  const files = raw ? JSON.parse(raw) : [];
+
+  if (files.length === 0) {
+    return { trained: false, fileCount: 0, summary: '', materials: [], labor: [], markup: null, projectTypes: [] };
+  }
+
+  // Combine all training text (truncate total to 30KB)
+  let combined = files.map(f => `=== ${f.filename} (${f.type}) ===\n${f.content_text}`).join('\n\n');
+  if (combined.length > 30000) combined = combined.substring(0, 30000);
+
+  const prompt = `Analyze these contractor documents (contracts, invoices, quotes, price lists) and extract a structured pricing profile. Return JSON:
+{
+  "summary": "2-3 sentence summary of this contractor's pricing patterns",
+  "materials": [{"name":"material name","avgPrice":"$X-Y per unit","unit":"sqft/unit/etc"}],
+  "labor": [{"task":"task name","rate":"$X-Y per hour or per sqft","notes":"..."}],
+  "markupRange": "typical markup % range",
+  "projectTypes": ["type1","type2"],
+  "contractTerms": ["common clause 1","common clause 2"],
+  "paymentStructure": "typical payment schedule"
+}
+
+DOCUMENTS:
+${combined}
+
+Return JSON only, no markdown.`;
+
+  let aiResponse;
+  try {
+    aiResponse = await callClaudeAPI(env, prompt, []);
+  } catch {
+    return { trained: true, fileCount: files.length, summary: 'Analysis pending', materials: [], labor: [] };
+  }
+
+  let parsed;
+  try {
+    parsed = JSON.parse(aiResponse.replace(/```json|```/g, '').trim());
+  } catch {
+    parsed = { summary: aiResponse.substring(0, 500) };
+  }
+
+  const knowledge = {
+    trained: true,
+    fileCount: files.length,
+    updatedAt: new Date().toISOString(),
+    ...parsed
+  };
+
+  await env.BQ_USERS.put(`knowledge:${email}`, JSON.stringify(knowledge), { expirationTtl: 604800 }); // cache 7 days
+  return knowledge;
+}
+
+// ── Quote System ──
+
+async function handleQuoteList(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const raw = await env.BQ_USERS.get(`quotes:${user.email}`);
+  const quotes = raw ? JSON.parse(raw) : [];
+  return json({ ok: true, quotes, count: quotes.length });
+}
+
+async function handleQuoteGet(request, env, path) {
+  // Skip known sub-routes
+  if (path === '/api/quotes/generate') return json({ error: 'Use POST' }, 405);
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const id = path.split('/').pop();
+  const raw = await env.BQ_USERS.get(`quotes:${user.email}`);
+  const quotes = raw ? JSON.parse(raw) : [];
+  const quote = quotes.find(q => q.id === id);
+  if (!quote) return json({ error: 'Quote not found' }, 404);
+  return json({ ok: true, quote });
+}
+
+async function handleQuoteSave(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const quote = await request.json();
+  const key = `quotes:${user.email}`;
+  const raw = await env.BQ_USERS.get(key);
+  const quotes = raw ? JSON.parse(raw) : [];
+
+  // Generate quote number if not set
+  const year = new Date().getFullYear();
+  const num = String(quotes.length + 1).padStart(4, '0');
+
+  const newQuote = {
+    id: Date.now().toString(36) + Math.random().toString(36).substring(2, 6),
+    quoteNumber: quote.quoteNumber || `BQ-${year}-${num}`,
+    clientName: quote.clientName || '',
+    clientAddress: quote.clientAddress || '',
+    projectTitle: quote.projectTitle || 'Untitled Project',
+    projectDescription: quote.projectDescription || '',
+    lineItems: quote.lineItems || [],
+    subtotal: quote.subtotal || 0,
+    tax: quote.tax || 0,
+    total: quote.total || 0,
+    terms: quote.terms || '',
+    template: quote.template || 'detailed',
+    status: quote.status || 'Draft',
+    date: quote.date || new Date().toISOString(),
+    validUntil: quote.validUntil || new Date(Date.now() + 30 * 86400000).toISOString(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+
+  quotes.unshift(newQuote);
+  if (quotes.length > 500) quotes.length = 500;
+  await env.BQ_USERS.put(key, JSON.stringify(quotes));
+
+  return json({ ok: true, quote: newQuote });
+}
+
+async function handleQuoteUpdate(request, env, path) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const id = path.split('/').pop();
+  const updates = await request.json();
+  const key = `quotes:${user.email}`;
+  const raw = await env.BQ_USERS.get(key);
+  const quotes = raw ? JSON.parse(raw) : [];
+
+  const idx = quotes.findIndex(q => q.id === id);
+  if (idx === -1) return json({ error: 'Quote not found' }, 404);
+
+  const allowed = ['clientName', 'clientAddress', 'projectTitle', 'projectDescription',
+    'lineItems', 'subtotal', 'tax', 'total', 'terms', 'status'];
+  for (const k of allowed) {
+    if (updates[k] !== undefined) quotes[idx][k] = updates[k];
+  }
+  quotes[idx].updatedAt = new Date().toISOString();
+
+  await env.BQ_USERS.put(key, JSON.stringify(quotes));
+  return json({ ok: true, quote: quotes[idx] });
+}
+
+async function handleQuoteDelete(request, env, path) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const id = path.split('/').pop();
+  const key = `quotes:${user.email}`;
+  const raw = await env.BQ_USERS.get(key);
+  const quotes = raw ? JSON.parse(raw) : [];
+
+  const filtered = quotes.filter(q => q.id !== id);
+  if (filtered.length === quotes.length) return json({ error: 'Quote not found' }, 404);
+
+  await env.BQ_USERS.put(key, JSON.stringify(filtered));
+  return json({ ok: true, count: filtered.length });
+}
+
+async function handleQuoteGenerate(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  if (!(await checkRateLimit(user.email, env))) {
+    return json({ error: 'Rate limit exceeded' }, 429);
+  }
+
+  const updated = checkMonthlyReset(user);
+  if (updated.credits < 1) {
+    return json({ error: 'Need 1 credit', credits: updated.credits }, 402);
+  }
+
+  const body = await request.json();
+  const { projectDescription, template, images, clientName, location } = body;
+  if (!projectDescription) return json({ error: 'projectDescription required' }, 400);
+
+  // Load user's knowledge base
+  const knowledge = await buildKnowledgeBase(updated.email, env);
+
+  // Build personalized system context
+  let personalContext = '';
+  if (knowledge.trained) {
+    personalContext = `\n\n=== THIS CONTRACTOR'S PRICING PROFILE (use this for accuracy) ===
+${knowledge.summary || ''}
+Materials: ${JSON.stringify(knowledge.materials || [])}
+Labor rates: ${JSON.stringify(knowledge.labor || [])}
+Markup range: ${knowledge.markupRange || 'standard'}
+Typical project types: ${(knowledge.projectTypes || []).join(', ')}
+Common terms: ${(knowledge.contractTerms || []).join('; ')}
+Payment structure: ${knowledge.paymentStructure || 'standard'}
+=== END OF PROFILE ===\n\nUse these rates and patterns. If a project detail is not covered by the profile, use market-typical LA pricing.\n`;
+  }
+
+  const templateInstructions = {
+    quick: 'Simple quote with just a total price and brief description.',
+    detailed: 'Detailed quote with itemized line items (description, quantity, unit price, total for each).',
+    premium: 'Premium quote with itemized line items, material specifications, timeline, and full terms.'
+  };
+
+  const prompt = `You are a professional quote generator for a construction contractor.
+${personalContext}
+
+Generate a quote for the following project${location ? ' in ' + location : ''}:
+"${projectDescription}"
+${clientName ? 'Client: ' + clientName : ''}
+
+Format: ${templateInstructions[template] || templateInstructions.detailed}
+
+Return as JSON ONLY:
+{
+  "projectTitle": "short project title",
+  "summary": "1-2 sentence project scope",
+  "lineItems": [
+    {"description":"item description","quantity":1,"unit":"unit","unitPrice":0,"total":0}
+  ],
+  "subtotal": 0,
+  "taxRate": 9.5,
+  "tax": 0,
+  "total": 0,
+  "timeline": "estimated duration",
+  "terms": "payment terms and conditions in 3-5 bullet points",
+  "notes": "any additional notes"
+}
+
+All prices in USD. Tax is ${location && location.toLowerCase().includes('los angeles') ? '9.5' : '9.5'}% for CA. Be realistic.`;
+
+  let aiResponse;
+  try {
+    aiResponse = await callClaudeAPI(env, prompt, images || []);
+  } catch (e) {
+    try {
+      aiResponse = await callGeminiAPI(env, prompt, images || []);
+    } catch (e2) {
+      return json({ error: 'AI failed: ' + e.message }, 502);
+    }
+  }
+
+  let quote;
+  try {
+    quote = JSON.parse(aiResponse.replace(/```json|```/g, '').trim());
+  } catch {
+    return json({ error: 'AI returned invalid format', raw: aiResponse }, 500);
+  }
+
+  // Deduct credit
+  updated.credits -= 1;
+  updated.creditsUsedThisMonth = (updated.creditsUsedThisMonth || 0) + 1;
+  await env.BQ_USERS.put(`user:${updated.email}`, JSON.stringify(updated));
+  await logCreditUsage(updated.email, 'quote-generate', quote.projectTitle || 'Quote', env);
+
+  return json({
+    ok: true,
+    quote,
+    personalized: knowledge.trained,
+    fileCount: knowledge.fileCount,
+    credits: updated.credits
+  });
+}
+
+// ── Contract Generator ──
+
+async function handleContractGenerate(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  if (!(await checkRateLimit(user.email, env))) {
+    return json({ error: 'Rate limit exceeded' }, 429);
+  }
+
+  const updated = checkMonthlyReset(user);
+  if (updated.credits < 2) {
+    return json({ error: 'Need 2 credits', credits: updated.credits }, 402);
+  }
+
+  const body = await request.json();
+  const { clientName, clientAddress, projectDescription, startDate, endDate, amount, paymentTerms } = body;
+  if (!projectDescription || !amount) return json({ error: 'projectDescription and amount required' }, 400);
+
+  const knowledge = await buildKnowledgeBase(updated.email, env);
+  let personalContext = '';
+  if (knowledge.trained && knowledge.contractTerms?.length) {
+    personalContext = `\nThis contractor's typical contract clauses: ${knowledge.contractTerms.join('; ')}\nPayment structure: ${knowledge.paymentStructure || 'standard'}\n`;
+  }
+
+  const businessName = updated.businessName || 'Contractor';
+  const prompt = `Generate a professional construction contract. ${personalContext}
+
+Details:
+- Contractor: ${businessName}
+- Client: ${clientName || '[Client Name]'}
+- Client Address: ${clientAddress || '[Client Address]'}
+- Project: ${projectDescription}
+- Start Date: ${startDate || 'TBD'}
+- End Date: ${endDate || 'TBD'}
+- Total Amount: $${amount}
+- Payment Terms: ${paymentTerms || 'standard'}
+
+Return as JSON:
+{
+  "title": "CONSTRUCTION AGREEMENT",
+  "scope": "detailed scope of work in paragraphs",
+  "payment": "payment schedule with milestones",
+  "timeline": "work schedule description",
+  "materials": "who provides materials",
+  "changeOrders": "change order policy",
+  "warranty": "warranty terms",
+  "termination": "termination clause",
+  "disputes": "dispute resolution (California law)",
+  "signatures": "signature block description"
+}
+
+California-compliant. Professional legal language. JSON only.`;
+
+  let aiResponse;
+  try {
+    aiResponse = await callClaudeAPI(env, prompt, []);
+  } catch (e) {
+    return json({ error: 'AI failed: ' + e.message }, 502);
+  }
+
+  let contract;
+  try {
+    contract = JSON.parse(aiResponse.replace(/```json|```/g, '').trim());
+  } catch {
+    return json({ error: 'AI returned invalid format', raw: aiResponse }, 500);
+  }
+
+  updated.credits -= 2;
+  updated.creditsUsedThisMonth = (updated.creditsUsedThisMonth || 0) + 2;
+  await env.BQ_USERS.put(`user:${updated.email}`, JSON.stringify(updated));
+  await logCreditUsage(updated.email, 'contract-generate', projectDescription.substring(0, 50), env);
+
+  return json({ ok: true, contract, credits: updated.credits });
 }

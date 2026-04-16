@@ -215,6 +215,31 @@
       <button class="btn btn-sm" onclick="reportErrors()" style="font-size:12px;min-height:36px;padding:6px 12px;" data-en="Report Issue" data-he="דווח בעיה">Report Issue</button>
     </div>
   </div>
+
+  <!-- My Quotes -->
+  <div id="quotes" class="dash-card full" style="margin-top:12px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+      <h3 style="font-size:16px;font-weight:800;">📝 <span data-en="My Quotes" data-he="ההצעות שלי">My Quotes</span></h3>
+      <div style="display:flex;gap:6px;">
+        <input class="input" id="quoteSearch" placeholder="Search..." style="padding:8px 10px;min-height:36px;font-size:13px;width:140px;" oninput="renderQuotes()">
+        <a href="/tools/quote.html" class="btn btn-sm" data-en="+ New Quote" data-he="+ הצעה חדשה">+ New Quote</a>
+      </div>
+    </div>
+    <div id="quotesBody">
+      <p style="color:var(--txd);font-size:13px;text-align:center;padding:20px;" data-en="Loading..." data-he="טוען...">Loading...</p>
+    </div>
+  </div>
+
+  <!-- Training Stats -->
+  <div class="dash-card full" style="margin-top:12px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+      <div>
+        <h3 style="font-size:16px;font-weight:800;">🧠 <span data-en="AI Training" data-he="אימון AI">AI Training</span></h3>
+        <p style="font-size:13px;color:var(--txd);margin-top:4px;" id="trainingStatus">—</p>
+      </div>
+      <a href="/training.html" class="btn btn-sm btn-primary" data-en="Manage Training →" data-he="ניהול אימון →">Manage Training →</a>
+    </div>
+  </div>
 </div>
 
 <footer class="footer"><div class="footer-brand">Powered by BQ Tools — BQ Production LLC</div></footer>
@@ -442,6 +467,117 @@ function reportErrors() {
 }
 
 loadDashboard();
+
+// ── Quotes ──
+let allQuotes = [];
+
+async function loadQuotes() {
+  try {
+    const data = await apiCall('/api/quotes');
+    allQuotes = data.quotes || [];
+    renderQuotes();
+  } catch (err) {
+    document.getElementById('quotesBody').innerHTML = `<p style="color:var(--red);font-size:13px;text-align:center;padding:20px;">${err.message}</p>`;
+  }
+}
+
+function renderQuotes() {
+  const body = document.getElementById('quotesBody');
+  const search = (document.getElementById('quoteSearch')?.value || '').toLowerCase();
+  const filtered = search
+    ? allQuotes.filter(q => (q.clientName + ' ' + q.projectTitle + ' ' + q.quoteNumber).toLowerCase().includes(search))
+    : allQuotes;
+
+  if (filtered.length === 0) {
+    body.innerHTML = `<p style="color:var(--txd);font-size:13px;text-align:center;padding:20px;">${lang === 'he' ? 'אין הצעות עדיין. צור הצעה חדשה למעלה.' : 'No quotes yet. Create one above.'}</p>`;
+    return;
+  }
+
+  const statusColors = {
+    'Draft': 'var(--txd)',
+    'Sent': 'var(--blu)',
+    'Accepted': 'var(--grn)',
+    'Rejected': 'var(--red)'
+  };
+
+  body.innerHTML = `<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;">
+    <thead><tr style="text-align:left;border-bottom:1px solid var(--bd);">
+      <th style="padding:8px 6px;font-size:11px;color:var(--txd);font-weight:600;">#</th>
+      <th style="padding:8px 6px;font-size:11px;color:var(--txd);font-weight:600;">${lang === 'he' ? 'לקוח' : 'Client'}</th>
+      <th style="padding:8px 6px;font-size:11px;color:var(--txd);font-weight:600;">${lang === 'he' ? 'פרויקט' : 'Project'}</th>
+      <th style="padding:8px 6px;font-size:11px;color:var(--txd);font-weight:600;text-align:right;">${lang === 'he' ? 'סה״כ' : 'Total'}</th>
+      <th style="padding:8px 6px;font-size:11px;color:var(--txd);font-weight:600;">${lang === 'he' ? 'תאריך' : 'Date'}</th>
+      <th style="padding:8px 6px;font-size:11px;color:var(--txd);font-weight:600;">${lang === 'he' ? 'סטטוס' : 'Status'}</th>
+      <th></th>
+    </tr></thead>
+    <tbody>
+      ${filtered.map(q => `<tr style="border-bottom:1px solid rgba(255,255,255,.04);">
+        <td style="padding:10px 6px;font-family:monospace;font-size:11px;color:var(--ac);">${escHtml(q.quoteNumber || '')}</td>
+        <td style="padding:10px 6px;">${escHtml(q.clientName || '—')}</td>
+        <td style="padding:10px 6px;color:var(--txd);">${escHtml((q.projectTitle || '').substring(0, 30))}</td>
+        <td style="padding:10px 6px;text-align:right;font-weight:700;">$${(q.total || 0).toLocaleString()}</td>
+        <td style="padding:10px 6px;color:var(--txd);font-size:12px;">${new Date(q.date || q.createdAt).toLocaleDateString()}</td>
+        <td style="padding:10px 6px;">
+          <select onchange="updateQuoteStatus('${q.id}',this.value)" style="padding:3px 8px;background:var(--bg);border:1px solid var(--bd);border-radius:6px;color:${statusColors[q.status] || 'var(--tx)'};font-size:11px;font-family:inherit;">
+            <option ${q.status === 'Draft' ? 'selected' : ''}>Draft</option>
+            <option ${q.status === 'Sent' ? 'selected' : ''}>Sent</option>
+            <option ${q.status === 'Accepted' ? 'selected' : ''}>Accepted</option>
+            <option ${q.status === 'Rejected' ? 'selected' : ''}>Rejected</option>
+          </select>
+        </td>
+        <td style="padding:10px 6px;">
+          <button onclick="deleteQuote('${q.id}')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;">🗑️</button>
+        </td>
+      </tr>`).join('')}
+    </tbody>
+  </table></div>`;
+}
+
+async function updateQuoteStatus(id, status) {
+  try {
+    await apiCall(`/api/quotes/${id}`, { method: 'PUT', body: { status } });
+    showToast(lang === 'he' ? 'עודכן' : 'Updated', 'ok');
+    const q = allQuotes.find(x => x.id === id);
+    if (q) q.status = status;
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+async function deleteQuote(id) {
+  if (!confirm(lang === 'he' ? 'למחוק הצעה?' : 'Delete this quote?')) return;
+  try {
+    await apiCall(`/api/quotes/${id}`, { method: 'DELETE' });
+    allQuotes = allQuotes.filter(q => q.id !== id);
+    renderQuotes();
+    showToast(lang === 'he' ? 'נמחק' : 'Deleted', 'ok');
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
+async function loadTrainingStatus() {
+  try {
+    const data = await apiCall('/api/training');
+    const el = document.getElementById('trainingStatus');
+    const h = lang === 'he';
+    if (data.count > 0) {
+      el.textContent = h
+        ? `✓ מאומן על ${data.count} מסמכים — הצעות והערכות מותאמות אישית`
+        : `✓ Trained on ${data.count} documents — quotes and estimates are personalized`;
+      el.style.color = 'var(--grn)';
+    } else {
+      el.textContent = h
+        ? 'לא מאומן עדיין — העלה חוזים וחשבוניות למחירים אישיים'
+        : 'Not trained yet — upload contracts and invoices for personalized pricing';
+    }
+  } catch {}
+}
+
+loadQuotes();
+loadTrainingStatus();
 </script>
 </body>
 </html>
