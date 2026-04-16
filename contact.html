@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Contact</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  body { display: flex; flex-direction: column; }
+  .contact-wrap { max-width: 560px; width: 92%; margin: 0 auto; padding: 40px 0; }
+  .contact-wrap h1 { font-size: 28px; font-weight: 900; margin-bottom: 8px; text-align: center; }
+  .contact-wrap .sub { font-size: 14px; color: var(--txd); text-align: center; margin-bottom: 28px; line-height: 1.6; }
+  .contact-card {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 14px;
+    padding: 24px; margin-bottom: 16px;
+  }
+  .contact-row {
+    display: flex; align-items: center; gap: 14px; padding: 14px 0;
+    border-bottom: 1px solid rgba(255,255,255,.04); font-size: 15px;
+  }
+  .contact-row:last-child { border-bottom: none; }
+  .contact-row .icon { font-size: 24px; width: 36px; text-align: center; flex-shrink: 0; }
+  .contact-row .label { font-size: 12px; color: var(--txd); margin-bottom: 2px; }
+  .contact-row a { color: var(--ac); }
+  .contact-hours {
+    background: var(--acd); border-radius: 10px; padding: 14px; text-align: center;
+    font-size: 13px; color: var(--ac); margin-top: 16px;
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/" class="nav-link" data-en="Home" data-he="בית">Home</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="contact-wrap">
+  <h1 data-en="Contact Us" data-he="צור קשר">Contact Us</h1>
+  <p class="sub" data-en="Questions, feedback, or partnership inquiries? We'd love to hear from you." data-he="שאלות, משוב, או הצעות שיתוף פעולה? נשמח לשמוע.">Questions, feedback, or partnership inquiries? We'd love to hear from you.</p>
+
+  <div class="contact-card">
+    <div class="contact-row">
+      <span class="icon">🏢</span>
+      <div>
+        <div class="label" data-en="Company" data-he="חברה">Company</div>
+        <strong>BQ Production LLC</strong>
+      </div>
+    </div>
+    <div class="contact-row">
+      <span class="icon">📍</span>
+      <div>
+        <div class="label" data-en="Location" data-he="מיקום">Location</div>
+        Los Angeles, California
+      </div>
+    </div>
+    <div class="contact-row">
+      <span class="icon">📧</span>
+      <div>
+        <div class="label">Email</div>
+        <a href="mailto:fanzai.mgmt@gmail.com">fanzai.mgmt@gmail.com</a>
+      </div>
+    </div>
+    <div class="contact-row">
+      <span class="icon">📸</span>
+      <div>
+        <div class="label">Instagram</div>
+        <a href="https://instagram.com/bq_music" target="_blank" rel="noopener">@bq_music</a>
+      </div>
+    </div>
+    <div class="contact-row">
+      <span class="icon">🌐</span>
+      <div>
+        <div class="label" data-en="Portfolio" data-he="תיק עבודות">Portfolio</div>
+        <a href="https://bqprod.pages.dev" target="_blank" rel="noopener">bqprod.pages.dev</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="contact-card">
+    <div class="contact-row">
+      <span class="icon">🔒</span>
+      <div>
+        <div class="label" data-en="Privacy & Data Requests" data-he="פרטיות ובקשות מידע">Privacy & Data Requests</div>
+        <span data-en="Email us with subject 'Privacy Request'" data-he="שלח מייל עם הנושא 'Privacy Request'">Email us with subject "Privacy Request"</span>
+      </div>
+    </div>
+    <div class="contact-row">
+      <span class="icon">©️</span>
+      <div>
+        <div class="label" data-en="DMCA / Copyright" data-he="DMCA / זכויות יוצרים">DMCA / Copyright</div>
+        <a href="mailto:fanzai.mgmt@gmail.com">fanzai.mgmt@gmail.com</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="contact-hours" data-en="We typically respond within 24-48 hours" data-he="אנחנו בדרך כלל מגיבים תוך 24-48 שעות">We typically respond within 24-48 hours</div>
+</div>
+
+<footer class="footer" style="width:100%;">
+  <div class="footer-brand">&copy; 2026 BQ Production LLC. All rights reserved.</div>
+  <div class="footer-legal">
+    <a href="/privacy.html">Privacy Policy</a><span>|</span>
+    <a href="/terms.html">Terms of Service</a>
+  </div>
+</footer>
+
+<script src="js/common.js"></script>
+</body>
+</html>

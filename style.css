@@ -318,6 +318,15 @@ a:hover, a:active { opacity: .8; }
 }
 .footer-links a:hover, .footer-links a:active { opacity: .7; color: var(--ac); }
 .footer-links svg { width: 12px; height: 12px; }
+.footer-legal {
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px; margin-top: 8px;
+}
+.footer-legal a {
+  font-size: 11px; color: var(--txd); opacity: .4; text-decoration: none; transition: opacity .2s;
+}
+.footer-legal a:hover { opacity: .8; color: var(--ac); }
+.footer-legal span { font-size: 11px; color: var(--txd); opacity: .3; }
 
 /* ── RTL Support ── */
 [dir="rtl"] .price-features,

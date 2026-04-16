@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Refund Policy</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  body { display: flex; flex-direction: column; }
+  .legal-wrap { max-width: 760px; width: 92%; margin: 0 auto; padding: 32px 0 40px; }
+  .legal-wrap h1 { font-size: 28px; font-weight: 900; margin-bottom: 6px; }
+  .legal-wrap .updated { font-size: 13px; color: var(--txd); margin-bottom: 24px; }
+  .legal-wrap h2 { font-size: 18px; font-weight: 700; margin: 24px 0 8px; color: var(--ac); }
+  .legal-wrap p, .legal-wrap li { font-size: 14px; line-height: 1.7; color: var(--tx); margin-bottom: 8px; }
+  .legal-wrap ul { padding-left: 20px; margin-bottom: 12px; }
+  .legal-wrap a { color: var(--ac); }
+  .legal-wrap .contact-box {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 10px;
+    padding: 16px; margin: 16px 0;
+  }
+  .policy-card { background: var(--sf); border: 1px solid var(--bd); border-radius: 12px; padding: 20px; margin-bottom: 14px; }
+  .policy-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+  .policy-card .status { display: inline-block; padding: 2px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; }
+  .policy-card .no-refund { background: rgba(255,107,107,.12); color: var(--red); }
+  .policy-card .partial { background: rgba(232,197,71,.12); color: var(--ac); }
+  .policy-card .yes { background: rgba(81,207,102,.12); color: var(--grn); }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/" class="nav-link" data-en="Home" data-he="בית">Home</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="legal-wrap">
+  <h1 data-en="Refund Policy" data-he="מדיניות החזרים">Refund Policy</h1>
+  <p class="updated" data-en="Last updated: April 15, 2026" data-he="עדכון אחרון: 15 באפריל 2026">Last updated: April 15, 2026</p>
+
+  <p>BQ Tools is a digital service that delivers AI-generated content instantly upon use. Please review our refund policy below before making a purchase.</p>
+
+  <div class="policy-card">
+    <h3>Used Credits <span class="status no-refund">Non-Refundable</span></h3>
+    <p>Credits are consumed immediately when an AI action is processed. Once a credit has been used to generate a report, estimate, analysis, or chat response, it cannot be refunded.</p>
+  </div>
+
+  <div class="policy-card">
+    <h3>Unused Credit Packs <span class="status no-refund">Non-Refundable</span></h3>
+    <p>Credit packs are digital goods delivered immediately upon purchase. As per California Civil Code and standard digital goods practices, we do not offer refunds on purchased credit packs, even if credits remain unused.</p>
+  </div>
+
+  <div class="policy-card">
+    <h3>Pro Subscription <span class="status partial">Cancel Anytime</span></h3>
+    <p>You may cancel your Pro subscription at any time. Your Pro benefits and monthly credits continue until the end of the current billing period. No refund is issued for the remaining days of the current period. No future charges will occur after cancellation.</p>
+  </div>
+
+  <div class="policy-card">
+    <h3>Technical Issues <span class="status yes">Case-by-Case</span></h3>
+    <p>If a technical issue on our side prevents you from receiving the AI output you paid for (e.g., server error during processing, credits deducted but no result delivered), please contact us. We will either:</p>
+    <ul>
+      <li>Restore the credits that were lost due to the technical issue, or</li>
+      <li>Re-process your request at no additional cost</li>
+    </ul>
+  </div>
+
+  <div class="policy-card">
+    <h3>Cryptocurrency Payments <span class="status no-refund">Non-Refundable</span></h3>
+    <p>Due to the nature of blockchain transactions, cryptocurrency payments cannot be reversed or refunded. Please ensure you are sending the correct amount to the correct wallet address before confirming your transaction.</p>
+  </div>
+
+  <h2>How to Request Support</h2>
+  <div class="contact-box">
+    <p>If you believe you are entitled to a credit restoration due to a technical issue, contact us at:</p>
+    <p><strong>Email:</strong> <a href="mailto:fanzai.mgmt@gmail.com">fanzai.mgmt@gmail.com</a></p>
+    <p style="margin-bottom:0;">Include your account email, the date and time of the issue, and a description of what happened. We aim to respond within 48 hours.</p>
+  </div>
+</div>
+
+<footer class="footer" style="width:100%;">
+  <div class="footer-brand">BQ Tools — BQ Production LLC</div>
+  <div class="footer-legal">
+    <a href="/privacy.html">Privacy Policy</a><span>|</span>
+    <a href="/terms.html">Terms of Service</a>
+  </div>
+</footer>
+
+<script src="js/common.js"></script>
+</body>
+</html>

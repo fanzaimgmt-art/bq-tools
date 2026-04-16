@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Privacy Policy</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  body { display: flex; flex-direction: column; }
+  .legal-wrap { max-width: 760px; width: 92%; margin: 0 auto; padding: 32px 0 40px; }
+  .legal-wrap h1 { font-size: 28px; font-weight: 900; margin-bottom: 6px; }
+  .legal-wrap .updated { font-size: 13px; color: var(--txd); margin-bottom: 24px; }
+  .legal-wrap h2 { font-size: 18px; font-weight: 700; margin: 24px 0 8px; color: var(--ac); }
+  .legal-wrap h3 { font-size: 15px; font-weight: 600; margin: 16px 0 6px; }
+  .legal-wrap p, .legal-wrap li { font-size: 14px; line-height: 1.7; color: var(--tx); margin-bottom: 8px; }
+  .legal-wrap ul { padding-left: 20px; margin-bottom: 12px; }
+  .legal-wrap a { color: var(--ac); }
+  .legal-wrap .contact-box {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 10px;
+    padding: 16px; margin: 16px 0;
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/" class="nav-link" data-en="Home" data-he="בית">Home</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="legal-wrap">
+  <h1 data-en="Privacy Policy" data-he="מדיניות פרטיות">Privacy Policy</h1>
+  <p class="updated" data-en="Last updated: April 15, 2026" data-he="עדכון אחרון: 15 באפריל 2026">Last updated: April 15, 2026</p>
+
+  <p>BQ Production LLC ("BQ Tools," "we," "us," or "our") operates the BQ Tools platform at bq-tools.fanzai-mgmt.workers.dev. This Privacy Policy describes how we collect, use, and protect your personal information when you use our services.</p>
+
+  <h2>1. Information We Collect</h2>
+
+  <h3>Information You Provide</h3>
+  <ul>
+    <li><strong>Account information:</strong> Email address (required for registration)</li>
+    <li><strong>Business profile:</strong> Business name, phone number, business type, preferred language</li>
+    <li><strong>Business logo:</strong> Uploaded image (resized to 200x200, max 50KB)</li>
+    <li><strong>Project content:</strong> Photos you upload for AI analysis, reports, estimates, and other tools</li>
+    <li><strong>Directory listing:</strong> Business description, photos, reviews, work locations, social media links, license number</li>
+    <li><strong>Memories:</strong> User-created notes and preferences for AI personalization</li>
+  </ul>
+
+  <h3>Information Collected Automatically</h3>
+  <ul>
+    <li><strong>Usage data:</strong> Credit usage history, tool actions, timestamps</li>
+    <li><strong>Error data:</strong> JavaScript errors (page, error message, browser type) for debugging purposes</li>
+    <li><strong>Authentication data:</strong> Login timestamps, authentication method (email or Google OAuth)</li>
+  </ul>
+
+  <h3>Information We Do NOT Collect</h3>
+  <ul>
+    <li>We do not use tracking cookies, third-party analytics, or advertising trackers</li>
+    <li>We do not store credit card or payment card information</li>
+    <li>We do not track your browsing activity across other websites</li>
+    <li>We use localStorage (browser-side storage) only for session management and caching</li>
+  </ul>
+
+  <h2>2. How We Use Your Information</h2>
+  <ul>
+    <li>To provide and operate our AI-powered tools for contractors</li>
+    <li>To process your photos and text through AI models for analysis, reports, and estimates</li>
+    <li>To manage your account, credits, and subscription</li>
+    <li>To display your business in the public Contractor Directory (if you opt in)</li>
+    <li>To generate personalized AI tips based on your usage patterns</li>
+    <li>To diagnose and fix technical issues</li>
+    <li>To communicate important service updates</li>
+  </ul>
+
+  <h2>3. Third-Party Services</h2>
+  <p>We use the following third-party services to operate BQ Tools. Your data may be processed by these services in accordance with their respective privacy policies:</p>
+  <ul>
+    <li><strong>Cloudflare:</strong> Hosting, CDN, and data storage (Cloudflare Workers KV)</li>
+    <li><strong>Google OAuth:</strong> Optional sign-in method (name, email, profile picture)</li>
+    <li><strong>Anthropic (Claude AI):</strong> AI text and image analysis</li>
+    <li><strong>Google (Gemini AI):</strong> AI text and image analysis (fallback)</li>
+    <li><strong>OpenAI (GPT-4o):</strong> AI text and image analysis</li>
+    <li><strong>Groq:</strong> AI text processing (Llama, Mixtral models)</li>
+    <li><strong>Manus AI:</strong> AI agent processing</li>
+    <li><strong>Apify:</strong> Social media profile data scraping (for Social Analysis tool)</li>
+    <li><strong>PayPal:</strong> Payment processing (redirected to PayPal's site)</li>
+    <li><strong>OpenStreetMap / Nominatim:</strong> Address geocoding for directory map</li>
+  </ul>
+
+  <h2>4. Payment Information</h2>
+  <p>We do not store any payment card information. Payments are processed through:</p>
+  <ul>
+    <li><strong>PayPal:</strong> You are redirected to PayPal's secure payment page. We only receive a transaction confirmation.</li>
+    <li><strong>Cryptocurrency:</strong> You send payment to our wallet addresses. We verify transactions manually.</li>
+  </ul>
+
+  <h2>5. Data Storage and Security</h2>
+  <p>Your data is stored on Cloudflare Workers KV, a globally distributed key-value store. We implement the following security measures:</p>
+  <ul>
+    <li>All data transmitted over HTTPS (TLS encryption in transit)</li>
+    <li>Authentication tokens (UUIDs) with no password storage</li>
+    <li>Rate limiting (10 requests per minute per user)</li>
+    <li>Admin access protected by password authentication</li>
+    <li>Verification codes expire after 10 minutes</li>
+  </ul>
+
+  <h2>6. Data Retention</h2>
+  <ul>
+    <li><strong>Account data:</strong> Retained until you request deletion</li>
+    <li><strong>Project history:</strong> Last 200 projects retained per user</li>
+    <li><strong>Credit usage history:</strong> Last 500 entries retained per user</li>
+    <li><strong>Error reports:</strong> Automatically deleted after 30 days</li>
+    <li><strong>Verification codes:</strong> Automatically deleted after 10 minutes</li>
+    <li><strong>Photos:</strong> Processed in memory by AI services; we store thumbnails (200px) only</li>
+  </ul>
+
+  <h2>7. Your Rights Under California Law</h2>
+
+  <h3>California Consumer Privacy Act (CCPA)</h3>
+  <p>If you are a California resident, you have the right to:</p>
+  <ul>
+    <li><strong>Know:</strong> Request disclosure of the personal information we collect, use, and share about you</li>
+    <li><strong>Delete:</strong> Request deletion of your personal information</li>
+    <li><strong>Opt-out:</strong> We do not sell or share your personal information with third parties for their marketing purposes</li>
+    <li><strong>Non-discrimination:</strong> We will not discriminate against you for exercising your privacy rights</li>
+  </ul>
+
+  <h3>California Online Privacy Protection Act (CalOPPA)</h3>
+  <p>In compliance with CalOPPA:</p>
+  <ul>
+    <li>This privacy policy is accessible from every page of our website</li>
+    <li>We disclose all categories of personal information collected</li>
+    <li>We disclose all third parties with whom information is shared</li>
+    <li><strong>Do Not Track:</strong> We do not track users across third-party websites. We do not respond to Do Not Track signals because we do not engage in tracking.</li>
+  </ul>
+
+  <h2>8. Children's Privacy</h2>
+  <p>BQ Tools is designed for business professionals and is not intended for use by individuals under 16 years of age. We do not knowingly collect personal information from children. If you believe a child has provided us with personal information, please contact us immediately.</p>
+
+  <h2>9. Directory and Public Information</h2>
+  <p>If you create a listing in the BQ Contractor Directory, the following information may be publicly visible depending on your tier:</p>
+  <ul>
+    <li><strong>Free tier:</strong> Business name and type only</li>
+    <li><strong>Pro tier:</strong> Business name, type, phone, email, logo, photos, reviews, work locations</li>
+    <li><strong>Featured tier:</strong> All Pro information plus WhatsApp group link and premium placement</li>
+  </ul>
+  <p>You can update or remove your directory listing at any time through your account settings.</p>
+
+  <h2>10. Changes to This Policy</h2>
+  <p>We may update this Privacy Policy from time to time. We will notify you of material changes by updating the "Last updated" date at the top of this page. Continued use of BQ Tools after changes constitutes acceptance of the updated policy.</p>
+
+  <h2>11. Contact Us</h2>
+  <div class="contact-box">
+    <p><strong>BQ Production LLC</strong></p>
+    <p>Los Angeles, California</p>
+    <p>Email: <a href="mailto:fanzai.mgmt@gmail.com">fanzai.mgmt@gmail.com</a></p>
+    <p style="margin-bottom:0;">For data requests (access, deletion, or correction), please email us with the subject line "Privacy Request" and include the email address associated with your BQ Tools account.</p>
+  </div>
+</div>
+
+<footer class="footer" style="width:100%;">
+  <div class="footer-brand">BQ Tools — BQ Production LLC</div>
+  <div class="footer-legal">
+    <a href="/privacy.html">Privacy Policy</a>
+    <span>|</span>
+    <a href="/terms.html">Terms of Service</a>
+  </div>
+</footer>
+
+<script src="js/common.js"></script>
+</body>
+</html>

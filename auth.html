@@ -167,6 +167,14 @@
       </div>
 
       <input type="email" class="auth-input" id="emailInput" placeholder="your@email.com" spellcheck="false" autocomplete="email">
+      <label style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;font-size:13px;color:var(--txd);line-height:1.5;text-align:left;cursor:pointer;">
+        <input type="checkbox" id="ageCheck" style="accent-color:var(--ac);width:18px;height:18px;margin-top:2px;flex-shrink:0;">
+        <span data-en="I am 18 years or older" data-he="אני בן/בת 18 ומעלה">I am 18 years or older</span>
+      </label>
+      <label style="display:flex;align-items:flex-start;gap:8px;margin-bottom:14px;font-size:13px;color:var(--txd);line-height:1.5;text-align:left;cursor:pointer;">
+        <input type="checkbox" id="termsCheck" style="accent-color:var(--ac);width:18px;height:18px;margin-top:2px;flex-shrink:0;">
+        <span data-en="I agree to the <a href='/terms.html' target='_blank' style='color:var(--ac)'>Terms of Service</a> and <a href='/privacy.html' target='_blank' style='color:var(--ac)'>Privacy Policy</a>" data-he="אני מסכים ל<a href='/terms.html' target='_blank' style='color:var(--ac)'>תנאי השירות</a> ול<a href='/privacy.html' target='_blank' style='color:var(--ac)'>מדיניות הפרטיות</a>">I agree to the <a href="/terms.html" target="_blank" style="color:var(--ac)">Terms of Service</a> and <a href="/privacy.html" target="_blank" style="color:var(--ac)">Privacy Policy</a></span>
+      </label>
       <button class="btn btn-primary" style="width:100%;font-size:16px;" onclick="doRegister()" id="registerBtn" data-en="Continue" data-he="המשך">Continue</button>
     </div>
 
@@ -218,6 +226,11 @@
   <div class="footer-links">
     <a href="https://bqprod.pages.dev" target="_blank">bqprod.pages.dev</a>
     <a href="https://instagram.com/bq_music" target="_blank">@bq_music</a>
+  </div>
+  <div class="footer-legal">
+    <a href="/privacy.html">Privacy Policy</a>
+    <span>|</span>
+    <a href="/terms.html">Terms of Service</a>
   </div>
 </footer>
 
@@ -285,6 +298,14 @@ async function doRegister() {
   const email = document.getElementById('emailInput').value.trim();
   if (!email || !email.includes('@')) {
     showMsg(lang === 'he' ? 'הכנס מייל תקין' : 'Enter a valid email', 'err');
+    return;
+  }
+  if (!document.getElementById('ageCheck').checked) {
+    showMsg(lang === 'he' ? 'יש לאשר שגילך 18 ומעלה' : 'Please confirm you are 18 or older', 'err');
+    return;
+  }
+  if (!document.getElementById('termsCheck').checked) {
+    showMsg(lang === 'he' ? 'יש לאשר את תנאי השירות ומדיניות הפרטיות' : 'Please agree to the Terms of Service and Privacy Policy', 'err');
     return;
   }
 

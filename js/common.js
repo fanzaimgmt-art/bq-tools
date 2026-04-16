@@ -345,7 +345,19 @@ function buildFooter() {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/></svg>
         @bq_music
       </a>
-    </div>`;
+    </div>
+    <div class="footer-legal">
+      <a href="/privacy.html">Privacy Policy</a>
+      <span>|</span>
+      <a href="/terms.html">Terms of Service</a>
+      <span>|</span>
+      <a href="/ai-disclaimer.html">AI Disclaimer</a>
+      <span>|</span>
+      <a href="/refund.html">Refund Policy</a>
+      <span>|</span>
+      <a href="/contact.html">Contact</a>
+    </div>
+    <div style="font-size:10px;color:var(--txd);opacity:.3;text-align:center;margin-top:6px;">&copy; 2026 BQ Production LLC. All rights reserved.</div>`;
   document.body.appendChild(footer);
 }
 
@@ -972,6 +984,24 @@ function _buildDropdownInto(wrap, user) {
   });
 }
 
+// ── Cookie Consent Banner ──
+
+function showCookieConsent() {
+  if (localStorage.getItem('bq_cookie_consent') === '1') return;
+  const h = lang === 'he';
+
+  const banner = document.createElement('div');
+  banner.id = 'cookieConsent';
+  banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9000;background:var(--sf);border-top:1px solid var(--bd);padding:14px 20px;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;box-shadow:0 -4px 20px rgba(0,0,0,.3);';
+  banner.innerHTML = `
+    <p style="font-size:13px;color:var(--txd);line-height:1.5;margin:0;max-width:500px;">
+      ${h ? 'אנחנו משתמשים ב-localStorage כדי לשמור את ההעדפות שלך. אין עוגיות מעקב.' : 'We use localStorage to save your preferences. No tracking cookies.'}
+      <a href="/privacy.html" style="color:var(--ac);margin-inline-start:4px;">${h ? 'מדיניות פרטיות' : 'Privacy Policy'}</a>
+    </p>
+    <button onclick="localStorage.setItem('bq_cookie_consent','1');this.parentElement.remove();" style="padding:8px 20px;border:none;border-radius:8px;background:var(--ac);color:var(--bg);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;min-height:40px;white-space:nowrap;">${h ? 'מאשר' : 'Got it'}</button>`;
+  document.body.appendChild(banner);
+}
+
 // ── Init on load ──
 document.addEventListener('DOMContentLoaded', () => {
   // Routing check — may redirect and stop execution
@@ -995,6 +1025,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Cross-promo banner
   showPromoBanner();
+
+  // Cookie consent
+  showCookieConsent();
 
   // Refresh user data from server
   if (typeof isLoggedIn === 'function' && isLoggedIn()) {
