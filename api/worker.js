@@ -2919,21 +2919,80 @@ async function scrapeInstagram(env, url) {
 }
 
 async function scrapeYouTube(env, url) {
-  const items = await runApifyActor(env, 'streamers~youtube-scraper', {
-    startUrls: [{ url }],
-    maxResults: 1
-  }, 45);
-  if (!items || !items.length) throw new Error('No data returned');
-  const v = items[0];
-  return {
-    videoUrl: v.url || url,
-    thumbnail: v.thumbnailUrl || '',
-    title: v.title || '',
-    author: v.channelName || '',
-    duration: v.duration || null,
-    note: 'YouTube: direct download not available via Apify. Use the URL with a yt-dlp client or use Chrome extension.',
-    platform: 'youtube'
-  };
+  // Try actors in order: first one with direct MP4 download URL
+  // Actor 1: epctex/youtube-video-downloader (specifically designed for downloads)
+  try {
+    const items = await runApifyActor(env, 'epctex~youtube-video-downloader', {
+      startUrls: [url],
+      maxResults: 1
+    }, 60);
+    if (items && items.length > 0) {
+      const v = items[0];
+      // This actor returns a downloadable video URL
+      const downloadUrl = v.downloadUrl || v.videoUrl || v.url;
+      if (downloadUrl && downloadUrl.startsWith('http')) {
+        return {
+          videoUrl: downloadUrl,
+          thumbnail: v.thumbnailUrl || v.thumbnail || '',
+          title: v.title || '',
+          author: v.channelName || v.author || '',
+          duration: v.duration || null,
+          platform: 'youtube'
+        };
+      }
+    }
+  } catch (e) {
+    // Fall through to next actor
+    console.log('epctex youtube failed:', e.message);
+  }
+
+  // Actor 2: scanny/youtube-video-downloader (backup)
+  try {
+    const items = await runApifyActor(env, 'scanny~youtube-video-downloader', {
+      startUrls: [{ url }],
+    }, 60);
+    if (items && items.length > 0) {
+      const v = items[0];
+      const downloadUrl = v.downloadUrl || v.videoUrl || v.mp4;
+      if (downloadUrl && downloadUrl.startsWith('http')) {
+        return {
+          videoUrl: downloadUrl,
+          thumbnail: v.thumbnail || v.thumbnailUrl || '',
+          title: v.title || '',
+          author: v.channel || v.author || '',
+          duration: v.duration || null,
+          platform: 'youtube'
+        };
+      }
+    }
+  } catch (e) {
+    console.log('scanny youtube failed:', e.message);
+  }
+
+  // Actor 3 (fallback): streamers/youtube-scraper — metadata only, no direct MP4
+  try {
+    const items = await runApifyActor(env, 'streamers~youtube-scraper', {
+      startUrls: [{ url }],
+      maxResults: 1
+    }, 45);
+    if (items && items.length > 0) {
+      const v = items[0];
+      // This returns metadata but no direct MP4 URL — return it anyway with a clear note
+      return {
+        videoUrl: '',
+        thumbnail: v.thumbnailUrl || '',
+        title: v.title || '',
+        author: v.channelName || '',
+        duration: v.duration || null,
+        note: 'YouTube direct download is temporarily unavailable. Try TikTok or Instagram URLs, or use the BQ Tools Chrome Extension for YouTube.',
+        platform: 'youtube'
+      };
+    }
+  } catch (e) {
+    // All failed
+  }
+
+  throw new Error('YouTube download unavailable. Try TikTok or Instagram URLs. Use the Chrome Extension for YouTube.');
 }
 
 // ── Receipt AI Extraction ──

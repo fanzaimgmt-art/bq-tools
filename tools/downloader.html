@@ -131,6 +131,13 @@
       <span class="platform-chip" id="p-instagram">📸 Instagram</span>
       <span class="platform-chip" id="p-youtube">▶️ YouTube</span>
     </div>
+    <div id="ytWarning" style="display:none;background:rgba(255,159,67,.1);border:1px solid rgba(255,159,67,.3);border-radius:10px;padding:12px 14px;margin-top:12px;font-size:13px;color:#ff9f43;line-height:1.5;align-items:flex-start;gap:10px;">
+      <span style="font-size:18px;flex-shrink:0;">⚠️</span>
+      <div>
+        <strong data-en="YouTube downloads are in beta" data-es="Descargas de YouTube en beta" data-he="YouTube בגרסת ניסיון">YouTube downloads are in beta</strong><br>
+        <span style="color:var(--txd);" data-en="We're testing multiple providers. YouTube may not always work. For now, TikTok and Instagram work reliably. The BQ Tools Chrome Extension handles YouTube directly." data-es="Estamos probando varios proveedores. YouTube no siempre funciona. Por ahora, TikTok e Instagram funcionan bien. La extensión de Chrome maneja YouTube directamente." data-he="אנחנו בודקים ספקים שונים. YouTube לא תמיד עובד. בינתיים, TikTok ו-Instagram עובדים היטב. תוסף ה-Chrome של BQ Tools מטפל ב-YouTube ישירות.">We're testing multiple providers. YouTube may not always work. For now, TikTok and Instagram work reliably. The BQ Tools Chrome Extension handles YouTube directly.</span>
+      </div>
+    </div>
     <button class="btn btn-primary" style="width:100%;margin-top:14px;font-size:15px;" onclick="download()" id="dlBtn">
       📥 <span data-en="Download ⚡1" data-es="Descargar ⚡1" data-he="הורד ⚡1">Download ⚡1</span>
     </button>
@@ -183,11 +190,16 @@ function detectUrl() {
     instagram: ['instagram.com'],
     youtube: ['youtube.com', 'youtu.be']
   };
+  let detected = null;
   platforms.forEach(p => {
     const chip = document.getElementById('p-' + p);
     const matches = matchers[p].some(m => url.includes(m));
     chip.classList.toggle('active', matches);
+    if (matches) detected = p;
   });
+  // YouTube warning toggle
+  const warn = document.getElementById('ytWarning');
+  if (warn) warn.style.display = detected === 'youtube' ? 'flex' : 'none';
 }
 
 async function download() {
