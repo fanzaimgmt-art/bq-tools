@@ -116,7 +116,8 @@ function _ddHTML(user) {
     <button class="nav-dd-item" onclick="showRedeemCode()"><span class="dd-icon">🎟️</span>${h ? 'הזן קוד' : 'Redeem Code'}</button>
     <a href="/affiliate.html" class="nav-dd-item"><span class="dd-icon">💰</span>${h ? 'תוכנית שותפים' : 'Affiliate Program'}</a>
     <div class="nav-dd-divider"></div>
-    <a href="https://www.paypal.com/ncp/payment/2LA7B7PZTHN54" target="_blank" rel="noopener" class="nav-dd-item accent"><span class="dd-icon">🛒</span>${h ? 'קנה קרדיטים' : 'Buy Credits'}</a>
+    <button class="nav-dd-item" onclick="resetTutorial()"><span class="dd-icon">📖</span>${h ? 'הצג Tutorial שוב' : 'Show Tutorial Again'}</button>
+    <button class="nav-dd-item accent" onclick="showBuyCreditsModal()"><span class="dd-icon">🛒</span>${h ? 'קנה קרדיטים' : 'Buy Credits'}</button>
     ${!user.isPro ? `<a href="/auth.html" class="nav-dd-item green"><span class="dd-icon">⭐</span>${h ? 'שדרג ל-Pro' : 'Upgrade to Pro'}</a>` : ''}
     <div class="nav-dd-divider"></div>
     <button class="nav-dd-item danger" onclick="doLogout()"><span class="dd-icon">🚪</span>${h ? 'התנתק' : 'Sign Out'}</button>`;
@@ -465,6 +466,234 @@ function addVoiceButton(inputId) {
   input.parentNode.insertBefore(btn, input.nextSibling);
 }
 
+// ── Onboarding Tutorial ──
+
+function runTutorial() {
+  if (localStorage.getItem('bq_tutorial_done') === '1') return;
+  if (!isLoggedIn()) return;
+
+  const h = lang === 'he';
+  const steps = [
+    { target: null, title: h ? 'ברוך הבא ל-BQ Tools!' : 'Welcome to BQ Tools!', text: h ? 'בוא אראה לך את הכל בקצרה' : 'Let me show you around — it only takes a minute', pos: 'center' },
+    { target: '.nav-link[href="/home.html"]', title: h ? 'הכלים שלך' : 'Your AI Tools', text: h ? 'השווה תמונות, צור דוחות, קבל הצעות מחיר — הכל עם AI' : 'Compare photos, create reports, get estimates — all powered by AI.', pos: 'bottom' },
+    { target: '.nav-link[href="/directory.html"]', title: 'Directory', text: h ? 'מצא קבלנים או רשום את העסק שלך כאן' : 'Find contractors or list your business here.', pos: 'bottom' },
+    { target: '#creditBar, .nav-credit-pill', title: h ? 'קרדיטים' : 'Credits', text: h ? 'יש לך 5 קרדיטים חינם. כל פעולת AI עולה 1 קרדיט' : 'You have 5 free credits. Each AI action uses 1 credit.', pos: 'bottom' },
+    { target: '#navAvatar, .nav-avatar', title: h ? 'הפרופיל שלך' : 'Your Profile', text: h ? 'פרופיל, הגדרות וחשבון — הכל כאן' : 'Your profile, settings, and account are here.', pos: 'bottom' },
+    { target: null, title: h ? 'מוכן!' : "You're ready!", text: h ? 'התחל בהשוואת תמונות לפני/אחרי' : 'Start by comparing your first before/after photos.', pos: 'center', cta: { text: h ? 'לך ל-Compare →' : 'Go to Compare →', href: '/tools/compare.html' } },
+  ];
+
+  let stepIdx = 0;
+
+  function showStep() {
+    // Remove old
+    document.getElementById('bq-tutorial-overlay')?.remove();
+
+    if (stepIdx >= steps.length) {
+      localStorage.setItem('bq_tutorial_done', '1');
+      return;
+    }
+
+    const step = steps[stepIdx];
+    const isCenter = step.pos === 'center' || !step.target;
+    let targetEl = null;
+
+    if (step.target) {
+      const selectors = step.target.split(', ');
+      for (const sel of selectors) {
+        targetEl = document.querySelector(sel);
+        if (targetEl) break;
+      }
+    }
+
+    // Overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'bq-tutorial-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;';
+
+    // Dark backdrop with cutout
+    const backdrop = document.createElement('div');
+    backdrop.style.cssText = 'position:absolute;inset:0;background:rgba(0,0,0,.7);transition:all .3s;';
+    overlay.appendChild(backdrop);
+
+    // Highlight target
+    if (targetEl && !isCenter) {
+      const rect = targetEl.getBoundingClientRect();
+      const pad = 6;
+      const highlight = document.createElement('div');
+      highlight.style.cssText = `position:absolute;left:${rect.left - pad}px;top:${rect.top - pad}px;width:${rect.width + pad * 2}px;height:${rect.height + pad * 2}px;border-radius:10px;box-shadow:0 0 0 9999px rgba(0,0,0,.7);z-index:1;pointer-events:none;border:2px solid var(--ac);`;
+      overlay.appendChild(highlight);
+      backdrop.style.background = 'transparent';
+    }
+
+    // Tooltip card
+    const card = document.createElement('div');
+    card.style.cssText = 'position:absolute;z-index:2;background:var(--sf);border:1px solid var(--ac);border-radius:14px;padding:20px 24px;max-width:340px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.5);';
+
+    if (isCenter) {
+      card.style.left = '50%';
+      card.style.top = '50%';
+      card.style.transform = 'translate(-50%,-50%)';
+    } else if (targetEl) {
+      const rect = targetEl.getBoundingClientRect();
+      card.style.left = Math.max(10, Math.min(rect.left, window.innerWidth - 360)) + 'px';
+      card.style.top = (rect.bottom + 14) + 'px';
+    }
+
+    const isLast = stepIdx === steps.length - 1;
+    const nextText = h ? 'הבא' : 'Next';
+    const skipText = h ? 'דלג' : 'Skip';
+
+    card.innerHTML = `
+      <div style="font-size:11px;color:var(--txd);margin-bottom:6px;">${stepIdx + 1}/${steps.length}</div>
+      <h3 style="font-size:17px;font-weight:700;margin-bottom:6px;color:var(--ac);">${step.title}</h3>
+      <p style="font-size:14px;color:var(--tx);line-height:1.6;margin-bottom:16px;">${step.text}</p>
+      <div style="display:flex;gap:8px;">
+        <button id="tutSkip" style="flex:1;padding:10px;border:1px solid var(--bd);border-radius:8px;background:none;color:var(--txd);cursor:pointer;font-family:inherit;font-size:14px;min-height:44px;">${skipText}</button>
+        ${step.cta
+          ? `<a href="${step.cta.href}" style="flex:1;padding:10px;border:none;border-radius:8px;background:var(--ac);color:var(--bg);cursor:pointer;font-family:inherit;font-size:14px;font-weight:700;text-align:center;text-decoration:none;min-height:44px;display:flex;align-items:center;justify-content:center;" id="tutNext">${step.cta.text}</a>`
+          : `<button id="tutNext" style="flex:1;padding:10px;border:none;border-radius:8px;background:var(--ac);color:var(--bg);cursor:pointer;font-family:inherit;font-size:14px;font-weight:700;min-height:44px;">${nextText}</button>`
+        }
+      </div>`;
+
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
+
+    // Bind
+    document.getElementById('tutSkip').onclick = () => {
+      overlay.remove();
+      localStorage.setItem('bq_tutorial_done', '1');
+    };
+    const nextBtn = document.getElementById('tutNext');
+    if (!step.cta) {
+      nextBtn.onclick = () => { stepIdx++; showStep(); };
+    } else {
+      nextBtn.addEventListener('click', () => {
+        localStorage.setItem('bq_tutorial_done', '1');
+      });
+    }
+  }
+
+  // Delay to let nav render
+  setTimeout(showStep, 600);
+}
+
+function resetTutorial() {
+  // Clear all tutorial flags
+  const keys = Object.keys(localStorage).filter(k => k.startsWith('bq_tutorial'));
+  keys.forEach(k => localStorage.removeItem(k));
+  _closeDropdown();
+  showToast(lang === 'he' ? 'Tutorial אופס — יופיע בעמוד הבא' : 'Tutorial reset — will show on next page', 'ok');
+  setTimeout(() => runTutorial(), 300);
+}
+
+// ── Per-Page Tooltips ──
+
+const PAGE_TIPS = {
+  '/tools/compare.html': [
+    { target: null, text: { en: 'Upload a BEFORE photo → Upload an AFTER photo → Move the slider → Click Analyze for AI insights', he: 'העלה תמונת לפני → העלה תמונת אחרי → הזז את הסליידר → לחץ Analyze לניתוח AI' } }
+  ],
+  '/tools/report.html': [
+    { target: null, text: { en: 'Upload project photos → Describe the work → AI creates a professional PDF report', he: 'העלה תמונות פרויקט → תאר את העבודה → AI יוצר דוח PDF מקצועי' } }
+  ],
+  '/tools/estimate.html': [
+    { target: null, text: { en: 'Upload a photo of the space → Describe what needs to be done → Get an AI cost estimate', he: 'העלה תמונה של החלל → תאר מה צריך לעשות → קבל הערכת עלות מ-AI' } }
+  ],
+  '/chat.html': [
+    { target: null, text: { en: 'Choose a model → Type or speak your question → AI answers. Try Multi-Model to compare!', he: 'בחר מודל → הקלד או דבר את השאלה → AI עונה. נסה Multi-Model להשוואה!' } }
+  ],
+  '/directory.html': [
+    { target: null, text: { en: 'Search for contractors → Click a profile → See their work and location on the map', he: 'חפש קבלנים → לחץ על פרופיל → ראה את העבודות והמיקום על המפה' } }
+  ],
+};
+
+function showPageTip() {
+  const path = window.location.pathname;
+  const tips = PAGE_TIPS[path];
+  if (!tips) return;
+
+  const flagKey = 'bq_tutorial_page_' + path.replace(/[^a-z]/g, '');
+  if (localStorage.getItem(flagKey) === '1') return;
+
+  const h = lang === 'he';
+  const tip = tips[0];
+  const text = h ? tip.text.he : tip.text.en;
+
+  const banner = document.createElement('div');
+  banner.id = 'bq-page-tip';
+  banner.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:500;background:var(--sf);border:1px solid var(--ac);border-radius:12px;padding:14px 20px;max-width:460px;width:90%;box-shadow:0 4px 20px rgba(0,0,0,.4);display:flex;align-items:flex-start;gap:10px;animation:tipSlideUp .3s ease;';
+  banner.innerHTML = `
+    <span style="font-size:20px;flex-shrink:0;">💡</span>
+    <p style="font-size:13px;line-height:1.5;color:var(--tx);margin:0;">${text}</p>
+    <button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--txd);cursor:pointer;font-size:16px;flex-shrink:0;padding:0 4px;">✕</button>`;
+  document.body.appendChild(banner);
+
+  localStorage.setItem(flagKey, '1');
+
+  // Auto-dismiss after 10 seconds
+  setTimeout(() => banner.remove(), 10000);
+}
+
+// ── Buy Credits Modal ──
+
+function showBuyCreditsModal() {
+  _closeDropdown();
+  const h = lang === 'he';
+  const credits = typeof getCredits === 'function' ? getCredits() : 0;
+
+  const m = document.createElement('div');
+  m.className = 'modal-overlay';
+  m.innerHTML = `
+    <div class="modal-card" style="max-width:540px;text-align:center;">
+      <div style="font-size:36px;margin-bottom:8px;">⚡</div>
+      <h3 style="margin-bottom:4px;">${h ? 'קנה קרדיטים' : 'Buy Credits'}</h3>
+      <p style="font-size:14px;color:var(--txd);margin-bottom:16px;">${h ? 'יש לך' : 'You have'} <b style="color:var(--ac);">${credits}</b> ${h ? 'קרדיטים' : 'credits remaining'}</p>
+
+      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+        <!-- 25 credits -->
+        <div style="flex:1;min-width:140px;background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:16px 12px;">
+          <div style="font-size:20px;font-weight:900;">25</div>
+          <div style="font-size:12px;color:var(--txd);margin-bottom:2px;">credits</div>
+          <div style="font-size:18px;font-weight:700;margin-bottom:2px;">$4.99</div>
+          <div style="font-size:11px;color:var(--txd);margin-bottom:10px;">~$0.20/credit</div>
+          <a href="https://www.paypal.com/ncp/payment/2LA7B7PZTHN54" target="_blank" rel="noopener" class="btn btn-sm" style="width:100%;font-size:12px;margin-bottom:6px;">PayPal</a>
+          <button onclick="openCryptoModal();this.closest('.modal-overlay').remove();" class="btn btn-sm" style="width:100%;font-size:11px;border-color:rgba(81,207,102,.3);color:var(--grn);">Crypto $3.24<br><span style="font-size:10px;">35% OFF</span></button>
+        </div>
+        <!-- 60 credits -->
+        <div style="flex:1;min-width:140px;background:var(--bg);border:2px solid var(--ac);border-radius:12px;padding:16px 12px;position:relative;">
+          <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--ac);color:var(--bg);font-size:10px;font-weight:700;padding:2px 10px;border-radius:6px;">POPULAR</div>
+          <div style="font-size:20px;font-weight:900;color:var(--ac);">60</div>
+          <div style="font-size:12px;color:var(--txd);margin-bottom:2px;">credits</div>
+          <div style="font-size:18px;font-weight:700;margin-bottom:2px;">$9.99</div>
+          <div style="font-size:11px;color:var(--txd);margin-bottom:10px;">~$0.17/credit</div>
+          <a href="https://www.paypal.com/ncp/payment/2LA7B7PZTHN54" target="_blank" rel="noopener" class="btn btn-primary btn-sm" style="width:100%;font-size:12px;margin-bottom:6px;">PayPal</a>
+          <button onclick="openCryptoModal();this.closest('.modal-overlay').remove();" class="btn btn-sm" style="width:100%;font-size:11px;border-color:rgba(81,207,102,.3);color:var(--grn);">Crypto $6.49<br><span style="font-size:10px;">35% OFF</span></button>
+        </div>
+        <!-- 150 credits -->
+        <div style="flex:1;min-width:140px;background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:16px 12px;position:relative;">
+          <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:2px 10px;border-radius:6px;">BEST VALUE</div>
+          <div style="font-size:20px;font-weight:900;">150</div>
+          <div style="font-size:12px;color:var(--txd);margin-bottom:2px;">credits</div>
+          <div style="font-size:18px;font-weight:700;margin-bottom:2px;">$19.99</div>
+          <div style="font-size:11px;color:var(--txd);margin-bottom:10px;">~$0.13/credit</div>
+          <a href="https://www.paypal.com/ncp/payment/2LA7B7PZTHN54" target="_blank" rel="noopener" class="btn btn-sm" style="width:100%;font-size:12px;margin-bottom:6px;">PayPal</a>
+          <button onclick="openCryptoModal();this.closest('.modal-overlay').remove();" class="btn btn-sm" style="width:100%;font-size:11px;border-color:rgba(81,207,102,.3);color:var(--grn);">Crypto $12.99<br><span style="font-size:10px;">35% OFF</span></button>
+        </div>
+      </div>
+
+      <p style="font-size:12px;color:var(--txd);margin-bottom:14px;line-height:1.5;">1 credit = 1 AI Analysis, Report, Estimate, Social Post, or Assistant message</p>
+
+      <div style="background:var(--acd);border-radius:10px;padding:12px;margin-bottom:14px;">
+        <p style="font-size:13px;color:var(--ac);font-weight:600;margin-bottom:6px;">${h ? 'צריך Pro? 50 קרדיטים בחודש ב-$14.99' : 'Need Pro? Get 50 credits/month for $14.99'}</p>
+        <a href="/auth.html" class="btn btn-sm" style="font-size:12px;">${h ? 'שדרג ל-Pro →' : 'Upgrade to Pro →'}</a>
+      </div>
+
+      <button onclick="this.closest('.modal-overlay').remove()" class="btn" style="width:100%;">${h ? 'סגור' : 'Close'}</button>
+    </div>`;
+  document.body.appendChild(m);
+  requestAnimationFrame(() => m.classList.add('open'));
+  m.onclick = (e) => { if (e.target === m) m.remove(); };
+}
+
 // ── Offline Check ──
 function requireOnline() {
   if (!navigator.onLine) {
@@ -635,6 +864,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!skip) {
         if (isLanding) injectProfileAvatar();
         else buildAppNav();
+      }
+      // Run tutorial after nav is built
+      if (!skip && !isLanding) {
+        runTutorial();
+        showPageTip();
       }
     }).catch(() => {});
   }
