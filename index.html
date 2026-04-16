@@ -361,10 +361,187 @@
   /* ── Pricing ── */
   .pricing-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 16px;
-    max-width: 920px;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    max-width: 680px;
     margin: 0 auto;
+  }
+
+  /* Credit packs dropdown */
+  .credit-packs-toggle {
+    max-width: 680px;
+    margin: 20px auto 0;
+    text-align: center;
+  }
+  .credit-packs-toggle summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    color: var(--txd);
+    cursor: pointer;
+    padding: 8px 18px;
+    border: 1px solid var(--bd);
+    border-radius: 40px;
+    background: var(--sf);
+    list-style: none;
+    transition: all .2s;
+    user-select: none;
+  }
+  .credit-packs-toggle summary:hover { border-color: var(--ac); color: var(--ac); }
+  .credit-packs-toggle summary::-webkit-details-marker { display: none; }
+  .credit-packs-content {
+    margin-top: 16px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .cp-pill {
+    background: var(--sf);
+    border: 1px solid var(--bd);
+    border-radius: 12px;
+    padding: 14px 20px;
+    text-align: center;
+    min-width: 150px;
+  }
+  .cp-pill .cp-amount { font-size: 22px; font-weight: 900; color: var(--ac); }
+  .cp-pill .cp-label { font-size: 12px; color: var(--txd); margin: 4px 0 10px; }
+
+  /* ── ROI Calculator ── */
+  .roi-section {
+    width: 92%;
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 80px 0;
+    text-align: center;
+  }
+  .roi-card {
+    background: var(--sf);
+    border: 1px solid var(--bd);
+    border-radius: 18px;
+    padding: 36px 32px;
+    margin-top: 32px;
+  }
+  .roi-inputs {
+    display: flex;
+    gap: 20px;
+    margin: 24px 0;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .roi-field {
+    flex: 1;
+    min-width: 200px;
+    text-align: left;
+  }
+  .roi-field label {
+    display: block;
+    font-size: 13px;
+    color: var(--txd);
+    font-weight: 600;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .roi-field input[type="range"] {
+    width: 100%;
+    accent-color: var(--ac);
+    cursor: pointer;
+    height: 4px;
+  }
+  .roi-field .roi-val {
+    font-size: 24px;
+    font-weight: 900;
+    color: var(--ac);
+    margin-top: 4px;
+  }
+  .roi-result {
+    background: linear-gradient(135deg, rgba(232,197,71,.12), rgba(232,197,71,.04));
+    border: 1px solid rgba(232,197,71,.3);
+    border-radius: 14px;
+    padding: 24px;
+    margin-top: 8px;
+  }
+  .roi-result .roi-number {
+    font-size: 56px;
+    font-weight: 900;
+    color: var(--ac);
+    line-height: 1;
+  }
+  .roi-result .roi-unit {
+    font-size: 16px;
+    color: rgba(255,255,255,.7);
+    margin-top: 6px;
+  }
+  .roi-result .roi-sub {
+    font-size: 14px;
+    color: var(--txd);
+    margin-top: 10px;
+  }
+
+  /* ── Social Proof (Testimonials) ── */
+  .social-proof-wrap {
+    width: 92%;
+    max-width: 960px;
+    margin: 0 auto 60px;
+    text-align: center;
+  }
+  .proof-headline {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--txd);
+    margin-bottom: 24px;
+  }
+  .proof-headline span { color: var(--ac); }
+  .testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .testi-card {
+    background: var(--sf);
+    border: 1px solid var(--bd);
+    border-radius: 14px;
+    padding: 22px 20px;
+    text-align: left;
+  }
+  .testi-stars { font-size: 14px; margin-bottom: 10px; color: var(--ac); letter-spacing: 2px; }
+  .testi-quote {
+    font-size: 14px;
+    font-style: italic;
+    line-height: 1.65;
+    color: rgba(255,255,255,.8);
+    margin-bottom: 14px;
+  }
+  .testi-author { font-size: 13px; font-weight: 700; color: var(--tx); }
+  .testi-role { font-size: 11px; color: var(--txd); margin-top: 2px; }
+
+  /* ── Sign-up-to-save CTA ── */
+  .save-cta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 20px;
+    padding: 14px 20px;
+    background: rgba(232,197,71,.07);
+    border: 1px solid rgba(232,197,71,.2);
+    border-radius: 12px;
+    flex-wrap: wrap;
+  }
+  .save-cta p { font-size: 14px; color: rgba(255,255,255,.7); margin: 0; }
+  .save-cta p strong { color: #fff; }
+
+  @media (max-width: 768px) {
+    .testimonials-grid { grid-template-columns: 1fr; }
+    .roi-inputs { flex-direction: column; }
+    .roi-result .roi-number { font-size: 44px; }
+    .credit-packs-content { flex-direction: column; align-items: center; }
+    .cp-pill { min-width: 200px; }
   }
   .price-card {
     background: var(--sf);
@@ -792,6 +969,12 @@
   </div>
 
   <p class="demo-footnote" data-en="📸 Upload any 2 photos → Get a shareable slider in 5 seconds" data-es="📸 Sube 2 fotos → Obtén un slider compartible en 5 segundos" data-he="📸 העלה 2 תמונות → קבל סליידר משותף תוך 5 שניות"><strong>📸 Upload any 2 photos</strong> → Get a shareable slider in 5 seconds</p>
+
+  <div class="save-cta">
+    <p><strong>No signup needed</strong> — try it free right now.</p>
+    <a href="/tools/compare.html" class="btn btn-primary">Open Compare Tool →</a>
+    <p style="font-size:12px;color:var(--txd);">Want to save &amp; share? <a href="/auth.html" style="color:var(--ac);font-weight:700;">Sign up free →</a></p>
+  </div>
 </section>
 
 <!-- Tools -->
@@ -998,22 +1181,28 @@
       </div>
     </div>
 
-    <!-- CREDIT PACKS -->
-    <div class="price-card compact">
-      <div class="price-name" data-en="Credit Packs" data-es="Paquetes de Créditos" data-he="חבילות קרדיטים">Credit Packs</div>
-      <div class="price-amount" style="font-size:26px;">⚡ <span style="font-size:26px;color:var(--tx);font-weight:900;" data-en="Top Up" data-es="Recarga" data-he="טעינה">Top Up</span></div>
-      <ul class="price-features">
-        <li data-en="25 credits — $4.99" data-es="25 créditos — $4.99" data-he="25 קרדיטים — $4.99">25 credits — $4.99</li>
-        <li data-en="60 credits — $9.99" data-es="60 créditos — $9.99" data-he="60 קרדיטים — $9.99">60 credits — $9.99</li>
-        <li data-en="150 credits — $19.99" data-es="150 créditos — $19.99" data-he="150 קרדיטים — $19.99">150 credits — $19.99</li>
-        <li data-en="Top up when you need more" data-es="Recarga cuando necesites más" data-he="טען כשצריך עוד" style="color:var(--txd);font-style:italic;">Top up when you need more</li>
-      </ul>
-      <div class="price-btn-stack">
-        <a href="https://www.paypal.com/ncp/payment/2LA7B7PZTHN54" target="_blank" rel="noopener" class="btn" style="width:100%;" data-en="Buy Credits → PayPal" data-es="Comprar Créditos → PayPal" data-he="קנה קרדיטים → PayPal">Buy Credits → PayPal</a>
-        <button onclick="openCryptoModal()" class="btn" style="width:100%;border-color:rgba(81,207,102,.3);color:var(--grn);font-size:13px;" data-en="Crypto — 35% OFF" data-es="Cripto — 35% DESCUENTO" data-he="קריפטו — 35% הנחה">Crypto — 35% OFF</button>
+  </div>
+
+  <details class="credit-packs-toggle">
+    <summary>⚡ Need more credits? See credit packs ▾</summary>
+    <div class="credit-packs-content">
+      <div class="cp-pill">
+        <div class="cp-amount">25</div>
+        <div class="cp-label">credits</div>
+        <a href="https://www.paypal.com/ncp/payment/2LA7B7PZTHN54" target="_blank" rel="noopener" class="btn" style="width:100%;font-size:13px;">$4.99 → PayPal</a>
+      </div>
+      <div class="cp-pill">
+        <div class="cp-amount">60</div>
+        <div class="cp-label">credits</div>
+        <a href="https://www.paypal.com/ncp/payment/2LA7B7PZTHN54" target="_blank" rel="noopener" class="btn" style="width:100%;font-size:13px;">$9.99 → PayPal</a>
+      </div>
+      <div class="cp-pill">
+        <div class="cp-amount">150</div>
+        <div class="cp-label">credits</div>
+        <a href="https://www.paypal.com/ncp/payment/2LA7B7PZTHN54" target="_blank" rel="noopener" class="btn" style="width:100%;font-size:13px;">$19.99 → PayPal</a>
       </div>
     </div>
-  </div>
+  </details>
 
   <!-- Featured Listing -->
   <div class="featured-listing">
@@ -1029,10 +1218,56 @@
   </div>
 </section>
 
+<!-- ROI Calculator -->
+<section class="roi-section">
+  <h2 class="section-title" style="font-size:42px;">How Much Time Will BQ Tools Save You?</h2>
+  <p class="section-sub">Real numbers, no marketing fluff.</p>
+  <div class="roi-card">
+    <div class="roi-inputs">
+      <div class="roi-field">
+        <label>Quotes per month</label>
+        <input type="range" id="roiQuotes" min="1" max="40" value="10" oninput="calcROI()">
+        <div class="roi-val" id="roiQuotesVal">10</div>
+      </div>
+      <div class="roi-field">
+        <label>Minutes per quote (manual)</label>
+        <input type="range" id="roiMins" min="10" max="120" value="45" step="5" oninput="calcROI()">
+        <div class="roi-val" id="roiMinsVal">45 min</div>
+      </div>
+    </div>
+    <div class="roi-result">
+      <div class="roi-number" id="roiHours">7.5</div>
+      <div class="roi-unit">hours saved per month</div>
+      <div class="roi-sub" id="roiSub">10 quotes × 45 min → BQ Tools cuts it to ~5 min each. You keep 6.7 hrs.</div>
+    </div>
+    <p style="font-size:13px;color:var(--txd);margin-top:16px;">At $75/hr your time is worth <strong id="roiMoney" style="color:var(--ac);">$562/mo</strong> — BQ Pro costs $14.99.</p>
+  </div>
+</section>
+
 <!-- Social Proof -->
-<div class="proof">
-  <blockquote data-en="&ldquo;CompanyCam charges $99/mo for photos alone. BQ Tools gives you AI-powered marketing tools for $14.99.&rdquo;" data-he="&ldquo;CompanyCam גובה $99/חודש על תמונות בלבד. BQ Tools נותן לך כלי שיווק מבוססי AI ב-$14.99.&rdquo;">&ldquo;CompanyCam charges $99/mo for photos alone. BQ Tools gives you AI-powered marketing tools for $14.99.&rdquo;</blockquote>
-  <div class="proof-cite" data-en="Trusted by contractors in LA, Seattle, Miami" data-es="La confianza de contratistas en LA, Seattle, Miami" data-he="בשימוש קבלנים ב-LA, סיאטל, מיאמי">Trusted by contractors in LA, Seattle, Miami</div>
+<div class="social-proof-wrap">
+  <p class="proof-headline">Trusted by <span>50+ contractors</span> in LA, Seattle, Miami</p>
+  <div class="testimonials-grid">
+    <div class="testi-card">
+      <div class="testi-stars">★★★★★</div>
+      <p class="testi-quote">"BQ Tools turned our project photos into professional marketing content in minutes. Our close rate went up because clients actually see the transformation before we even finish the pitch."</p>
+      <div class="testi-author">Josh Blum</div>
+      <div class="testi-role">Gold Remodeling — LA</div>
+    </div>
+    <div class="testi-card">
+      <div class="testi-stars">★★★★★</div>
+      <p class="testi-quote">"I used to spend 45 minutes putting together a before/after comparison for clients. Now it takes 30 seconds. CompanyCam charges $99/mo for less than what BQ Tools does at $14.99."</p>
+      <div class="testi-author">Gabriel Ohayon</div>
+      <div class="testi-role">General Contractor — LA</div>
+    </div>
+    <div class="testi-card">
+      <div class="testi-stars">★★★★★</div>
+      <p class="testi-quote">"The AI report feature is a game changer. I send clients a PDF after every job and they're always impressed. It makes us look like a big operation even though we're a small crew."</p>
+      <div class="testi-author">Arthur</div>
+      <div class="testi-role">Surface Walls — Contractor</div>
+    </div>
+  </div>
+  <p style="font-size:13px;color:var(--txd);">Real contractors. Real results. No BS.</p>
 </div>
 
 <!-- CTA -->
@@ -1271,6 +1506,20 @@
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeVideoModal();
   });
+
+  // ── ROI Calculator ──
+  function calcROI() {
+    const quotes = parseInt(document.getElementById('roiQuotes').value);
+    const mins = parseInt(document.getElementById('roiMins').value);
+    const saved = quotes * (mins - 5) / 60;
+    const money = Math.round(saved * 75);
+    document.getElementById('roiQuotesVal').textContent = quotes;
+    document.getElementById('roiMinsVal').textContent = mins + ' min';
+    document.getElementById('roiHours').textContent = saved.toFixed(1);
+    document.getElementById('roiSub').textContent = `${quotes} quotes × ${mins} min → BQ Tools cuts it to ~5 min each. You keep ${(quotes*(mins-5)/60).toFixed(1)} hrs.`;
+    document.getElementById('roiMoney').textContent = '$' + money.toLocaleString() + '/mo';
+  }
+  calcROI();
 </script>
 </body>
 </html>
