@@ -276,12 +276,17 @@
     display: flex; align-items: center; justify-content: center; position: relative;
   }
   .vs-play {
-    width: 44px; height: 44px; border-radius: 50%; background: rgba(0,0,0,.5);
-    border: 2px solid rgba(255,255,255,.3); display: flex; align-items: center;
-    justify-content: center; font-size: 18px; color: #fff; transition: all .2s;
-    backdrop-filter: blur(4px);
+    width: 52px; height: 52px; border-radius: 50%; background: rgba(0,0,0,.6);
+    border: 2px solid rgba(255,255,255,.4); display: flex; align-items: center;
+    justify-content: center; font-size: 22px; color: #fff; transition: all .25s;
+    backdrop-filter: blur(4px); z-index: 1;
   }
-  .vs-card:hover .vs-play { background: var(--ac); color: var(--bg); border-color: var(--ac); }
+  .vs-card:hover .vs-play { background: var(--ac); color: var(--bg); border-color: var(--ac); transform: scale(1.15); }
+  .vs-thumb::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,.5) 0%, transparent 50%);
+    pointer-events: none;
+  }
   .vs-label {
     position: absolute; bottom: 8px; left: 8px; font-size: 11px; font-weight: 700;
     color: #fff; background: rgba(0,0,0,.5); padding: 3px 8px; border-radius: 6px;
