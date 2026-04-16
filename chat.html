@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — AI Chat</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+  .chat-layout { flex: 1; display: flex; flex-direction: column; max-width: 900px; width: 100%; margin: 0 auto; overflow: hidden; }
+
+  /* Top bar */
+  .chat-topbar {
+    padding: 12px 16px; border-bottom: 1px solid var(--bd); display: flex;
+    align-items: center; gap: 10px; flex-wrap: wrap; background: var(--sf);
+  }
+  .chat-topbar h2 { font-size: 16px; font-weight: 700; margin-right: auto; }
+  .model-select {
+    padding: 8px 12px; border: 1px solid var(--bd); border-radius: 8px;
+    background: var(--bg); color: var(--tx); font-family: 'Heebo', sans-serif;
+    font-size: 14px; min-height: 40px;
+  }
+  .model-select:focus { outline: none; border-color: var(--ac); }
+  .multi-toggle {
+    display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--txd); cursor: pointer;
+  }
+  .multi-toggle input { accent-color: var(--ac); width: 16px; height: 16px; }
+  .model-cost { font-size: 12px; color: var(--ac); font-weight: 700; }
+
+  /* Messages */
+  .chat-msgs {
+    flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px;
+  }
+  .msg { max-width: 80%; padding: 12px 16px; border-radius: 14px; font-size: 14px; line-height: 1.6; word-wrap: break-word; }
+  .msg.user { align-self: flex-end; background: var(--acd); color: var(--tx); border-bottom-right-radius: 4px; }
+  .msg.ai { align-self: flex-start; background: var(--sf); border: 1px solid var(--bd); border-bottom-left-radius: 4px; }
+  .msg.ai pre { background: var(--bg); padding: 8px; border-radius: 6px; overflow-x: auto; font-size: 13px; margin: 6px 0; }
+  .msg .msg-model { font-size: 11px; color: var(--txd); margin-bottom: 4px; font-weight: 600; }
+  .msg.typing { color: var(--txd); font-style: italic; }
+  .msg .msg-img { max-width: 200px; border-radius: 8px; margin-bottom: 6px; display: block; }
+
+  /* Multi-model side by side */
+  .multi-row { display: flex; gap: 10px; width: 100%; }
+  .multi-row .msg { flex: 1; max-width: none; }
+
+  /* Input bar */
+  .chat-inputbar {
+    padding: 12px 16px; border-top: 1px solid var(--bd); display: flex; gap: 8px;
+    align-items: flex-end; background: var(--sf);
+  }
+  .chat-textarea {
+    flex: 1; padding: 10px 14px; border: 1px solid var(--bd); border-radius: 12px;
+    background: var(--bg); color: var(--tx); font-family: 'Heebo', sans-serif;
+    font-size: 15px; resize: none; min-height: 44px; max-height: 120px; line-height: 1.4;
+    overflow-y: auto;
+  }
+  .chat-textarea:focus { outline: none; border-color: var(--ac); }
+  .chat-attach {
+    width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--bd);
+    background: var(--bg); color: var(--txd); cursor: pointer; display: flex;
+    align-items: center; justify-content: center; font-size: 18px; position: relative;
+    transition: all .15s; flex-shrink: 0;
+  }
+  .chat-attach:hover { border-color: var(--ac); color: var(--ac); }
+  .chat-attach input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .chat-attach.has-img { border-color: var(--grn); color: var(--grn); }
+  .chat-sendbtn {
+    width: 44px; height: 44px; border-radius: 10px; border: none;
+    background: var(--ac); color: var(--bg); cursor: pointer; display: flex;
+    align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
+    transition: all .15s;
+  }
+  .chat-sendbtn:hover { filter: brightness(1.1); }
+  .chat-sendbtn:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* Actions bar */
+  .chat-actions { padding: 8px 16px; display: flex; gap: 8px; border-top: 1px solid rgba(255,255,255,.04); }
+  .chat-actions button {
+    padding: 6px 12px; border: 1px solid var(--bd); border-radius: 8px; background: none;
+    color: var(--txd); font-family: inherit; font-size: 12px; cursor: pointer; transition: all .15s; min-height: 32px;
+  }
+  .chat-actions button:hover { border-color: var(--ac); color: var(--ac); }
+
+  @media (max-width: 600px) {
+    .chat-topbar { gap: 6px; }
+    .chat-topbar h2 { font-size: 14px; }
+    .multi-row { flex-direction: column; }
+    .msg { max-width: 90%; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/home.html" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/home.html" class="nav-link" data-en="← Tools" data-he="כלים →">← Tools</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="chat-layout">
+  <!-- Top bar -->
+  <div class="chat-topbar">
+    <h2 data-en="AI Chat" data-he="צ'אט AI">AI Chat</h2>
+    <select class="model-select" id="modelSelect" onchange="updateCost()">
+      <option value="claude-haiku">Claude Haiku (fast)</option>
+      <option value="claude-sonnet">Claude Sonnet (smart)</option>
+      <option value="gemini-flash">Gemini Flash (fast)</option>
+      <option value="gemini-pro">Gemini Pro (smart)</option>
+    </select>
+    <label class="multi-toggle">
+      <input type="checkbox" id="multiToggle" onchange="updateCost()">
+      <span data-en="Multi-Model" data-he="מולטי-מודל">Multi-Model</span>
+    </label>
+    <span class="model-cost" id="costDisplay">⚡ 1 credit</span>
+  </div>
+
+  <!-- Messages -->
+  <div class="chat-msgs" id="chatMsgs">
+    <div class="msg ai">
+      <span data-en="Hi! I'm your AI assistant for construction and remodeling. Ask me anything — bids, permits, materials, contracts, or marketing." data-he="היי! אני העוזר AI שלך לבנייה ושיפוצים. שאל אותי כל דבר — הצעות מחיר, היתרים, חומרים, חוזים או שיווק.">Hi! I'm your AI assistant for construction and remodeling. Ask me anything — bids, permits, materials, contracts, or marketing.</span>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="chat-actions">
+    <button onclick="clearChat()" data-en="Clear Chat" data-he="נקה צ'אט">Clear Chat</button>
+    <button onclick="exportChat()" data-en="Export PDF" data-he="ייצוא PDF">Export PDF</button>
+  </div>
+
+  <!-- Input -->
+  <div class="chat-inputbar">
+    <div class="chat-attach" id="attachBtn" title="Attach image">
+      📎
+      <input type="file" accept="image/*" id="imgInput" onchange="handleAttach(event)">
+    </div>
+    <textarea class="chat-textarea" id="chatInput" placeholder="Ask anything..." rows="1" oninput="autoGrow(this)"></textarea>
+    <button class="chat-sendbtn" id="sendBtn" onclick="sendMessage()">→</button>
+  </div>
+</div>
+
+<script src="js/ai.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/crypto.js"></script>
+<script src="js/common.js"></script>
+<script>
+if (!isLoggedIn()) window.location.replace('/auth.html');
+
+const MODELS = {
+  'claude-haiku': { label: 'Claude Haiku', cost: 1 },
+  'claude-sonnet': { label: 'Claude Sonnet', cost: 2 },
+  'gemini-flash': { label: 'Gemini Flash', cost: 1 },
+  'gemini-pro': { label: 'Gemini Pro', cost: 2 },
+};
+
+let chatHistory = JSON.parse(localStorage.getItem('bq_fullchat') || '[]');
+let attachedImage = null;
+
+// Restore chat
+chatHistory.forEach(m => addMsg(m.role, m.content, m.model, m.image, true));
+
+function updateCost() {
+  const multi = document.getElementById('multiToggle').checked;
+  let cost;
+  if (multi) {
+    cost = Object.values(MODELS).reduce((s, m) => s + m.cost, 0);
+  } else {
+    const sel = document.getElementById('modelSelect').value;
+    cost = MODELS[sel]?.cost || 1;
+  }
+  document.getElementById('costDisplay').textContent = `⚡ ${cost} credit${cost > 1 ? 's' : ''}`;
+}
+
+function autoGrow(el) {
+  el.style.height = '44px';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function handleAttach(e) {
+  const f = e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = async ev => {
+    attachedImage = await resizeForAPI(ev.target.result);
+    document.getElementById('attachBtn').classList.add('has-img');
+    showToast(lang === 'he' ? 'תמונה צורפה' : 'Image attached', 'ok');
+  };
+  r.readAsDataURL(f);
+}
+
+function addMsg(role, content, model, image, noSave) {
+  const msgsEl = document.getElementById('chatMsgs');
+  const div = document.createElement('div');
+
+  if (role === 'multi') {
+    // Multi-model: content is an array of {model, text}
+    div.className = 'multi-row';
+    div.innerHTML = content.map(r => `
+      <div class="msg ai">
+        <div class="msg-model">${MODELS[r.model]?.label || r.model}</div>
+        ${formatContent(r.text)}
+      </div>`).join('');
+  } else {
+    div.className = 'msg ' + role;
+    let inner = '';
+    if (model && role === 'ai') inner += `<div class="msg-model">${MODELS[model]?.label || model}</div>`;
+    if (image) inner += `<img class="msg-img" src="data:image/jpeg;base64,${image}" alt="">`;
+    inner += formatContent(content);
+    div.innerHTML = inner;
+  }
+
+  msgsEl.appendChild(div);
+  msgsEl.scrollTop = msgsEl.scrollHeight;
+
+  if (!noSave) {
+    chatHistory.push({ role, content, model, image: image ? '(image)' : null });
+    if (chatHistory.length > 100) chatHistory.splice(0, chatHistory.length - 100);
+    localStorage.setItem('bq_fullchat', JSON.stringify(chatHistory));
+  }
+}
+
+function formatContent(text) {
+  // Basic markdown: code blocks, bold
+  return (text || '')
+    .replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre>$2</pre>')
+    .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+    .replace(/\n/g, '<br>');
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+
+  const multi = document.getElementById('multiToggle').checked;
+  const selModel = document.getElementById('modelSelect').value;
+
+  // Calculate cost
+  let cost;
+  if (multi) {
+    cost = Object.values(MODELS).reduce((s, m) => s + m.cost, 0);
+  } else {
+    cost = MODELS[selModel]?.cost || 1;
+  }
+
+  // Confirm credits
+  const credits = getCredits();
+  if (credits < cost) {
+    showNoCreditModal();
+    return;
+  }
+  const ok = await confirmCredit(`${multi ? 'Multi-Model' : MODELS[selModel]?.label} — ${cost} credit${cost > 1 ? 's' : ''}`);
+  if (!ok) return;
+
+  input.value = '';
+  input.style.height = '44px';
+
+  // Show user message
+  addMsg('user', text, null, attachedImage || null);
+
+  // Build messages for context (last 10)
+  const contextMsgs = chatHistory.filter(m => m.role === 'user' || m.role === 'ai').slice(-10).map(m => ({
+    role: m.role === 'user' ? 'user' : 'assistant',
+    content: typeof m.content === 'string' ? m.content : 'multi-model response'
+  }));
+  contextMsgs.push({ role: 'user', content: text });
+
+  const images = attachedImage ? [attachedImage] : [];
+  attachedImage = null;
+  document.getElementById('attachBtn').classList.remove('has-img');
+  document.getElementById('imgInput').value = '';
+
+  const sendBtn = document.getElementById('sendBtn');
+  sendBtn.disabled = true;
+
+  if (multi) {
+    // Multi-model: send to all models
+    const typing = document.createElement('div');
+    typing.className = 'msg ai typing';
+    typing.textContent = lang === 'he' ? 'שולח ל-4 מודלים...' : 'Sending to 4 models...';
+    document.getElementById('chatMsgs').appendChild(typing);
+
+    const results = [];
+    for (const [key, conf] of Object.entries(MODELS)) {
+      try {
+        const data = await apiCall('/api/ai/chat', {
+          method: 'POST',
+          body: { model: key, messages: contextMsgs, images }
+        });
+        results.push({ model: key, text: data.result });
+      } catch (err) {
+        results.push({ model: key, text: '❌ ' + (err.message || 'Failed') });
+      }
+    }
+
+    typing.remove();
+    addMsg('multi', results);
+
+  } else {
+    // Single model
+    const typing = document.createElement('div');
+    typing.className = 'msg ai typing';
+    typing.textContent = '...';
+    document.getElementById('chatMsgs').appendChild(typing);
+
+    try {
+      const data = await apiCall('/api/ai/chat', {
+        method: 'POST',
+        body: { model: selModel, messages: contextMsgs, images }
+      });
+      typing.remove();
+      addMsg('ai', data.result, selModel);
+
+      // Update credit display
+      const user = getCachedUser();
+      if (user && data.credits !== undefined) {
+        user.credits = data.credits;
+        setCachedUser(user);
+        if (typeof updateCreditDisplay === 'function') updateCreditDisplay();
+      }
+    } catch (err) {
+      typing.remove();
+      addMsg('ai', '❌ ' + (err.message || 'Error'), selModel);
+    }
+  }
+
+  sendBtn.disabled = false;
+}
+
+function clearChat() {
+  chatHistory = [];
+  localStorage.removeItem('bq_fullchat');
+  document.getElementById('chatMsgs').innerHTML = `
+    <div class="msg ai"><span data-en="Chat cleared. Ask me anything!" data-he="הצ'אט נוקה. שאל אותי הכל!">${lang === 'he' ? 'הצ'אט נוקה. שאל אותי הכל!' : 'Chat cleared. Ask me anything!'}</span></div>`;
+}
+
+function exportChat() {
+  const msgs = chatHistory.filter(m => typeof m.content === 'string');
+  if (!msgs.length) { showToast(lang === 'he' ? 'אין הודעות' : 'No messages', 'info'); return; }
+  const w = window.open('', '_blank');
+  w.document.write(`<html><head><title>BQ AI Chat Export</title>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;700&display=swap" rel="stylesheet">
+    <style>body{font-family:'Heebo',sans-serif;padding:40px;max-width:700px;margin:0 auto;color:#222;}
+    .user{background:#f5f0d0;padding:10px 14px;border-radius:10px;margin:8px 0;}
+    .ai{background:#f0f0f0;padding:10px 14px;border-radius:10px;margin:8px 0;}
+    .model{font-size:11px;color:#888;margin-bottom:4px;}
+    .footer{font-size:10px;color:#aaa;text-align:center;margin-top:20px;border-top:1px solid #eee;padding-top:10px;}</style></head>
+    <body><h1>AI Chat — ${new Date().toLocaleDateString()}</h1>
+    ${msgs.map(m => `<div class="${m.role}">
+      ${m.model ? `<div class="model">${MODELS[m.model]?.label || m.model}</div>` : ''}
+      ${m.content.replace(/\n/g, '<br>')}
+    </div>`).join('')}
+    <div class="footer">Powered by BQ Tools — bqtools.dev</div></body></html>`);
+  w.document.close();
+  setTimeout(() => w.print(), 500);
+}
+
+// Enter to send (shift+enter for newline)
+document.getElementById('chatInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+});
+</script>
+</body>
+</html>

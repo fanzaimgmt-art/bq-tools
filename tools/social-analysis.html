@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Social Media Analysis</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  body { display: flex; flex-direction: column; }
+  .platform-btns { display: flex; gap: 8px; margin-bottom: 14px; }
+  .plat-btn {
+    flex: 1; padding: 12px; border: 1px solid var(--bd); border-radius: 10px;
+    background: var(--sf); color: var(--txd); font-family: 'Heebo', sans-serif;
+    font-size: 15px; cursor: pointer; transition: all .2s; min-height: 52px;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .plat-btn.on { border-color: var(--ac); color: var(--ac); background: var(--acd); }
+
+  .result-section { margin-top: 20px; display: none; }
+  .result-section.on { display: block; animation: fadeIn .3s; }
+
+  .score-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+  .score-card {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 10px;
+    padding: 14px; text-align: center;
+  }
+  .score-num { font-size: 28px; font-weight: 900; color: var(--ac); }
+  .score-label { font-size: 11px; color: var(--txd); margin-top: 2px; }
+
+  .rec-card {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 10px;
+    padding: 14px; margin-bottom: 8px;
+  }
+  .rec-card h4 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .rec-card p { font-size: 13px; color: var(--txd); line-height: 1.5; }
+
+  .breakdown-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.04); font-size: 14px;
+  }
+  .breakdown-bar { width: 80px; height: 6px; background: var(--bd); border-radius: 3px; overflow: hidden; }
+  .breakdown-fill { height: 100%; background: var(--ac); border-radius: 3px; }
+
+  @media (max-width: 600px) {
+    .score-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/home.html" class="nav-link" data-en="← Back" data-he="חזור →">← Back</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <a href="/home.html" class="page-back" data-en="← All Tools" data-he="כל הכלים →">← All Tools</a>
+  <h1 class="page-title" data-en="📊 Social Media Analysis" data-he="📊 ניתוח רשתות חברתיות">📊 Social Media Analysis</h1>
+  <p class="page-sub" data-en="Enter your Instagram or Facebook URL. AI analyzes your profile and gives actionable recommendations." data-he="הכנס את ה-URL של האינסטגרם או הפייסבוק שלך. AI מנתח את הפרופיל ונותן המלצות.">Enter your Instagram or Facebook URL. AI analyzes your profile and gives actionable recommendations.</p>
+
+  <div class="card" style="margin-bottom:14px;">
+    <label class="input-label" data-en="Platform" data-he="פלטפורמה">Platform</label>
+    <div class="platform-btns">
+      <button class="plat-btn on" onclick="setPlatform(this,'instagram')">📸 Instagram</button>
+      <button class="plat-btn" onclick="setPlatform(this,'facebook')">📘 Facebook</button>
+    </div>
+
+    <label class="input-label" data-en="Profile URL or Username" data-he="URL פרופיל או שם משתמש">Profile URL or Username</label>
+    <input class="input" type="text" id="profileUrl" placeholder="https://instagram.com/your_handle or @your_handle" style="margin-bottom:12px;">
+
+    <label class="input-label" data-en="What does your business do? (helps AI give better advice)" data-he="מה העסק שלך עושה? (עוזר ל-AI לתת עצות טובות יותר)">What does your business do?</label>
+    <input class="input" type="text" id="bizContext" placeholder="Kitchen and bathroom remodeling in LA">
+  </div>
+
+  <div style="background:var(--acd);border:1px solid rgba(232,197,71,.2);border-radius:10px;padding:12px;margin-bottom:14px;font-size:14px;color:var(--ac);text-align:center;">
+    ⚡ <span data-en="This tool uses 2 credits" data-he="כלי זה משתמש ב-2 קרדיטים">This tool uses 2 credits</span>
+  </div>
+
+  <button class="btn btn-primary btn-large" style="width:100%;" onclick="analyzeSocial()" id="analyzeBtn" data-en="🧠 Analyze Profile" data-he="🧠 נתח פרופיל">🧠 Analyze Profile</button>
+
+  <div class="result-section" id="resultSection">
+    <div class="score-grid" id="scoreGrid"></div>
+    <div id="breakdownSection"></div>
+    <div id="recsSection"></div>
+    <div style="text-align:center;margin-top:16px;">
+      <button class="btn btn-primary" onclick="exportAnalysis()" data-en="📥 Export PDF" data-he="📥 ייצוא PDF">📥 Export PDF</button>
+    </div>
+  </div>
+</div>
+
+<footer class="footer"><div class="footer-brand">Powered by BQ Tools — BQ Production LLC</div></footer>
+
+<script src="../js/ai.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/crypto.js"></script>
+<script src="../js/common.js"></script>
+<script src="../js/assistant.js"></script>
+<script>
+let platform = 'instagram';
+let lastResult = null;
+
+function setPlatform(el, p) {
+  platform = p;
+  document.querySelectorAll('.plat-btn').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('profileUrl').placeholder = p === 'instagram'
+    ? 'https://instagram.com/your_handle or @your_handle'
+    : 'https://facebook.com/your-page';
+}
+
+async function analyzeSocial() {
+  if (!requirePro()) return;
+
+  const url = document.getElementById('profileUrl').value.trim();
+  if (!url) { showToast(lang === 'he' ? 'הכנס URL או שם משתמש' : 'Enter a URL or username', 'err'); return; }
+
+  const credits = getCredits();
+  // Custom 2-credit confirmation
+  const ok = await new Promise(resolve => {
+    const m = document.createElement('div');
+    m.className = 'modal-overlay';
+    m.innerHTML = `
+      <div class="modal-card" style="max-width:360px;text-align:center;">
+        <div style="font-size:32px;margin-bottom:12px;">⚡⚡</div>
+        <h3>${lang === 'he' ? 'השתמש ב-2 קרדיטים' : 'Use 2 Credits'}</h3>
+        <p style="color:var(--txd);font-size:14px;margin:8px 0 20px;">${lang === 'he' ? 'ניתוח רשתות חברתיות' : 'Social Media Analysis'}<br>⚡ ${credits} ${lang === 'he' ? 'נשאר' : 'remaining'}</p>
+        <div style="display:flex;gap:8px;">
+          <button class="btn" style="flex:1;" id="saCancel">${lang === 'he' ? 'ביטול' : 'Cancel'}</button>
+          <button class="btn btn-primary" style="flex:1;" id="saConfirm">${lang === 'he' ? 'המשך' : 'Continue'}</button>
+        </div>
+      </div>`;
+    document.body.appendChild(m);
+    requestAnimationFrame(() => m.classList.add('open'));
+    m.querySelector('#saCancel').onclick = () => { m.remove(); resolve(false); };
+    m.querySelector('#saConfirm').onclick = () => { m.remove(); resolve(true); };
+    m.onclick = e => { if (e.target === m) { m.remove(); resolve(false); } };
+  });
+  if (!ok) return;
+
+  const btn = document.getElementById('analyzeBtn');
+  btn.disabled = true;
+  btn.textContent = lang === 'he' ? '⏳ מנתח...' : '⏳ Analyzing...';
+
+  const biz = document.getElementById('bizContext').value.trim();
+
+  try {
+    const prompt = `You are an expert social media analyst for construction and remodeling businesses. Analyze this ${platform} profile and give a comprehensive report.
+
+Profile: ${url}
+Platform: ${platform}
+Business context: ${biz || 'contractor/remodeler'}
+
+Based on what you know about best practices for contractor social media accounts, provide:
+
+Respond JSON only:
+{
+  "profile_name": "the handle/name",
+  "overall_score": 1-100,
+  "bio_score": 1-10,
+  "content_score": 1-10,
+  "engagement_score": 1-10,
+  "consistency_score": 1-10,
+  "hashtag_score": 1-10,
+  "content_breakdown": {
+    "before_after": 20,
+    "project_photos": 30,
+    "videos_reels": 15,
+    "testimonials": 5,
+    "behind_scenes": 10,
+    "educational": 10,
+    "other": 10
+  },
+  "strengths": ["strength 1", "strength 2"],
+  "weaknesses": ["weakness 1", "weakness 2"],
+  "recommendations": [
+    {"title": "rec title", "description": "detailed recommendation", "priority": "high/medium/low"},
+    {"title": "rec title", "description": "detailed recommendation", "priority": "high/medium/low"}
+  ],
+  "quick_wins": ["quick win 1", "quick win 2", "quick win 3"],
+  "competitor_tip": "one sentence about what top contractors do differently"
+}`;
+
+    // Uses 2 credits — call twice via the standard endpoint
+    const text = await callWorkerAI('social-analysis', prompt, [], url.substring(0, 50));
+    // Deduct extra credit (first one deducted by callWorkerAI)
+    await apiCall('/api/ai', { method: 'POST', body: { action: 'social-analysis-2', prompt: 'credit deduction', images: [] } }).catch(() => {});
+
+    lastResult = parseAIJSON(text);
+    renderResults(lastResult);
+
+  } catch (err) {
+    showToast('Error: ' + err.message, 'err');
+  }
+
+  btn.disabled = false;
+  btn.textContent = lang === 'he' ? '🧠 נתח פרופיל' : '🧠 Analyze Profile';
+}
+
+function renderResults(r) {
+  document.getElementById('resultSection').classList.add('on');
+
+  // Scores
+  const scoreColor = s => s >= 7 ? 'var(--grn)' : s >= 4 ? 'var(--ac)' : 'var(--red)';
+  document.getElementById('scoreGrid').innerHTML = `
+    <div class="score-card"><div class="score-num" style="font-size:36px;color:${r.overall_score >= 70 ? 'var(--grn)' : r.overall_score >= 40 ? 'var(--ac)' : 'var(--red)'}">${r.overall_score}</div><div class="score-label">Overall Score</div></div>
+    <div class="score-card"><div class="score-num" style="color:${scoreColor(r.bio_score)}">${r.bio_score}</div><div class="score-label">Bio</div></div>
+    <div class="score-card"><div class="score-num" style="color:${scoreColor(r.content_score)}">${r.content_score}</div><div class="score-label">Content</div></div>
+    <div class="score-card"><div class="score-num" style="color:${scoreColor(r.engagement_score)}">${r.engagement_score}</div><div class="score-label">Engagement</div></div>
+    <div class="score-card"><div class="score-num" style="color:${scoreColor(r.consistency_score)}">${r.consistency_score}</div><div class="score-label">Consistency</div></div>
+    <div class="score-card"><div class="score-num" style="color:${scoreColor(r.hashtag_score)}">${r.hashtag_score}</div><div class="score-label">Hashtags</div></div>`;
+
+  // Content breakdown
+  const bd = r.content_breakdown || {};
+  const entries = Object.entries(bd).sort((a, b) => b[1] - a[1]);
+  document.getElementById('breakdownSection').innerHTML = `
+    <div class="card" style="margin-bottom:14px;">
+      <h3 style="font-size:14px;font-weight:700;margin-bottom:10px;" data-en="Content Breakdown" data-he="פילוח תוכן">Content Breakdown</h3>
+      ${entries.map(([k, v]) => `
+        <div class="breakdown-row">
+          <span>${k.replace(/_/g, ' ')}</span>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="breakdown-bar"><div class="breakdown-fill" style="width:${v}%"></div></div>
+            <span style="color:var(--ac);font-weight:700;width:32px;text-align:right;">${v}%</span>
+          </div>
+        </div>`).join('')}
+    </div>`;
+
+  // Recommendations
+  const priColor = { high: 'var(--red)', medium: 'var(--ac)', low: 'var(--grn)' };
+  document.getElementById('recsSection').innerHTML = `
+    ${r.quick_wins?.length ? `
+    <div class="card" style="margin-bottom:14px;">
+      <h3 style="font-size:14px;font-weight:700;margin-bottom:10px;color:var(--grn);" data-en="Quick Wins" data-he="ניצחונות מהירים">Quick Wins</h3>
+      ${r.quick_wins.map(w => `<div style="padding:6px 0;font-size:14px;border-bottom:1px solid rgba(255,255,255,.04);">✅ ${w}</div>`).join('')}
+    </div>` : ''}
+    <h3 style="font-size:14px;font-weight:700;margin-bottom:10px;" data-en="Recommendations" data-he="המלצות">Recommendations</h3>
+    ${(r.recommendations || []).map(rec => `
+      <div class="rec-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <h4>${rec.title}</h4>
+          <span style="font-size:11px;font-weight:700;color:${priColor[rec.priority] || 'var(--txd)'};text-transform:uppercase;">${rec.priority}</span>
+        </div>
+        <p>${rec.description}</p>
+      </div>`).join('')}
+    ${r.competitor_tip ? `<div class="card" style="background:var(--acd);border-color:rgba(232,197,71,.2);"><p style="font-size:14px;color:var(--ac);">💡 ${r.competitor_tip}</p></div>` : ''}`;
+
+  setLang(lang);
+}
+
+function exportAnalysis() {
+  if (!lastResult) return;
+  const w = window.open('', '_blank');
+  w.document.write(`<html><head><title>Social Analysis — ${lastResult.profile_name || ''}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>body{font-family:'Heebo',sans-serif;padding:40px;max-width:700px;margin:0 auto;color:#222;}
+    h1{font-size:24px;}h2{font-size:16px;color:#555;margin-top:20px;}
+    .score{font-size:48px;font-weight:900;color:#e8c547;}.footer{font-size:10px;color:#aaa;text-align:center;margin-top:30px;border-top:1px solid #eee;padding-top:10px;}</style></head>
+    <body><h1>Social Media Analysis: ${lastResult.profile_name || ''}</h1>
+    <div class="score">${lastResult.overall_score}/100</div>
+    <h2>Recommendations</h2>
+    ${(lastResult.recommendations||[]).map(r=>`<p><b>${r.title}</b> (${r.priority}): ${r.description}</p>`).join('')}
+    <div class="footer">Powered by BQ Tools — bqtools.dev</div></body></html>`);
+  w.document.close();
+  setTimeout(() => w.print(), 500);
+}
+</script>
+</body>
+</html>

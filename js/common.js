@@ -343,7 +343,7 @@ function requireOnline() {
 // ── Routing ──
 const _SKIP_PAGES = ['/admin.html', '/auth.html', '/onboarding.html'];
 const _LANDING_PAGES = ['/', '/index.html'];
-const _APP_PAGES = ['/home.html', '/profile.html', '/dashboard.html', '/gallery.html', '/directory.html', '/directory-profile.html'];
+const _APP_PAGES = ['/home.html', '/profile.html', '/dashboard.html', '/gallery.html', '/directory.html', '/directory-profile.html', '/chat.html'];
 
 function _isAppPage() {
   const p = window.location.pathname;

@@ -31,6 +31,9 @@ export default {
       if (path === '/api/ai' && request.method === 'POST') {
         return corsResponse(env, await handleAI(request, env));
       }
+      if (path === '/api/ai/chat' && request.method === 'POST') {
+        return corsResponse(env, await handleAIChat(request, env));
+      }
       if (path === '/api/credits/add' && request.method === 'POST') {
         return corsResponse(env, await handleAddCredits(request, env));
       }
@@ -475,6 +478,102 @@ async function handleAI(request, env) {
     result: aiResponse,
     credits: updated.credits
   });
+}
+
+// ── Multi-Model Chat ──
+
+const MODEL_MAP = {
+  'claude-haiku': { type: 'claude', model: 'claude-3-5-haiku-20241022', cost: 1 },
+  'claude-sonnet': { type: 'claude', model: 'claude-sonnet-4-20250514', cost: 2 },
+  'gemini-flash': { type: 'gemini', model: 'gemini-2.5-flash', cost: 1 },
+  'gemini-pro': { type: 'gemini', model: 'gemini-2.0-flash', cost: 2 },
+};
+
+async function handleAIChat(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  if (!(await checkRateLimit(user.email, env))) {
+    return json({ error: 'Rate limit exceeded' }, 429);
+  }
+
+  const updated = checkMonthlyReset(user);
+  const body = await request.json();
+  const { model, messages, images } = body;
+
+  if (!model || !messages || !messages.length) {
+    return json({ error: 'model and messages required' }, 400);
+  }
+
+  const modelConf = MODEL_MAP[model];
+  if (!modelConf) return json({ error: `Unknown model: ${model}` }, 400);
+
+  if (updated.credits < modelConf.cost) {
+    return json({ error: 'Not enough credits', credits: updated.credits, cost: modelConf.cost }, 402);
+  }
+
+  // Build prompt from messages array
+  const lastMsg = messages[messages.length - 1];
+  const prompt = messages.map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`).join('\n');
+
+  let aiResponse;
+  try {
+    if (modelConf.type === 'claude') {
+      aiResponse = await callClaudeWithModel(env, modelConf.model, prompt, images || []);
+    } else {
+      aiResponse = await callGeminiWithModel(env, modelConf.model, prompt, images || []);
+    }
+  } catch (err) {
+    return json({ error: `AI failed: ${err.message}` }, 502);
+  }
+
+  updated.credits -= modelConf.cost;
+  updated.creditsUsedThisMonth = (updated.creditsUsedThisMonth || 0) + modelConf.cost;
+  await env.BQ_USERS.put(`user:${updated.email}`, JSON.stringify(updated));
+  await logCreditUsage(updated.email, `chat:${model}`, lastMsg?.content?.substring(0, 50) || 'Chat', env);
+
+  return json({ ok: true, result: aiResponse, model, credits: updated.credits });
+}
+
+async function callClaudeWithModel(env, model, prompt, images) {
+  const apiKey = env.CLAUDE_API_KEY;
+  if (!apiKey) throw new Error('Claude API key not configured');
+
+  const content = [];
+  for (const img of images) {
+    content.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: img } });
+  }
+  content.push({ type: 'text', text: prompt });
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({ model, max_tokens: 2000, messages: [{ role: 'user', content }] })
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+  return data.content?.map(c => c.text || '').join('') || '';
+}
+
+async function callGeminiWithModel(env, model, prompt, images) {
+  const apiKey = env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error('Gemini API key not configured');
+
+  const parts = [];
+  for (const img of images) {
+    parts.push({ inline_data: { mime_type: 'image/jpeg', data: img } });
+  }
+  parts.push({ text: prompt });
+
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ contents: [{ parts }] })
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 }
 
 async function callClaudeAPI(env, prompt, images) {
