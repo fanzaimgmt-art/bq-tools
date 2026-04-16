@@ -177,6 +177,15 @@
         <button onclick="openCryptoModal()" class="btn" style="width:100%;font-size:14px;border-color:rgba(81,207,102,.3);color:var(--grn);" data-en="Pay with Crypto — 35% OFF" data-he="שלם בקריפטו — 35% הנחה">Pay with Crypto — 35% OFF</button>
       </div>
 
+      <div class="divider" data-en="Data" data-he="מידע">Data</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <button class="btn" style="flex:1;" onclick="exportProfile()" data-en="Export JSON" data-he="ייצוא JSON">Export JSON</button>
+        <button class="btn" style="flex:1;position:relative;" data-en="Import JSON" data-he="ייבוא JSON">
+          Import JSON
+          <input type="file" accept=".json" onchange="importProfile(event)" style="position:absolute;inset:0;opacity:0;cursor:pointer;">
+        </button>
+      </div>
+
       <div class="logout-section">
         <button class="btn btn-danger" style="width:100%;" onclick="logout()" data-en="Log Out" data-he="התנתק">Log Out</button>
       </div>
@@ -306,6 +315,43 @@ function renderProfile() {
     <div class="profile-row"><span class="label">${lang === 'he' ? 'שם עסק' : 'Business'}</span><span class="value">${user.businessName || '—'}</span></div>
     <div class="profile-row"><span class="label">${lang === 'he' ? 'נוצר' : 'Created'}</span><span class="value">${(user.createdAt || '').split('T')[0]}</span></div>
   `;
+}
+
+// Export/Import profile
+function exportProfile() {
+  const user = getCachedUser();
+  if (!user) return;
+  const data = JSON.stringify(user, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `bq-profile-${user.email.split('@')[0]}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast(lang === 'he' ? 'פרופיל יוצא!' : 'Profile exported!', 'ok');
+}
+
+async function importProfile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    if (data.businessName) {
+      await updateUserProfile({
+        businessName: data.businessName,
+        phone: data.phone || '',
+        logo: data.logo || '',
+        businessType: data.businessType || '',
+        language: data.language || 'en'
+      });
+      renderProfile();
+      showToast(lang === 'he' ? 'פרופיל יובא!' : 'Profile imported!', 'ok');
+    }
+  } catch (err) {
+    showToast(lang === 'he' ? 'קובץ לא תקין' : 'Invalid file', 'err');
+  }
 }
 
 // On load — check if already logged in

@@ -18,6 +18,17 @@
   .stat-num { font-size: 28px; font-weight: 900; color: var(--ac); }
   .stat-label { font-size: 12px; color: var(--txd); margin-top: 2px; }
 
+  .filter-bar {
+    display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;
+  }
+  .filter-btn {
+    padding: 8px 14px; border: 1px solid var(--bd); border-radius: 8px;
+    background: var(--sf); color: var(--txd); font-family: 'Heebo', sans-serif;
+    font-size: 13px; cursor: pointer; transition: all .2s; min-height: 40px;
+  }
+  .filter-btn.on { border-color: var(--ac); color: var(--ac); background: var(--acd); }
+  .filter-btn:hover:not(.on) { border-color: var(--ac); }
+
   .gallery-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -31,9 +42,17 @@
   .gallery-thumb {
     width: 100%; aspect-ratio: 4/3; object-fit: cover;
   }
+  .gallery-thumb-placeholder {
+    width: 100%; aspect-ratio: 4/3; background: var(--bg);
+    display: flex; align-items: center; justify-content: center; font-size: 24px;
+  }
   .gallery-info { padding: 10px; }
+  .gallery-title { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
   .gallery-date { font-size: 13px; color: var(--txd); }
-  .gallery-type { font-size: 12px; color: var(--ac); margin-top: 2px; }
+  .gallery-type {
+    font-size: 11px; color: var(--ac); margin-top: 4px;
+    background: var(--acd); padding: 2px 8px; border-radius: 4px; display: inline-block;
+  }
 
   .empty-state {
     text-align: center; padding: 60px 20px;
@@ -42,9 +61,12 @@
   .empty-state h3 { color: var(--txd); font-size: 18px; margin-bottom: 8px; }
   .empty-state p { color: var(--txd); font-size: 14px; }
 
-  /* Detail modal */
   .detail-imgs { display: flex; gap: 8px; margin-bottom: 12px; }
   .detail-imgs img { flex: 1; max-width: 50%; border-radius: 8px; }
+
+  .export-bar {
+    display: flex; gap: 8px; margin-bottom: 16px; justify-content: flex-end;
+  }
 </style>
 </head>
 <body>
@@ -53,7 +75,10 @@
   <a href="/" class="nav-logo">BQ <span>Tools</span></a>
   <div class="nav-right">
     <a href="/" class="nav-link" data-en="← Home" data-he="← בית">← Home</a>
-    <a href="/auth.html" class="btn btn-sm" id="navProBtn" data-en="Pro" data-he="Pro">Pro</a>
+    <div class="credit-bar" id="creditBar" style="display:none;">
+      <span>⚡</span><span class="credit-count">0</span>
+    </div>
+    <a href="/auth.html" class="btn btn-sm" id="navAuthBtn" data-en="Login" data-he="התחבר">Login</a>
     <div class="lang-toggle">
       <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
       <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
@@ -62,8 +87,8 @@
 </nav>
 
 <div class="page">
-  <h1 class="page-title" data-en="📁 Project Gallery" data-he="📁 גלריית פרויקטים">📁 Project Gallery</h1>
-  <p class="page-sub" data-en="All your saved comparisons in one place." data-he="כל ההשוואות השמורות שלך במקום אחד.">All your saved comparisons in one place.</p>
+  <h1 class="page-title" data-en="Project Gallery" data-he="גלריית פרויקטים">Project Gallery</h1>
+  <p class="page-sub" data-en="All your saved projects in one place." data-he="כל הפרויקטים השמורים שלך במקום אחד.">All your saved projects in one place.</p>
 
   <div class="gallery-stats" id="statsRow">
     <div class="stat-card">
@@ -71,9 +96,21 @@
       <div class="stat-label" data-en="Projects" data-he="פרויקטים">Projects</div>
     </div>
     <div class="stat-card">
+      <div class="stat-num" id="creditCount">0</div>
+      <div class="stat-label" data-en="Credits" data-he="קרדיטים">Credits</div>
+    </div>
+    <div class="stat-card">
       <div class="stat-num" id="statusBadge">Free</div>
       <div class="stat-label" data-en="Plan" data-he="תוכנית">Plan</div>
     </div>
+  </div>
+
+  <div class="filter-bar" id="filterBar">
+    <button class="filter-btn on" onclick="filterBy('all')" data-filter="all" data-en="All" data-he="הכל">All</button>
+    <button class="filter-btn" onclick="filterBy('compare')" data-filter="compare">Compare</button>
+    <button class="filter-btn" onclick="filterBy('report')" data-filter="report">Report</button>
+    <button class="filter-btn" onclick="filterBy('estimate')" data-filter="estimate">Estimate</button>
+    <button class="filter-btn" onclick="filterBy('social')" data-filter="social">Social</button>
   </div>
 
   <div id="galleryContent"></div>
@@ -81,26 +118,62 @@
 
 <footer class="footer"><div class="footer-brand">Powered by BQ Tools — BQ Production LLC</div></footer>
 
+<script src="js/ai.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/crypto.js"></script>
 <script src="js/common.js"></script>
 <script>
-function renderGallery() {
-  const gallery = JSON.parse(localStorage.getItem('bq_gallery') || '[]');
-  const container = document.getElementById('galleryContent');
-  const countEl = document.getElementById('projCount');
-  const statusEl = document.getElementById('statusBadge');
+let allProjects = [];
+let activeFilter = 'all';
 
-  countEl.textContent = gallery.length;
-  statusEl.textContent = isPro() ? 'PRO' : 'Free';
-  statusEl.style.color = isPro() ? 'var(--ac)' : 'var(--txd)';
+// Update nav
+if (isLoggedIn()) {
+  const btn = document.getElementById('navAuthBtn');
+  if (isPro()) { btn.textContent = 'PRO'; btn.classList.add('btn-pro-active'); }
+  else { btn.textContent = lang === 'he' ? 'חשבון' : 'Account'; }
+  btn.href = '/auth.html';
+  updateCreditDisplay();
+}
 
-  if (isPro()) {
-    const btn = document.getElementById('navProBtn');
-    if (btn) { btn.textContent = 'PRO ✓'; btn.classList.add('btn-pro-active'); }
+async function loadGallery() {
+  // Load from localStorage first (fast)
+  const local = JSON.parse(localStorage.getItem('bq_gallery') || '[]');
+
+  // Try server
+  let serverProjects = [];
+  if (isLoggedIn()) {
+    try {
+      serverProjects = await getProjectsFromServer();
+    } catch {}
   }
 
-  if (gallery.length === 0) {
+  // Merge: server projects + local-only projects
+  allProjects = serverProjects.length > 0 ? serverProjects : local.map(p => ({
+    id: p.id,
+    date: p.date,
+    tool: p.type || 'compare',
+    title: 'Compare Project',
+    thumbnail: '',
+    result_summary: ''
+  }));
+
+  renderGallery();
+}
+
+function renderGallery() {
+  const filtered = activeFilter === 'all'
+    ? allProjects
+    : allProjects.filter(p => p.tool === activeFilter);
+
+  const container = document.getElementById('galleryContent');
+  document.getElementById('projCount').textContent = allProjects.length;
+
+  const user = getCachedUser();
+  document.getElementById('creditCount').textContent = user ? user.credits : 0;
+  document.getElementById('statusBadge').textContent = isPro() ? 'PRO' : 'Free';
+  document.getElementById('statusBadge').style.color = isPro() ? 'var(--ac)' : 'var(--txd)';
+
+  if (filtered.length === 0) {
     container.innerHTML = `
       <div class="empty-state">
         <div class="icon">📁</div>
@@ -112,16 +185,20 @@ function renderGallery() {
     return;
   }
 
+  const toolIcons = { compare: '🔀', report: '📄', estimate: '💰', social: '📱', review: '⭐', sketch: '✏️' };
+
   let html = '<div class="gallery-grid">';
-  gallery.forEach((p, i) => {
-    // Use a tiny version for the thumbnail
-    const thumb = p.afterFull ? p.afterFull.substring(0, 100) : '';
+  filtered.forEach((p, i) => {
+    const dateStr = p.date ? new Date(p.date).toLocaleDateString() : '';
     html += `
       <div class="gallery-card" onclick="openProject(${i})">
-        ${p.afterFull ? `<img class="gallery-thumb" src="${p.afterFull}" loading="lazy">` : '<div class="gallery-thumb" style="background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:24px;">📁</div>'}
+        ${p.thumbnail
+          ? `<img class="gallery-thumb" src="data:image/jpeg;base64,${p.thumbnail}" loading="lazy">`
+          : `<div class="gallery-thumb-placeholder">${toolIcons[p.tool] || '📁'}</div>`}
         <div class="gallery-info">
-          <div class="gallery-date">${p.date || 'Unknown'}</div>
-          <div class="gallery-type">${p.type || 'image'}</div>
+          <div class="gallery-title">${p.title || p.tool || 'Project'}</div>
+          <div class="gallery-date">${dateStr}</div>
+          <div class="gallery-type">${p.tool || 'compare'}</div>
         </div>
       </div>`;
   });
@@ -130,42 +207,43 @@ function renderGallery() {
   setLang(lang);
 }
 
+function filterBy(type) {
+  activeFilter = type;
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    b.classList.toggle('on', b.dataset.filter === type);
+  });
+  renderGallery();
+}
+
 function openProject(idx) {
-  const gallery = JSON.parse(localStorage.getItem('bq_gallery') || '[]');
-  const p = gallery[idx];
+  const filtered = activeFilter === 'all'
+    ? allProjects
+    : allProjects.filter(p => p.tool === activeFilter);
+  const p = filtered[idx];
   if (!p) return;
 
   const m = document.createElement('div');
   m.className = 'modal-overlay';
   m.innerHTML = `
-    <div class="modal-card" style="max-width:600px;">
+    <div class="modal-card" style="max-width:500px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <h3 style="color:var(--ac);">${p.date || 'Project'}</h3>
-        <button onclick="this.closest('.modal-overlay').remove()" style="background:none;border:none;color:var(--txd);font-size:20px;cursor:pointer;">✕</button>
+        <h3 style="color:var(--ac);">${p.title || 'Project'}</h3>
+        <button onclick="this.closest('.modal-overlay').remove()" style="background:none;border:none;color:var(--txd);font-size:20px;cursor:pointer;width:48px;height:48px;">✕</button>
       </div>
-      <div class="detail-imgs">
-        ${p.beforeFull ? `<img src="${p.beforeFull}" style="border:1px solid var(--red);">` : ''}
-        ${p.afterFull ? `<img src="${p.afterFull}" style="border:1px solid var(--grn);">` : ''}
-      </div>
-      <div style="display:flex;gap:8px;">
-        <a href="/tools/compare.html" class="btn" style="flex:1;" data-en="Open in Compare" data-he="פתח בהשוואה">Open in Compare</a>
-        <button class="btn btn-danger" style="flex:1;" onclick="deleteProject(${idx});this.closest('.modal-overlay').remove();" data-en="Delete" data-he="מחק">Delete</button>
+      ${p.thumbnail ? `<img src="data:image/jpeg;base64,${p.thumbnail}" style="width:100%;border-radius:8px;margin-bottom:12px;">` : ''}
+      <div style="font-size:14px;color:var(--txd);margin-bottom:8px;">${new Date(p.date).toLocaleDateString()} — ${p.tool}</div>
+      ${p.result_summary ? `<div style="font-size:14px;padding:10px;background:var(--bg);border-radius:8px;">${p.result_summary}</div>` : ''}
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <a href="/tools/${p.tool === 'compare' ? 'compare' : p.tool}.html" class="btn" style="flex:1;" data-en="Open Tool" data-he="פתח כלי">Open Tool</a>
       </div>
     </div>`;
   document.body.appendChild(m);
   requestAnimationFrame(() => m.classList.add('open'));
+  m.onclick = (e) => { if (e.target === m) m.remove(); };
   setLang(lang);
 }
 
-function deleteProject(idx) {
-  const gallery = JSON.parse(localStorage.getItem('bq_gallery') || '[]');
-  gallery.splice(idx, 1);
-  localStorage.setItem('bq_gallery', JSON.stringify(gallery));
-  renderGallery();
-  showToast(lang === 'he' ? 'נמחק' : 'Deleted', 'info');
-}
-
-renderGallery();
+loadGallery();
 </script>
 </body>
 </html>
