@@ -135,9 +135,37 @@ function requireOnline() {
   return true;
 }
 
+// ── Inject credit bar into navs that don't have one ──
+function injectCreditBar() {
+  if (typeof isLoggedIn !== 'function' || !isLoggedIn()) return;
+  if (document.getElementById('creditBar')) return; // already has one
+
+  const navRight = document.querySelector('.nav-right');
+  if (!navRight) return;
+
+  const user = typeof getCachedUser === 'function' ? getCachedUser() : null;
+  const credits = user ? user.credits : 0;
+
+  const bar = document.createElement('div');
+  bar.className = 'credit-bar' + (credits < 5 ? (credits === 0 ? ' credit-empty' : ' credit-low') : '');
+  bar.id = 'creditBar';
+  bar.innerHTML = `<span>⚡</span><span class="credit-count">${credits}</span>`;
+
+  // Insert before the first button/link in nav-right
+  const firstBtn = navRight.querySelector('.btn');
+  if (firstBtn) {
+    navRight.insertBefore(bar, firstBtn);
+  } else {
+    navRight.appendChild(bar);
+  }
+}
+
 // ── Init on load ──
 document.addEventListener('DOMContentLoaded', () => {
   setLang(lang);
+
+  // Inject credit bar on pages that don't have one
+  injectCreditBar();
 
   // Refresh user data from server if logged in
   if (typeof isLoggedIn === 'function' && isLoggedIn()) {

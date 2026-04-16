@@ -39,7 +39,8 @@
     width: 92%; max-width: 900px; margin: 0 auto 32px;
     border-radius: 14px; overflow: hidden; border: 1px solid var(--bd);
   }
-  #directoryMap { height: 350px; width: 100%; background: var(--sf); }
+  #directoryMap { height: 300px; max-height: 400px; width: 100%; background: var(--sf); }
+  .dir-map-wrap { z-index: 0; position: relative; }
 
   /* ── Listings Grid ── */
   .dir-grid {
@@ -106,7 +107,7 @@
     .dir-hero { padding: 30px 16px 20px; }
     .dir-hero h1 { font-size: 24px; }
     .dir-grid { grid-template-columns: 1fr; }
-    #directoryMap { height: 250px; }
+    #directoryMap { height: 220px; }
     .dir-search { flex-direction: column; }
     .dir-search select { min-width: 100%; }
   }
@@ -186,6 +187,7 @@
 <script src="js/auth.js"></script>
 <script src="js/crypto.js"></script>
 <script src="js/common.js"></script>
+<script src="js/assistant.js"></script>
 <script>
 let map, allListings = [], markers = [];
 

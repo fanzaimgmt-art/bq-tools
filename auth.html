@@ -254,8 +254,8 @@ async function handleGoogleCallback(response) {
     if (!res.ok) throw new Error(data.error || 'Google sign-in failed');
 
     // Save token + user data
-    localStorage.setItem('userToken', data.userToken);
-    localStorage.setItem('userData', JSON.stringify(data.user));
+    localStorage.setItem('bq_token', data.userToken);
+    setCachedUser(data.user);
 
     showMsg(lang === 'he' ? '✓ מחובר!' : '✓ Logged in!', 'ok');
 
