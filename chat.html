@@ -198,7 +198,7 @@
 <nav class="nav">
   <a href="/home.html" class="nav-logo">BQ <span>Tools</span></a>
   <div class="nav-right">
-    <a href="/home.html" class="nav-link" data-en="Tools" data-he="כלים">Tools</a>
+    <a href="/home.html" class="nav-link" data-en="Tools" data-es="Herramientas" data-he="כלים">Tools</a>
     <div class="lang-toggle">
       <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
       <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
@@ -223,10 +223,10 @@
 
     <!-- Quick Actions -->
     <div class="chat-quick">
-      <a href="/tools/compare.html">🔀 <span data-en="Compare" data-he="השוואה">Compare</span></a>
+      <a href="/tools/compare.html">🔀 <span data-en="Compare" data-es="Comparar" data-he="השוואה">Compare</span></a>
       <a href="/tools/report.html">📄 <span data-en="Report" data-he="דוח">Report</span></a>
       <a href="/tools/estimate.html">💰 <span data-en="Estimate" data-he="הערכה">Estimate</span></a>
-      <a href="/tools/social-post.html">📱 <span data-en="Social Post" data-he="פוסט">Social Post</span></a>
+      <a href="/tools/social-post.html">📱 <span data-en="Social Post" data-es="Post Social" data-he="פוסט">Social Post</span></a>
       <a href="/tools/social-analysis.html">📊 <span data-en="Analyze IG" data-he="ניתוח IG">Analyze IG</span></a>
       <a href="/tools/sketch.html">✏️ <span data-en="Sketch" data-he="סקיצה">Sketch</span></a>
     </div>
@@ -234,7 +234,7 @@
     <!-- Top bar -->
     <div class="chat-topbar">
       <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
-      <h2 data-en="AI Chat" data-he="צ'אט AI">AI Chat</h2>
+      <h2 data-en="AI Chat" data-es="Chat IA" data-he="צ'אט AI">AI Chat</h2>
 
       <select class="model-select" id="modelSelect" onchange="updateCost()">
         <optgroup label="OPENAI">
@@ -314,6 +314,13 @@ const MODELS = {
   'mixtral-8x7b': { label: 'Mixtral 8x7B', cost: 1, icon: '🟡' },
   'manus': { label: 'Manus Agent', cost: 5, icon: '🔴' },
 };
+
+// Language instruction injected into every chat request
+function getLangInstruction() {
+  if (lang === 'es') return '\n\nIMPORTANT: Respond in Mexican-American Spanish (español mexicano-americano) — the kind spoken by Hispanic contractors in California, Texas, and Florida. Use "tú" informal. Use contractor terminology (contratista, cotización, estimado, plomería, electricidad, yarda, pies cuadrados). Never translate brand terms like "BQ Tools".';
+  if (lang === 'he') return '\n\nIMPORTANT: Respond in casual Hebrew (עברית). Use "אתה" direct. Use Israeli contractor terminology. Never translate brand terms like "BQ Tools".';
+  return '\n\nRespond in English.';
+}
 
 const SYSTEM_PROMPT = `You are BQ Assistant for contractors. You know every feature of BQ Tools inside out. Keep answers practical and actionable.
 
@@ -678,7 +685,7 @@ async function sendMessage() {
     }));
 
   // Add system prompt + memories
-  const sysPrompt = SYSTEM_PROMPT + getMemoriesForPrompt();
+  const sysPrompt = SYSTEM_PROMPT + getLangInstruction() + getMemoriesForPrompt();
   contextMsgs.unshift({ role: 'system', content: sysPrompt });
   contextMsgs.push({ role: 'user', content: text });
 

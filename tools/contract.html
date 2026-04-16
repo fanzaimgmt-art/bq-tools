@@ -46,7 +46,7 @@
 <nav class="nav">
   <a href="/home.html" class="nav-logo">BQ <span>Tools</span></a>
   <div class="nav-right">
-    <a href="/home.html" class="nav-link" data-en="Tools" data-he="כלים">Tools</a>
+    <a href="/home.html" class="nav-link" data-en="Tools" data-es="Herramientas" data-he="כלים">Tools</a>
     <div class="lang-toggle">
       <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
       <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
@@ -55,46 +55,46 @@
 </nav>
 
 <div class="page">
-  <a href="/home.html" class="page-back" data-en="← All Tools" data-he="כל הכלים →">← All Tools</a>
+  <a href="/home.html" class="page-back" data-en="← All Tools" data-es="← Todas las Herramientas" data-he="כל הכלים →">← All Tools</a>
   <h1 class="page-title" data-en="📜 Contract Generator" data-he="📜 מחולל חוזים">📜 Contract Generator</h1>
   <p class="page-sub" data-en="Generate professional California-compliant construction contracts using YOUR style." data-he="צור חוזי בנייה מקצועיים לקליפורניה בסגנון שלך.">Generate professional California-compliant construction contracts using YOUR style.</p>
 
   <div class="card" style="margin-bottom:14px;">
-    <label class="input-label" data-en="Client Name" data-he="שם הלקוח">Client Name</label>
+    <label class="input-label" data-en="Client Name" data-es="Nombre del Cliente" data-he="שם הלקוח">Client Name</label>
     <input class="input" id="clientName" placeholder="John Smith" style="margin-bottom:10px;">
 
-    <label class="input-label" data-en="Client Address" data-he="כתובת הלקוח">Client Address</label>
+    <label class="input-label" data-en="Client Address" data-es="Dirección del Cliente" data-he="כתובת הלקוח">Client Address</label>
     <input class="input" id="clientAddress" placeholder="123 Main St, Los Angeles, CA 90001" style="margin-bottom:10px;">
 
-    <label class="input-label" data-en="Project Description" data-he="תיאור הפרויקט">Project Description</label>
+    <label class="input-label" data-en="Project Description" data-es="Descripción del Proyecto" data-he="תיאור הפרויקט">Project Description</label>
     <textarea class="textarea" id="projectDesc" placeholder="Complete kitchen remodel including demolition, new cabinets, quartz countertops, tile backsplash, LVP flooring, recessed lighting, and all related electrical and plumbing work." rows="4"></textarea>
 
     <div style="display:flex;gap:10px;margin-top:10px;">
       <div style="flex:1;">
-        <label class="input-label" data-en="Start Date" data-he="תאריך התחלה">Start Date</label>
+        <label class="input-label" data-en="Start Date" data-es="Fecha de Inicio" data-he="תאריך התחלה">Start Date</label>
         <input class="input" id="startDate" type="date">
       </div>
       <div style="flex:1;">
-        <label class="input-label" data-en="End Date" data-he="תאריך סיום">End Date</label>
+        <label class="input-label" data-en="End Date" data-es="Fecha de Fin" data-he="תאריך סיום">End Date</label>
         <input class="input" id="endDate" type="date">
       </div>
     </div>
 
-    <label class="input-label" style="margin-top:10px;" data-en="Total Amount ($)" data-he="סכום כולל ($)">Total Amount ($)</label>
+    <label class="input-label" style="margin-top:10px;" data-en="Total Amount ($)" data-es="Monto Total ($)" data-he="סכום כולל ($)">Total Amount ($)</label>
     <input class="input" id="amount" type="number" placeholder="25000">
 
-    <label class="input-label" style="margin-top:10px;" data-en="Payment Terms" data-he="תנאי תשלום">Payment Terms</label>
+    <label class="input-label" style="margin-top:10px;" data-en="Payment Terms" data-es="Términos de Pago" data-he="תנאי תשלום">Payment Terms</label>
     <input class="input" id="paymentTerms" placeholder="30% deposit, 40% mid-project, 30% on completion">
   </div>
 
   <button class="btn btn-primary btn-large" style="width:100%;" onclick="generateContract()" id="genBtn">
-    📜 <span data-en="Generate Contract ⚡2" data-he="צור חוזה ⚡2">Generate Contract ⚡2</span>
+    📜 <span data-en="Generate Contract ⚡2" data-es="Generar Contrato ⚡2" data-he="צור חוזה ⚡2">Generate Contract ⚡2</span>
   </button>
 
   <div class="contract-preview" id="preview"></div>
   <div class="cp-actions" id="actions" style="display:none;">
-    <button class="btn" onclick="window.print()">🖨️ <span data-en="Print / PDF" data-he="הדפס / PDF">Print / PDF</span></button>
-    <button class="btn" onclick="emailContract()">📧 <span data-en="Email" data-he="מייל">Email</span></button>
+    <button class="btn" onclick="window.print()">🖨️ <span data-en="Print / PDF" data-es="Imprimir / PDF" data-he="הדפס / PDF">Print / PDF</span></button>
+    <button class="btn" onclick="emailContract()">📧 <span data-en="Email" data-es="Enviar por Email" data-he="מייל">Email</span></button>
   </div>
 </div>
 

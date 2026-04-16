@@ -57,7 +57,7 @@
 <nav class="nav">
   <a href="/home.html" class="nav-logo">BQ <span>Tools</span></a>
   <div class="nav-right">
-    <a href="/business.html" class="nav-link" data-en="Business" data-he="עסק">Business</a>
+    <a href="/business.html" class="nav-link" data-en="Business" data-es="Negocio" data-he="עסק">Business</a>
     <div class="lang-toggle">
       <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
       <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
@@ -66,7 +66,7 @@
 </nav>
 
 <div class="page">
-  <a href="/business.html" class="page-back" data-en="← Business Hub" data-he="← מרכז עסקי">← Business Hub</a>
+  <a href="/business.html" class="page-back" data-en="← Business Hub" data-es="← Centro de Negocio" data-he="← מרכז עסקי">← Business Hub</a>
   <h1 class="page-title" data-en="📜 Compliance" data-he="📜 תאימות">📜 Compliance</h1>
   <p class="page-sub" data-en="Never miss a license renewal or a permit deadline." data-he="לעולם אל תפספס חידוש רישיון או היתר.">Never miss a license renewal or a permit deadline.</p>
 
@@ -89,14 +89,14 @@
   <div class="co-alert" id="alert"></div>
 
   <div class="co-tabs">
-    <button class="co-tab on" data-sec="documents" onclick="setSec('documents')">📄 <span data-en="Documents" data-he="מסמכים">Documents</span></button>
-    <button class="co-tab" data-sec="permits" onclick="setSec('permits')">🏛️ <span data-en="Permits" data-he="היתרים">Permits</span></button>
-    <button class="co-tab" data-sec="incidents" onclick="setSec('incidents')">⚠️ <span data-en="Incidents" data-he="אירועים">Incidents</span></button>
+    <button class="co-tab on" data-sec="documents" onclick="setSec('documents')">📄 <span data-en="Documents" data-es="Documentos" data-he="מסמכים">Documents</span></button>
+    <button class="co-tab" data-sec="permits" onclick="setSec('permits')">🏛️ <span data-en="Permits" data-es="Permisos" data-he="היתרים">Permits</span></button>
+    <button class="co-tab" data-sec="incidents" onclick="setSec('incidents')">⚠️ <span data-en="Incidents" data-es="Incidentes" data-he="אירועים">Incidents</span></button>
   </div>
 
   <div class="co-bar">
     <input type="text" id="fSearch" placeholder="Search..." oninput="render()" style="flex:1;">
-    <button class="btn btn-primary" onclick="showAddForm()" id="addBtn">+ <span data-en="Add" data-he="הוסף">Add</span></button>
+    <button class="btn btn-primary" onclick="showAddForm()" id="addBtn">+ <span data-en="Add" data-es="Agregar" data-he="הוסף">Add</span></button>
   </div>
 
   <div class="co-grid" id="list"></div>

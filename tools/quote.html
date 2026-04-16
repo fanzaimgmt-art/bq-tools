@@ -82,7 +82,7 @@
 <nav class="nav">
   <a href="/home.html" class="nav-logo">BQ <span>Tools</span></a>
   <div class="nav-right">
-    <a href="/home.html" class="nav-link" data-en="Tools" data-he="כלים">Tools</a>
+    <a href="/home.html" class="nav-link" data-en="Tools" data-es="Herramientas" data-he="כלים">Tools</a>
     <div class="lang-toggle">
       <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
       <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
@@ -91,7 +91,7 @@
 </nav>
 
 <div class="page">
-  <a href="/home.html" class="page-back" data-en="← All Tools" data-he="כל הכלים →">← All Tools</a>
+  <a href="/home.html" class="page-back" data-en="← All Tools" data-es="← Todas las Herramientas" data-he="כל הכלים →">← All Tools</a>
   <h1 class="page-title" data-en="📝 Quote Generator" data-he="📝 מחולל הצעות מחיר">📝 Quote Generator</h1>
   <p class="page-sub" data-en="Generate professional quotes using YOUR pricing from trained data." data-he="צור הצעות מחיר מקצועיות עם המחירים שלך מנתוני אימון.">Generate professional quotes using YOUR pricing from trained data.</p>
 
@@ -119,51 +119,51 @@
 
   <!-- Template selector -->
   <div class="card" style="margin-bottom:14px;">
-    <label class="input-label" data-en="Quote Template" data-he="תבנית הצעה">Quote Template</label>
+    <label class="input-label" data-en="Quote Template" data-es="Plantilla de Cotización" data-he="תבנית הצעה">Quote Template</label>
     <div class="template-chips">
       <button class="template-chip" data-tpl="quick" onclick="setTemplate('quick')">
         <span class="chip-icon">⚡</span>
-        <span class="chip-label" data-en="Quick" data-he="מהיר">Quick</span>
-        <span class="chip-desc" data-en="Total only" data-he="רק סה״כ">Total only</span>
+        <span class="chip-label" data-en="Quick" data-es="Rápido" data-he="מהיר">Quick</span>
+        <span class="chip-desc" data-en="Total only" data-es="Solo total" data-he="רק סה״כ">Total only</span>
       </button>
       <button class="template-chip on" data-tpl="detailed" onclick="setTemplate('detailed')">
         <span class="chip-icon">📋</span>
-        <span class="chip-label" data-en="Detailed" data-he="מפורט">Detailed</span>
-        <span class="chip-desc" data-en="Line items" data-he="סעיפים">Line items</span>
+        <span class="chip-label" data-en="Detailed" data-es="Detallado" data-he="מפורט">Detailed</span>
+        <span class="chip-desc" data-en="Line items" data-es="Conceptos" data-he="סעיפים">Line items</span>
       </button>
       <button class="template-chip" data-tpl="premium" onclick="setTemplate('premium')">
         <span class="chip-icon">⭐</span>
-        <span class="chip-label" data-en="Premium" data-he="פרימיום">Premium</span>
-        <span class="chip-desc" data-en="Full terms" data-he="תנאים מלאים">Full terms</span>
+        <span class="chip-label" data-en="Premium" data-es="Premium" data-he="פרימיום">Premium</span>
+        <span class="chip-desc" data-en="Full terms" data-es="Términos completos" data-he="תנאים מלאים">Full terms</span>
       </button>
     </div>
   </div>
 
   <!-- Inputs -->
   <div class="card" style="margin-bottom:14px;">
-    <label class="input-label" data-en="Client Name" data-he="שם הלקוח">Client Name</label>
+    <label class="input-label" data-en="Client Name" data-es="Nombre del Cliente" data-he="שם הלקוח">Client Name</label>
     <input class="input" id="clientName" placeholder="Sarah Johnson" style="margin-bottom:10px;">
 
-    <label class="input-label" data-en="Client Address" data-he="כתובת הלקוח">Client Address</label>
+    <label class="input-label" data-en="Client Address" data-es="Dirección del Cliente" data-he="כתובת הלקוח">Client Address</label>
     <input class="input" id="clientAddress" placeholder="123 Main St, Los Angeles, CA" style="margin-bottom:10px;">
 
-    <label class="input-label" data-en="Project Description" data-he="תיאור הפרויקט">Project Description</label>
+    <label class="input-label" data-en="Project Description" data-es="Descripción del Proyecto" data-he="תיאור הפרויקט">Project Description</label>
     <textarea class="textarea" id="projectDesc" placeholder="Bathroom renovation, 60 sqft, replace tub with walk-in shower, new tile floor, new vanity" rows="4"></textarea>
 
-    <label class="input-label" style="margin-top:10px;" data-en="Location" data-he="מיקום">Location</label>
+    <label class="input-label" style="margin-top:10px;" data-en="Location" data-es="Ubicación" data-he="מיקום">Location</label>
     <input class="input" id="location" placeholder="Los Angeles, CA" value="Los Angeles, CA">
   </div>
 
   <button class="btn btn-primary btn-large" style="width:100%;" onclick="generateQuote()" id="genBtn">
-    📝 <span data-en="Generate Quote ⚡1" data-he="צור הצעת מחיר ⚡1">Generate Quote ⚡1</span>
+    📝 <span data-en="Generate Quote ⚡1" data-es="Generar Cotización ⚡1" data-he="צור הצעת מחיר ⚡1">Generate Quote ⚡1</span>
   </button>
 
   <!-- Preview -->
   <div class="quote-preview" id="quotePreview"></div>
   <div class="qp-actions" id="qpActions" style="display:none;">
-    <button class="btn" onclick="window.print()">🖨️ <span data-en="Print / PDF" data-he="הדפס / PDF">Print / PDF</span></button>
-    <button class="btn" onclick="emailQuote()">📧 <span data-en="Email" data-he="מייל">Email</span></button>
-    <button class="btn btn-primary" onclick="saveQuote()">💾 <span data-en="Save" data-he="שמור">Save</span></button>
+    <button class="btn" onclick="window.print()">🖨️ <span data-en="Print / PDF" data-es="Imprimir / PDF" data-he="הדפס / PDF">Print / PDF</span></button>
+    <button class="btn" onclick="emailQuote()">📧 <span data-en="Email" data-es="Enviar por Email" data-he="מייל">Email</span></button>
+    <button class="btn btn-primary" onclick="saveQuote()">💾 <span data-en="Save" data-es="Guardar" data-he="שמור">Save</span></button>
     <a href="/dashboard.html#quotes" class="btn" data-en="📁 My Quotes" data-he="📁 ההצעות שלי">📁 My Quotes</a>
   </div>
 </div>

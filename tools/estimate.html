@@ -47,7 +47,7 @@
 <nav class="nav">
   <a href="/" class="nav-logo">BQ <span>Tools</span></a>
   <div class="nav-right">
-    <a href="/" class="nav-link" data-en="← Back" data-he="חזור →">← Back</a>
+    <a href="/" class="nav-link" data-en="← Back" data-es="← Atrás" data-he="חזור →">← Back</a>
     <div class="lang-toggle">
       <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
       <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
@@ -56,7 +56,7 @@
 </nav>
 
 <div class="page">
-  <a href="/" class="page-back" data-en="← All Tools" data-he="כל הכלים →">← All Tools</a>
+  <a href="/" class="page-back" data-en="← All Tools" data-es="← Todas las Herramientas" data-he="כל הכלים →">← All Tools</a>
   <h1 class="page-title" data-en="💰 Smart Estimate" data-he="💰 הערכת עלות חכמה">💰 Smart Estimate</h1>
   <p class="page-sub" data-en="Upload a photo and describe the job. AI estimates materials, labor, and total cost." data-he="העלה תמונה ותאר את העבודה. AI מעריך חומרים, עבודה ועלות כוללת.">Upload a photo and describe the job. AI estimates materials, labor, and total cost.</p>
 
@@ -90,20 +90,20 @@
   </script>
 
   <div class="card" style="margin-bottom:14px;">
-    <label class="input-label" data-en="Photo of the area" data-he="תמונה של האזור">Photo of the area</label>
+    <label class="input-label" data-en="Photo of the area" data-es="Foto del área" data-he="תמונה של האזור">Photo of the area</label>
     <div class="upload-area" id="uploadArea">
-      <span data-en="Click to upload photo" data-he="לחץ להעלאת תמונה">Click to upload photo</span>
+      <span data-en="Click to upload photo" data-es="Haz clic para subir foto" data-he="לחץ להעלאת תמונה">Click to upload photo</span>
       <input type="file" accept="image/*" id="photoInput">
     </div>
 
-    <label class="input-label" data-en="What needs to be done?" data-he="מה צריך לעשות?">What needs to be done?</label>
+    <label class="input-label" data-en="What needs to be done?" data-es="¿Qué hay que hacer?" data-he="מה צריך לעשות?">What needs to be done?</label>
     <textarea class="textarea" id="jobDesc" placeholder="Replace kitchen tiles, install new backsplash, repair grout in bathroom"></textarea>
 
-    <label class="input-label" style="margin-top:12px;" data-en="Location (for pricing)" data-he="מיקום (לתמחור)">Location</label>
+    <label class="input-label" style="margin-top:12px;" data-en="Location (for pricing)" data-es="Ubicación (para precios)" data-he="מיקום (לתמחור)">Location</label>
     <input class="input" id="location" placeholder="Los Angeles, CA">
   </div>
 
-  <button class="btn btn-primary btn-large" style="width:100%;" onclick="generateEstimate()" id="genBtn" data-en="🧠 Generate Estimate" data-he="🧠 צור הערכה">🧠 Generate Estimate</button>
+  <button class="btn btn-primary btn-large" style="width:100%;" onclick="generateEstimate()" id="genBtn" data-en="🧠 Generate Estimate" data-es="🧠 Generar Estimado" data-he="🧠 צור הערכה">🧠 Generate Estimate</button>
 
   <div class="estimate-result" id="estResult"></div>
 </div>
@@ -174,19 +174,19 @@ Respond JSON only:
     el.classList.add('on');
     el.innerHTML = `
       <div class="est-section">
-        <h3 data-en="Materials" data-he="חומרים">Materials</h3>
+        <h3 data-en="Materials" data-es="Materiales" data-he="חומרים">Materials</h3>
         ${r.materials.map(m => `<div class="est-row"><span class="est-label">${m.item}</span><span class="est-val">${m.estimated_cost}</span></div>`).join('')}
       </div>
       <div class="est-section">
-        <h3 data-en="Labor" data-he="עבודה">Labor</h3>
-        <div class="est-row"><span class="est-label" data-en="Hours" data-he="שעות">Hours</span><span class="est-val">${r.labor_hours}</span></div>
-        <div class="est-row"><span class="est-label" data-en="Cost" data-he="עלות">Cost</span><span class="est-val">${r.labor_cost}</span></div>
+        <h3 data-en="Labor" data-es="Mano de Obra" data-he="עבודה">Labor</h3>
+        <div class="est-row"><span class="est-label" data-en="Hours" data-es="Horas" data-he="שעות">Hours</span><span class="est-val">${r.labor_hours}</span></div>
+        <div class="est-row"><span class="est-label" data-en="Cost" data-es="Costo" data-he="עלות">Cost</span><span class="est-val">${r.labor_cost}</span></div>
       </div>
       <div class="est-total">
-        <span data-en="Total Estimate" data-he="הערכה כוללת">Total Estimate</span>
+        <span data-en="Total Estimate" data-es="Estimado Total" data-he="הערכה כוללת">Total Estimate</span>
         <span class="est-range">${r.total_low} — ${r.total_high}</span>
       </div>
-      ${r.recommended_materials?.length ? `<div class="est-section" style="margin-top:14px;"><h3 data-en="Recommended" data-he="מומלץ">Recommended</h3>${r.recommended_materials.map(m => `<div class="est-row"><span>${m}</span></div>`).join('')}</div>` : ''}
+      ${r.recommended_materials?.length ? `<div class="est-section" style="margin-top:14px;"><h3 data-en="Recommended" data-es="Recomendado" data-he="מומלץ">Recommended</h3>${r.recommended_materials.map(m => `<div class="est-row"><span>${m}</span></div>`).join('')}</div>` : ''}
       ${r.notes ? `<div class="est-row" style="margin-top:8px;"><span class="est-label">${r.notes}</span></div>` : ''}
       <div class="disclaimer" data-en="⚠️ This is an AI estimate for reference only. Final costs may vary based on actual conditions, material availability, and local labor rates. Always get multiple quotes from licensed contractors." data-he="⚠️ זוהי הערכת AI לייחוס בלבד. עלויות סופיות עשויות להשתנות. קבל תמיד מספר הצעות מקבלנים מורשים.">⚠️ This is an AI estimate for reference only. Final costs may vary based on actual conditions, material availability, and local labor rates.</div>`;
 

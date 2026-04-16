@@ -46,7 +46,7 @@
 <nav class="nav">
   <a href="/" class="nav-logo">BQ <span>Tools</span></a>
   <div class="nav-right">
-    <a href="/" class="nav-link" data-en="← Back" data-he="חזור →">← Back</a>
+    <a href="/" class="nav-link" data-en="← Back" data-es="← Atrás" data-he="חזור →">← Back</a>
     <div class="lang-toggle">
       <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
       <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
@@ -55,15 +55,15 @@
 </nav>
 
 <div class="page">
-  <a href="/" class="page-back" data-en="← All Tools" data-he="כל הכלים →">← All Tools</a>
+  <a href="/" class="page-back" data-en="← All Tools" data-es="← Todas las Herramientas" data-he="כל הכלים →">← All Tools</a>
   <h1 class="page-title" data-en="📱 Social Post Generator" data-he="📱 מחולל פוסטים">📱 Social Post Generator</h1>
-  <p class="page-sub" data-en="Upload a before/after, pick your platform, get a ready-to-post caption." data-he="העלה לפני/אחרי, בחר פלטפורמה, קבל קפשן מוכן לפרסום.">Upload a before/after, pick your platform, get a ready-to-post caption.</p>
+  <p class="page-sub" data-en="Upload a before/after, pick your platform, get a ready-to-post caption." data-es="Sube un antes/después, elige tu plataforma, obtén un texto listo para publicar." data-he="העלה לפני/אחרי, בחר פלטפורמה, קבל קפשן מוכן לפרסום.">Upload a before/after, pick your platform, get a ready-to-post caption.</p>
 
   <div id="hiw-social-post"></div>
   <script>document.addEventListener('DOMContentLoaded',()=>{if(typeof buildHowItWorks==='function')buildHowItWorks('hiw-social-post',HIW_CONFIGS['social-post'])});</script>
 
   <div class="card" style="margin-bottom:14px;">
-    <label class="input-label" data-en="Upload Before/After Photo" data-he="העלה תמונת לפני/אחרי">Upload Photo</label>
+    <label class="input-label" data-en="Upload Before/After Photo" data-es="Sube Foto de Antes/Después" data-he="העלה תמונת לפני/אחרי">Upload Photo</label>
     <div class="upload-area" id="uploadArea">
       <span id="uploadText" data-en="Click or drag to upload" data-he="לחץ או גרור להעלאה">Click or drag to upload</span>
       <input type="file" accept="image/*" id="photoInput">
@@ -72,7 +72,7 @@
     <label class="input-label" data-en="What work was done?" data-he="מה בוצע?">What work was done?</label>
     <input class="input" id="workDesc" placeholder="Bathroom renovation - new tile, vanity, and fixtures" style="margin-bottom:14px;">
 
-    <label class="input-label" data-en="Platform" data-he="פלטפורמה">Platform</label>
+    <label class="input-label" data-en="Platform" data-es="Plataforma" data-he="פלטפורמה">Platform</label>
     <div class="platform-btns">
       <button class="plat-btn on" onclick="setPlatform(this, 'instagram')">Instagram</button>
       <button class="plat-btn" onclick="setPlatform(this, 'facebook')">Facebook</button>

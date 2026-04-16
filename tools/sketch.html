@@ -58,7 +58,7 @@
 <nav class="nav">
   <a href="/" class="nav-logo">BQ <span>Tools</span></a>
   <div class="nav-right">
-    <a href="/" class="nav-link" data-en="← Back" data-he="חזור →">← Back</a>
+    <a href="/" class="nav-link" data-en="← Back" data-es="← Atrás" data-he="חזור →">← Back</a>
     <div class="lang-toggle">
       <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
       <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
@@ -67,19 +67,19 @@
 </nav>
 
 <div class="page">
-  <a href="/" class="page-back" data-en="← All Tools" data-he="כל הכלים →">← All Tools</a>
+  <a href="/" class="page-back" data-en="← All Tools" data-es="← Todas las Herramientas" data-he="כל הכלים →">← All Tools</a>
   <h1 class="page-title" data-en="✏️ Quick Sketch" data-he="✏️ סקיצה מהירה">✏️ Quick Sketch</h1>
-  <p class="page-sub" data-en="Draw a rough sketch or upload a photo of one. AI cleans it up into a sharp blueprint." data-he="צייר סקיצה או העלה תמונה. AI מנקה לשרטוט חד.">Draw a rough sketch or upload a photo of one. AI cleans it up into a sharp blueprint.</p>
+  <p class="page-sub" data-en="Draw a rough sketch or upload a photo of one. AI cleans it up into a sharp blueprint." data-es="Dibuja un boceto o sube una foto. La IA lo limpia en un plano profesional." data-he="צייר סקיצה או העלה תמונה. AI מנקה לשרטוט חד.">Draw a rough sketch or upload a photo of one. AI cleans it up into a sharp blueprint.</p>
 
   <div id="hiw-sketch"></div>
   <script>document.addEventListener('DOMContentLoaded',()=>{if(typeof buildHowItWorks==='function')buildHowItWorks('hiw-sketch',HIW_CONFIGS.sketch)});</script>
 
   <!-- Drawing tools -->
   <div class="toolbar">
-    <button class="tool-btn on" onclick="setTool(this,'pen')" data-en="✏️ Pen" data-he="✏️ עט">✏️ Pen</button>
-    <button class="tool-btn" onclick="setTool(this,'line')" data-en="📏 Line" data-he="📏 קו">📏 Line</button>
-    <button class="tool-btn" onclick="setTool(this,'rect')" data-en="⬜ Rect" data-he="⬜ מלבן">⬜ Rect</button>
-    <button class="tool-btn" onclick="setTool(this,'eraser')" data-en="🧹 Erase" data-he="🧹 מחק">🧹 Erase</button>
+    <button class="tool-btn on" onclick="setTool(this,'pen')" data-en="✏️ Pen" data-es="✏️ Lápiz" data-he="✏️ עט">✏️ Pen</button>
+    <button class="tool-btn" onclick="setTool(this,'line')" data-en="📏 Line" data-es="📏 Línea" data-he="📏 קו">📏 Line</button>
+    <button class="tool-btn" onclick="setTool(this,'rect')" data-en="⬜ Rect" data-es="⬜ Rectángulo" data-he="⬜ מלבן">⬜ Rect</button>
+    <button class="tool-btn" onclick="setTool(this,'eraser')" data-en="🧹 Erase" data-es="🧹 Borrar" data-he="🧹 מחק">🧹 Erase</button>
     <div style="display:flex;gap:4px;align-items:center;">
       <div class="color-dot on" style="background:#222" onclick="setColor(this,'#222')"></div>
       <div class="color-dot" style="background:#ff6b6b" onclick="setColor(this,'#ff6b6b')"></div>

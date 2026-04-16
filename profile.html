@@ -88,7 +88,7 @@
 <nav class="nav">
   <a href="/" class="nav-logo">BQ <span>Tools</span></a>
   <div class="nav-right">
-    <a href="/" class="nav-link" data-en="← Home" data-he="בית →">← Home</a>
+    <a href="/" class="nav-link" data-en="← Home" data-es="← Inicio" data-he="בית →">← Home</a>
     <div class="lang-toggle">
       <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
       <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
@@ -108,12 +108,12 @@
     <h3>🏢 <span data-en="Business Info" data-he="פרטי עסק">Business Info</span></h3>
 
     <div class="field-row">
-      <label class="field-label" data-en="Business Name" data-he="שם העסק">Business Name</label>
+      <label class="field-label" data-en="Business Name" data-es="Nombre del Negocio" data-he="שם העסק">Business Name</label>
       <input class="field-input" type="text" id="fBusinessName" placeholder="e.g. Gold Remodeling" autocomplete="organization">
     </div>
 
     <div class="field-row">
-      <label class="field-label" data-en="Business Type" data-he="סוג עסק">Business Type</label>
+      <label class="field-label" data-en="Business Type" data-es="Tipo de Negocio" data-he="סוג עסק">Business Type</label>
       <select class="field-select" id="fBusinessType">
         <option value="">—</option>
         <option value="General Contractor">General Contractor</option>
@@ -127,12 +127,12 @@
     </div>
 
     <div class="field-row">
-      <label class="field-label" data-en="Phone" data-he="טלפון">Phone</label>
+      <label class="field-label" data-en="Phone" data-es="Teléfono" data-he="טלפון">Phone</label>
       <input class="field-input" type="tel" id="fPhone" placeholder="+1 (555) 123-4567" autocomplete="tel">
     </div>
 
     <div class="field-row">
-      <label class="field-label" data-en="Logo" data-he="לוגו">Logo</label>
+      <label class="field-label" data-en="Logo" data-es="Logo" data-he="לוגו">Logo</label>
       <div class="logo-upload-area" id="logoArea">
         <div id="logoPreview"><span style="font-size:24px;opacity:.3;">📷</span></div>
         <div class="logo-hint" data-en="Click to upload (max 5MB, resized to 200x200)" data-he="לחץ להעלאה (מקס 5MB, מוקטן ל-200x200)">Click to upload (max 5MB)</div>
@@ -166,7 +166,7 @@
       <input class="field-input" type="text" id="fLicense" placeholder="CA-12345">
     </div>
     <div class="field-row">
-      <label class="field-label" data-en="Years in Business" data-he="שנות ניסיון">Years in Business</label>
+      <label class="field-label" data-en="Years in Business" data-es="Años en el Negocio" data-he="שנות ניסיון">Years in Business</label>
       <input class="field-input" type="number" id="fYears" placeholder="10" min="0" max="99">
     </div>
   </div>
@@ -184,7 +184,7 @@
     </div>
 
     <div class="field-row">
-      <label class="field-label" data-en="Email" data-he="אימייל">Email</label>
+      <label class="field-label" data-en="Email" data-es="Enviar por Email" data-he="אימייל">Email</label>
       <input class="field-input" type="email" id="fEmail" disabled style="color:var(--txd);">
     </div>
   </div>
@@ -421,8 +421,8 @@ function deleteAccount() {
       <h3 style="color:var(--red);margin-bottom:8px;" data-en="Delete Account?" data-he="למחוק חשבון?">${lang === 'he' ? 'למחוק חשבון?' : 'Delete Account?'}</h3>
       <p style="font-size:14px;color:var(--txd);margin-bottom:20px;line-height:1.5;">${msg}</p>
       <div style="display:flex;gap:8px;">
-        <button class="btn" style="flex:1;" onclick="this.closest('.modal-overlay').remove()" data-en="Cancel" data-he="ביטול">${lang === 'he' ? 'ביטול' : 'Cancel'}</button>
-        <button class="btn btn-danger" style="flex:1;" onclick="confirmDelete()" data-en="Delete" data-he="מחק">${lang === 'he' ? 'מחק' : 'Delete'}</button>
+        <button class="btn" style="flex:1;" onclick="this.closest('.modal-overlay').remove()" data-en="Cancel" data-es="Cancelar" data-he="ביטול">${lang === 'he' ? 'ביטול' : 'Cancel'}</button>
+        <button class="btn btn-danger" style="flex:1;" onclick="confirmDelete()" data-en="Delete" data-es="Eliminar" data-he="מחק">${lang === 'he' ? 'מחק' : 'Delete'}</button>
       </div>
     </div>`;
   document.body.appendChild(m);

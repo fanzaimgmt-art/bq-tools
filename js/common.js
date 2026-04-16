@@ -24,8 +24,18 @@ function toggleTheme() {
 // Apply theme immediately on script load (before DOMContentLoaded to avoid flash)
 if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
 
+// ── Translation helper ──
+// Usage: t({ en: 'Hello', he: 'שלום', es: 'Hola' })
+// Falls back to EN if current lang missing.
+function t(strings) {
+  if (!strings) return '';
+  return strings[lang] || strings.en || Object.values(strings)[0] || '';
+}
+
 // ── Language Toggle ──
+// Supported: 'en' (English), 'he' (Hebrew, RTL), 'es' (Spanish, Mexican-American)
 function setLang(l) {
+  if (!['en', 'he', 'es'].includes(l)) l = 'en';
   lang = l;
   localStorage.setItem('bq_lang', l);
   document.documentElement.dir = l === 'he' ? 'rtl' : 'ltr';
@@ -33,7 +43,8 @@ function setLang(l) {
   document.querySelectorAll('.lang-btn').forEach(btn => {
     btn.classList.toggle('on', btn.dataset.lang === l);
   });
-  document.querySelectorAll('[data-he]').forEach(el => {
+  // Apply translations — elements with any of data-en/he/es
+  document.querySelectorAll('[data-en],[data-he],[data-es]').forEach(el => {
     const t = el.getAttribute('data-' + l);
     if (!t) return;
     if (t.includes('<')) {
@@ -104,7 +115,6 @@ function _ddHTML(user) {
   const badge = user.isPro === true
     ? '<span class="nav-dd-badge badge-pro">PRO</span>'
     : '<span class="nav-dd-badge badge-free">FREE</span>';
-  const h = lang === 'he';
 
   return `
     <div class="nav-dd-header">
@@ -119,30 +129,31 @@ function _ddHTML(user) {
     </div>
     <div class="nav-dd-credits-row">
       <div class="nav-dd-credits-top">
-        <span class="nav-dd-credits-label">⚡ ${h ? 'קרדיטים' : 'Credits'}</span>
+        <span class="nav-dd-credits-label">⚡ ${t({ en: 'Credits', he: 'קרדיטים', es: 'Créditos' })}</span>
         <span class="nav-dd-credits-val">${credits}</span>
       </div>
       <div class="nav-dd-credits-bar"><div class="nav-dd-credits-fill${pct < 20 ? ' low' : ''}" style="width:${pct}%"></div></div>
     </div>
-    <a href="/profile.html" class="nav-dd-item"><span class="dd-icon">🏢</span>${h ? 'פרופיל עסקי' : 'Business Profile'}</a>
-    <a href="/dashboard.html" class="nav-dd-item"><span class="dd-icon">📊</span>${h ? 'דשבורד' : 'Dashboard'}</a>
-    <a href="/gallery.html" class="nav-dd-item"><span class="dd-icon">📁</span>${h ? 'הפרויקטים שלי' : 'My Projects'}</a>
-    <a href="/directory-profile.html?email=${encodeURIComponent(user.email)}" class="nav-dd-item"><span class="dd-icon">📋</span>${h ? 'רישום Directory' : 'Directory Listing'}</a>
+    <a href="/profile.html" class="nav-dd-item"><span class="dd-icon">🏢</span>${t({ en: 'Business Profile', he: 'פרופיל עסקי', es: 'Perfil del Negocio' })}</a>
+    <a href="/dashboard.html" class="nav-dd-item"><span class="dd-icon">📊</span>${t({ en: 'Dashboard', he: 'דשבורד', es: 'Panel' })}</a>
+    <a href="/gallery.html" class="nav-dd-item"><span class="dd-icon">📁</span>${t({ en: 'My Projects', he: 'הפרויקטים שלי', es: 'Mis Proyectos' })}</a>
+    <a href="/directory-profile.html?email=${encodeURIComponent(user.email)}" class="nav-dd-item"><span class="dd-icon">📋</span>${t({ en: 'Directory Listing', he: 'רישום Directory', es: 'Mi Directorio' })}</a>
     <div class="nav-dd-divider"></div>
     <div class="nav-dd-lang">
       <button class="nav-dd-lang-btn${lang === 'en' ? ' on' : ''}" onclick="setLang('en');_rebuildDropdown()">🇺🇸 EN</button>
       <button class="nav-dd-lang-btn${lang === 'he' ? ' on' : ''}" onclick="setLang('he');_rebuildDropdown()">🇮🇱 עב</button>
+      <button class="nav-dd-lang-btn${lang === 'es' ? ' on' : ''}" onclick="setLang('es');_rebuildDropdown()">🇲🇽 ES</button>
     </div>
-    <a href="/memories.html" class="nav-dd-item"><span class="dd-icon">🧠</span>${h ? 'זיכרונות' : 'Memories'}</a>
-    <button class="nav-dd-item" onclick="showReferralLink()"><span class="dd-icon">🎁</span>${h ? 'הזמן חבר' : 'Refer a Friend'}</button>
-    <button class="nav-dd-item" onclick="showRedeemCode()"><span class="dd-icon">🎟️</span>${h ? 'הזן קוד' : 'Redeem Code'}</button>
-    <a href="/affiliate.html" class="nav-dd-item"><span class="dd-icon">💰</span>${h ? 'תוכנית שותפים' : 'Affiliate Program'}</a>
+    <a href="/memories.html" class="nav-dd-item"><span class="dd-icon">🧠</span>${t({ en: 'Memories', he: 'זיכרונות', es: 'Memorias' })}</a>
+    <button class="nav-dd-item" onclick="showReferralLink()"><span class="dd-icon">🎁</span>${t({ en: 'Refer a Friend', he: 'הזמן חבר', es: 'Recomienda a un Amigo' })}</button>
+    <button class="nav-dd-item" onclick="showRedeemCode()"><span class="dd-icon">🎟️</span>${t({ en: 'Redeem Code', he: 'הזן קוד', es: 'Canjear Código' })}</button>
+    <a href="/affiliate.html" class="nav-dd-item"><span class="dd-icon">💰</span>${t({ en: 'Affiliate Program', he: 'תוכנית שותפים', es: 'Programa de Afiliados' })}</a>
     <div class="nav-dd-divider"></div>
-    <button class="nav-dd-item" onclick="resetTutorial()"><span class="dd-icon">📖</span>${h ? 'הצג Tutorial שוב' : 'Show Tutorial Again'}</button>
-    <button class="nav-dd-item accent" onclick="showBuyCreditsModal()"><span class="dd-icon">🛒</span>${h ? 'קנה קרדיטים' : 'Buy Credits'}</button>
-    ${!user.isPro ? `<a href="/auth.html" class="nav-dd-item green"><span class="dd-icon">⭐</span>${h ? 'שדרג ל-Pro' : 'Upgrade to Pro'}</a>` : ''}
+    <button class="nav-dd-item" onclick="resetTutorial()"><span class="dd-icon">📖</span>${t({ en: 'Show Tutorial Again', he: 'הצג Tutorial שוב', es: 'Ver Tutorial' })}</button>
+    <button class="nav-dd-item accent" onclick="showBuyCreditsModal()"><span class="dd-icon">🛒</span>${t({ en: 'Buy Credits', he: 'קנה קרדיטים', es: 'Comprar Créditos' })}</button>
+    ${!user.isPro ? `<a href="/auth.html" class="nav-dd-item green"><span class="dd-icon">⭐</span>${t({ en: 'Upgrade to Pro', he: 'שדרג ל-Pro', es: 'Hazte Pro' })}</a>` : ''}
     <div class="nav-dd-divider"></div>
-    <button class="nav-dd-item danger" onclick="doLogout()"><span class="dd-icon">🚪</span>${h ? 'התנתק' : 'Sign Out'}</button>`;
+    <button class="nav-dd-item danger" onclick="doLogout()"><span class="dd-icon">🚪</span>${t({ en: 'Sign Out', he: 'התנתק', es: 'Cerrar Sesión' })}</button>`;
 }
 
 function _rebuildDropdown() {
@@ -181,7 +192,7 @@ function injectProfileAvatar() {
     signIn.href = '/auth.html';
     signIn.className = 'btn btn-sm';
     signIn.id = 'navSignInBtn';
-    signIn.textContent = lang === 'he' ? 'התחבר' : 'Sign In';
+    signIn.textContent = t({ en: 'Sign In', he: 'התחבר', es: 'Iniciar Sesión' });
     if (langToggle) navRight.insertBefore(signIn, langToggle);
     else navRight.appendChild(signIn);
     return;
@@ -340,11 +351,10 @@ function showPromoBanner() {
   if (sessionStorage.getItem('bq_promo_seen')) return;
   sessionStorage.setItem('bq_promo_seen', '1');
 
-  const isHe = lang === 'he';
   const banner = document.createElement('div');
   banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:110;background:linear-gradient(90deg,rgba(232,197,71,.12),rgba(81,207,102,.12));border-bottom:1px solid rgba(232,197,71,.2);padding:10px 20px;text-align:center;font-size:14px;font-weight:600;color:var(--ac);display:flex;align-items:center;justify-content:center;gap:8px;';
   banner.innerHTML = `
-    <span>${isHe ? '🎉 ברוכים הבאים מ-BQ Production! 10% הנחה על החודש הראשון' : '🎉 Welcome from BQ Production! 10% OFF your first month'}</span>
+    <span>${t({ en: '🎉 Welcome from BQ Production! 10% OFF your first month', he: '🎉 ברוכים הבאים מ-BQ Production! 10% הנחה על החודש הראשון', es: '🎉 ¡Bienvenido de BQ Production! 10% de descuento en tu primer mes' })}</span>
     <button onclick="this.parentElement.remove();document.querySelector('.nav').style.top=''" style="background:none;border:none;color:var(--txd);cursor:pointer;font-size:18px;margin-inline-start:8px;">✕</button>`;
   document.body.prepend(banner);
   // Push nav down
@@ -506,14 +516,38 @@ function runTutorial() {
   if (localStorage.getItem('bq_tutorial_done') === '1') return;
   if (!isLoggedIn()) return;
 
-  const h = lang === 'he';
   const steps = [
-    { target: null, title: h ? 'ברוך הבא ל-BQ Tools!' : 'Welcome to BQ Tools!', text: h ? 'בוא אראה לך את הכל בקצרה' : 'Let me show you around — it only takes a minute', pos: 'center' },
-    { target: '.nav-link[href="/home.html"]', title: h ? 'הכלים שלך' : 'Your AI Tools', text: h ? 'השווה תמונות, צור דוחות, קבל הצעות מחיר — הכל עם AI' : 'Compare photos, create reports, get estimates — all powered by AI.', pos: 'bottom' },
-    { target: '.nav-link[href="/directory.html"]', title: 'Directory', text: h ? 'מצא קבלנים או רשום את העסק שלך כאן' : 'Find contractors or list your business here.', pos: 'bottom' },
-    { target: '#creditBar, .nav-credit-pill', title: h ? 'קרדיטים' : 'Credits', text: h ? 'יש לך 5 קרדיטים חינם. כל פעולת AI עולה 1 קרדיט' : 'You have 5 free credits. Each AI action uses 1 credit.', pos: 'bottom' },
-    { target: '#navAvatar, .nav-avatar', title: h ? 'הפרופיל שלך' : 'Your Profile', text: h ? 'פרופיל, הגדרות וחשבון — הכל כאן' : 'Your profile, settings, and account are here.', pos: 'bottom' },
-    { target: null, title: h ? 'מוכן!' : "You're ready!", text: h ? 'התחל בהשוואת תמונות לפני/אחרי' : 'Start by comparing your first before/after photos.', pos: 'center', cta: { text: h ? 'לך ל-Compare →' : 'Go to Compare →', href: '/tools/compare.html' } },
+    {
+      target: null, pos: 'center',
+      title: t({ en: 'Welcome to BQ Tools!', he: 'ברוך הבא ל-BQ Tools!', es: '¡Bienvenido a BQ Tools!' }),
+      text: t({ en: 'Let me show you around — it only takes a minute', he: 'בוא אראה לך את הכל בקצרה', es: 'Te muestro todo — solo toma un minuto' })
+    },
+    {
+      target: '.nav-link[href="/home.html"]', pos: 'bottom',
+      title: t({ en: 'Your AI Tools', he: 'הכלים שלך', es: 'Tus Herramientas IA' }),
+      text: t({ en: 'Compare photos, create reports, get estimates — all powered by AI.', he: 'השווה תמונות, צור דוחות, קבל הצעות מחיר — הכל עם AI', es: 'Compara fotos, crea reportes, obtén estimados — todo con IA.' })
+    },
+    {
+      target: '.nav-link[href="/directory.html"]', pos: 'bottom',
+      title: t({ en: 'Directory', he: 'Directory', es: 'Directorio' }),
+      text: t({ en: 'Find contractors or list your business here.', he: 'מצא קבלנים או רשום את העסק שלך כאן', es: 'Encuentra contratistas o registra tu negocio aquí.' })
+    },
+    {
+      target: '#creditBar, .nav-credit-pill', pos: 'bottom',
+      title: t({ en: 'Credits', he: 'קרדיטים', es: 'Créditos' }),
+      text: t({ en: 'You have 5 free credits. Each AI action uses 1 credit.', he: 'יש לך 5 קרדיטים חינם. כל פעולת AI עולה 1 קרדיט', es: 'Tienes 5 créditos gratis. Cada acción con IA usa 1 crédito.' })
+    },
+    {
+      target: '#navAvatar, .nav-avatar', pos: 'bottom',
+      title: t({ en: 'Your Profile', he: 'הפרופיל שלך', es: 'Tu Perfil' }),
+      text: t({ en: 'Your profile, settings, and account are here.', he: 'פרופיל, הגדרות וחשבון — הכל כאן', es: 'Tu perfil, ajustes y cuenta están aquí.' })
+    },
+    {
+      target: null, pos: 'center',
+      title: t({ en: "You're ready!", he: 'מוכן!', es: '¡Listo!' }),
+      text: t({ en: 'Start by comparing your first before/after photos.', he: 'התחל בהשוואת תמונות לפני/אחרי', es: 'Empieza comparando tus primeras fotos de antes/después.' }),
+      cta: { text: t({ en: 'Go to Compare →', he: 'לך ל-Compare →', es: 'Ir a Comparar →' }), href: '/tools/compare.html' }
+    },
   ];
 
   let stepIdx = 0;
@@ -574,8 +608,8 @@ function runTutorial() {
     }
 
     const isLast = stepIdx === steps.length - 1;
-    const nextText = h ? 'הבא' : 'Next';
-    const skipText = h ? 'דלג' : 'Skip';
+    const nextText = t({ en: 'Next', he: 'הבא', es: 'Siguiente' });
+    const skipText = t({ en: 'Skip', he: 'דלג', es: 'Omitir' });
 
     card.innerHTML = `
       <div style="font-size:11px;color:var(--txd);margin-bottom:6px;">${stepIdx + 1}/${steps.length}</div>
@@ -624,19 +658,39 @@ function resetTutorial() {
 
 const PAGE_TIPS = {
   '/tools/compare.html': [
-    { target: null, text: { en: 'Upload a BEFORE photo → Upload an AFTER photo → Move the slider → Click Analyze for AI insights', he: 'העלה תמונת לפני → העלה תמונת אחרי → הזז את הסליידר → לחץ Analyze לניתוח AI' } }
+    { target: null, text: {
+      en: 'Upload a BEFORE photo → Upload an AFTER photo → Move the slider → Click Analyze for AI insights',
+      he: 'העלה תמונת לפני → העלה תמונת אחרי → הזז את הסליידר → לחץ Analyze לניתוח AI',
+      es: 'Sube una foto de ANTES → Sube una foto de DESPUÉS → Mueve el control → Haz clic en Analizar para ver el análisis con IA'
+    } }
   ],
   '/tools/report.html': [
-    { target: null, text: { en: 'Upload project photos → Describe the work → AI creates a professional PDF report', he: 'העלה תמונות פרויקט → תאר את העבודה → AI יוצר דוח PDF מקצועי' } }
+    { target: null, text: {
+      en: 'Upload project photos → Describe the work → AI creates a professional PDF report',
+      he: 'העלה תמונות פרויקט → תאר את העבודה → AI יוצר דוח PDF מקצועי',
+      es: 'Sube fotos del proyecto → Describe el trabajo → La IA crea un reporte profesional en PDF'
+    } }
   ],
   '/tools/estimate.html': [
-    { target: null, text: { en: 'Upload a photo of the space → Describe what needs to be done → Get an AI cost estimate', he: 'העלה תמונה של החלל → תאר מה צריך לעשות → קבל הערכת עלות מ-AI' } }
+    { target: null, text: {
+      en: 'Upload a photo of the space → Describe what needs to be done → Get an AI cost estimate',
+      he: 'העלה תמונה של החלל → תאר מה צריך לעשות → קבל הערכת עלות מ-AI',
+      es: 'Sube una foto del área → Describe lo que se va a hacer → Obtén un estimado con IA'
+    } }
   ],
   '/chat.html': [
-    { target: null, text: { en: 'Choose a model → Type or speak your question → AI answers. Try Multi-Model to compare!', he: 'בחר מודל → הקלד או דבר את השאלה → AI עונה. נסה Multi-Model להשוואה!' } }
+    { target: null, text: {
+      en: 'Choose a model → Type or speak your question → AI answers. Try Multi-Model to compare!',
+      he: 'בחר מודל → הקלד או דבר את השאלה → AI עונה. נסה Multi-Model להשוואה!',
+      es: 'Elige un modelo → Escribe o habla tu pregunta → La IA responde. ¡Prueba Multi-Model para comparar!'
+    } }
   ],
   '/directory.html': [
-    { target: null, text: { en: 'Search for contractors → Click a profile → See their work and location on the map', he: 'חפש קבלנים → לחץ על פרופיל → ראה את העבודות והמיקום על המפה' } }
+    { target: null, text: {
+      en: 'Search for contractors → Click a profile → See their work and location on the map',
+      he: 'חפש קבלנים → לחץ על פרופיל → ראה את העבודות והמיקום על המפה',
+      es: 'Busca contratistas → Haz clic en un perfil → Ve su trabajo y ubicación en el mapa'
+    } }
   ],
 };
 
@@ -648,9 +702,8 @@ function showPageTip() {
   const flagKey = 'bq_tutorial_page_' + path.replace(/[^a-z]/g, '');
   if (localStorage.getItem(flagKey) === '1') return;
 
-  const h = lang === 'he';
   const tip = tips[0];
-  const text = h ? tip.text.he : tip.text.en;
+  const text = t(tip.text);
 
   const banner = document.createElement('div');
   banner.id = 'bq-page-tip';
@@ -810,16 +863,17 @@ const HIW_CONFIGS = {
 
 function showBuyCreditsModal() {
   _closeDropdown();
-  const h = lang === 'he';
   const credits = typeof getCredits === 'function' ? getCredits() : 0;
+  const creditsWord = t({ en: 'credits remaining', he: 'קרדיטים', es: 'créditos disponibles' });
+  const youHave = t({ en: 'You have', he: 'יש לך', es: 'Tienes' });
 
   const m = document.createElement('div');
   m.className = 'modal-overlay';
   m.innerHTML = `
     <div class="modal-card" style="max-width:540px;text-align:center;">
       <div style="font-size:36px;margin-bottom:8px;">⚡</div>
-      <h3 style="margin-bottom:4px;">${h ? 'קנה קרדיטים' : 'Buy Credits'}</h3>
-      <p style="font-size:14px;color:var(--txd);margin-bottom:16px;">${h ? 'יש לך' : 'You have'} <b style="color:var(--ac);">${credits}</b> ${h ? 'קרדיטים' : 'credits remaining'}</p>
+      <h3 style="margin-bottom:4px;">${t({ en: 'Buy Credits', he: 'קנה קרדיטים', es: 'Comprar Créditos' })}</h3>
+      <p style="font-size:14px;color:var(--txd);margin-bottom:16px;">${youHave} <b style="color:var(--ac);">${credits}</b> ${creditsWord}</p>
 
       <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
         <!-- 25 credits -->
@@ -856,11 +910,11 @@ function showBuyCreditsModal() {
       <p style="font-size:12px;color:var(--txd);margin-bottom:14px;line-height:1.5;">1 credit = 1 AI Analysis, Report, Estimate, Social Post, or Assistant message</p>
 
       <div style="background:var(--acd);border-radius:10px;padding:12px;margin-bottom:14px;">
-        <p style="font-size:13px;color:var(--ac);font-weight:600;margin-bottom:6px;">${h ? 'צריך Pro? 50 קרדיטים בחודש ב-$14.99' : 'Need Pro? Get 50 credits/month for $14.99'}</p>
-        <a href="/auth.html" class="btn btn-sm" style="font-size:12px;">${h ? 'שדרג ל-Pro →' : 'Upgrade to Pro →'}</a>
+        <p style="font-size:13px;color:var(--ac);font-weight:600;margin-bottom:6px;">${t({ en: 'Need Pro? Get 50 credits/month for $14.99', he: 'צריך Pro? 50 קרדיטים בחודש ב-$14.99', es: '¿Necesitas Pro? Obtén 50 créditos al mes por $14.99' })}</p>
+        <a href="/auth.html" class="btn btn-sm" style="font-size:12px;">${t({ en: 'Upgrade to Pro →', he: 'שדרג ל-Pro →', es: 'Hazte Pro →' })}</a>
       </div>
 
-      <button onclick="this.closest('.modal-overlay').remove()" class="btn" style="width:100%;">${h ? 'סגור' : 'Close'}</button>
+      <button onclick="this.closest('.modal-overlay').remove()" class="btn" style="width:100%;">${t({ en: 'Close', he: 'סגור', es: 'Cerrar' })}</button>
     </div>`;
   document.body.appendChild(m);
   requestAnimationFrame(() => m.classList.add('open'));
@@ -916,22 +970,21 @@ function buildAppNav() {
 
   const loggedIn = typeof isLoggedIn === 'function' && isLoggedIn();
   const user = typeof getCachedUser === 'function' ? getCachedUser() : null;
-  const isHe = lang === 'he';
   const credits = user ? (user.credits || 0) : 0;
   const p = window.location.pathname;
 
   // Build nav links
   const links = [
-    { href: '/home.html', en: 'Tools', he: 'כלים', match: ['/home.html'] },
-    { href: '/business.html', en: 'Business', he: 'עסק', match: ['/business.html'] },
-    { href: '/news.html', en: 'News', he: 'חדשות', match: ['/news.html'] },
-    { href: '/directory.html', en: 'Directory', he: 'ספר עסקים', match: ['/directory.html', '/directory-profile.html'] },
-    { href: '/dashboard.html', en: 'Dashboard', he: 'דשבורד', match: ['/dashboard.html'] },
+    { href: '/home.html', en: 'Tools', he: 'כלים', es: 'Herramientas', match: ['/home.html'] },
+    { href: '/business.html', en: 'Business', he: 'עסק', es: 'Negocio', match: ['/business.html'] },
+    { href: '/news.html', en: 'News', he: 'חדשות', es: 'Noticias', match: ['/news.html'] },
+    { href: '/directory.html', en: 'Directory', he: 'ספר עסקים', es: 'Directorio', match: ['/directory.html', '/directory-profile.html'] },
+    { href: '/dashboard.html', en: 'Dashboard', he: 'דשבורד', es: 'Panel', match: ['/dashboard.html'] },
   ];
 
   const linksHtml = links.map(l => {
     const active = l.match.some(m => p === m) || (p.startsWith('/tools/') && l.href === '/home.html');
-    return `<a href="${l.href}" class="nav-link${active ? ' nav-active' : ''}" data-en="${l.en}" data-he="${l.he}">${isHe ? l.he : l.en}</a>`;
+    return `<a href="${l.href}" class="nav-link${active ? ' nav-active' : ''}" data-en="${l.en}" data-he="${l.he}" data-es="${l.es}">${t(l)}</a>`;
   }).join('');
 
   // Credit pill (compact, integrated in nav)
@@ -949,7 +1002,7 @@ function buildAppNav() {
   if (loggedIn && user) {
     authHtml = `<div class="nav-avatar-wrap" id="navAvatarWrap"></div>`;
   } else {
-    authHtml = `<a href="/auth.html" class="btn btn-sm" data-en="Sign In" data-he="התחבר">${isHe ? 'התחבר' : 'Sign In'}</a>`;
+    authHtml = `<a href="/auth.html" class="btn btn-sm" data-en="Sign In" data-he="התחבר" data-es="Iniciar Sesión">${t({ en: 'Sign In', he: 'התחבר', es: 'Iniciar Sesión' })}</a>`;
   }
 
   oldNav.innerHTML = `
@@ -1016,17 +1069,16 @@ function _buildDropdownInto(wrap, user) {
 
 function showCookieConsent() {
   if (localStorage.getItem('bq_cookie_consent') === '1') return;
-  const h = lang === 'he';
 
   const banner = document.createElement('div');
   banner.id = 'cookieConsent';
   banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9000;background:var(--sf);border-top:1px solid var(--bd);padding:14px 20px;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;box-shadow:0 -4px 20px rgba(0,0,0,.3);';
   banner.innerHTML = `
     <p style="font-size:13px;color:var(--txd);line-height:1.5;margin:0;max-width:500px;">
-      ${h ? 'אנחנו משתמשים ב-localStorage כדי לשמור את ההעדפות שלך. אין עוגיות מעקב.' : 'We use localStorage to save your preferences. No tracking cookies.'}
-      <a href="/privacy.html" style="color:var(--ac);margin-inline-start:4px;">${h ? 'מדיניות פרטיות' : 'Privacy Policy'}</a>
+      ${t({ en: 'We use localStorage to save your preferences. No tracking cookies.', he: 'אנחנו משתמשים ב-localStorage כדי לשמור את ההעדפות שלך. אין עוגיות מעקב.', es: 'Usamos localStorage para guardar tus preferencias. Sin cookies de rastreo.' })}
+      <a href="/privacy.html" style="color:var(--ac);margin-inline-start:4px;">${t({ en: 'Privacy Policy', he: 'מדיניות פרטיות', es: 'Política de Privacidad' })}</a>
     </p>
-    <button onclick="localStorage.setItem('bq_cookie_consent','1');this.parentElement.remove();" style="padding:8px 20px;border:none;border-radius:8px;background:var(--ac);color:var(--bg);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;min-height:40px;white-space:nowrap;">${h ? 'מאשר' : 'Got it'}</button>`;
+    <button onclick="localStorage.setItem('bq_cookie_consent','1');this.parentElement.remove();" style="padding:8px 20px;border:none;border-radius:8px;background:var(--ac);color:var(--bg);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;min-height:40px;white-space:nowrap;">${t({ en: 'Got it', he: 'מאשר', es: 'Entendido' })}</button>`;
   document.body.appendChild(banner);
 }
 

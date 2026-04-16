@@ -180,7 +180,7 @@
 <nav class="nav">
   <a href="/home.html" class="nav-logo">BQ <span>Tools</span></a>
   <div class="nav-right">
-    <a href="/home.html" class="nav-link" data-en="Tools" data-he="כלים">Tools</a>
+    <a href="/home.html" class="nav-link" data-en="Tools" data-es="Herramientas" data-he="כלים">Tools</a>
     <div class="lang-toggle">
       <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
       <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
@@ -191,22 +191,22 @@
 <div class="page">
   <div class="news-header">
     <div>
-      <h1>📰 <span data-en="What's New Today" data-he="מה חדש היום" class="accent">What's New Today</span></h1>
+      <h1>📰 <span data-en="What's New Today" data-es="Qué Hay de Nuevo Hoy" data-he="מה חדש היום" class="accent">What's New Today</span></h1>
       <span class="news-date" id="newsDate"></span>
     </div>
     <div style="display:flex;gap:8px;">
       <button class="news-prefs-btn" onclick="togglePrefs()">
-        ⚙️ <span data-en="Preferences" data-he="העדפות">Preferences</span>
+        ⚙️ <span data-en="Preferences" data-es="Preferencias" data-he="העדפות">Preferences</span>
       </button>
       <button class="refresh-btn" id="refreshBtn" onclick="refreshNow()">
-        🔄 <span data-en="Refresh" data-he="רענן">Refresh</span>
+        🔄 <span data-en="Refresh" data-es="Actualizar" data-he="רענן">Refresh</span>
       </button>
     </div>
   </div>
 
   <!-- Preferences Panel -->
   <div class="prefs-panel" id="prefsPanel">
-    <h3 data-en="Choose which categories to show:" data-he="בחר אילו קטגוריות להציג:">Choose which categories to show:</h3>
+    <h3 data-en="Choose which categories to show:" data-es="Elige qué categorías mostrar:" data-he="בחר אילו קטגוריות להציג:">Choose which categories to show:</h3>
     <div class="prefs-grid" id="prefsGrid"></div>
   </div>
 
@@ -217,20 +217,20 @@
   <div class="news-grid" id="newsGrid">
     <div class="news-loading">
       <div class="spinner"></div>
-      <p data-en="Loading news..." data-he="טוען חדשות...">Loading news...</p>
+      <p data-en="Loading news..." data-es="Cargando noticias..." data-he="טוען חדשות...">Loading news...</p>
     </div>
   </div>
 
   <!-- Archive -->
   <div class="news-archive">
-    <span style="font-size:13px;color:var(--txd);" data-en="📅 Archive:" data-he="📅 ארכיון:">📅 Archive:</span>
+    <span style="font-size:13px;color:var(--txd);" data-en="📅 Archive:" data-es="📅 Archivo:" data-he="📅 ארכיון:">📅 Archive:</span>
     <input type="date" id="archiveDate" onchange="loadArchive()">
-    <button class="news-card-btn" style="flex:0 0 auto;" onclick="loadNews()" data-en="← Today" data-he="← היום">← Today</button>
+    <button class="news-card-btn" style="flex:0 0 auto;" onclick="loadNews()" data-en="← Today" data-es="← Hoy" data-he="← היום">← Today</button>
   </div>
 
   <!-- Amazon Associates Disclaimer (FTC required) -->
   <div style="margin-top:20px;padding:14px 16px;background:var(--sf);border:1px solid var(--bd);border-radius:10px;font-size:12px;color:var(--txd);line-height:1.6;text-align:center;">
-    <span data-en="As an Amazon Associate, BQ Tools earns from qualifying purchases." data-he="As an Amazon Associate, BQ Tools earns from qualifying purchases.">As an Amazon Associate, BQ Tools earns from qualifying purchases.</span>
+    <span data-en="As an Amazon Associate, BQ Tools earns from qualifying purchases." data-es="Como afiliado de Amazon, BQ Tools gana con las compras que califiquen." data-he="As an Amazon Associate, BQ Tools earns from qualifying purchases.">As an Amazon Associate, BQ Tools earns from qualifying purchases.</span>
   </div>
 </div>
 

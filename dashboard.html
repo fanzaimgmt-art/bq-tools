@@ -118,7 +118,7 @@
 <nav class="nav">
   <a href="/" class="nav-logo">BQ <span>Tools</span></a>
   <div class="nav-right">
-    <a href="/" class="nav-link" data-en="← Home" data-he="בית →">← Home</a>
+    <a href="/" class="nav-link" data-en="← Home" data-es="← Inicio" data-he="בית →">← Home</a>
     <div class="credit-bar" id="creditBar" style="display:none;">
       <span>⚡</span><span class="credit-count">0</span>
     </div>
@@ -131,8 +131,8 @@
 </nav>
 
 <div class="page">
-  <h1 class="page-title" data-en="Dashboard" data-he="דשבורד">Dashboard</h1>
-  <p class="page-sub" id="dashSub" data-en="Your usage stats and insights" data-he="הסטטיסטיקות שלך">Your usage stats and insights</p>
+  <h1 class="page-title" data-en="Dashboard" data-es="Panel" data-he="דשבורד">Dashboard</h1>
+  <p class="page-sub" id="dashSub" data-en="Your usage stats and insights" data-es="Tus estadísticas de uso y análisis" data-he="הסטטיסטיקות שלך">Your usage stats and insights</p>
 
   <!-- AI Monthly Tip -->
   <div class="tip-card" id="tipCard" style="display:none;">
@@ -144,20 +144,20 @@
   <div class="dash-grid">
     <div class="dash-card">
       <div class="dash-num" id="dCredits">0</div>
-      <div class="dash-label" data-en="Credits Remaining" data-he="קרדיטים נשארו">Credits Remaining</div>
+      <div class="dash-label" data-en="Credits Remaining" data-es="Créditos Restantes" data-he="קרדיטים נשארו">Credits Remaining</div>
       <div class="credit-progress"><div class="credit-fill" id="creditFill" style="width:0%"></div></div>
     </div>
     <div class="dash-card">
       <div class="dash-num" id="dUsed">0</div>
-      <div class="dash-label" data-en="Used This Month" data-he="בשימוש החודש">Used This Month</div>
+      <div class="dash-label" data-en="Used This Month" data-es="Usados Este Mes" data-he="בשימוש החודש">Used This Month</div>
     </div>
     <div class="dash-card">
       <div class="dash-num" id="dProjects">0</div>
-      <div class="dash-label" data-en="Total Projects" data-he="סה״כ פרויקטים">Total Projects</div>
+      <div class="dash-label" data-en="Total Projects" data-es="Proyectos Totales" data-he="סה״כ פרויקטים">Total Projects</div>
     </div>
     <div class="dash-card">
       <div class="dash-num" id="dTopTool">—</div>
-      <div class="dash-label" data-en="Most Used Tool" data-he="הכלי הנפוץ">Most Used Tool</div>
+      <div class="dash-label" data-en="Most Used Tool" data-es="Herramienta Más Usada" data-he="הכלי הנפוץ">Most Used Tool</div>
     </div>
 
     <!-- Plan card -->
@@ -166,13 +166,13 @@
         <div style="font-size:14px;font-weight:700;" id="dPlan">Free</div>
         <div style="font-size:12px;color:var(--txd);" id="dPlanSub"></div>
       </div>
-      <a href="/auth.html" class="btn btn-sm" id="dPlanBtn" data-en="Buy Credits" data-he="קנה קרדיטים">Buy Credits</a>
+      <a href="/auth.html" class="btn btn-sm" id="dPlanBtn" data-en="Buy Credits" data-es="Comprar Créditos" data-he="קנה קרדיטים">Buy Credits</a>
     </div>
   </div>
 
   <!-- Pie Chart: Credits by Tool -->
   <div class="dash-card" style="margin-bottom:12px;">
-    <div style="font-size:14px;font-weight:700;margin-bottom:12px;" data-en="Credits by Tool" data-he="קרדיטים לפי כלי">Credits by Tool</div>
+    <div style="font-size:14px;font-weight:700;margin-bottom:12px;" data-en="Credits by Tool" data-es="Créditos por Herramienta" data-he="קרדיטים לפי כלי">Credits by Tool</div>
     <div class="pie-chart" id="pieChart"></div>
     <div class="pie-legend" id="pieLegend"></div>
   </div>
@@ -187,17 +187,17 @@
   <!-- Credit Usage Table -->
   <div class="dash-card" style="margin-bottom:12px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-      <div style="font-size:14px;font-weight:700;" data-en="Recent Usage" data-he="שימוש אחרון">Recent Usage</div>
-      <button class="btn btn-sm" onclick="exportCSV()" style="font-size:12px;min-height:36px;padding:6px 12px;" data-en="Export CSV" data-he="ייצוא CSV">Export CSV</button>
+      <div style="font-size:14px;font-weight:700;" data-en="Recent Usage" data-es="Uso Reciente" data-he="שימוש אחרון">Recent Usage</div>
+      <button class="btn btn-sm" onclick="exportCSV()" style="font-size:12px;min-height:36px;padding:6px 12px;" data-en="Export CSV" data-es="Exportar CSV" data-he="ייצוא CSV">Export CSV</button>
     </div>
     <div style="overflow-x:auto;">
       <table class="credit-table" id="creditTable">
         <thead>
           <tr>
-            <th data-en="Date" data-he="תאריך">Date</th>
-            <th data-en="Tool" data-he="כלי">Tool</th>
-            <th data-en="Project" data-he="פרויקט">Project</th>
-            <th data-en="Cost" data-he="עלות">Cost</th>
+            <th data-en="Date" data-es="Fecha" data-he="תאריך">Date</th>
+            <th data-en="Tool" data-es="Herramienta" data-he="כלי">Tool</th>
+            <th data-en="Project" data-es="Proyecto" data-he="פרויקט">Project</th>
+            <th data-en="Cost" data-es="Costo" data-he="עלות">Cost</th>
           </tr>
         </thead>
         <tbody id="creditTableBody"></tbody>
@@ -212,21 +212,21 @@
         <div class="error-dot ok"></div>
         <span data-en="0 errors this week" data-he="0 שגיאות השבוע">0 errors this week</span>
       </div>
-      <button class="btn btn-sm" onclick="reportErrors()" style="font-size:12px;min-height:36px;padding:6px 12px;" data-en="Report Issue" data-he="דווח בעיה">Report Issue</button>
+      <button class="btn btn-sm" onclick="reportErrors()" style="font-size:12px;min-height:36px;padding:6px 12px;" data-en="Report Issue" data-es="Reportar Problema" data-he="דווח בעיה">Report Issue</button>
     </div>
   </div>
 
   <!-- My Quotes -->
   <div id="quotes" class="dash-card full" style="margin-top:12px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
-      <h3 style="font-size:16px;font-weight:800;">📝 <span data-en="My Quotes" data-he="ההצעות שלי">My Quotes</span></h3>
+      <h3 style="font-size:16px;font-weight:800;">📝 <span data-en="My Quotes" data-es="Mis Cotizaciones" data-he="ההצעות שלי">My Quotes</span></h3>
       <div style="display:flex;gap:6px;">
         <input class="input" id="quoteSearch" placeholder="Search..." style="padding:8px 10px;min-height:36px;font-size:13px;width:140px;" oninput="renderQuotes()">
-        <a href="/tools/quote.html" class="btn btn-sm" data-en="+ New Quote" data-he="+ הצעה חדשה">+ New Quote</a>
+        <a href="/tools/quote.html" class="btn btn-sm" data-en="+ New Quote" data-es="+ Nueva Cotización" data-he="+ הצעה חדשה">+ New Quote</a>
       </div>
     </div>
     <div id="quotesBody">
-      <p style="color:var(--txd);font-size:13px;text-align:center;padding:20px;" data-en="Loading..." data-he="טוען...">Loading...</p>
+      <p style="color:var(--txd);font-size:13px;text-align:center;padding:20px;" data-en="Loading..." data-es="Cargando..." data-he="טוען...">Loading...</p>
     </div>
   </div>
 
@@ -234,7 +234,7 @@
   <div class="dash-card full" style="margin-top:12px;">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
       <div>
-        <h3 style="font-size:16px;font-weight:800;">🧠 <span data-en="AI Training" data-he="אימון AI">AI Training</span></h3>
+        <h3 style="font-size:16px;font-weight:800;">🧠 <span data-en="AI Training" data-es="Entrenamiento IA" data-he="אימון AI">AI Training</span></h3>
         <p style="font-size:13px;color:var(--txd);margin-top:4px;" id="trainingStatus">—</p>
       </div>
       <a href="/training.html" class="btn btn-sm btn-primary" data-en="Manage Training →" data-he="ניהול אימון →">Manage Training →</a>

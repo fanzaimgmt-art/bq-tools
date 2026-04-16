@@ -118,9 +118,9 @@
 <nav class="nav">
   <a href="/" class="nav-logo">BQ <span>Tools</span></a>
   <div class="nav-right">
-    <a href="/" class="nav-link" data-en="Tools" data-he="כלים">Tools</a>
-    <a href="/directory.html" class="nav-link" style="color:var(--ac);" data-en="Directory" data-he="ספר עסקים">Directory</a>
-    <a href="/auth.html" class="btn btn-sm" id="navAuthBtn" data-en="Login" data-he="התחבר">Login</a>
+    <a href="/" class="nav-link" data-en="Tools" data-es="Herramientas" data-he="כלים">Tools</a>
+    <a href="/directory.html" class="nav-link" style="color:var(--ac);" data-en="Directory" data-es="Directorio" data-he="ספר עסקים">Directory</a>
+    <a href="/auth.html" class="btn btn-sm" id="navAuthBtn" data-en="Login" data-es="Iniciar Sesión" data-he="התחבר">Login</a>
     <div class="lang-toggle">
       <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
       <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
@@ -130,8 +130,8 @@
 
 <!-- Hero -->
 <section class="dir-hero">
-  <h1><span class="accent">BQ</span> <span data-en="Directory" data-he="ספר עסקים">Directory</span></h1>
-  <p data-en="Find trusted contractors near you" data-he="מצא קבלנים מהימנים באזור שלך">Find trusted contractors near you</p>
+  <h1><span class="accent">BQ</span> <span data-en="Directory" data-es="Directorio" data-he="ספר עסקים">Directory</span></h1>
+  <p data-en="Find trusted contractors near you" data-es="Encuentra contratistas confiables cerca de ti" data-he="מצא קבלנים מהימנים באזור שלך">Find trusted contractors near you</p>
 </section>
 
 <!-- How to get listed -->
@@ -144,7 +144,7 @@
 <div class="dir-search">
   <input class="input" type="text" id="searchInput" placeholder="Search by name, type, or area..." data-en-placeholder="Search by name, type, or area..." data-he-placeholder="חפש לפי שם, סוג עבודה או אזור...">
   <select id="typeFilter">
-    <option value="" data-en="All Types" data-he="כל הסוגים">All Types</option>
+    <option value="" data-en="All Types" data-es="Todos los Tipos" data-he="כל הסוגים">All Types</option>
     <option value="General Contractor">General Contractor</option>
     <option value="Remodeler">Remodeler</option>
     <option value="Painter">Painter</option>
@@ -152,7 +152,7 @@
     <option value="Landscaper">Landscaper</option>
     <option value="Interior Designer">Interior Designer</option>
   </select>
-  <button class="btn btn-primary" onclick="searchDirectory()" style="min-width:90px;" data-en="Search" data-he="חפש">Search</button>
+  <button class="btn btn-primary" onclick="searchDirectory()" style="min-width:90px;" data-en="Search" data-es="Buscar" data-he="חפש">Search</button>
 </div>
 
 <!-- Map -->
@@ -172,18 +172,18 @@
 <div class="dir-add-location" id="addLocationSection" style="display:none;">
   <div style="width:92%;max-width:700px;margin:0 auto 24px;background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:20px;">
     <h3 style="font-size:16px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
-      📍 <span data-en="Add Work Location" data-he="הוסף מיקום עבודה">Add Work Location</span>
+      📍 <span data-en="Add Work Location" data-es="Agregar Ubicación de Trabajo" data-he="הוסף מיקום עבודה">Add Work Location</span>
     </h3>
     <div style="margin-bottom:10px;">
-      <label class="input-label" data-en="Address" data-he="כתובת">Address</label>
+      <label class="input-label" data-en="Address" data-es="Dirección" data-he="כתובת">Address</label>
       <input class="input" type="text" id="locAddress" placeholder="123 Main St, Los Angeles, CA">
     </div>
     <div style="margin-bottom:10px;">
-      <label class="input-label" data-en="Project Name (optional)" data-he="שם פרויקט (אופציונלי)">Project Name (optional)</label>
+      <label class="input-label" data-en="Project Name (optional)" data-es="Nombre del Proyecto (opcional)" data-he="שם פרויקט (אופציונלי)">Project Name (optional)</label>
       <input class="input" type="text" id="locProject" placeholder="Kitchen Remodel — Johnson">
     </div>
     <div style="margin-bottom:14px;">
-      <label class="input-label" data-en="Photo (optional)" data-he="תמונה (אופציונלי)">Photo (optional)</label>
+      <label class="input-label" data-en="Photo (optional)" data-es="Foto (opcional)" data-he="תמונה (אופציונלי)">Photo (optional)</label>
       <div style="border:2px dashed var(--bd);border-radius:10px;padding:16px;text-align:center;cursor:pointer;position:relative;background:var(--bg);">
         <span id="locThumbPreview" style="font-size:14px;color:var(--txd);" data-en="Click to upload thumbnail" data-he="לחץ להעלאת תמונה">Click to upload thumbnail</span>
         <input type="file" accept="image/*" id="locThumbInput" style="position:absolute;inset:0;opacity:0;cursor:pointer;">
@@ -196,11 +196,11 @@
 
 <!-- CTA -->
 <div class="dir-cta">
-  <h3 data-en="Are you a contractor?" data-he="אתה קבלן?">Are you a contractor?</h3>
-  <p data-en="Get listed for free when you sign up for BQ Tools. Pro members get a full profile with photos and reviews." data-he="הירשם ל-BQ Tools וקבל רישום חינם. חברי Pro מקבלים פרופיל מלא עם תמונות וביקורות.">Get listed for free when you sign up for BQ Tools. Pro members get a full profile with photos and reviews.</p>
+  <h3 data-en="Are you a contractor?" data-es="¿Eres contratista?" data-he="אתה קבלן?">Are you a contractor?</h3>
+  <p data-en="Get listed for free when you sign up for BQ Tools. Pro members get a full profile with photos and reviews." data-es="Aparece gratis cuando te registres en BQ Tools. Los miembros Pro obtienen perfil completo con fotos y reseñas." data-he="הירשם ל-BQ Tools וקבל רישום חינם. חברי Pro מקבלים פרופיל מלא עם תמונות וביקורות.">Get listed for free when you sign up for BQ Tools. Pro members get a full profile with photos and reviews.</p>
   <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
-    <a href="/auth.html" class="btn btn-primary" data-en="Sign Up Free" data-he="הרשם בחינם">Sign Up Free</a>
-    <a href="#" class="btn" onclick="showFeaturedInfo();return false;" data-en="Featured Listing — $49.99/mo" data-he="Featured Listing — $49.99/חודש">Featured Listing — $49.99/mo</a>
+    <a href="/auth.html" class="btn btn-primary" data-en="Sign Up Free" data-es="Regístrate Gratis" data-he="הרשם בחינם">Sign Up Free</a>
+    <a href="#" class="btn" onclick="showFeaturedInfo();return false;" data-en="Featured Listing — $49.99/mo" data-es="Listado Destacado — $49.99/mes" data-he="Featured Listing — $49.99/חודש">Featured Listing — $49.99/mo</a>
   </div>
 </div>
 

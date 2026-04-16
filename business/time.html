@@ -56,7 +56,7 @@
 <nav class="nav">
   <a href="/home.html" class="nav-logo">BQ <span>Tools</span></a>
   <div class="nav-right">
-    <a href="/business.html" class="nav-link" data-en="Business" data-he="עסק">Business</a>
+    <a href="/business.html" class="nav-link" data-en="Business" data-es="Negocio" data-he="עסק">Business</a>
     <div class="lang-toggle">
       <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
       <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
@@ -65,7 +65,7 @@
 </nav>
 
 <div class="page">
-  <a href="/business.html" class="page-back" data-en="← Business Hub" data-he="← מרכז עסקי">← Business Hub</a>
+  <a href="/business.html" class="page-back" data-en="← Business Hub" data-es="← Centro de Negocio" data-he="← מרכז עסקי">← Business Hub</a>
   <h1 class="page-title" data-en="⏱️ Time Tracking" data-he="⏱️ מעקב זמן">⏱️ Time Tracking</h1>
   <p class="page-sub" data-en="Clock in and clock out. Know exactly how many hours go into each job." data-he="היכנס ויצא. דע בדיוק כמה שעות נכנסות לכל עבודה.">Clock in and clock out. Know exactly how many hours go into each job.</p>
 
@@ -88,8 +88,8 @@
   <!-- Clock -->
   <div class="clock-box">
     <div class="clock-timer" id="timer">00:00:00</div>
-    <div class="clock-status" id="status" data-en="Ready to clock in" data-he="מוכן להיכנס">Ready to clock in</div>
-    <button class="clock-btn in" id="clockBtn" onclick="clockToggle()">▶️ <span data-en="Clock In" data-he="כניסה">Clock In</span></button>
+    <div class="clock-status" id="status" data-en="Ready to clock in" data-es="Listo para entrar" data-he="מוכן להיכנס">Ready to clock in</div>
+    <button class="clock-btn in" id="clockBtn" onclick="clockToggle()">▶️ <span data-en="Clock In" data-es="Entrada" data-he="כניסה">Clock In</span></button>
     <div class="clock-inputs">
       <select id="cProject"><option value="">Select project</option></select>
       <input type="text" id="cTask" placeholder="Task (e.g. Install cabinets)" style="min-width:200px;">
@@ -99,9 +99,9 @@
 
   <!-- Summary -->
   <div class="t-summary">
-    <div class="t-sum"><div class="n" id="sToday">0</div><div class="l" data-en="Hours Today" data-he="שעות היום">Hours Today</div></div>
-    <div class="t-sum"><div class="n" id="sWeek">0</div><div class="l" data-en="Hours This Week" data-he="שעות השבוע">Hours This Week</div></div>
-    <div class="t-sum"><div class="n" id="sPay">$0</div><div class="l" data-en="Est. Pay This Week" data-he="שכר משוער השבוע">Est. Pay This Week</div></div>
+    <div class="t-sum"><div class="n" id="sToday">0</div><div class="l" data-en="Hours Today" data-es="Horas Hoy" data-he="שעות היום">Hours Today</div></div>
+    <div class="t-sum"><div class="n" id="sWeek">0</div><div class="l" data-en="Hours This Week" data-es="Horas Esta Semana" data-he="שעות השבוע">Hours This Week</div></div>
+    <div class="t-sum"><div class="n" id="sPay">$0</div><div class="l" data-en="Est. Pay This Week" data-es="Pago Estimado Semana" data-he="שכר משוער השבוע">Est. Pay This Week</div></div>
   </div>
 
   <!-- Filters -->

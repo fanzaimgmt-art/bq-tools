@@ -77,7 +77,7 @@
 <nav class="nav">
   <a href="/home.html" class="nav-logo">BQ <span>Tools</span></a>
   <div class="nav-right">
-    <a href="/business.html" class="nav-link" data-en="Business" data-he="עסק">Business</a>
+    <a href="/business.html" class="nav-link" data-en="Business" data-es="Negocio" data-he="עסק">Business</a>
     <div class="lang-toggle">
       <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
       <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
@@ -86,7 +86,7 @@
 </nav>
 
 <div class="page">
-  <a href="/business.html" class="page-back" data-en="← Business Hub" data-he="← מרכז עסקי">← Business Hub</a>
+  <a href="/business.html" class="page-back" data-en="← Business Hub" data-es="← Centro de Negocio" data-he="← מרכז עסקי">← Business Hub</a>
   <h1 class="page-title" data-en="📸 Receipt Scanner" data-he="📸 סורק קבלות">📸 Receipt Scanner</h1>
   <p class="page-sub" data-en="Snap a photo, AI fills in everything." data-he="צלם תמונה, AI ממלא הכל.">Snap a photo, AI fills in everything.</p>
 
@@ -110,8 +110,8 @@
   <label class="snap-zone" id="snapZone">
     <input type="file" accept="image/*" capture="environment" id="fileInput" onchange="handleSnap(event)">
     <span class="big-btn">📸</span>
-    <h3 data-en="Snap a Receipt" data-he="צלם קבלה">Snap a Receipt</h3>
-    <p data-en="Tap to take a photo or choose from gallery" data-he="לחץ לצילום או בחר מהגלריה">Tap to take a photo or choose from gallery</p>
+    <h3 data-en="Snap a Receipt" data-es="Toma Foto del Recibo" data-he="צלם קבלה">Snap a Receipt</h3>
+    <p data-en="Tap to take a photo or choose from gallery" data-es="Toca para tomar una foto o elige de la galería" data-he="לחץ לצילום או בחר מהגלריה">Tap to take a photo or choose from gallery</p>
     <div class="chip-row">
       <span class="chip" data-en="📷 Camera or Gallery" data-he="📷 מצלמה או גלריה">📷 Camera or Gallery</span>
       <span class="chip">⚡ 1 credit</span>
@@ -120,9 +120,9 @@
 
   <!-- Stats -->
   <div class="r-stats">
-    <div class="r-stat"><div class="sn" id="rCount">0</div><div class="sl" data-en="This Month" data-he="החודש">This Month</div></div>
-    <div class="r-stat"><div class="sn" id="rTotal">$0</div><div class="sl" data-en="Total Spent" data-he="סה״כ הוצאה">Total Spent</div></div>
-    <div class="r-stat"><div class="sn" id="rTax">$0</div><div class="sl" data-en="Tax Deductible" data-he="מע״מ זיכוי">Tax Deductible</div></div>
+    <div class="r-stat"><div class="sn" id="rCount">0</div><div class="sl" data-en="This Month" data-es="Este Mes" data-he="החודש">This Month</div></div>
+    <div class="r-stat"><div class="sn" id="rTotal">$0</div><div class="sl" data-en="Total Spent" data-es="Total Gastado" data-he="סה״כ הוצאה">Total Spent</div></div>
+    <div class="r-stat"><div class="sn" id="rTax">$0</div><div class="sl" data-en="Tax Deductible" data-es="Deducible de Impuestos" data-he="מע״מ זיכוי">Tax Deductible</div></div>
   </div>
 
   <!-- Filters -->
@@ -137,7 +137,7 @@
       <option value="">All Projects</option>
     </select>
     <span class="spacer"></span>
-    <button class="btn btn-sm" onclick="exportAll()">📥 <span data-en="Export CSV" data-he="ייצוא CSV">Export CSV</span></button>
+    <button class="btn btn-sm" onclick="exportAll()">📥 <span data-en="Export CSV" data-es="Exportar CSV" data-he="ייצוא CSV">Export CSV</span></button>
   </div>
 
   <!-- List -->

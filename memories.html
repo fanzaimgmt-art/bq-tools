@@ -115,7 +115,7 @@
 <nav class="nav">
   <a href="/home.html" class="nav-logo">BQ <span>Tools</span></a>
   <div class="nav-right">
-    <a href="/home.html" class="nav-link" data-en="Tools" data-he="כלים">Tools</a>
+    <a href="/home.html" class="nav-link" data-en="Tools" data-es="Herramientas" data-he="כלים">Tools</a>
     <div class="lang-toggle">
       <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
       <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
@@ -126,10 +126,10 @@
 <div class="page">
   <!-- Header -->
   <div class="mem-header">
-    <h1><span class="icon">🧠</span> <span data-en="Memories" data-he="זיכרונות">Memories</span></h1>
+    <h1><span class="icon">🧠</span> <span data-en="Memories" data-es="Memorias" data-he="זיכרונות">Memories</span></h1>
     <div class="mem-controls">
       <select class="mem-filter" id="catFilter" onchange="renderMemories()">
-        <option value="" data-en="All Categories" data-he="כל הקטגוריות">All Categories</option>
+        <option value="" data-en="All Categories" data-es="Todas las Categorías" data-he="כל הקטגוריות">All Categories</option>
         <option value="Address">Address</option>
         <option value="Contact">Contact</option>
         <option value="Preferences">Preferences</option>
@@ -139,10 +139,10 @@
       </select>
       <label class="mem-toggle" id="autoMemToggle">
         <input type="checkbox" id="autoMemCheck" onchange="toggleAutoMem()">
-        <span data-en="Auto Memory" data-he="זיכרון אוטומטי">Auto Memory</span>
+        <span data-en="Auto Memory" data-es="Memoria Automática" data-he="זיכרון אוטומטי">Auto Memory</span>
       </label>
       <button class="btn btn-primary" style="font-size:13px;min-height:44px;" onclick="generateMemories()" id="genBtn">
-        <span data-en="Generate with AI ⚡1" data-he="יצירה עם AI ⚡1">Generate with AI ⚡1</span>
+        <span data-en="Generate with AI ⚡1" data-es="Generar con IA ⚡1" data-he="יצירה עם AI ⚡1">Generate with AI ⚡1</span>
       </button>
     </div>
   </div>
@@ -162,7 +162,7 @@
         <option value="Projects">Projects</option>
       </select>
       <div class="stars-input" id="starsInput"></div>
-      <button class="btn" style="min-height:44px;font-size:14px;" onclick="addMemory()" data-en="Add" data-he="הוסף">Add</button>
+      <button class="btn" style="min-height:44px;font-size:14px;" onclick="addMemory()" data-en="Add" data-es="Agregar" data-he="הוסף">Add</button>
     </div>
   </div>
 
@@ -171,10 +171,10 @@
     <table class="mem-table">
       <thead>
         <tr>
-          <th data-en="Memory" data-he="זיכרון">Memory</th>
-          <th data-en="Category" data-he="קטגוריה">Category</th>
-          <th data-en="Importance" data-he="חשיבות">Importance</th>
-          <th data-en="Date" data-he="תאריך">Date</th>
+          <th data-en="Memory" data-es="Memoria" data-he="זיכרון">Memory</th>
+          <th data-en="Category" data-es="Categoría" data-he="קטגוריה">Category</th>
+          <th data-en="Importance" data-es="Importancia" data-he="חשיבות">Importance</th>
+          <th data-en="Date" data-es="Fecha" data-he="תאריך">Date</th>
           <th></th>
         </tr>
       </thead>
@@ -384,7 +384,7 @@ async function generateMemories() {
   }
 
   btn.disabled = false;
-  btn.innerHTML = `<span data-en="Generate with AI ⚡1" data-he="יצירה עם AI ⚡1">${lang === 'he' ? 'יצירה עם AI ⚡1' : 'Generate with AI ⚡1'}</span>`;
+  btn.innerHTML = `<span data-en="Generate with AI ⚡1" data-es="Generar con IA ⚡1" data-he="יצירה עם AI ⚡1">${lang === 'he' ? 'יצירה עם AI ⚡1' : 'Generate with AI ⚡1'}</span>`;
 }
 
 // Enter to add

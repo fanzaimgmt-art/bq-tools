@@ -120,7 +120,7 @@
 <nav class="nav">
   <a href="/" class="nav-logo">BQ <span>Tools</span></a>
   <div class="nav-right">
-    <a href="/" class="nav-link" data-en="← Home" data-he="בית →">← Home</a>
+    <a href="/" class="nav-link" data-en="← Home" data-es="← Inicio" data-he="בית →">← Home</a>
     <div class="lang-toggle">
       <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
       <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
@@ -134,7 +134,7 @@
 
     <!-- Step 1: Login Options -->
     <div class="step active" id="stepEmail">
-      <h2 data-en="Log In / Sign Up" data-he="התחבר / הרשם">Log In / Sign Up</h2>
+      <h2 data-en="Log In / Sign Up" data-es="Iniciar Sesión / Registrarse" data-he="התחבר / הרשם">Log In / Sign Up</h2>
       <p class="sub" data-en="Sign in with Google or your email. No password needed." data-he="התחבר עם Google או עם המייל שלך. לא צריך סיסמה.">Sign in with Google or your email. No password needed.</p>
 
       <!-- Google Sign-In Button -->
@@ -157,65 +157,65 @@
       <!-- Fallback manual Google button if GSI fails to load -->
       <button id="googleFallbackBtn" class="btn" style="width:100%;font-size:16px;margin-bottom:16px;display:none;gap:10px;" onclick="manualGoogleSignIn()">
         <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-        <span data-en="Sign in with Google" data-he="התחבר עם Google">Sign in with Google</span>
+        <span data-en="Sign in with Google" data-es="Iniciar sesión con Google" data-he="התחבר עם Google">Sign in with Google</span>
       </button>
 
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;color:var(--txd);font-size:13px;">
         <div style="flex:1;height:1px;background:var(--bd);"></div>
-        <span data-en="Or sign in with email" data-he="או התחבר עם מייל">Or sign in with email</span>
+        <span data-en="Or sign in with email" data-es="O inicia sesión con email" data-he="או התחבר עם מייל">Or sign in with email</span>
         <div style="flex:1;height:1px;background:var(--bd);"></div>
       </div>
 
       <input type="email" class="auth-input" id="emailInput" placeholder="your@email.com" spellcheck="false" autocomplete="email">
       <label style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;font-size:13px;color:var(--txd);line-height:1.5;text-align:left;cursor:pointer;">
         <input type="checkbox" id="ageCheck" style="accent-color:var(--ac);width:18px;height:18px;margin-top:2px;flex-shrink:0;">
-        <span data-en="I am 18 years or older" data-he="אני בן/בת 18 ומעלה">I am 18 years or older</span>
+        <span data-en="I am 18 years or older" data-es="Tengo 18 años o más" data-he="אני בן/בת 18 ומעלה">I am 18 years or older</span>
       </label>
       <label style="display:flex;align-items:flex-start;gap:8px;margin-bottom:14px;font-size:13px;color:var(--txd);line-height:1.5;text-align:left;cursor:pointer;">
         <input type="checkbox" id="termsCheck" style="accent-color:var(--ac);width:18px;height:18px;margin-top:2px;flex-shrink:0;">
-        <span data-en="I agree to the <a href='/terms.html' target='_blank' style='color:var(--ac)'>Terms of Service</a> and <a href='/privacy.html' target='_blank' style='color:var(--ac)'>Privacy Policy</a>" data-he="אני מסכים ל<a href='/terms.html' target='_blank' style='color:var(--ac)'>תנאי השירות</a> ול<a href='/privacy.html' target='_blank' style='color:var(--ac)'>מדיניות הפרטיות</a>">I agree to the <a href="/terms.html" target="_blank" style="color:var(--ac)">Terms of Service</a> and <a href="/privacy.html" target="_blank" style="color:var(--ac)">Privacy Policy</a></span>
+        <span data-en="I agree to the <a href='/terms.html' target='_blank' style='color:var(--ac)'>Terms of Service</a> and <a href='/privacy.html' target='_blank' style='color:var(--ac)'>Privacy Policy</a>" data-es="Acepto los <a href='/terms.html' target='_blank' style='color:var(--ac)'>Términos de Servicio</a> y la <a href='/privacy.html' target='_blank' style='color:var(--ac)'>Política de Privacidad</a>" data-he="אני מסכים ל<a href='/terms.html' target='_blank' style='color:var(--ac)'>תנאי השירות</a> ול<a href='/privacy.html' target='_blank' style='color:var(--ac)'>מדיניות הפרטיות</a>">I agree to the <a href="/terms.html" target="_blank" style="color:var(--ac)">Terms of Service</a> and <a href="/privacy.html" target="_blank" style="color:var(--ac)">Privacy Policy</a></span>
       </label>
-      <button class="btn btn-primary" style="width:100%;font-size:16px;" onclick="doRegister()" id="registerBtn" data-en="Continue" data-he="המשך">Continue</button>
+      <button class="btn btn-primary" style="width:100%;font-size:16px;" onclick="doRegister()" id="registerBtn" data-en="Continue" data-es="Continuar" data-he="המשך">Continue</button>
     </div>
 
     <!-- Step 2: Code -->
     <div class="step" id="stepCode">
-      <h2 data-en="Enter Code" data-he="הכנס קוד">Enter Code</h2>
-      <p class="sub" id="codeSub" data-en="We sent a 6-digit code to your email." data-he="שלחנו קוד בן 6 ספרות למייל שלך.">We sent a 6-digit code to your email.</p>
+      <h2 data-en="Enter Code" data-es="Ingresa el Código" data-he="הכנס קוד">Enter Code</h2>
+      <p class="sub" id="codeSub" data-en="We sent a 6-digit code to your email." data-es="Enviamos un código de 6 dígitos a tu email." data-he="שלחנו קוד בן 6 ספרות למייל שלך.">We sent a 6-digit code to your email.</p>
 
       <!-- MVP: Show code on screen -->
       <div class="code-display" id="codeDisplay">
-        <div class="code-label" data-en="Your verification code (MVP — will be emailed later):" data-he="קוד האימות שלך (MVP — ישלח במייל בהמשך):">Your verification code (MVP — will be emailed later):</div>
+        <div class="code-label" data-en="Your verification code (MVP — will be emailed later):" data-es="Tu código de verificación (MVP — se enviará por email después):" data-he="קוד האימות שלך (MVP — ישלח במייל בהמשך):">Your verification code (MVP — will be emailed later):</div>
         <div class="code-num" id="displayedCode"></div>
       </div>
 
       <input type="text" class="auth-input" id="codeInput" placeholder="123456" maxlength="6" inputmode="numeric" autocomplete="one-time-code" style="letter-spacing:8px;font-family:monospace;font-size:24px;">
-      <button class="btn btn-primary" style="width:100%;font-size:16px;" onclick="doVerify()" id="verifyBtn" data-en="Verify" data-he="אמת">Verify</button>
-      <button onclick="showStep('stepEmail')" style="margin-top:12px;background:none;border:none;color:var(--txd);cursor:pointer;font-size:14px;font-family:inherit;min-height:48px;padding:8px 16px;" data-en="← Back to email" data-he="חזור למייל →">← Back to email</button>
+      <button class="btn btn-primary" style="width:100%;font-size:16px;" onclick="doVerify()" id="verifyBtn" data-en="Verify" data-es="Verificar" data-he="אמת">Verify</button>
+      <button onclick="showStep('stepEmail')" style="margin-top:12px;background:none;border:none;color:var(--txd);cursor:pointer;font-size:14px;font-family:inherit;min-height:48px;padding:8px 16px;" data-en="← Back to email" data-es="← Volver a email" data-he="חזור למייל →">← Back to email</button>
     </div>
 
     <!-- Step 3: Logged In -->
     <div class="step" id="stepProfile">
       <div class="status" id="statusBox">
-        <div class="status-label" data-en="YOUR STATUS" data-he="הסטטוס שלך">YOUR STATUS</div>
+        <div class="status-label" data-en="YOUR STATUS" data-es="TU ESTADO" data-he="הסטטוס שלך">YOUR STATUS</div>
         <div class="status-value" id="statusVal">Free</div>
         <div class="status-date" id="statusDate"></div>
       </div>
 
       <div class="profile-info" id="profileInfo"></div>
 
-      <a href="/dashboard.html" class="btn" style="width:100%;margin-bottom:8px;" data-en="Open Dashboard" data-he="פתח דשבורד">Open Dashboard</a>
-      <a href="/tools/compare.html" class="btn btn-primary" style="width:100%;margin-bottom:8px;" data-en="Go to Tools →" data-he="← לך לכלים">Go to Tools →</a>
+      <a href="/dashboard.html" class="btn" style="width:100%;margin-bottom:8px;" data-en="Open Dashboard" data-es="Abrir Panel" data-he="פתח דשבורד">Open Dashboard</a>
+      <a href="/tools/compare.html" class="btn btn-primary" style="width:100%;margin-bottom:8px;" data-en="Go to Tools →" data-es="Ir a Herramientas →" data-he="← לך לכלים">Go to Tools →</a>
 
-      <div class="divider" data-en="Need more credits?" data-he="צריך עוד קרדיטים?">Need more credits?</div>
+      <div class="divider" data-en="Need more credits?" data-es="¿Necesitas más créditos?" data-he="צריך עוד קרדיטים?">Need more credits?</div>
 
       <div class="buy-section">
-        <a href="https://www.paypal.com/ncp/payment/2LA7B7PZTHN54" target="_blank" rel="noopener" class="btn" style="width:100%;font-size:15px;margin-bottom:8px;" data-en="Buy Credits — PayPal" data-he="קנה קרדיטים — PayPal">Buy Credits — PayPal</a>
-        <button onclick="openCryptoModal()" class="btn" style="width:100%;font-size:14px;border-color:rgba(81,207,102,.3);color:var(--grn);" data-en="Pay with Crypto — 35% OFF" data-he="שלם בקריפטו — 35% הנחה">Pay with Crypto — 35% OFF</button>
+        <a href="https://www.paypal.com/ncp/payment/2LA7B7PZTHN54" target="_blank" rel="noopener" class="btn" style="width:100%;font-size:15px;margin-bottom:8px;" data-en="Buy Credits — PayPal" data-es="Comprar Créditos — PayPal" data-he="קנה קרדיטים — PayPal">Buy Credits — PayPal</a>
+        <button onclick="openCryptoModal()" class="btn" style="width:100%;font-size:14px;border-color:rgba(81,207,102,.3);color:var(--grn);" data-en="Pay with Crypto — 35% OFF" data-es="Pagar con Cripto — 35% DE DESCUENTO" data-he="שלם בקריפטו — 35% הנחה">Pay with Crypto — 35% OFF</button>
       </div>
 
       <div class="logout-section">
-        <button class="btn btn-danger" style="width:100%;" onclick="logout()" data-en="Log Out" data-he="התנתק">Log Out</button>
+        <button class="btn btn-danger" style="width:100%;" onclick="logout()" data-en="Log Out" data-es="Cerrar Sesión" data-he="התנתק">Log Out</button>
       </div>
     </div>
   </div>

@@ -56,7 +56,7 @@
 <nav class="nav">
   <a href="/home.html" class="nav-logo">BQ <span>Tools</span></a>
   <div class="nav-right">
-    <a href="/business.html" class="nav-link" data-en="Business" data-he="עסק">Business</a>
+    <a href="/business.html" class="nav-link" data-en="Business" data-es="Negocio" data-he="עסק">Business</a>
     <div class="lang-toggle">
       <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
       <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
@@ -65,7 +65,7 @@
 </nav>
 
 <div class="page">
-  <a href="/business.html" class="page-back" data-en="← Business Hub" data-he="← מרכז עסקי">← Business Hub</a>
+  <a href="/business.html" class="page-back" data-en="← Business Hub" data-es="← Centro de Negocio" data-he="← מרכז עסקי">← Business Hub</a>
   <h1 class="page-title" data-en="💰 Expenses" data-he="💰 הוצאות">💰 Expenses</h1>
   <p class="page-sub" data-en="See where every dollar goes. Know your profit per project." data-he="ראה לאן כל דולר הולך. דע את הרווח שלך בכל פרויקט.">See where every dollar goes. Know your profit per project.</p>
 
@@ -87,23 +87,23 @@
 
   <!-- Summary -->
   <div class="e-summary">
-    <div class="e-sum month"><div class="n" id="sMonth">$0</div><div class="l" data-en="This Month" data-he="החודש">This Month</div></div>
-    <div class="e-sum year"><div class="n" id="sYear">$0</div><div class="l" data-en="This Year" data-he="השנה">This Year</div></div>
-    <div class="e-sum"><div class="n" id="sCount">0</div><div class="l" data-en="Total Expenses" data-he="סה״כ הוצאות">Total Expenses</div></div>
-    <div class="e-sum"><div class="n" id="sTaxDed">$0</div><div class="l" data-en="Tax Deductible" data-he="מע״מ">Tax Deductible</div></div>
+    <div class="e-sum month"><div class="n" id="sMonth">$0</div><div class="l" data-en="This Month" data-es="Este Mes" data-he="החודש">This Month</div></div>
+    <div class="e-sum year"><div class="n" id="sYear">$0</div><div class="l" data-en="This Year" data-es="Este Año" data-he="השנה">This Year</div></div>
+    <div class="e-sum"><div class="n" id="sCount">0</div><div class="l" data-en="Total Expenses" data-es="Gastos Totales" data-he="סה״כ הוצאות">Total Expenses</div></div>
+    <div class="e-sum"><div class="n" id="sTaxDed">$0</div><div class="l" data-en="Tax Deductible" data-es="Deducible de Impuestos" data-he="מע״מ">Tax Deductible</div></div>
   </div>
 
   <!-- Charts -->
   <div class="e-charts">
     <div class="e-chart">
-      <h3 data-en="By Category" data-he="לפי קטגוריה">By Category</h3>
+      <h3 data-en="By Category" data-es="Por Categoría" data-he="לפי קטגוריה">By Category</h3>
       <div class="pie-wrap">
         <div class="pie" id="pie"></div>
         <div class="pie-legend" id="pieLegend"></div>
       </div>
     </div>
     <div class="e-chart">
-      <h3 data-en="Last 6 Months" data-he="6 חודשים אחרונים">Last 6 Months</h3>
+      <h3 data-en="Last 6 Months" data-es="Últimos 6 Meses" data-he="6 חודשים אחרונים">Last 6 Months</h3>
       <div class="bars" id="bars"></div>
     </div>
   </div>
@@ -118,7 +118,7 @@
     </select>
     <select id="fProj" onchange="render()"><option value="">All Projects</option></select>
     <span class="spacer"></span>
-    <button class="btn btn-primary" onclick="showAddForm()">+ <span data-en="Add Expense" data-he="הוסף הוצאה">Add Expense</span></button>
+    <button class="btn btn-primary" onclick="showAddForm()">+ <span data-en="Add Expense" data-es="Agregar Gasto" data-he="הוסף הוצאה">Add Expense</span></button>
     <button class="btn btn-sm" onclick="exportAll()">📥 CSV</button>
   </div>
 
