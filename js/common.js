@@ -117,7 +117,11 @@ function injectProfileAvatar() {
   const dd = document.createElement('div');
   dd.className = 'nav-dropdown';
   dd.id = 'navDropdown';
-  dd.onclick = (e) => e.stopPropagation();
+  // Allow clicks on links/buttons inside to work normally
+  dd.addEventListener('click', (e) => {
+    // Only stop propagation if clicking the dropdown background itself
+    if (e.target === dd) e.stopPropagation();
+  });
 
   dd.innerHTML = `
     <div class="nav-dd-header">
@@ -181,6 +185,11 @@ function injectProfileAvatar() {
   wrap.appendChild(avatar);
   wrap.appendChild(dd);
 
+  // Make all nav-dd-item links close dropdown on click
+  dd.querySelectorAll('.nav-dd-item').forEach(item => {
+    item.addEventListener('click', () => _toggleDropdown(false));
+  });
+
   // Insert before lang toggle (which is now hidden) or at end
   if (langToggle) navRight.insertBefore(wrap, langToggle);
   else navRight.appendChild(wrap);
@@ -192,9 +201,10 @@ function injectProfileAvatar() {
 function _closeDropdownOutside(e) {
   const dd = document.getElementById('navDropdown');
   const av = document.getElementById('navAvatar');
-  if (dd && dd.classList.contains('open') && !dd.contains(e.target) && e.target !== av && !av.contains(e.target)) {
-    _toggleDropdown(false);
-  }
+  if (!dd || !dd.classList.contains('open')) return;
+  // Don't close if clicking inside dropdown or avatar
+  if (dd.contains(e.target) || (av && av.contains(e.target))) return;
+  _toggleDropdown(false);
 }
 
 function doLogout() {
@@ -451,7 +461,11 @@ function _buildDropdownInto(wrap, user) {
   const dd = document.createElement('div');
   dd.className = 'nav-dropdown';
   dd.id = 'navDropdown';
-  dd.onclick = (e) => e.stopPropagation();
+  // Allow clicks on links/buttons inside to work normally
+  dd.addEventListener('click', (e) => {
+    // Only stop propagation if clicking the dropdown background itself
+    if (e.target === dd) e.stopPropagation();
+  });
 
   dd.innerHTML = `
     <div class="nav-dd-header">
@@ -503,6 +517,11 @@ function _buildDropdownInto(wrap, user) {
 
   wrap.appendChild(avatar);
   wrap.appendChild(dd);
+
+  // Make all nav-dd-item links close dropdown on click
+  dd.querySelectorAll('.nav-dd-item').forEach(item => {
+    item.addEventListener('click', () => _toggleDropdown(false));
+  });
 
   document.removeEventListener('click', _closeDropdownOutside);
   document.addEventListener('click', _closeDropdownOutside);
