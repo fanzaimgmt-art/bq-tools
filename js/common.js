@@ -23,11 +23,35 @@ function setLang(l) {
 }
 
 // ── Profile Avatar Dropdown ──
-function getAvatarHTML(user) {
+
+function _avatarInner(user) {
   if (user.picture) return `<img src="${user.picture}" alt="">`;
   if (user.logo) return `<img src="${user.logo}" alt="">`;
-  const initial = (user.businessName || user.email || '?')[0].toUpperCase();
-  return initial;
+  return (user.businessName || user.email || '?')[0].toUpperCase();
+}
+
+function _escHtml(s) {
+  const d = document.createElement('span');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
+function _planBadge(user) {
+  // Check directory tier first (featured > pro > free)
+  if (user.directoryTier === 'featured') return '<span class="nav-dd-badge badge-featured">FEATURED</span>';
+  if (user.isPro) return '<span class="nav-dd-badge badge-pro">PRO</span>';
+  return '<span class="nav-dd-badge badge-free">FREE</span>';
+}
+
+function _toggleDropdown(open) {
+  const dd = document.getElementById('navDropdown');
+  const bd = document.getElementById('navDdBackdrop');
+  if (!dd) return;
+  if (open === undefined) open = !dd.classList.contains('open');
+  dd.classList.toggle('open', open);
+  if (bd) bd.classList.toggle('open', open);
+  // Prevent body scroll on mobile when open
+  document.body.style.overflow = open ? 'hidden' : '';
 }
 
 function injectProfileAvatar() {
@@ -35,27 +59,26 @@ function injectProfileAvatar() {
   if (!navRight) return;
   const loggedIn = typeof isLoggedIn === 'function' && isLoggedIn();
 
-  // Remove any existing auth buttons (.btn.btn-sm that link to auth/dashboard)
-  const oldBtns = navRight.querySelectorAll('.btn.btn-sm');
-  oldBtns.forEach(b => {
+  // Clean up old elements
+  navRight.querySelectorAll('.btn.btn-sm').forEach(b => {
     const href = b.getAttribute('href') || '';
-    if (href.includes('auth') || href.includes('dashboard')) b.remove();
+    if (href.includes('auth') || href.includes('dashboard') || b.id === 'navSignInBtn') b.remove();
   });
-
-  // Remove old avatar wrap if re-injecting
   const oldWrap = navRight.querySelector('.nav-avatar-wrap');
   if (oldWrap) oldWrap.remove();
-
+  const oldBackdrop = document.getElementById('navDdBackdrop');
+  if (oldBackdrop) oldBackdrop.remove();
+  // Also remove old standalone lang-toggle (dropdown has its own)
   const langToggle = navRight.querySelector('.lang-toggle');
 
   if (!loggedIn) {
     const signIn = document.createElement('a');
     signIn.href = '/auth.html';
     signIn.className = 'btn btn-sm';
+    signIn.id = 'navSignInBtn';
     signIn.setAttribute('data-en', 'Sign In');
     signIn.setAttribute('data-he', 'התחבר');
     signIn.textContent = lang === 'he' ? 'התחבר' : 'Sign In';
-    signIn.id = 'navSignInBtn';
     if (langToggle) navRight.insertBefore(signIn, langToggle);
     else navRight.appendChild(signIn);
     return;
@@ -64,66 +87,116 @@ function injectProfileAvatar() {
   const user = typeof getCachedUser === 'function' ? getCachedUser() : null;
   if (!user) return;
 
+  // Hide standalone lang toggle — dropdown has its own
+  if (langToggle) langToggle.style.display = 'none';
+
+  const credits = user.credits || 0;
+  const maxCredits = user.isPro ? 50 : 5;
+  const pct = Math.min(100, Math.round((credits / maxCredits) * 100));
+  const name = user.businessName || user.email.split('@')[0];
+  const isHe = lang === 'he';
+
+  // Backdrop for mobile
+  const backdrop = document.createElement('div');
+  backdrop.className = 'nav-dd-backdrop';
+  backdrop.id = 'navDdBackdrop';
+  backdrop.onclick = () => _toggleDropdown(false);
+  document.body.appendChild(backdrop);
+
   const wrap = document.createElement('div');
   wrap.className = 'nav-avatar-wrap';
 
   const avatar = document.createElement('div');
   avatar.className = 'nav-avatar';
   avatar.id = 'navAvatar';
-  avatar.innerHTML = getAvatarHTML(user);
-  avatar.onclick = function(e) {
-    e.stopPropagation();
-    const dd = document.getElementById('navDropdown');
-    dd.classList.toggle('open');
-  };
-
-  const credits = user.credits || 0;
-  const name = user.businessName || user.email.split('@')[0];
+  avatar.innerHTML = _avatarInner(user);
+  avatar.onclick = (e) => { e.stopPropagation(); _toggleDropdown(); };
 
   const dd = document.createElement('div');
   dd.className = 'nav-dropdown';
   dd.id = 'navDropdown';
+  dd.onclick = (e) => e.stopPropagation();
+
   dd.innerHTML = `
     <div class="nav-dd-header">
-      <div class="nav-dd-name">${escText(name)}</div>
-      <div class="nav-dd-email">${escText(user.email)}</div>
-      <div class="nav-dd-credits">⚡ <span id="ddCredits">${credits}</span> ${lang === 'he' ? 'קרדיטים' : 'credits'}</div>
+      <div class="nav-dd-top">
+        <div class="nav-dd-avatar">${_avatarInner(user)}</div>
+        <div>
+          <div class="nav-dd-name">${_escHtml(name)}</div>
+          <div class="nav-dd-email">${_escHtml(user.email)}</div>
+          ${_planBadge(user)}
+        </div>
+      </div>
     </div>
-    <a href="/profile.html" class="nav-dd-item"><span class="dd-icon">🏢</span>${lang === 'he' ? 'הפרופיל שלי' : 'My Profile'}</a>
-    <a href="/dashboard.html" class="nav-dd-item"><span class="dd-icon">📊</span>${lang === 'he' ? 'דשבורד' : 'Dashboard'}</a>
-    <a href="/gallery.html" class="nav-dd-item"><span class="dd-icon">📁</span>${lang === 'he' ? 'הפרויקטים שלי' : 'My Projects'}</a>
-    <a href="/directory-profile.html?email=${encodeURIComponent(user.email)}" class="nav-dd-item"><span class="dd-icon">📋</span>${lang === 'he' ? 'הרישום שלי ב-Directory' : 'My Directory Listing'}</a>
+
+    <div class="nav-dd-credits-row">
+      <div class="nav-dd-credits-top">
+        <span class="nav-dd-credits-label">⚡ ${isHe ? 'קרדיטים' : 'Credits'}</span>
+        <span class="nav-dd-credits-val">${credits}</span>
+      </div>
+      <div class="nav-dd-credits-bar">
+        <div class="nav-dd-credits-fill${pct < 20 ? ' low' : ''}" style="width:${pct}%"></div>
+      </div>
+    </div>
+
+    <a href="/profile.html" class="nav-dd-item" onclick="_toggleDropdown(false)">
+      <span class="dd-icon">🏢</span><span class="dd-label">${isHe ? 'פרופיל עסקי' : 'Business Profile'}</span>
+    </a>
+    <a href="/dashboard.html" class="nav-dd-item" onclick="_toggleDropdown(false)">
+      <span class="dd-icon">📊</span><span class="dd-label">${isHe ? 'דשבורד' : 'Dashboard'}</span>
+    </a>
+    <a href="/gallery.html" class="nav-dd-item" onclick="_toggleDropdown(false)">
+      <span class="dd-icon">📁</span><span class="dd-label">${isHe ? 'הפרויקטים שלי' : 'My Projects'}</span>
+    </a>
+    <a href="/directory-profile.html?email=${encodeURIComponent(user.email)}" class="nav-dd-item" onclick="_toggleDropdown(false)">
+      <span class="dd-icon">📋</span><span class="dd-label">${isHe ? 'רישום Directory' : 'Directory Listing'}</span>
+    </a>
+
     <div class="nav-dd-divider"></div>
-    <a href="/profile.html#settings" class="nav-dd-item"><span class="dd-icon">⚙️</span>${lang === 'he' ? 'הגדרות' : 'Settings'}</a>
+
+    <div class="nav-dd-lang">
+      <button class="nav-dd-lang-btn${lang === 'en' ? ' on' : ''}" onclick="setLang('en');injectProfileAvatar()">🇺🇸 EN</button>
+      <button class="nav-dd-lang-btn${lang === 'he' ? ' on' : ''}" onclick="setLang('he');injectProfileAvatar()">🇮🇱 עב</button>
+    </div>
+
+    <a href="https://www.paypal.com/ncp/payment/2LA7B7PZTHN54" target="_blank" rel="noopener" class="nav-dd-item accent" onclick="_toggleDropdown(false)">
+      <span class="dd-icon">🛒</span><span class="dd-label">${isHe ? 'קנה קרדיטים' : 'Buy Credits'}</span>
+    </a>
+    ${!user.isPro ? `
+    <a href="/auth.html" class="nav-dd-item green" onclick="_toggleDropdown(false)">
+      <span class="dd-icon">⭐</span><span class="dd-label">${isHe ? 'שדרג ל-Pro' : 'Upgrade to Pro'}</span>
+    </a>` : ''}
+
     <div class="nav-dd-divider"></div>
-    <button class="nav-dd-item danger" onclick="doLogout()"><span class="dd-icon">🚪</span>${lang === 'he' ? 'התנתק' : 'Log Out'}</button>
+
+    <button class="nav-dd-item danger" onclick="doLogout()">
+      <span class="dd-icon">🚪</span><span class="dd-label">${isHe ? 'התנתק' : 'Sign Out'}</span>
+    </button>
   `;
 
   wrap.appendChild(avatar);
   wrap.appendChild(dd);
 
+  // Insert before lang toggle (which is now hidden) or at end
   if (langToggle) navRight.insertBefore(wrap, langToggle);
   else navRight.appendChild(wrap);
 
-  // Close dropdown on outside click
-  document.addEventListener('click', function(e) {
-    const d = document.getElementById('navDropdown');
-    if (d && !d.contains(e.target) && e.target.id !== 'navAvatar') {
-      d.classList.remove('open');
-    }
-  });
+  // Close on outside click (desktop)
+  document.addEventListener('click', _closeDropdownOutside);
+}
+
+function _closeDropdownOutside(e) {
+  const dd = document.getElementById('navDropdown');
+  const av = document.getElementById('navAvatar');
+  if (dd && dd.classList.contains('open') && !dd.contains(e.target) && e.target !== av && !av.contains(e.target)) {
+    _toggleDropdown(false);
+  }
 }
 
 function doLogout() {
   localStorage.removeItem('bq_token');
   localStorage.removeItem('bq_user');
   window.location.href = '/';
-}
-
-function escText(s) {
-  const d = document.createElement('span');
-  d.textContent = s || '';
-  return d.innerHTML;
 }
 
 // ── Footer Builder ──
