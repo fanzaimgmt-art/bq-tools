@@ -37,6 +37,18 @@ export default {
       if (path === '/api/social/analyze' && request.method === 'POST') {
         return corsResponse(env, await handleSocialAnalyze(request, env));
       }
+      if (path === '/api/credits/redeem' && request.method === 'POST') {
+        return corsResponse(env, await handleRedeemCode(request, env));
+      }
+      if (path === '/api/admin/create-giftcode' && request.method === 'POST') {
+        return corsResponse(env, await handleAdminCreateGiftCode(request, env));
+      }
+      if (path === '/api/affiliate/register' && request.method === 'POST') {
+        return corsResponse(env, await handleAffiliateRegister(request, env));
+      }
+      if (path === '/api/affiliate/stats' && request.method === 'GET') {
+        return corsResponse(env, await handleAffiliateStats(request, env));
+      }
       if (path === '/api/admin/scrape-directory' && request.method === 'POST') {
         return corsResponse(env, await handleAdminScrapeDirectory(request, env));
       }
@@ -1472,5 +1484,109 @@ async function handleAdminScrapeDirectory(request, env) {
     imported,
     skipped: skipped.length,
     skippedNames: skipped.slice(0, 10)
+  });
+}
+
+// ── Gift Codes ──
+
+async function handleRedeemCode(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const { code } = await request.json();
+  if (!code) return json({ error: 'Code required' }, 400);
+
+  const codeKey = `giftcode:${code.toUpperCase().trim()}`;
+  const raw = await env.BQ_USERS.get(codeKey);
+  if (!raw) return json({ error: 'Invalid code' }, 404);
+
+  const gc = JSON.parse(raw);
+  if (gc.used) return json({ error: 'Code already used' }, 400);
+
+  // Mark as used
+  gc.used = true;
+  gc.usedBy = user.email;
+  gc.usedAt = new Date().toISOString();
+  await env.BQ_USERS.put(codeKey, JSON.stringify(gc));
+
+  // Add credits
+  user.credits = (user.credits || 0) + (gc.credits || 0);
+  await env.BQ_USERS.put(`user:${user.email}`, JSON.stringify(user));
+
+  return json({ ok: true, credits: gc.credits, total: user.credits });
+}
+
+async function handleAdminCreateGiftCode(request, env) {
+  if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
+
+  const { credits, note } = await request.json();
+  if (!credits || credits < 1) return json({ error: 'credits required (min 1)' }, 400);
+
+  // Generate random 8-char code
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
+
+  const gc = {
+    code,
+    credits: parseInt(credits),
+    type: 'gift',
+    note: note || '',
+    createdAt: new Date().toISOString(),
+    used: false
+  };
+
+  await env.BQ_USERS.put(`giftcode:${code}`, JSON.stringify(gc));
+  return json({ ok: true, code, credits: gc.credits });
+}
+
+// ── Affiliate ──
+
+async function handleAffiliateRegister(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const { paypalEmail } = await request.json();
+  if (!paypalEmail || !paypalEmail.includes('@')) return json({ error: 'Valid PayPal email required' }, 400);
+
+  const key = `affiliate:${user.email}`;
+  const existing = await env.BQ_USERS.get(key);
+  if (existing) {
+    const aff = JSON.parse(existing);
+    aff.paypalEmail = paypalEmail;
+    await env.BQ_USERS.put(key, JSON.stringify(aff));
+    return json({ ok: true, updated: true });
+  }
+
+  const aff = {
+    email: user.email,
+    paypalEmail,
+    referrals: [],
+    earnings: 0,
+    joinedAt: new Date().toISOString()
+  };
+  await env.BQ_USERS.put(key, JSON.stringify(aff));
+  return json({ ok: true, created: true });
+}
+
+async function handleAffiliateStats(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const key = `affiliate:${user.email}`;
+  const raw = await env.BQ_USERS.get(key);
+  if (!raw) return json({ ok: true, registered: false });
+
+  const aff = JSON.parse(raw);
+  return json({
+    ok: true,
+    registered: true,
+    paypalEmail: aff.paypalEmail,
+    referrals: aff.referrals?.length || 0,
+    earnings: aff.earnings || 0,
+    joinedAt: aff.joinedAt
   });
 }

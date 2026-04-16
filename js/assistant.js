@@ -123,6 +123,16 @@ When performing an action, include the ACTION: tag at the END of your response o
     .chat-send:hover { filter: brightness(1.1); }
     .chat-send:disabled { opacity: .5; cursor: not-allowed; }
 
+    .chat-mic {
+      width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--bd);
+      background: var(--bg); color: var(--txd); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; transition: all .2s; flex-shrink: 0;
+    }
+    .chat-mic:hover { border-color: var(--ac); color: var(--ac); }
+    .chat-mic.recording { background: var(--red); border-color: var(--red); color: #fff; animation: micPulse 1s ease-in-out infinite; }
+    @keyframes micPulse { 0%,100%{ box-shadow:0 0 0 0 rgba(255,107,107,.4); } 50%{ box-shadow:0 0 0 8px rgba(255,107,107,0); } }
+
     @media (max-width: 600px) {
       .chat-panel {
         bottom: 0; right: 0; left: 0; width: 100%; max-height: 70vh;
@@ -155,6 +165,7 @@ When performing an action, include the ACTION: tag at the END of your response o
     <div class="chat-suggestions" id="chatSuggestions"></div>
     <div class="chat-input-bar">
       <input class="chat-input" id="chatInput" placeholder="${lang === 'he' ? 'מה תרצה לעשות?' : 'What do you want to do?'}" autocomplete="off">
+      <button class="chat-mic" id="chatMic" onclick="toggleVoice()" title="Voice input">🎤</button>
       <button class="chat-send" id="chatSend" onclick="sendChatMessage()">→</button>
     </div>
   `;
@@ -389,6 +400,72 @@ When performing an action, include the ACTION: tag at the END of your response o
       : 'History cleared. What do you want to do?');
     renderSuggestions();
   };
+
+  // ── Voice Input (Web Speech API) ──
+  let _recognition = null;
+  let _isRecording = false;
+
+  window.toggleVoice = function() {
+    if (_isRecording) { stopVoice(); return; }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      showToast(lang === 'he' ? 'הדפדפן לא תומך בזיהוי קול' : 'Browser does not support voice input', 'err');
+      return;
+    }
+
+    _recognition = new SpeechRecognition();
+    _recognition.lang = lang === 'he' ? 'he-IL' : 'en-US';
+    _recognition.interimResults = true;
+    _recognition.continuous = false;
+
+    const micBtn = document.getElementById('chatMic');
+    const input = document.getElementById('chatInput');
+
+    _recognition.onstart = () => {
+      _isRecording = true;
+      micBtn.classList.add('recording');
+      micBtn.innerHTML = '⏹';
+      input.placeholder = lang === 'he' ? '...מקשיב' : 'Listening...';
+    };
+
+    _recognition.onresult = (e) => {
+      let transcript = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        transcript += e.results[i][0].transcript;
+      }
+      input.value = transcript;
+    };
+
+    _recognition.onend = () => {
+      _isRecording = false;
+      micBtn.classList.remove('recording');
+      micBtn.innerHTML = '🎤';
+      input.placeholder = lang === 'he' ? 'מה תרצה לעשות?' : 'What do you want to do?';
+      // Auto-send if we got text
+      if (input.value.trim()) {
+        sendChatMessage();
+      }
+    };
+
+    _recognition.onerror = (e) => {
+      _isRecording = false;
+      micBtn.classList.remove('recording');
+      micBtn.innerHTML = '🎤';
+      if (e.error !== 'no-speech') {
+        showToast('Voice error: ' + e.error, 'err');
+      }
+    };
+
+    _recognition.start();
+  };
+
+  function stopVoice() {
+    if (_recognition) { _recognition.stop(); }
+    _isRecording = false;
+    const micBtn = document.getElementById('chatMic');
+    if (micBtn) { micBtn.classList.remove('recording'); micBtn.innerHTML = '🎤'; }
+  }
 
   // ── Action Executor ──
   async function executeAction(action, payload) {

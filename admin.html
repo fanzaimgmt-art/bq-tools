@@ -149,6 +149,23 @@
     </div>
   </div>
 
+  <!-- Gift Codes -->
+  <div class="admin-section">
+    <h3>🎟️ Create Gift Code</h3>
+    <div class="add-credits-form">
+      <div class="field" style="max-width:100px;">
+        <label>Credits</label>
+        <input type="number" id="gcCredits" value="25" min="1">
+      </div>
+      <div class="field">
+        <label>Note (optional)</label>
+        <input type="text" id="gcNote" placeholder="Birthday gift for Josh">
+      </div>
+      <button class="btn btn-primary" style="min-height:44px;" onclick="createGiftCode()">Create</button>
+    </div>
+    <div id="gcResult" style="margin-top:8px;font-size:13px;"></div>
+  </div>
+
   <!-- Directory Scraper -->
   <div class="admin-section">
     <h3>🗺️ Scrape Directory (Google Maps)</h3>
@@ -299,6 +316,19 @@ async function loadErrors() {
     `).join('');
   } catch {
     document.getElementById('errorList').innerHTML = '<div style="color:var(--txd);text-align:center;">Failed to load</div>';
+  }
+}
+
+async function createGiftCode() {
+  const credits = parseInt(document.getElementById('gcCredits').value) || 0;
+  const note = document.getElementById('gcNote').value.trim();
+  const result = document.getElementById('gcResult');
+  if (credits < 1) { result.innerHTML = '<span style="color:var(--red);">Min 1 credit</span>'; return; }
+  try {
+    const data = await adminCall('/api/admin/create-giftcode', { method: 'POST', body: { credits, note } });
+    result.innerHTML = `<span style="color:var(--grn);">✓ Code: <b style="font-size:18px;letter-spacing:2px;color:var(--ac);">${data.code}</b> (${data.credits} credits)</span>`;
+  } catch (err) {
+    result.innerHTML = `<span style="color:var(--red);">✗ ${err.message}</span>`;
   }
 }
 

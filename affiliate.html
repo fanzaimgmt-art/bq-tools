@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Affiliate Program</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  body { display: flex; flex-direction: column; }
+  .aff-hero { text-align: center; padding: 40px 0 30px; }
+  .aff-hero h1 { font-size: 28px; font-weight: 900; margin-bottom: 8px; }
+  .aff-hero h1 .accent { color: var(--ac); }
+  .aff-hero p { color: var(--txd); font-size: 15px; line-height: 1.6; max-width: 500px; margin: 0 auto; }
+
+  .aff-stats { display: flex; gap: 12px; margin-bottom: 24px; }
+  .aff-stat { flex: 1; background: var(--sf); border: 1px solid var(--bd); border-radius: 12px; padding: 16px; text-align: center; }
+  .aff-stat .num { font-size: 28px; font-weight: 900; color: var(--ac); }
+  .aff-stat .lbl { font-size: 12px; color: var(--txd); margin-top: 2px; }
+
+  .aff-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 24px; }
+  .aff-step { background: var(--sf); border: 1px solid var(--bd); border-radius: 14px; padding: 20px; text-align: center; }
+  .aff-step .step-num { font-size: 28px; font-weight: 900; color: var(--ac); margin-bottom: 8px; }
+  .aff-step h3 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .aff-step p { font-size: 13px; color: var(--txd); line-height: 1.5; }
+
+  .aff-example { background: var(--acd); border: 1px solid rgba(232,197,71,.2); border-radius: 14px; padding: 20px; text-align: center; margin-bottom: 24px; }
+  .aff-example .big { font-size: 36px; font-weight: 900; color: var(--ac); }
+  .aff-example p { font-size: 14px; color: var(--txd); margin-top: 4px; }
+
+  .aff-form { background: var(--sf); border: 1px solid var(--bd); border-radius: 14px; padding: 24px; margin-bottom: 24px; }
+  .aff-form h3 { font-size: 16px; font-weight: 700; margin-bottom: 14px; }
+
+  @media (max-width: 600px) {
+    .aff-steps { grid-template-columns: 1fr; }
+    .aff-stats { flex-direction: column; }
+    .aff-hero h1 { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/home.html" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/home.html" class="nav-link" data-en="← Back" data-he="חזור →">← Back</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="aff-hero">
+    <h1 data-en="Earn <span class='accent'>20%</span> Commission" data-he="הרוויח <span class='accent'>20%</span> עמלה">Earn <span class="accent">20%</span> Commission</h1>
+    <p data-en="Refer contractors to BQ Tools. When they upgrade to Pro, you earn 20% of their payments for 6 months." data-he="הפנה קבלנים ל-BQ Tools. כשהם משדרגים ל-Pro, אתה מרוויח 20% מהתשלומים שלהם למשך 6 חודשים.">Refer contractors to BQ Tools. When they upgrade to Pro, you earn 20% of their payments for 6 months.</p>
+  </div>
+
+  <!-- Stats (if registered) -->
+  <div class="aff-stats" id="affStats" style="display:none;">
+    <div class="aff-stat"><div class="num" id="affRefs">0</div><div class="lbl" data-en="Referrals" data-he="הפניות">Referrals</div></div>
+    <div class="aff-stat"><div class="num" id="affEarnings">$0</div><div class="lbl" data-en="Earnings" data-he="רווחים">Earnings</div></div>
+    <div class="aff-stat"><div class="num" id="affStatus">—</div><div class="lbl" data-en="Status" data-he="סטטוס">Status</div></div>
+  </div>
+
+  <!-- How it works -->
+  <div class="aff-steps">
+    <div class="aff-step">
+      <div class="step-num">1</div>
+      <h3 data-en="Share Your Link" data-he="שתף את הלינק">Share Your Link</h3>
+      <p data-en="Get your unique referral link and share it with contractors." data-he="קבל את הלינק הייחודי שלך ושתף עם קבלנים.">Get your unique referral link and share it.</p>
+    </div>
+    <div class="aff-step">
+      <div class="step-num">2</div>
+      <h3 data-en="Friend Signs Up" data-he="חבר נרשם">Friend Signs Up</h3>
+      <p data-en="They sign up for free and try the tools." data-he="הם נרשמים בחינם ומנסים את הכלים.">They sign up free and try the tools.</p>
+    </div>
+    <div class="aff-step">
+      <div class="step-num">3</div>
+      <h3 data-en="You Earn 20%" data-he="אתה מרוויח 20%">You Earn 20%</h3>
+      <p data-en="When they upgrade to Pro, you earn 20% for 6 months." data-he="כשהם משדרגים ל-Pro, אתה מרוויח 20% למשך 6 חודשים.">When they go Pro, you earn 20% for 6 months.</p>
+    </div>
+  </div>
+
+  <!-- Example -->
+  <div class="aff-example">
+    <p style="font-size:13px;color:var(--txd);margin-bottom:4px;" data-en="Example: 10 referrals" data-he="דוגמה: 10 הפניות">Example: 10 referrals</p>
+    <div class="big">$899</div>
+    <p data-en="10 referrals x $14.99/mo x 6 months x 20% = $899.40" data-he="10 הפניות x $14.99/חודש x 6 חודשים x 20% = $899.40">10 x $14.99/mo x 6mo x 20% = $899.40</p>
+  </div>
+
+  <!-- Sign Up Form -->
+  <div class="aff-form" id="affForm">
+    <h3 data-en="Join the Affiliate Program" data-he="הצטרף לתוכנית השותפים">Join the Affiliate Program</h3>
+    <div style="margin-bottom:12px;">
+      <label class="input-label" data-en="PayPal Email (for payouts)" data-he="PayPal Email (לתשלומים)">PayPal Email (for payouts)</label>
+      <input class="input" type="email" id="affPaypal" placeholder="your@paypal.com">
+    </div>
+    <button class="btn btn-primary" style="width:100%;font-size:16px;" onclick="joinAffiliate()" id="affBtn" data-en="Join Program" data-he="הצטרף">Join Program</button>
+    <div id="affResult" style="margin-top:8px;font-size:13px;"></div>
+  </div>
+</div>
+
+<footer class="footer"><div class="footer-brand">Powered by BQ Tools — BQ Production LLC</div></footer>
+
+<script src="js/ai.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/crypto.js"></script>
+<script src="js/common.js"></script>
+<script>
+if (!isLoggedIn()) window.location.replace('/auth.html');
+
+// Load affiliate stats
+async function loadAffStats() {
+  try {
+    const data = await apiCall('/api/affiliate/stats');
+    if (data.ok && data.registered) {
+      document.getElementById('affStats').style.display = 'flex';
+      document.getElementById('affRefs').textContent = data.referrals || 0;
+      document.getElementById('affEarnings').textContent = '$' + ((data.earnings || 0) / 100).toFixed(2);
+      document.getElementById('affStatus').textContent = 'Active';
+      document.getElementById('affStatus').style.color = 'var(--grn)';
+      document.getElementById('affPaypal').value = data.paypalEmail || '';
+      document.getElementById('affBtn').textContent = lang === 'he' ? 'עדכן' : 'Update';
+    }
+  } catch {}
+}
+
+async function joinAffiliate() {
+  const paypal = document.getElementById('affPaypal').value.trim();
+  if (!paypal || !paypal.includes('@')) {
+    document.getElementById('affResult').innerHTML = '<span style="color:var(--red);">Enter a valid PayPal email</span>';
+    return;
+  }
+  const btn = document.getElementById('affBtn');
+  btn.disabled = true; btn.textContent = '...';
+  try {
+    await apiCall('/api/affiliate/register', { method: 'POST', body: { paypalEmail: paypal } });
+    document.getElementById('affResult').innerHTML = '<span style="color:var(--grn);">Registered! Share your referral link to start earning.</span>';
+    loadAffStats();
+  } catch (err) {
+    document.getElementById('affResult').innerHTML = `<span style="color:var(--red);">${err.message}</span>`;
+  }
+  btn.disabled = false;
+  btn.textContent = lang === 'he' ? 'הצטרף' : 'Join Program';
+}
+
+loadAffStats();
+</script>
+</body>
+</html>

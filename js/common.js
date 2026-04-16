@@ -112,6 +112,9 @@ function _ddHTML(user) {
       <button class="nav-dd-lang-btn${lang === 'he' ? ' on' : ''}" onclick="setLang('he');_rebuildDropdown()">🇮🇱 עב</button>
     </div>
     <button class="nav-dd-item" onclick="showReferralLink()"><span class="dd-icon">🎁</span>${h ? 'הזמן חבר' : 'Refer a Friend'}</button>
+    <button class="nav-dd-item" onclick="showRedeemCode()"><span class="dd-icon">🎟️</span>${h ? 'הזן קוד' : 'Redeem Code'}</button>
+    <a href="/affiliate.html" class="nav-dd-item"><span class="dd-icon">💰</span>${h ? 'תוכנית שותפים' : 'Affiliate Program'}</a>
+    <div class="nav-dd-divider"></div>
     <a href="https://www.paypal.com/ncp/payment/2LA7B7PZTHN54" target="_blank" rel="noopener" class="nav-dd-item accent"><span class="dd-icon">🛒</span>${h ? 'קנה קרדיטים' : 'Buy Credits'}</a>
     ${!user.isPro ? `<a href="/auth.html" class="nav-dd-item green"><span class="dd-icon">⭐</span>${h ? 'שדרג ל-Pro' : 'Upgrade to Pro'}</a>` : ''}
     <div class="nav-dd-divider"></div>
@@ -212,43 +215,97 @@ function doLogout() {
 
 // ── Referral Link Modal ──
 function showReferralLink() {
-  _toggleDropdown(false);
+  _closeDropdown();
   const user = typeof getCachedUser === 'function' ? getCachedUser() : null;
   if (!user) return;
-  const isHe = lang === 'he';
+  const h = lang === 'he';
   const link = `${window.location.origin}/?ref=${encodeURIComponent(user.email)}`;
+  const waUrl = `https://wa.me/?text=${encodeURIComponent((h ? 'נסה את BQ Tools — כלי AI לקבלנים! ' : 'Check out BQ Tools — AI tools for contractors! ') + link)}`;
+  const mailUrl = `mailto:?subject=${encodeURIComponent('BQ Tools')}&body=${encodeURIComponent((h ? 'נסה את BQ Tools: ' : 'Try BQ Tools: ') + link)}`;
 
   const m = document.createElement('div');
   m.className = 'modal-overlay';
   m.innerHTML = `
     <div class="modal-card" style="max-width:420px;text-align:center;">
       <div style="font-size:40px;margin-bottom:12px;">🎁</div>
-      <h3 style="margin-bottom:6px;">${isHe ? 'הזמן חבר' : 'Refer a Friend'}</h3>
-      <p style="font-size:14px;color:var(--txd);line-height:1.6;margin-bottom:16px;">${isHe
-        ? 'שתף את הלינק שלך. חברים שנרשמים מקבלים 10 קרדיטים חינם, ואתה מקבל 10% הנחה על הרכישה הבאה!'
-        : 'Share your link. Friends who sign up get 10 free credits, and you get 10% off your next purchase!'}</p>
-      <div style="display:flex;gap:6px;margin-bottom:16px;">
-        <input type="text" value="${link}" readonly id="refLinkInput" style="flex:1;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--ac);font-family:monospace;font-size:12px;overflow:hidden;text-overflow:ellipsis;">
-        <button class="btn btn-primary" style="min-width:70px;" onclick="navigator.clipboard.writeText(document.getElementById('refLinkInput').value);showToast('${isHe ? 'הועתק!' : 'Copied!'}','ok')">${isHe ? 'העתק' : 'Copy'}</button>
+      <h3 style="margin-bottom:6px;">${h ? 'שתף והרוויח' : 'Share & Earn Rewards!'}</h3>
+      <p style="font-size:14px;color:var(--txd);line-height:1.6;margin-bottom:6px;">${h
+        ? 'לכל חבר שנרשם:'
+        : 'For every friend who signs up:'}</p>
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        <div style="flex:1;background:var(--acd);border-radius:10px;padding:10px;">
+          <div style="font-size:13px;font-weight:700;color:var(--ac);">${h ? 'אתה מקבל' : 'You get'}</div>
+          <div style="font-size:12px;color:var(--txd);">10% OFF</div>
+        </div>
+        <div style="flex:1;background:rgba(81,207,102,.1);border-radius:10px;padding:10px;">
+          <div style="font-size:13px;font-weight:700;color:var(--grn);">${h ? 'הם מקבלים' : 'They get'}</div>
+          <div style="font-size:12px;color:var(--txd);">5 bonus credits</div>
+        </div>
       </div>
-      <div id="refStats" style="font-size:13px;color:var(--txd);margin-bottom:16px;"></div>
-      <button onclick="this.closest('.modal-overlay').remove()" class="btn" style="width:100%;">${isHe ? 'סגור' : 'Close'}</button>
+      <div style="display:flex;gap:6px;margin-bottom:12px;">
+        <input type="text" value="${link}" readonly id="refLinkInput" style="flex:1;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--ac);font-family:monospace;font-size:11px;overflow:hidden;text-overflow:ellipsis;">
+        <button class="btn btn-primary" style="min-width:60px;font-size:13px;" onclick="navigator.clipboard.writeText(document.getElementById('refLinkInput').value);showToast('Copied!','ok')">Copy</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;">
+        <a href="${waUrl}" target="_blank" rel="noopener" class="btn" style="flex:1;font-size:13px;background:#25D366;border-color:#25D366;color:#fff;">WhatsApp</a>
+        <a href="${mailUrl}" class="btn" style="flex:1;font-size:13px;">Email</a>
+      </div>
+      <div id="refStats" style="font-size:13px;color:var(--txd);margin-bottom:14px;"></div>
+      <button onclick="this.closest('.modal-overlay').remove()" class="btn" style="width:100%;">${h ? 'סגור' : 'Close'}</button>
     </div>`;
   document.body.appendChild(m);
   requestAnimationFrame(() => m.classList.add('open'));
   m.onclick = (e) => { if (e.target === m) m.remove(); };
 
-  // Load referral stats
   if (typeof apiCall === 'function') {
     apiCall('/api/referral/stats').then(data => {
       if (data.ok) {
         const el = document.getElementById('refStats');
-        if (el) el.textContent = isHe
+        if (el) el.textContent = h
           ? `הפנית ${data.referrals} חברים${data.hasDiscount ? ' — יש לך 10% הנחה!' : ''}`
           : `You referred ${data.referrals} friend${data.referrals !== 1 ? 's' : ''}${data.hasDiscount ? ' — you earned 10% off!' : ''}`;
       }
     }).catch(() => {});
   }
+}
+
+// ── Redeem Code Modal ──
+function showRedeemCode() {
+  _closeDropdown();
+  const h = lang === 'he';
+  const m = document.createElement('div');
+  m.className = 'modal-overlay';
+  m.innerHTML = `
+    <div class="modal-card" style="max-width:380px;text-align:center;">
+      <div style="font-size:40px;margin-bottom:12px;">🎟️</div>
+      <h3 style="margin-bottom:6px;">${h ? 'הזן קוד' : 'Redeem Code'}</h3>
+      <p style="font-size:14px;color:var(--txd);margin-bottom:16px;line-height:1.5;">${h ? 'יש לך קוד מתנה או קוד ארגון?' : 'Have a gift code or organization code?'}</p>
+      <input type="text" id="redeemInput" class="input" placeholder="ABCD-1234" style="text-align:center;letter-spacing:2px;font-size:18px;font-weight:700;margin-bottom:12px;" maxlength="20">
+      <button class="btn btn-primary" style="width:100%;margin-bottom:8px;" onclick="doRedeem()" id="redeemBtn">${h ? 'הפעל קוד' : 'Redeem'}</button>
+      <div id="redeemResult" style="font-size:13px;margin-bottom:12px;min-height:20px;"></div>
+      <button onclick="this.closest('.modal-overlay').remove()" class="btn" style="width:100%;">${h ? 'סגור' : 'Close'}</button>
+    </div>`;
+  document.body.appendChild(m);
+  requestAnimationFrame(() => m.classList.add('open'));
+  m.onclick = (e) => { if (e.target === m) m.remove(); };
+  setTimeout(() => document.getElementById('redeemInput')?.focus(), 200);
+  document.getElementById('redeemInput')?.addEventListener('keydown', e => { if (e.key === 'Enter') doRedeem(); });
+}
+
+async function doRedeem() {
+  const code = document.getElementById('redeemInput')?.value.trim();
+  const result = document.getElementById('redeemResult');
+  const btn = document.getElementById('redeemBtn');
+  if (!code) { result.innerHTML = '<span style="color:var(--red);">Enter a code</span>'; return; }
+  btn.disabled = true; btn.textContent = '...';
+  try {
+    const data = await apiCall('/api/credits/redeem', { method: 'POST', body: { code } });
+    result.innerHTML = `<span style="color:var(--grn);">✓ ${data.credits} credits added!</span>`;
+    if (typeof fetchUser === 'function') fetchUser().catch(() => {});
+  } catch (err) {
+    result.innerHTML = `<span style="color:var(--red);">✗ ${err.message}</span>`;
+  }
+  btn.disabled = false; btn.textContent = lang === 'he' ? 'הפעל קוד' : 'Redeem';
 }
 
 // ── Cross-promo Banner ──
@@ -350,7 +407,7 @@ function requireOnline() {
 // ── Routing ──
 const _SKIP_PAGES = ['/admin.html', '/auth.html', '/onboarding.html'];
 const _LANDING_PAGES = ['/', '/index.html'];
-const _APP_PAGES = ['/home.html', '/profile.html', '/dashboard.html', '/gallery.html', '/directory.html', '/directory-profile.html', '/chat.html'];
+const _APP_PAGES = ['/home.html', '/profile.html', '/dashboard.html', '/gallery.html', '/directory.html', '/directory-profile.html', '/chat.html', '/affiliate.html'];
 
 function _isAppPage() {
   const p = window.location.pathname;
