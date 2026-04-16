@@ -119,21 +119,21 @@ document.getElementById('photoInput').addEventListener('change', handlePhotoUplo
 
 async function generatePost() {
   if (!requirePro()) return;
-  const s = getAISettings();
-  if (!s.claudeKey) { openAISettings(); return; }
 
   const desc = document.getElementById('workDesc').value.trim();
   if (!desc) { showToast(lang === 'he' ? 'תאר את העבודה' : 'Describe the work', 'err'); return; }
+
+  const ok = await confirmCredit(lang === 'he' ? 'פוסט חברתי' : 'Social Post');
+  if (!ok) return;
 
   const btn = document.getElementById('genBtn');
   btn.disabled = true;
   btn.textContent = '⏳...';
 
   try {
-    const imageParts = [];
+    const images = [];
     if (photoSrc) {
-      const b64 = await resizeForAPI(photoSrc);
-      imageParts.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 } });
+      images.push(await resizeForAPI(photoSrc));
     }
 
     const prompt = `You are a social media expert for construction contractors. Write a ${platform} post for this project:
@@ -150,8 +150,7 @@ Requirements:
 Respond JSON only:
 {"caption": "the full caption text", "hashtags": "#tag1 #tag2 ..."}`;
 
-    const content = [...imageParts, { type: 'text', text: prompt }];
-    const text = await callClaude(s.claudeKey, s.claudeModel, [{ role: 'user', content }], 1000);
+    const text = await callWorkerAI('social-post', prompt, images, desc.substring(0, 50));
     const result = parseAIJSON(text);
 
     document.getElementById('captionBox').textContent = result.caption;

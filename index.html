@@ -6,6 +6,7 @@
 <title>BQ Tools — AI-Powered Tools for Contractors</title>
 <meta name="description" content="AI-powered tools for contractors and remodelers. Before/after comparisons, AI reports, smart estimates, and more. Make your work sell itself.">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
   /* ── Hero ── */
   .hero {
@@ -157,9 +158,9 @@
   /* ── Pricing ── */
   .pricing-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    max-width: 720px;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    max-width: 920px;
     margin: 0 auto;
   }
   .price-card {
@@ -169,22 +170,27 @@
     padding: 28px;
     text-align: center;
     position: relative;
+    display: flex;
+    flex-direction: column;
   }
-  .price-card.featured {
+  .price-card.recommended {
     border-color: var(--ac);
     box-shadow: 0 0 40px var(--acd);
+    transform: scale(1.03);
   }
-  .price-card.featured::before {
-    content: 'BEST VALUE';
+  .price-card.recommended::before {
+    content: 'RECOMMENDED';
     position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
     background: var(--ac); color: var(--bg);
     font-size: 10px; font-weight: 700; padding: 2px 12px;
     border-radius: 10px; letter-spacing: 1px;
+    white-space: nowrap;
   }
+  .price-card.compact { padding: 22px; }
   .price-name { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
   .price-amount { font-size: 42px; font-weight: 900; margin: 12px 0; }
   .price-amount span { font-size: 16px; font-weight: 400; color: var(--txd); }
-  .price-features { list-style: none; text-align: left; margin: 20px 0; }
+  .price-features { list-style: none; text-align: left; margin: 20px 0; flex: 1; }
   .price-features li {
     font-size: 14px; color: var(--txd); padding: 7px 0;
     border-bottom: 1px solid rgba(255,255,255,.04);
@@ -194,7 +200,66 @@
     content: ''; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
   }
   .price-card .price-features li::before { background: var(--grn); }
-  .price-card.featured .price-features li::before { background: var(--ac); }
+  .price-card.recommended .price-features li::before { background: var(--ac); }
+  .price-btn-stack { display: flex; flex-direction: column; gap: 8px; margin-top: auto; }
+
+  /* Featured listing */
+  .featured-listing {
+    max-width: 720px;
+    margin: 32px auto 0;
+    background: linear-gradient(135deg, rgba(232,197,71,.08), rgba(232,197,71,.02));
+    border: 1px solid var(--ac);
+    border-radius: 16px;
+    padding: 28px;
+    text-align: center;
+  }
+  .featured-listing h3 { font-size: 20px; font-weight: 900; color: var(--ac); margin-bottom: 4px; }
+  .featured-listing .featured-price { font-size: 32px; font-weight: 900; margin: 8px 0 16px; }
+  .featured-listing .featured-price span { font-size: 14px; font-weight: 400; color: var(--txd); }
+  .featured-listing ul { list-style: none; text-align: left; max-width: 400px; margin: 0 auto 20px; }
+  .featured-listing ul li {
+    font-size: 14px; color: var(--txd); padding: 6px 0;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .featured-listing ul li::before {
+    content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--ac); flex-shrink: 0;
+  }
+
+  /* ── Coming Soon ── */
+  .coming-soon-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    max-width: 920px;
+    margin: 0 auto 32px;
+  }
+  .cs-card {
+    background: var(--sf);
+    border: 1px solid var(--bd);
+    border-radius: 14px;
+    padding: 24px;
+    text-align: center;
+  }
+  .cs-card .cs-icon { font-size: 36px; margin-bottom: 12px; }
+  .cs-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+  .cs-card p { font-size: 14px; color: var(--txd); line-height: 1.5; margin-bottom: 16px; }
+  .waitlist-form {
+    max-width: 420px;
+    margin: 0 auto;
+    display: flex;
+    gap: 8px;
+  }
+  .waitlist-form input {
+    flex: 1;
+    padding: 12px 14px;
+    border: 1px solid var(--bd);
+    border-radius: var(--r);
+    background: var(--bg);
+    color: var(--tx);
+    font-family: 'Heebo', sans-serif;
+    font-size: 16px;
+  }
+  .waitlist-form input:focus { outline: none; border-color: var(--ac); }
 
   /* ── Social Proof ── */
   .proof {
@@ -239,6 +304,9 @@
     .hero .tagline { font-size: 16px; }
     .tools-grid { grid-template-columns: 1fr; }
     .pricing-grid { grid-template-columns: 1fr; }
+    .price-card.recommended { transform: none; }
+    .coming-soon-grid { grid-template-columns: 1fr; }
+    .waitlist-form { flex-direction: column; }
     .section-title { font-size: 24px; }
     .proof blockquote { font-size: 14px; }
   }
@@ -251,6 +319,7 @@
   <a href="/" class="nav-logo">BQ <span>Tools</span></a>
   <div class="nav-right">
     <a href="#tools" class="nav-link" data-en="Tools" data-he="כלים">Tools</a>
+    <a href="/directory.html" class="nav-link" data-en="Directory" data-he="ספר עסקים">Directory</a>
     <a href="#pricing" class="nav-link" data-en="Pricing" data-he="מחירים">Pricing</a>
     <a href="/auth.html" class="btn btn-sm" id="navProBtn" data-en="Pro" data-he="Pro">Pro</a>
     <div class="lang-toggle">
@@ -357,12 +426,65 @@
   </div>
 </section>
 
+<!-- Directory Preview -->
+<section class="section" id="directory">
+  <h2 class="section-title" data-en="Find Contractors Near You" data-he="מצא קבלנים באזור שלך">Find Contractors Near You</h2>
+  <p class="section-sub" data-en="Browse the BQ Directory — trusted professionals in your area" data-he="דפדף בספר העסקים של BQ — אנשי מקצוע מהימנים באזור שלך">Browse the BQ Directory — trusted professionals in your area</p>
+
+  <div style="width:100%;border-radius:14px;overflow:hidden;border:1px solid var(--bd);margin-bottom:24px;height:200px;background:var(--sf);position:relative;">
+    <div id="previewMap" style="width:100%;height:100%;"></div>
+    <div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 50%,var(--bg));pointer-events:none;z-index:1;"></div>
+  </div>
+
+  <div style="text-align:center;">
+    <a href="/directory.html" class="btn btn-primary btn-large" data-en="Browse Directory →" data-he="דפדף בספר העסקים →">Browse Directory →</a>
+  </div>
+</section>
+
+<!-- Coming Soon — AI Video -->
+<section class="section" id="video">
+  <h2 class="section-title" data-en="AI Video Production — Coming Soon" data-he="הפקת וידאו AI — בקרוב">AI Video Production — Coming Soon</h2>
+  <p class="section-sub" data-en="Professional AI-generated videos from your project photos" data-he="סרטוני AI מקצועיים מתמונות הפרויקט שלך">Professional AI-generated videos from your project photos</p>
+
+  <div class="coming-soon-grid">
+    <div class="cs-card">
+      <div class="cs-icon">🎬</div>
+      <h3 data-en="Custom Video" data-he="וידאו מותאם אישית">Custom Video</h3>
+      <p data-en="Upload photos → our team creates a cinematic AI video. Professional editing by BQ Production. 3-5 business days delivery." data-he="העלה תמונות → הצוות שלנו יוצר סרטון AI קולנועי. עריכה מקצועית של BQ Production. אספקה תוך 3-5 ימי עסקים.">Upload photos → our team creates a cinematic AI video. Professional editing by BQ Production. 3-5 business days delivery.</p>
+      <button class="btn" style="width:100%;" onclick="scrollToWaitlist()" data-en="Join Waitlist" data-he="הצטרף לרשימת המתנה">Join Waitlist</button>
+    </div>
+
+    <div class="cs-card">
+      <div class="cs-icon">🤖</div>
+      <h3 data-en="Auto Video (Self-Service)" data-he="וידאו אוטומטי (שירות עצמי)">Auto Video (Self-Service)</h3>
+      <p data-en="AI automatically creates videos from your before/after photos. Powered by Seedance 2.0. Choose style, music, duration — no editing needed." data-he="AI יוצר סרטונים אוטומטית מתמונות לפני/אחרי. מופעל על ידי Seedance 2.0. בחר סגנון, מוזיקה, משך — בלי עריכה.">AI automatically creates videos from your before/after photos. Powered by Seedance 2.0. Choose style, music, duration — no editing needed.</p>
+      <button class="btn" style="width:100%;" onclick="scrollToWaitlist()" data-en="Join Waitlist" data-he="הצטרף לרשימת המתנה">Join Waitlist</button>
+    </div>
+
+    <div class="cs-card">
+      <div class="cs-icon">▶️</div>
+      <h3 data-en="See Examples" data-he="צפה בדוגמאות">See Examples</h3>
+      <p data-en="Watch AI videos created for real contractors. By BQ Production — AI Video Studio." data-he="צפה בסרטוני AI שנוצרו לקבלנים אמיתיים. מאת BQ Production — סטודיו וידאו AI.">Watch AI videos created for real contractors. By BQ Production — AI Video Studio.</p>
+      <a href="https://bqprod.pages.dev/" target="_blank" rel="noopener" class="btn btn-primary" style="width:100%;" data-en="View Portfolio →" data-he="צפה בתיק עבודות →">View Portfolio →</a>
+    </div>
+  </div>
+
+  <div style="text-align:center;">
+    <p style="color:var(--txd);font-size:15px;margin-bottom:12px;" data-en="Be first to know when AI Video launches" data-he="היה הראשון לדעת כשוידאו AI יושק" id="waitlistAnchor">Be first to know when AI Video launches</p>
+    <div class="waitlist-form" id="waitlistForm">
+      <input type="email" id="waitlistEmail" placeholder="your@email.com" spellcheck="false" autocomplete="email">
+      <button class="btn btn-primary" onclick="joinVideoWaitlist()" data-en="Notify Me" data-he="עדכנו אותי">Notify Me</button>
+    </div>
+  </div>
+</section>
+
 <!-- Pricing -->
 <section class="section" id="pricing">
   <h2 class="section-title" data-en="Simple Pricing" data-he="מחירים פשוטים">Simple Pricing</h2>
   <p class="section-sub" data-en="Start free. Upgrade when your business is ready." data-he="התחל בחינם. שדרג כשהעסק שלך מוכן.">Start free. Upgrade when your business is ready.</p>
 
   <div class="pricing-grid">
+    <!-- FREE -->
     <div class="price-card">
       <div class="price-name">Free</div>
       <div class="price-amount">$0</div>
@@ -370,28 +492,60 @@
         <li data-en="5 AI credits (one-time)" data-he="5 קרדיטים (חד פעמי)">5 AI credits (one-time)</li>
         <li data-en="Before/after Compare slider" data-he="סליידר לפני/אחרי">Before/after Compare slider</li>
         <li data-en="1 Client Page" data-he="1 עמוד לקוח">1 Client Page</li>
-        <li data-en="Image + video support" data-he="תמונה + וידאו">Image + video support</li>
+        <li data-en="Basic Directory listing" data-he="רישום בסיסי בספר העסקים">Basic Directory listing</li>
         <li data-en="EN / HE language" data-he="EN / HE שפה">EN / HE language</li>
       </ul>
-      <a href="/auth.html" class="btn" style="width:100%;" data-en="Sign Up Free" data-he="הרשם בחינם">Sign Up Free</a>
+      <div class="price-btn-stack">
+        <a href="/auth.html" class="btn" style="width:100%;" data-en="Sign Up Free" data-he="הרשם בחינם">Sign Up Free</a>
+      </div>
     </div>
 
-    <div class="price-card featured">
+    <!-- PRO -->
+    <div class="price-card recommended">
+      <div class="price-name">Pro</div>
+      <div class="price-amount">$14.99<span>/mo</span></div>
+      <ul class="price-features">
+        <li data-en="50 AI credits/month (auto-reset)" data-he="50 קרדיטים/חודש (איפוס אוטומטי)">50 AI credits/month (auto-reset)</li>
+        <li data-en="All tools unlimited" data-he="כל הכלים ללא הגבלה">All tools unlimited</li>
+        <li data-en="Pro Directory listing (phone, email, photos, reviews)" data-he="רישום Pro בספר (טלפון, מייל, תמונות, ביקורות)">Pro Directory listing (phone, email, photos, reviews)</li>
+        <li data-en="Your logo on exports" data-he="הלוגו שלך על ייצוא">Your logo on exports</li>
+        <li data-en="Project Gallery + Dashboard" data-he="גלריה + דשבורד">Project Gallery + Dashboard</li>
+        <li data-en="AI Assistant" data-he="עוזר AI">AI Assistant</li>
+      </ul>
+      <div class="price-btn-stack">
+        <a href="https://www.paypal.com/ncp/payment/2LA7B7PZTHN54" target="_blank" rel="noopener" class="btn btn-primary" style="width:100%;" data-en="Go Pro → PayPal" data-he="עבור ל-Pro → PayPal">Go Pro → PayPal</a>
+        <button onclick="openCryptoModal()" class="btn" style="width:100%;border-color:rgba(81,207,102,.3);color:var(--grn);font-size:13px;" data-en="Pay with Crypto — 35% OFF → $9.74/mo" data-he="שלם בקריפטו — 35% הנחה → $9.74/חודש">Pay with Crypto — 35% OFF → $9.74/mo</button>
+      </div>
+    </div>
+
+    <!-- CREDIT PACKS -->
+    <div class="price-card compact">
       <div class="price-name" data-en="Credit Packs" data-he="חבילות קרדיטים">Credit Packs</div>
-      <div class="price-amount" style="font-size:28px;">⚡ <span style="font-size:28px;color:var(--tx);font-weight:900;">Credits</span></div>
+      <div class="price-amount" style="font-size:26px;">⚡ <span style="font-size:26px;color:var(--tx);font-weight:900;" data-en="Top Up" data-he="טעינה">Top Up</span></div>
       <ul class="price-features">
         <li data-en="25 credits — $4.99" data-he="25 קרדיטים — $4.99">25 credits — $4.99</li>
         <li data-en="60 credits — $9.99" data-he="60 קרדיטים — $9.99">60 credits — $9.99</li>
         <li data-en="150 credits — $19.99" data-he="150 קרדיטים — $19.99">150 credits — $19.99</li>
-        <li data-en="AI Analysis, Reports, Estimates" data-he="ניתוח AI, דוחות, הערכות">AI Analysis, Reports, Estimates</li>
-        <li data-en="Social Post AI + Review Request" data-he="פוסט AI + בקשת ביקורת">Social Post AI + Review Request</li>
-        <li data-en="Quick Sketch + AI Assistant" data-he="סקיצה + עוזר AI">Quick Sketch + AI Assistant</li>
-        <li data-en="Your logo on exports" data-he="הלוגו שלך על ייצוא">Your logo on exports</li>
-        <li data-en="Project Gallery + Dashboard" data-he="גלריה + דשבורד">Project Gallery + Dashboard</li>
+        <li data-en="Top up when you need more" data-he="טען כשצריך עוד" style="color:var(--txd);font-style:italic;">Top up when you need more</li>
       </ul>
-      <a href="https://www.paypal.com/ncp/payment/2LA7B7PZTHN54" target="_blank" rel="noopener" class="btn btn-primary" style="width:100%;" data-en="Buy Credits — PayPal" data-he="קנה קרדיטים — PayPal">Buy Credits — PayPal</a>
-      <button onclick="openCryptoModal()" class="btn" style="width:100%;margin-top:8px;border-color:rgba(81,207,102,.3);color:var(--grn);" data-en="Pay with Crypto — 35% OFF" data-he="שלם בקריפטו — 35% הנחה">Pay with Crypto — 35% OFF</button>
+      <div class="price-btn-stack">
+        <a href="https://www.paypal.com/ncp/payment/2LA7B7PZTHN54" target="_blank" rel="noopener" class="btn" style="width:100%;" data-en="Buy Credits → PayPal" data-he="קנה קרדיטים → PayPal">Buy Credits → PayPal</a>
+        <button onclick="openCryptoModal()" class="btn" style="width:100%;border-color:rgba(81,207,102,.3);color:var(--grn);font-size:13px;" data-en="Crypto — 35% OFF" data-he="קריפטו — 35% הנחה">Crypto — 35% OFF</button>
+      </div>
     </div>
+  </div>
+
+  <!-- Featured Listing -->
+  <div class="featured-listing">
+    <h3 data-en="⭐ FEATURED LISTING" data-he="⭐ רישום מובחר">⭐ FEATURED LISTING</h3>
+    <div class="featured-price">$49.99<span>/mo</span></div>
+    <ul>
+      <li data-en="Everything in Pro" data-he="הכל ב-Pro">Everything in Pro</li>
+      <li data-en="WhatsApp Group promoted in Directory" data-he="קבוצת WhatsApp מקודמת בספר העסקים">WhatsApp Group promoted in Directory</li>
+      <li data-en="Top placement + ⭐ Premium badge" data-he="מיקום ראשון + ⭐ תג פרימיום">Top placement + ⭐ Premium badge</li>
+      <li data-en="20 work photos" data-he="20 תמונות עבודה">20 work photos</li>
+    </ul>
+    <a href="mailto:fanzai.mgmt@gmail.com?subject=Featured%20Listing%20Interest" class="btn btn-primary btn-large" data-en="Contact for Featured" data-he="צור קשר לרישום מובחר">Contact for Featured</a>
   </div>
 </section>
 
@@ -423,12 +577,48 @@
   </div>
 </footer>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="js/ai.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/crypto.js"></script>
 <script src="js/common.js"></script>
 <script src="js/assistant.js"></script>
 <script>
+  // Preview map
+  try {
+    const pm = L.map('previewMap', { zoomControl: false, dragging: false, scrollWheelZoom: false, attributionControl: false }).setView([34.05, -118.25], 10);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(pm);
+  } catch(e) {}
+
+  // Waitlist
+  function scrollToWaitlist() {
+    document.getElementById('waitlistAnchor').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => document.getElementById('waitlistEmail').focus(), 400);
+  }
+
+  async function joinVideoWaitlist() {
+    const email = document.getElementById('waitlistEmail').value.trim();
+    if (!email || !email.includes('@')) {
+      showToast(lang === 'he' ? 'הכנס מייל תקין' : 'Enter a valid email', 'err');
+      return;
+    }
+    try {
+      const res = await fetch(API_URL + '/api/waitlist/video', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      if (res.ok) {
+        showToast(lang === 'he' ? 'נרשמת! נעדכן אותך כשזה יושק.' : "You're on the list! We'll notify you when it launches.", 'ok');
+        document.getElementById('waitlistEmail').value = '';
+      } else {
+        showToast('Error — try again', 'err');
+      }
+    } catch {
+      showToast('Network error', 'err');
+    }
+  }
+
   // Update nav based on login state
   if (isLoggedIn()) {
     const btn = document.getElementById('navProBtn');

@@ -47,6 +47,7 @@ function buildNav(activePage) {
     <a href="/" class="nav-logo">BQ <span>Tools</span></a>
     <div class="nav-right">
       <a href="/#tools" class="nav-link" data-en="Tools" data-he="כלים">Tools</a>
+      <a href="/directory.html" class="nav-link" data-en="Directory" data-he="ספר עסקים">Directory</a>
       <a href="/gallery.html" class="nav-link" data-en="Gallery" data-he="גלריה">Gallery</a>
       ${creditBar}
       ${authBtn}

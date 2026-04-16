@@ -19,6 +19,9 @@ export default {
       if (path === '/api/auth/verify' && request.method === 'POST') {
         return corsResponse(env, await handleVerify(request, env));
       }
+      if (path === '/api/auth/google' && request.method === 'POST') {
+        return corsResponse(env, await handleGoogleAuth(request, env));
+      }
       if (path === '/api/user' && request.method === 'GET') {
         return corsResponse(env, await handleGetUser(request, env));
       }
@@ -58,6 +61,27 @@ export default {
       if (path === '/api/monthly-tip' && request.method === 'GET') {
         return corsResponse(env, await handleMonthlyTip(request, env));
       }
+      // ── Directory Routes ──
+      if (path === '/api/directory/update' && request.method === 'POST') {
+        return corsResponse(env, await handleDirectoryUpdate(request, env));
+      }
+      if (path === '/api/directory/list' && request.method === 'GET') {
+        return corsResponse(env, await handleDirectoryList(request, env));
+      }
+      if (path === '/api/directory/profile' && request.method === 'GET') {
+        return corsResponse(env, await handleDirectoryProfile(request, env));
+      }
+      if (path === '/api/directory/location' && request.method === 'POST') {
+        return corsResponse(env, await handleDirectoryLocation(request, env));
+      }
+      if (path === '/api/admin/directory-tier' && request.method === 'POST') {
+        return corsResponse(env, await handleAdminDirectoryTier(request, env));
+      }
+
+      if (path === '/api/waitlist/video' && request.method === 'POST') {
+        return corsResponse(env, await handleVideoWaitlist(request, env));
+      }
+
       if (path === '/api/health') {
         return corsResponse(env, json({ ok: true, ts: Date.now() }));
       }
@@ -229,6 +253,91 @@ async function handleVerify(request, env) {
     userToken: user.userToken,
     user: sanitizeUser(user)
   });
+}
+
+// ── Google Auth ──
+
+async function handleGoogleAuth(request, env) {
+  const { credential } = await request.json();
+  if (!credential) return json({ error: 'credential required' }, 400);
+
+  // Verify JWT with Google
+  let payload;
+  try {
+    const res = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`);
+    if (!res.ok) throw new Error('Invalid token');
+    payload = await res.json();
+  } catch {
+    return json({ error: 'Invalid Google credential' }, 401);
+  }
+
+  const email = (payload.email || '').toLowerCase().trim();
+  if (!email) return json({ error: 'No email in Google token' }, 400);
+
+  // Check if user exists
+  const existing = await env.BQ_USERS.get(`user:${email}`);
+  let user;
+
+  if (existing) {
+    user = JSON.parse(existing);
+    // Generate new token
+    const newToken = generateToken();
+    if (user.userToken) {
+      await env.BQ_USERS.delete(`token:${user.userToken}`);
+    }
+    user.userToken = newToken;
+    user.lastLogin = new Date().toISOString();
+    // Update name/picture from Google if not set
+    if (!user.businessName && payload.name) user.businessName = payload.name;
+    if (!user.picture && payload.picture) user.picture = payload.picture;
+    user = checkMonthlyReset(user);
+  } else {
+    // New user
+    const token = generateToken();
+    const freeCredits = parseInt(env.FREE_CREDITS || '5');
+    user = {
+      email,
+      userToken: token,
+      credits: freeCredits,
+      isPro: false,
+      creditsUsedThisMonth: 0,
+      createdAt: new Date().toISOString(),
+      resetDate: null,
+      businessName: payload.name || '',
+      phone: '',
+      logo: '',
+      picture: payload.picture || '',
+      businessType: '',
+      language: 'en',
+      lastLogin: new Date().toISOString(),
+      isNew: true,
+      authMethod: 'google'
+    };
+  }
+
+  await env.BQ_USERS.put(`user:${email}`, JSON.stringify(user));
+  await env.BQ_USERS.put(`token:${user.userToken}`, email);
+
+  return json({
+    ok: true,
+    userToken: user.userToken,
+    user: sanitizeUser(user)
+  });
+}
+
+// ── Video Waitlist ──
+
+async function handleVideoWaitlist(request, env) {
+  const { email } = await request.json();
+  if (!email || !email.includes('@')) return json({ error: 'Valid email required' }, 400);
+
+  const emailLower = email.toLowerCase().trim();
+  await env.BQ_USERS.put(`waitlist:video:${emailLower}`, JSON.stringify({
+    email: emailLower,
+    joinedAt: new Date().toISOString()
+  }));
+
+  return json({ ok: true });
 }
 
 function sanitizeUser(user) {
@@ -683,4 +792,225 @@ async function handleAdminErrors(request, env) {
   }
 
   return json({ ok: true, errors, count: errors.length });
+}
+
+// ── Directory ──
+
+async function handleDirectoryUpdate(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const updates = await request.json();
+  const key = `directory:${user.email}`;
+  const raw = await env.BQ_USERS.get(key);
+  const listing = raw ? JSON.parse(raw) : {
+    email: user.email,
+    businessName: user.businessName || '',
+    type: user.businessType || '',
+    phone: '',
+    contactEmail: user.email,
+    logo: user.logo || '',
+    description: '',
+    photos: [],
+    reviews: [],
+    locations: [],
+    tier: 'free',
+    whatsappGroup: '',
+    createdAt: new Date().toISOString()
+  };
+
+  // Allowed fields
+  const allowed = ['businessName', 'type', 'phone', 'contactEmail', 'logo', 'description', 'photos', 'reviews', 'whatsappGroup'];
+  for (const k of allowed) {
+    if (updates[k] !== undefined) {
+      // Limit photos based on tier
+      if (k === 'photos') {
+        const maxPhotos = listing.tier === 'featured' ? 20 : (listing.tier === 'pro' ? 5 : 0);
+        if (updates[k].length > maxPhotos) {
+          return json({ error: `Max ${maxPhotos} photos for ${listing.tier} tier` }, 400);
+        }
+      }
+      // Reviews only for pro+
+      if (k === 'reviews' && listing.tier === 'free') {
+        return json({ error: 'Reviews require Pro listing' }, 400);
+      }
+      // WhatsApp only for featured
+      if (k === 'whatsappGroup' && listing.tier !== 'featured') {
+        return json({ error: 'WhatsApp group requires Featured listing' }, 400);
+      }
+      listing[k] = updates[k];
+    }
+  }
+
+  listing.updatedAt = new Date().toISOString();
+  await env.BQ_USERS.put(key, JSON.stringify(listing));
+
+  // Update index
+  await updateDirectoryIndex(user.email, listing, env);
+
+  return json({ ok: true, listing });
+}
+
+async function updateDirectoryIndex(email, listing, env) {
+  const indexKey = 'directory:index';
+  const raw = await env.BQ_USERS.get(indexKey);
+  const index = raw ? JSON.parse(raw) : [];
+
+  // Remove existing entry
+  const filtered = index.filter(e => e.email !== email);
+
+  // Add updated entry
+  filtered.push({
+    email: listing.email,
+    businessName: listing.businessName,
+    type: listing.type,
+    tier: listing.tier,
+    logo: listing.logo,
+    phone: listing.phone,
+    description: (listing.description || '').substring(0, 120),
+    photoCount: (listing.photos || []).length,
+    reviewCount: (listing.reviews || []).length,
+    locationCount: (listing.locations || []).length,
+    updatedAt: listing.updatedAt || listing.createdAt
+  });
+
+  await env.BQ_USERS.put(indexKey, JSON.stringify(filtered));
+}
+
+async function handleDirectoryList(request, env) {
+  const url = new URL(request.url);
+  const search = (url.searchParams.get('q') || '').toLowerCase();
+  const typeFilter = url.searchParams.get('type') || '';
+
+  const raw = await env.BQ_USERS.get('directory:index');
+  let listings = raw ? JSON.parse(raw) : [];
+
+  // Filter
+  if (search) {
+    listings = listings.filter(l =>
+      (l.businessName || '').toLowerCase().includes(search) ||
+      (l.type || '').toLowerCase().includes(search) ||
+      (l.description || '').toLowerCase().includes(search)
+    );
+  }
+  if (typeFilter) {
+    listings = listings.filter(l => l.type === typeFilter);
+  }
+
+  // Sort: featured first, then pro, then free. Within each tier, by updatedAt desc
+  const tierOrder = { featured: 0, pro: 1, free: 2 };
+  listings.sort((a, b) => {
+    const ta = tierOrder[a.tier] ?? 2;
+    const tb = tierOrder[b.tier] ?? 2;
+    if (ta !== tb) return ta - tb;
+    return (b.updatedAt || '').localeCompare(a.updatedAt || '');
+  });
+
+  return json({ ok: true, listings, count: listings.length });
+}
+
+async function handleDirectoryProfile(request, env) {
+  const url = new URL(request.url);
+  const email = url.searchParams.get('email');
+  if (!email) return json({ error: 'email param required' }, 400);
+
+  const raw = await env.BQ_USERS.get(`directory:${email.toLowerCase().trim()}`);
+  if (!raw) return json({ error: 'Listing not found' }, 404);
+
+  const listing = JSON.parse(raw);
+
+  // Strip sensitive data for free tier
+  const result = { ...listing };
+  if (listing.tier === 'free') {
+    result.phone = '';
+    result.contactEmail = '';
+    result.logo = '';
+    result.photos = [];
+    result.reviews = [];
+  }
+
+  return json({ ok: true, listing: result });
+}
+
+async function handleDirectoryLocation(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const { address, projectTitle, thumbnail } = await request.json();
+  if (!address) return json({ error: 'address required' }, 400);
+
+  // Geocode with Nominatim (free, OSM)
+  let lat = null, lng = null;
+  try {
+    const geo = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(address)}`, {
+      headers: { 'User-Agent': 'BQTools/1.0' }
+    });
+    const results = await geo.json();
+    if (results.length > 0) {
+      lat = parseFloat(results[0].lat);
+      lng = parseFloat(results[0].lon);
+    }
+  } catch (e) {
+    console.error('Geocode failed:', e);
+  }
+
+  if (!lat || !lng) {
+    return json({ error: 'Could not geocode address. Try a more specific address.' }, 400);
+  }
+
+  const key = `directory:${user.email}`;
+  const raw = await env.BQ_USERS.get(key);
+  if (!raw) return json({ error: 'Create listing first' }, 400);
+
+  const listing = JSON.parse(raw);
+
+  // Pro: 10 locations, Featured: 50, Free: 0
+  const maxLoc = listing.tier === 'featured' ? 50 : (listing.tier === 'pro' ? 10 : 0);
+  if (listing.tier === 'free') {
+    return json({ error: 'Locations require Pro listing' }, 400);
+  }
+  if ((listing.locations || []).length >= maxLoc) {
+    return json({ error: `Max ${maxLoc} locations for ${listing.tier} tier` }, 400);
+  }
+
+  if (!listing.locations) listing.locations = [];
+  listing.locations.push({
+    address,
+    lat,
+    lng,
+    projectTitle: projectTitle || '',
+    thumbnail: thumbnail || '',
+    addedAt: new Date().toISOString()
+  });
+
+  listing.updatedAt = new Date().toISOString();
+  await env.BQ_USERS.put(key, JSON.stringify(listing));
+  await updateDirectoryIndex(user.email, listing, env);
+
+  return json({ ok: true, location: listing.locations[listing.locations.length - 1] });
+}
+
+async function handleAdminDirectoryTier(request, env) {
+  if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
+
+  const { email, tier } = await request.json();
+  if (!email || !['free', 'pro', 'featured'].includes(tier)) {
+    return json({ error: 'email and tier (free/pro/featured) required' }, 400);
+  }
+
+  const emailLower = email.toLowerCase().trim();
+  const key = `directory:${emailLower}`;
+  const raw = await env.BQ_USERS.get(key);
+  if (!raw) return json({ error: 'Listing not found' }, 404);
+
+  const listing = JSON.parse(raw);
+  listing.tier = tier;
+  listing.updatedAt = new Date().toISOString();
+
+  await env.BQ_USERS.put(key, JSON.stringify(listing));
+  await updateDirectoryIndex(emailLower, listing, env);
+
+  return json({ ok: true, tier: listing.tier });
 }

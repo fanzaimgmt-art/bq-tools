@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Directory — Contractor Profile</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+  body { display: flex; flex-direction: column; }
+
+  .profile-header {
+    width: 92%; max-width: 700px; margin: 0 auto; padding: 24px 0;
+    display: flex; align-items: center; gap: 20px;
+  }
+  .profile-logo {
+    width: 80px; height: 80px; border-radius: 14px; object-fit: cover;
+    border: 2px solid var(--bd); flex-shrink: 0;
+  }
+  .profile-logo-placeholder {
+    width: 80px; height: 80px; border-radius: 14px; border: 2px solid var(--bd);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px; font-weight: 900; background: var(--sf); flex-shrink: 0; color: var(--ac);
+  }
+  .profile-info h1 { font-size: 24px; font-weight: 900; line-height: 1.2; margin-bottom: 4px; }
+  .profile-type { font-size: 15px; color: var(--txd); }
+  .profile-badge {
+    display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 10px;
+    border-radius: 6px; margin-top: 6px;
+  }
+  .badge-featured { background: var(--acd); color: var(--ac); }
+  .badge-pro { background: rgba(116,185,255,.12); color: var(--blu); }
+
+  .profile-body { width: 92%; max-width: 700px; margin: 0 auto; padding-bottom: 40px; }
+
+  /* Contact card */
+  .contact-card {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 14px;
+    padding: 20px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px;
+  }
+  .contact-item {
+    display: flex; align-items: center; gap: 8px; font-size: 14px;
+    padding: 8px 14px; background: var(--bg); border-radius: 8px;
+    border: 1px solid var(--bd); min-height: 48px;
+  }
+  .contact-item a { color: var(--ac); text-decoration: none; }
+  .contact-item a:hover { opacity: .8; }
+
+  /* Description */
+  .profile-desc {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 14px;
+    padding: 20px; margin-bottom: 20px;
+  }
+  .profile-desc h3 { font-size: 14px; color: var(--txd); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .profile-desc p { font-size: 15px; line-height: 1.7; }
+
+  /* Photos grid */
+  .photos-section { margin-bottom: 20px; }
+  .photos-section h3 {
+    font-size: 14px; color: var(--txd); text-transform: uppercase;
+    letter-spacing: 1px; margin-bottom: 10px;
+  }
+  .photos-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+  }
+  .photos-grid img {
+    width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 10px;
+    border: 1px solid var(--bd); cursor: pointer; transition: transform .2s;
+  }
+  .photos-grid img:hover { transform: scale(1.03); }
+
+  /* Reviews */
+  .reviews-section { margin-bottom: 20px; }
+  .reviews-section h3 {
+    font-size: 14px; color: var(--txd); text-transform: uppercase;
+    letter-spacing: 1px; margin-bottom: 10px;
+  }
+  .review-card {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 10px;
+    padding: 14px; margin-bottom: 10px;
+  }
+  .review-card img {
+    width: 100%; border-radius: 8px; margin-bottom: 8px;
+  }
+  .review-card .review-text { font-size: 14px; color: var(--txd); line-height: 1.6; }
+
+  /* Map */
+  .profile-map-wrap {
+    border-radius: 14px; overflow: hidden; border: 1px solid var(--bd); margin-bottom: 20px;
+  }
+  #profileMap { height: 300px; width: 100%; background: var(--sf); }
+
+  /* WhatsApp */
+  .whatsapp-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 14px; border-radius: 12px;
+    background: #25D366; color: #fff; font-weight: 700; font-size: 16px;
+    border: none; cursor: pointer; font-family: 'Heebo', sans-serif;
+    text-decoration: none; min-height: 54px; margin-bottom: 20px;
+  }
+  .whatsapp-btn:hover { filter: brightness(1.1); color: #fff; opacity: 1; }
+
+  /* Contact button */
+  .contact-btn {
+    width: 100%; margin-bottom: 20px;
+  }
+
+  /* Loading */
+  .profile-loading {
+    text-align: center; padding: 80px 20px; color: var(--txd);
+  }
+
+  /* Lightbox */
+  .lightbox {
+    position: fixed; inset: 0; background: rgba(0,0,0,.9); z-index: 300;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+  }
+  .lightbox img { max-width: 95%; max-height: 90vh; border-radius: 8px; }
+
+  /* Leaflet popup */
+  .leaflet-popup-content-wrapper { background: var(--sf); color: var(--tx); border: 1px solid var(--bd); border-radius: 10px; }
+  .leaflet-popup-tip { background: var(--sf); }
+  .leaflet-popup-content { margin: 10px 14px; font-family: 'Heebo', sans-serif; font-size: 13px; }
+
+  @media (max-width: 600px) {
+    .profile-header { flex-direction: column; text-align: center; padding: 16px 0; }
+    .photos-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+    #profileMap { height: 220px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/directory.html" class="nav-link" data-en="← Directory" data-he="← ספר עסקים">← Directory</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div id="profileContent">
+  <div class="profile-loading">
+    <div class="dots"><span></span><span></span><span></span></div>
+    <p style="margin-top:12px;" data-en="Loading profile..." data-he="טוען פרופיל...">Loading profile...</p>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="footer-brand">Powered by BQ Tools — BQ Production LLC</div>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/crypto.js"></script>
+<script src="js/common.js"></script>
+<script>
+const params = new URLSearchParams(window.location.search);
+const email = params.get('email') || params.get('id');
+
+if (!email) {
+  document.getElementById('profileContent').innerHTML = `
+    <div class="profile-loading">
+      <p>No contractor specified. <a href="/directory.html">Browse directory</a></p>
+    </div>`;
+} else {
+  loadProfile();
+}
+
+async function loadProfile() {
+  try {
+    const res = await fetch(`${API_URL}/api/directory/profile?email=${encodeURIComponent(email)}`);
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error);
+    renderProfile(data.listing);
+  } catch (e) {
+    document.getElementById('profileContent').innerHTML = `
+      <div class="profile-loading">
+        <p>⚠️ ${escHtml(e.message || 'Could not load profile')}. <a href="/directory.html">Back to directory</a></p>
+      </div>`;
+  }
+}
+
+function renderProfile(l) {
+  const isFeatured = l.tier === 'featured';
+  const isPro = l.tier === 'pro';
+  const isFree = l.tier === 'free';
+
+  document.title = `${l.businessName || 'Contractor'} — BQ Directory`;
+
+  const logoHTML = l.logo
+    ? `<img src="${l.logo}" class="profile-logo" alt="${escHtml(l.businessName)}">`
+    : `<div class="profile-logo-placeholder">${(l.businessName || '?')[0].toUpperCase()}</div>`;
+
+  const badge = isFeatured
+    ? `<span class="profile-badge badge-featured">⭐ Featured Contractor</span>`
+    : isPro
+      ? `<span class="profile-badge badge-pro">PRO</span>`
+      : '';
+
+  // Contact info (pro+ only)
+  let contactHTML = '';
+  if (!isFree) {
+    const items = [];
+    if (l.phone) items.push(`<div class="contact-item">📞 <a href="tel:${l.phone}">${escHtml(l.phone)}</a></div>`);
+    if (l.contactEmail) items.push(`<div class="contact-item">✉️ <a href="mailto:${l.contactEmail}">${escHtml(l.contactEmail)}</a></div>`);
+    if (items.length) {
+      contactHTML = `<div class="contact-card">${items.join('')}</div>`;
+    }
+  }
+
+  // WhatsApp (featured only)
+  let whatsappHTML = '';
+  if (isFeatured && l.whatsappGroup) {
+    whatsappHTML = `<a href="${escHtml(l.whatsappGroup)}" target="_blank" class="whatsapp-btn">💬 Join WhatsApp Group</a>`;
+  }
+
+  // Description
+  let descHTML = '';
+  if (l.description) {
+    descHTML = `
+      <div class="profile-desc">
+        <h3 data-en="About" data-he="אודות">About</h3>
+        <p>${escHtml(l.description)}</p>
+      </div>`;
+  }
+
+  // Photos
+  let photosHTML = '';
+  if (l.photos && l.photos.length > 0) {
+    photosHTML = `
+      <div class="photos-section">
+        <h3 data-en="Work Photos" data-he="תמונות עבודה">Work Photos</h3>
+        <div class="photos-grid">
+          ${l.photos.map(p => `<img src="${p}" alt="Work photo" onclick="openLightbox(this.src)">`).join('')}
+        </div>
+      </div>`;
+  }
+
+  // Reviews
+  let reviewsHTML = '';
+  if (l.reviews && l.reviews.length > 0) {
+    reviewsHTML = `
+      <div class="reviews-section">
+        <h3 data-en="Customer Reviews" data-he="ביקורות לקוחות">Customer Reviews</h3>
+        ${l.reviews.map(r => `
+          <div class="review-card">
+            ${r.image ? `<img src="${r.image}" alt="Review">` : ''}
+            ${r.text ? `<div class="review-text">${escHtml(r.text)}</div>` : ''}
+          </div>
+        `).join('')}
+      </div>`;
+  }
+
+  // Map
+  let mapHTML = '';
+  if (l.locations && l.locations.length > 0) {
+    mapHTML = `
+      <div style="margin-bottom:20px;">
+        <h3 style="font-size:14px;color:var(--txd);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;" data-en="Work Locations" data-he="מיקומי עבודה">Work Locations</h3>
+        <div class="profile-map-wrap">
+          <div id="profileMap"></div>
+        </div>
+      </div>`;
+  }
+
+  // Contact button
+  let contactBtnHTML = '';
+  if (!isFree) {
+    const mailto = l.contactEmail ? `mailto:${l.contactEmail}?subject=Inquiry from BQ Directory` : '#';
+    contactBtnHTML = `<a href="${mailto}" class="btn btn-primary btn-large contact-btn" data-en="📩 Contact This Contractor" data-he="📩 צור קשר עם הקבלן">📩 Contact This Contractor</a>`;
+  } else {
+    contactBtnHTML = `
+      <div style="text-align:center;padding:20px;background:var(--sf);border:1px solid var(--bd);border-radius:14px;margin-bottom:20px;">
+        <p style="color:var(--txd);font-size:14px;margin-bottom:12px;" data-en="This contractor has a basic listing. Contact info available for Pro members." data-he="לקבלן זה רישום בסיסי. פרטי קשר זמינים לחברי Pro.">This contractor has a basic listing. Contact info available for Pro members.</p>
+      </div>`;
+  }
+
+  document.getElementById('profileContent').innerHTML = `
+    <div class="profile-header">
+      ${logoHTML}
+      <div class="profile-info">
+        <h1>${escHtml(l.businessName || 'Unnamed Contractor')}</h1>
+        <div class="profile-type">${escHtml(l.type || '')}</div>
+        ${badge}
+      </div>
+    </div>
+    <div class="profile-body">
+      ${whatsappHTML}
+      ${contactBtnHTML}
+      ${contactHTML}
+      ${descHTML}
+      ${photosHTML}
+      ${reviewsHTML}
+      ${mapHTML}
+    </div>`;
+
+  setLang(lang);
+
+  // Init map if locations exist
+  if (l.locations && l.locations.length > 0) {
+    setTimeout(() => initProfileMap(l), 100);
+  }
+}
+
+function initProfileMap(l) {
+  const mapEl = document.getElementById('profileMap');
+  if (!mapEl) return;
+
+  const pmap = L.map('profileMap');
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OSM &copy; CARTO', maxZoom: 19
+  }).addTo(pmap);
+
+  const bounds = [];
+  for (const loc of l.locations) {
+    if (!loc.lat || !loc.lng) continue;
+
+    const icon = L.divIcon({
+      className: 'custom-marker',
+      html: `<div style="width:32px;height:32px;border-radius:50%;background:var(--ac);border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#0a0a0c;box-shadow:0 2px 8px rgba(0,0,0,.4);">📍</div>`,
+      iconSize: [32, 32], iconAnchor: [16, 16]
+    });
+
+    const popup = `
+      <div style="font-family:Heebo,sans-serif;">
+        ${loc.thumbnail ? `<img src="${loc.thumbnail}" style="width:120px;border-radius:6px;margin-bottom:6px;">` : ''}
+        ${loc.projectTitle ? `<strong>${escHtml(loc.projectTitle)}</strong><br>` : ''}
+        <span style="color:var(--txd);font-size:12px;">${escHtml(loc.address)}</span>
+      </div>`;
+
+    L.marker([loc.lat, loc.lng], { icon }).bindPopup(popup).addTo(pmap);
+    bounds.push([loc.lat, loc.lng]);
+  }
+
+  if (bounds.length > 0) {
+    pmap.fitBounds(bounds, { padding: [30, 30], maxZoom: 14 });
+  } else {
+    pmap.setView([34.05, -118.25], 10);
+  }
+}
+
+function openLightbox(src) {
+  const lb = document.createElement('div');
+  lb.className = 'lightbox';
+  lb.innerHTML = `<img src="${src}" alt="">`;
+  lb.onclick = () => lb.remove();
+  document.body.appendChild(lb);
+}
+
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+</script>
+</body>
+</html>

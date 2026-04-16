@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Directory — Find Trusted Contractors</title>
+<meta name="description" content="Find trusted contractors near you. Browse verified professionals — General Contractors, Remodelers, Painters, Roofers, Landscapers, and more.">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+  body { display: flex; flex-direction: column; }
+
+  /* ── Hero ── */
+  .dir-hero {
+    width: 100%;
+    padding: 50px 20px 30px;
+    text-align: center;
+    background: linear-gradient(180deg, var(--sf) 0%, var(--bg) 100%);
+  }
+  .dir-hero h1 { font-size: 32px; font-weight: 900; margin-bottom: 8px; }
+  .dir-hero h1 .accent { color: var(--ac); }
+  .dir-hero p { color: var(--txd); font-size: 15px; margin-bottom: 24px; }
+
+  /* ── Search ── */
+  .dir-search {
+    width: 92%; max-width: 700px; margin: 0 auto 24px;
+    display: flex; gap: 8px; flex-wrap: wrap;
+  }
+  .dir-search .input { flex: 1; min-width: 200px; }
+  .dir-search select {
+    padding: 12px 14px; border: 1px solid var(--bd); border-radius: var(--r);
+    background: var(--bg); color: var(--tx); font-family: 'Heebo', sans-serif;
+    font-size: 16px; min-height: 48px; min-width: 180px;
+  }
+  .dir-search select:focus { outline: none; border-color: var(--ac); }
+
+  /* ── Map ── */
+  .dir-map-wrap {
+    width: 92%; max-width: 900px; margin: 0 auto 32px;
+    border-radius: 14px; overflow: hidden; border: 1px solid var(--bd);
+  }
+  #directoryMap { height: 350px; width: 100%; background: var(--sf); }
+
+  /* ── Listings Grid ── */
+  .dir-grid {
+    width: 92%; max-width: 900px; margin: 0 auto;
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 14px; padding-bottom: 40px;
+  }
+  .dir-card {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 14px;
+    padding: 20px; cursor: pointer; transition: all .25s;
+    text-decoration: none; color: var(--tx); display: flex; flex-direction: column;
+  }
+  .dir-card:hover { border-color: var(--ac); transform: translateY(-2px); opacity: 1; }
+  .dir-card.featured-card {
+    border-color: var(--ac); background: linear-gradient(135deg, rgba(232,197,71,.06), var(--sf));
+    box-shadow: 0 0 30px var(--acd);
+  }
+  .dir-card-top { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .dir-card-logo {
+    width: 48px; height: 48px; border-radius: 10px; object-fit: cover;
+    border: 1px solid var(--bd); flex-shrink: 0; background: var(--bg);
+  }
+  .dir-card-logo-placeholder {
+    width: 48px; height: 48px; border-radius: 10px; border: 1px solid var(--bd);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; background: var(--bg); flex-shrink: 0;
+  }
+  .dir-card-name { font-size: 16px; font-weight: 700; line-height: 1.3; }
+  .dir-card-type { font-size: 13px; color: var(--txd); }
+  .dir-card-desc {
+    font-size: 14px; color: var(--txd); line-height: 1.5; flex: 1;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .dir-card-meta { display: flex; gap: 12px; margin-top: 10px; font-size: 12px; color: var(--txd); }
+  .dir-card-badge {
+    display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px;
+    border-radius: 5px; margin-top: 8px; align-self: flex-start;
+  }
+  .badge-featured { background: var(--acd); color: var(--ac); }
+  .badge-pro { background: rgba(116,185,255,.12); color: var(--blu); }
+
+  /* ── Empty state ── */
+  .dir-empty {
+    grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--txd);
+  }
+  .dir-empty .icon { font-size: 48px; margin-bottom: 12px; opacity: .5; }
+
+  /* ── CTA ── */
+  .dir-cta {
+    width: 92%; max-width: 700px; margin: 0 auto 40px; text-align: center;
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 14px; padding: 30px;
+  }
+  .dir-cta h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+  .dir-cta p { color: var(--txd); font-size: 14px; margin-bottom: 16px; }
+
+  /* Leaflet popup custom */
+  .leaflet-popup-content-wrapper { background: var(--sf); color: var(--tx); border: 1px solid var(--bd); border-radius: 10px; }
+  .leaflet-popup-tip { background: var(--sf); }
+  .leaflet-popup-content { margin: 10px 14px; font-family: 'Heebo', sans-serif; font-size: 13px; }
+  .leaflet-popup-content a { color: var(--ac); }
+  .popup-thumb { width: 120px; border-radius: 6px; margin-bottom: 6px; }
+
+  @media (max-width: 600px) {
+    .dir-hero { padding: 30px 16px 20px; }
+    .dir-hero h1 { font-size: 24px; }
+    .dir-grid { grid-template-columns: 1fr; }
+    #directoryMap { height: 250px; }
+    .dir-search { flex-direction: column; }
+    .dir-search select { min-width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/" class="nav-link" data-en="Tools" data-he="כלים">Tools</a>
+    <a href="/directory.html" class="nav-link" style="color:var(--ac);" data-en="Directory" data-he="ספר עסקים">Directory</a>
+    <a href="/auth.html" class="btn btn-sm" id="navAuthBtn" data-en="Login" data-he="התחבר">Login</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="dir-hero">
+  <h1><span class="accent">BQ</span> <span data-en="Directory" data-he="ספר עסקים">Directory</span></h1>
+  <p data-en="Find trusted contractors near you" data-he="מצא קבלנים מהימנים באזור שלך">Find trusted contractors near you</p>
+</section>
+
+<!-- Search + Filter -->
+<div class="dir-search">
+  <input class="input" type="text" id="searchInput" placeholder="Search by name, type, or area..." data-en-placeholder="Search by name, type, or area..." data-he-placeholder="חפש לפי שם, סוג עבודה או אזור...">
+  <select id="typeFilter">
+    <option value="" data-en="All Types" data-he="כל הסוגים">All Types</option>
+    <option value="General Contractor">General Contractor</option>
+    <option value="Remodeler">Remodeler</option>
+    <option value="Painter">Painter</option>
+    <option value="Roofer">Roofer</option>
+    <option value="Landscaper">Landscaper</option>
+    <option value="Interior Designer">Interior Designer</option>
+  </select>
+  <button class="btn btn-primary" onclick="searchDirectory()" style="min-width:90px;" data-en="Search" data-he="חפש">Search</button>
+</div>
+
+<!-- Map -->
+<div class="dir-map-wrap">
+  <div id="directoryMap"></div>
+</div>
+
+<!-- Listings -->
+<div class="dir-grid" id="listingsGrid">
+  <div class="dir-empty">
+    <div class="icon">🔍</div>
+    <p data-en="Loading contractors..." data-he="טוען קבלנים...">Loading contractors...</p>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="dir-cta">
+  <h3 data-en="Are you a contractor?" data-he="אתה קבלן?">Are you a contractor?</h3>
+  <p data-en="Get listed for free when you sign up for BQ Tools. Pro members get a full profile with photos and reviews." data-he="הירשם ל-BQ Tools וקבל רישום חינם. חברי Pro מקבלים פרופיל מלא עם תמונות וביקורות.">Get listed for free when you sign up for BQ Tools. Pro members get a full profile with photos and reviews.</p>
+  <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+    <a href="/auth.html" class="btn btn-primary" data-en="Sign Up Free" data-he="הרשם בחינם">Sign Up Free</a>
+    <a href="#" class="btn" onclick="showFeaturedInfo();return false;" data-en="Featured Listing — $49.99/mo" data-he="רישום מובלט — $49.99/חודש">Featured Listing — $49.99/mo</a>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="footer-brand">Powered by BQ Tools — BQ Production LLC</div>
+  <div class="footer-links">
+    <a href="https://bqprod.pages.dev" target="_blank">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/></svg>
+      bqprod.pages.dev
+    </a>
+  </div>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/crypto.js"></script>
+<script src="js/common.js"></script>
+<script>
+let map, allListings = [], markers = [];
+
+// Init map
+function initMap() {
+  map = L.map('directoryMap').setView([34.05, -118.25], 10); // LA default
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OSM contributors &copy; CARTO',
+    maxZoom: 19
+  }).addTo(map);
+}
+
+// Load listings
+async function loadListings() {
+  try {
+    const res = await fetch(`${API_URL}/api/directory/list`);
+    const data = await res.json();
+    if (data.ok) {
+      allListings = data.listings || [];
+      renderListings(allListings);
+      loadMapMarkers();
+    }
+  } catch (e) {
+    console.error('Failed to load directory:', e);
+    document.getElementById('listingsGrid').innerHTML = `
+      <div class="dir-empty">
+        <div class="icon">⚠️</div>
+        <p data-en="Could not load directory" data-he="לא ניתן לטעון את הספר">Could not load directory</p>
+      </div>`;
+  }
+}
+
+function renderListings(listings) {
+  const grid = document.getElementById('listingsGrid');
+  if (listings.length === 0) {
+    grid.innerHTML = `
+      <div class="dir-empty">
+        <div class="icon">🏗️</div>
+        <p data-en="No contractors found. Be the first to list your business!" data-he="לא נמצאו קבלנים. היה הראשון לרשום את העסק שלך!">No contractors found. Be the first to list your business!</p>
+        <a href="/auth.html" class="btn btn-primary" style="margin-top:16px;" data-en="Get Listed Free" data-he="הירשם חינם">Get Listed Free</a>
+      </div>`;
+    setLang(lang);
+    return;
+  }
+
+  grid.innerHTML = listings.map(l => {
+    const isFeatured = l.tier === 'featured';
+    const isPro = l.tier === 'pro';
+    const logoHTML = l.logo
+      ? `<img src="${l.logo}" class="dir-card-logo" alt="">`
+      : `<div class="dir-card-logo-placeholder">${(l.businessName || '?')[0].toUpperCase()}</div>`;
+    const badge = isFeatured
+      ? `<span class="dir-card-badge badge-featured">⭐ FEATURED</span>`
+      : isPro
+        ? `<span class="dir-card-badge badge-pro">PRO</span>`
+        : '';
+
+    return `
+      <a href="/directory-profile.html?email=${encodeURIComponent(l.email)}" class="dir-card ${isFeatured ? 'featured-card' : ''}">
+        <div class="dir-card-top">
+          ${logoHTML}
+          <div>
+            <div class="dir-card-name">${escHtml(l.businessName || 'Unnamed')}</div>
+            <div class="dir-card-type">${escHtml(l.type || '')}</div>
+          </div>
+        </div>
+        ${l.description ? `<div class="dir-card-desc">${escHtml(l.description)}</div>` : ''}
+        <div class="dir-card-meta">
+          ${l.photoCount ? `<span>📷 ${l.photoCount}</span>` : ''}
+          ${l.reviewCount ? `<span>⭐ ${l.reviewCount}</span>` : ''}
+          ${l.locationCount ? `<span>📍 ${l.locationCount}</span>` : ''}
+        </div>
+        ${badge}
+      </a>`;
+  }).join('');
+  setLang(lang);
+}
+
+async function loadMapMarkers() {
+  // Clear existing markers
+  markers.forEach(m => map.removeLayer(m));
+  markers = [];
+
+  // Fetch full profiles for listings that have locations
+  const withLocations = allListings.filter(l => l.locationCount > 0);
+  if (withLocations.length === 0) return;
+
+  const bounds = [];
+
+  for (const l of withLocations) {
+    try {
+      const res = await fetch(`${API_URL}/api/directory/profile?email=${encodeURIComponent(l.email)}`);
+      const data = await res.json();
+      if (!data.ok || !data.listing.locations) continue;
+
+      for (const loc of data.listing.locations) {
+        if (!loc.lat || !loc.lng) continue;
+
+        // Create custom icon with profile initial
+        const icon = L.divIcon({
+          className: 'custom-marker',
+          html: `<div style="width:36px;height:36px;border-radius:50%;background:${l.tier === 'featured' ? 'var(--ac)' : 'var(--blu)'};border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:${l.tier === 'featured' ? '#0a0a0c' : '#fff'};font-family:Heebo,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.4);">${l.logo ? `<img src="${l.logo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">` : (l.businessName || '?')[0].toUpperCase()}</div>`,
+          iconSize: [36, 36],
+          iconAnchor: [18, 18]
+        });
+
+        const popupContent = `
+          <div>
+            ${loc.thumbnail ? `<img src="${loc.thumbnail}" class="popup-thumb" alt="">` : ''}
+            <strong>${escHtml(l.businessName)}</strong><br>
+            <span style="color:var(--txd);">${escHtml(l.type)}</span><br>
+            ${loc.projectTitle ? `<em>${escHtml(loc.projectTitle)}</em><br>` : ''}
+            <a href="/directory-profile.html?email=${encodeURIComponent(l.email)}">View Profile →</a>
+          </div>`;
+
+        const marker = L.marker([loc.lat, loc.lng], { icon })
+          .bindPopup(popupContent)
+          .addTo(map);
+        markers.push(marker);
+        bounds.push([loc.lat, loc.lng]);
+      }
+    } catch (e) { console.error('Map marker error:', e); }
+  }
+
+  if (bounds.length > 0) {
+    map.fitBounds(bounds, { padding: [40, 40], maxZoom: 12 });
+  }
+}
+
+function searchDirectory() {
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const type = document.getElementById('typeFilter').value;
+
+  let filtered = allListings;
+  if (q) {
+    filtered = filtered.filter(l =>
+      (l.businessName || '').toLowerCase().includes(q) ||
+      (l.type || '').toLowerCase().includes(q) ||
+      (l.description || '').toLowerCase().includes(q)
+    );
+  }
+  if (type) {
+    filtered = filtered.filter(l => l.type === type);
+  }
+  renderListings(filtered);
+}
+
+// Search on Enter
+document.getElementById('searchInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') searchDirectory();
+});
+document.getElementById('typeFilter').addEventListener('change', searchDirectory);
+
+function showFeaturedInfo() {
+  const m = document.createElement('div');
+  m.className = 'modal-overlay';
+  m.innerHTML = `
+    <div class="modal-card" style="max-width:440px;">
+      <h3 style="font-size:20px;margin-bottom:12px;">⭐ Featured Listing</h3>
+      <p style="color:var(--txd);font-size:14px;line-height:1.7;margin-bottom:16px;">
+        ${lang === 'he' ? 'רישום מובלט כולל:' : 'Featured listing includes:'}
+      </p>
+      <ul style="list-style:none;margin-bottom:20px;">
+        <li style="padding:6px 0;font-size:14px;color:var(--tx);">✅ Premium badge & top placement</li>
+        <li style="padding:6px 0;font-size:14px;color:var(--tx);">✅ 20 work photos</li>
+        <li style="padding:6px 0;font-size:14px;color:var(--tx);">✅ Customer reviews</li>
+        <li style="padding:6px 0;font-size:14px;color:var(--tx);">✅ WhatsApp group link</li>
+        <li style="padding:6px 0;font-size:14px;color:var(--tx);">✅ Full profile with description</li>
+        <li style="padding:6px 0;font-size:14px;color:var(--tx);">✅ Map locations (up to 50)</li>
+      </ul>
+      <div style="text-align:center;margin-bottom:12px;">
+        <span style="font-size:36px;font-weight:900;color:var(--ac);">$49.99</span>
+        <span style="color:var(--txd);font-size:14px;">/month</span>
+      </div>
+      <a href="https://www.paypal.com/ncp/payment/2LA7B7PZTHN54" target="_blank" class="btn btn-primary" style="width:100%;margin-bottom:8px;">Pay with PayPal</a>
+      <button onclick="openCryptoModal();this.closest('.modal-overlay').remove();" class="btn" style="width:100%;border-color:rgba(81,207,102,.3);color:var(--grn);">Crypto — 35% OFF ($32.49)</button>
+      <button onclick="this.closest('.modal-overlay').remove()" style="display:block;margin:12px auto 0;background:none;border:none;color:var(--txd);cursor:pointer;font-size:14px;font-family:inherit;min-height:48px;">Close</button>
+    </div>`;
+  document.body.appendChild(m);
+  requestAnimationFrame(() => m.classList.add('open'));
+  m.onclick = e => { if (e.target === m) m.remove(); };
+}
+
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
+// Update nav auth button
+if (isLoggedIn()) {
+  const btn = document.getElementById('navAuthBtn');
+  if (btn) { btn.textContent = isPro() ? 'PRO' : 'Account'; btn.href = '/dashboard.html'; }
+}
+
+// Init
+initMap();
+loadListings();
+</script>
+</body>
+</html>

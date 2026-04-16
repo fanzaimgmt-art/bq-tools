@@ -9,6 +9,7 @@ GEMINI_MODEL = "gemini-2.5-flash"
 GEMINI_MODEL_FALLBACK = "gemini-2.0-flash"
 ALLOWED_ORIGIN = "https://bq-tools.fanzai-mgmt.workers.dev"
 FREE_CREDITS = "5"
+GOOGLE_CLIENT_ID = "GOOGLE_CLIENT_ID"
 
 [[kv_namespaces]]
 binding = "BQ_USERS"

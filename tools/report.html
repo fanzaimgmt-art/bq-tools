@@ -171,11 +171,11 @@ async function generateReport() {
   if (!requirePro()) return;
   if (photos.length === 0) { showToast(lang === 'he' ? 'העלה לפחות תמונה אחת' : 'Upload at least 1 photo', 'err'); return; }
 
-  const s = getAISettings();
-  if (!s.claudeKey) { openAISettings(); return; }
-
   const desc = document.getElementById('workDesc').value.trim();
   if (!desc) { showToast(lang === 'he' ? 'תאר את העבודה' : 'Describe the work', 'err'); return; }
+
+  const ok = await confirmCredit(lang === 'he' ? 'דוח מהיר' : 'Quick Report');
+  if (!ok) return;
 
   const btn = document.getElementById('genBtn');
   btn.disabled = true;
@@ -183,11 +183,10 @@ async function generateReport() {
 
   try {
     // Resize first 4 images max for API
-    const imageParts = [];
+    const images = [];
     const toSend = photos.slice(0, 4);
     for (const src of toSend) {
-      const b64 = await resizeForAPI(src);
-      imageParts.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 } });
+      images.push(await resizeForAPI(src));
     }
 
     const client = document.getElementById('clientName').value.trim();
@@ -208,8 +207,7 @@ Respond JSON only:
   "recommendations": "optional recommendation or null"
 }`;
 
-    const content = [...imageParts, { type: 'text', text: prompt }];
-    const text = await callClaude(s.claudeKey, s.claudeModel, [{ role: 'user', content }], 1500);
+    const text = await callWorkerAI('report', prompt, images, desc.substring(0, 50));
     const r = parseAIJSON(text);
 
     const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });

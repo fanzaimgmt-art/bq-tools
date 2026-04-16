@@ -97,8 +97,6 @@ function setChannel(el, ch) {
 
 async function generateReview() {
   if (!requirePro()) return;
-  const s = getAISettings();
-  if (!s.claudeKey) { openAISettings(); return; }
 
   const name = document.getElementById('clientName').value.trim();
   const work = document.getElementById('workType').value.trim();
@@ -106,6 +104,9 @@ async function generateReview() {
   const link = document.getElementById('reviewLink').value.trim();
 
   if (!name || !work) { showToast(lang === 'he' ? 'מלא שם לקוח וסוג עבודה' : 'Fill in client name and work type', 'err'); return; }
+
+  const ok = await confirmCredit(lang === 'he' ? 'בקשת ביקורת' : 'Review Request');
+  if (!ok) return;
 
   const btn = document.getElementById('genBtn');
   btn.disabled = true;
@@ -131,7 +132,7 @@ Requirements:
 Respond JSON only:
 {"message": "the full message text"}`;
 
-    const text = await callClaude(s.claudeKey, s.claudeModel, [{ role: 'user', content: prompt }], 500);
+    const text = await callWorkerAI('review', prompt, [], name + ' - ' + work);
     const result = parseAIJSON(text);
 
     document.getElementById('msgText').textContent = result.message;
