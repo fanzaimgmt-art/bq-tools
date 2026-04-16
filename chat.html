@@ -834,6 +834,25 @@ if (sessions.length === 0) {
   loadSession(sessions[0].id);
 }
 renderSessions();
+
+// Handle incoming context (from Content Spy / Moodboard "Inspire me")
+(function() {
+  try {
+    const ctx = JSON.parse(localStorage.getItem('bq_chat_context') || 'null');
+    if (ctx && ctx.prompt) {
+      localStorage.removeItem('bq_chat_context');
+      newChat();
+      setTimeout(() => {
+        const input = document.getElementById('chatInput');
+        if (input) {
+          input.value = ctx.prompt;
+          autoGrow(input);
+          if (ctx.autoSend) setTimeout(() => sendMessage(), 300);
+        }
+      }, 300);
+    }
+  } catch {}
+})();
 </script>
 </body>
 </html>

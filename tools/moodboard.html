@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Moodboard</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  body { display: flex; flex-direction: column; }
+
+  .mb-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 14px; margin-bottom: 20px;
+  }
+  .mb-card {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 12px;
+    overflow: hidden; transition: all .2s; position: relative;
+  }
+  .mb-card:hover { border-color: var(--ac); transform: translateY(-2px); }
+  .mb-card .thumb {
+    width: 100%; aspect-ratio: 1; background: var(--bg);
+    display: flex; align-items: center; justify-content: center; font-size: 32px; overflow: hidden;
+  }
+  .mb-card .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .mb-card .body { padding: 10px 12px; }
+  .mb-card .source { font-size: 11px; color: var(--ac); margin-bottom: 4px; font-weight: 600; }
+  .mb-card .caption {
+    font-size: 12px; color: var(--txd); line-height: 1.4; margin-bottom: 8px;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .mb-card .note {
+    font-size: 11px; background: var(--acd); color: var(--ac); padding: 6px 8px;
+    border-radius: 6px; margin-bottom: 8px;
+  }
+  .mb-card .stats { font-size: 10px; color: var(--txd); margin-bottom: 8px; }
+  .mb-card .actions { display: flex; gap: 4px; }
+  .mb-card .actions button, .mb-card .actions a {
+    flex: 1; padding: 6px; background: var(--bg); border: 1px solid var(--bd); border-radius: 6px;
+    color: var(--tx); font-family: inherit; font-size: 11px; cursor: pointer; text-decoration: none;
+    text-align: center; transition: all .2s;
+  }
+  .mb-card .actions button:hover, .mb-card .actions a:hover { border-color: var(--ac); color: var(--ac); }
+  .mb-card .actions .del:hover { border-color: var(--red); color: var(--red); }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--txd); }
+  .empty-state .icon { font-size: 60px; margin-bottom: 14px; }
+
+  .mb-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .mb-bar input { flex: 1; min-width: 160px; padding: 8px 12px; border: 1px solid var(--bd); border-radius: 8px; background: var(--bg); color: var(--tx); font-family: inherit; font-size: 13px; min-height: 38px; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/home.html" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/home.html" class="nav-link" data-en="Tools" data-he="כלים">Tools</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <a href="/home.html" class="page-back" data-en="← All Tools" data-he="כל הכלים →">← All Tools</a>
+  <h1 class="page-title" data-en="💖 My Moodboard" data-he="💖 המוד בורד שלי">💖 My Moodboard</h1>
+  <p class="page-sub" data-en="All the inspiration you've saved. Turn it into your next post." data-he="כל ההשראה ששמרת. הפוך לפוסט הבא שלך.">All the inspiration you've saved. Turn it into your next post.</p>
+
+  <div class="mb-bar">
+    <input type="text" id="fSearch" placeholder="Search captions..." oninput="render()">
+    <a href="/tools/content-spy.html" class="btn btn-primary">🔍 <span data-en="Find More" data-he="מצא עוד">Find More</span></a>
+  </div>
+
+  <div id="list"></div>
+</div>
+
+<script src="../js/ai.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/crypto.js"></script>
+<script src="../js/common.js"></script>
+<script src="../js/business.js"></script>
+<script>
+if (!isLoggedIn()) window.location.replace('/auth.html');
+
+let items = [];
+
+async function init() {
+  try {
+    const data = await apiCall('/api/content/moodboard');
+    items = data.items || [];
+    render();
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+function render() {
+  const search = document.getElementById('fSearch').value.toLowerCase();
+  let list = items.slice();
+  if (search) list = list.filter(i => (i.caption + ' ' + i.sourceUsername + ' ' + i.notes).toLowerCase().includes(search));
+
+  const el = document.getElementById('list');
+  if (list.length === 0) {
+    el.innerHTML = `<div class="empty-state">
+      <div class="icon">💖</div>
+      <p>${lang === 'he' ? 'המוד בורד ריק. לך ל-Content Spy ושמור השראה.' : 'Your moodboard is empty. Go to Content Spy to save inspiration.'}</p>
+      <a href="/tools/content-spy.html" class="btn btn-primary" style="margin-top:14px;">🔍 ${lang === 'he' ? 'פתח Content Spy' : 'Open Content Spy'}</a>
+    </div>`;
+    return;
+  }
+
+  const h = lang === 'he';
+  el.innerHTML = `<div class="mb-grid">${list.map(i => `
+    <div class="mb-card">
+      <div class="thumb">${i.thumbnail ? `<img src="${escHtml(i.thumbnail)}" alt="">` : '📷'}</div>
+      <div class="body">
+        ${i.sourceUsername ? `<div class="source">@${escHtml(i.sourceUsername)}</div>` : ''}
+        <div class="caption">${escHtml((i.caption || '').substring(0, 120))}</div>
+        ${i.notes ? `<div class="note">📝 ${escHtml(i.notes)}</div>` : ''}
+        <div class="stats">❤️ ${(i.likes || 0).toLocaleString()} · 💬 ${(i.comments || 0).toLocaleString()} · ${escHtml(i.type || 'Image')}</div>
+        <div class="actions">
+          <a href="${escHtml(i.url)}" target="_blank" rel="noopener">${h ? 'פתח' : 'Open'}</a>
+          <button onclick='inspireMe(${JSON.stringify(i).replace(/'/g,"&#39;")})'>${h ? 'השראה' : 'Inspire'}</button>
+          <button onclick="editNote('${i.id}')">📝</button>
+          <button class="del" onclick="remove('${i.id}')">🗑️</button>
+        </div>
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+function inspireMe(post) {
+  localStorage.setItem('bq_chat_context', JSON.stringify({
+    prompt: `I saved this post for inspiration${post.sourceUsername ? ' from @' + post.sourceUsername : ''}: "${(post.caption || '').substring(0, 200)}" (${post.likes} likes, ${post.type}). Generate a similar but unique post idea for my construction/remodeling business, including caption and hashtags.`,
+    autoSend: true
+  }));
+  window.location.href = '/chat.html';
+}
+
+async function remove(id) {
+  if (!confirmDelete('this item')) return;
+  try {
+    await apiCall(`/api/content/moodboard/${id}`, { method: 'DELETE' });
+    items = items.filter(i => i.id !== id);
+    render();
+    showToast(lang === 'he' ? 'נמחק' : 'Removed', 'ok');
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+function editNote(id) {
+  const item = items.find(x => x.id === id);
+  if (!item) return;
+  const h = lang === 'he';
+  const note = prompt(h ? 'הערה:' : 'Note:', item.notes || '');
+  if (note === null) return;
+  // Resave — server doesn't have an update route for moodboard, but we can re-post
+  // For now, save locally
+  item.notes = note;
+  render();
+  // Also save to server by deleting + re-creating
+  apiCall(`/api/content/moodboard/${id}`, { method: 'DELETE' }).then(() => {
+    apiCall('/api/content/save', { method: 'POST', body: { ...item, id: undefined } });
+  }).catch(() => {});
+  showToast(lang === 'he' ? 'עודכן' : 'Updated', 'ok');
+}
+
+init();
+</script>
+</body>
+</html>

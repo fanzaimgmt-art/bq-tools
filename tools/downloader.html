@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Video Downloader</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  body { display: flex; flex-direction: column; }
+
+  .dl-hero {
+    background: linear-gradient(135deg, var(--acd), rgba(116,185,255,.08));
+    border: 1px solid var(--ac); border-radius: 14px; padding: 20px;
+    text-align: center; margin-bottom: 20px;
+  }
+  .dl-hero h2 { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+  .dl-hero p { color: var(--txd); font-size: 13px; line-height: 1.5; }
+
+  .dl-input-wrap {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 12px;
+    padding: 16px; margin-bottom: 16px;
+  }
+  .dl-input-wrap input, .dl-input-wrap textarea {
+    width: 100%; padding: 14px 16px; border: 1px solid var(--bd); border-radius: 10px;
+    background: var(--bg); color: var(--tx); font-family: inherit; font-size: 14px;
+    margin-bottom: 10px; resize: vertical;
+  }
+  .dl-input-wrap input:focus, .dl-input-wrap textarea:focus { outline: none; border-color: var(--ac); }
+
+  .dl-platforms { display: flex; gap: 10px; justify-content: center; margin-top: 10px; flex-wrap: wrap; }
+  .platform-chip {
+    display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: var(--bg);
+    border: 1px solid var(--bd); border-radius: 8px; font-size: 12px; color: var(--txd);
+  }
+  .platform-chip.active { border-color: var(--ac); color: var(--ac); background: var(--acd); }
+
+  .dl-mode-toggle { display: flex; gap: 6px; margin-bottom: 14px; }
+  .dl-mode-toggle button { flex: 1; padding: 10px; border: 1px solid var(--bd); border-radius: 10px; background: var(--sf); color: var(--txd); cursor: pointer; font-family: inherit; font-size: 14px; transition: all .2s; }
+  .dl-mode-toggle button.on { background: var(--acd); border-color: var(--ac); color: var(--ac); font-weight: 700; }
+
+  .dl-result {
+    background: var(--sf); border: 1px solid var(--ac); border-radius: 14px;
+    padding: 18px; margin-bottom: 14px; display: none;
+  }
+  .dl-result.show { display: block; animation: fadeInUp .4s; }
+  .dl-result .header { display: flex; gap: 14px; margin-bottom: 14px; }
+  .dl-result .thumb {
+    width: 120px; aspect-ratio: 9/16; background: var(--bg); border-radius: 8px;
+    overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 32px;
+  }
+  .dl-result .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .dl-result .info { flex: 1; min-width: 0; }
+  .dl-result .title { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+  .dl-result .author { font-size: 12px; color: var(--ac); margin-bottom: 8px; }
+  .dl-result .meta { font-size: 12px; color: var(--txd); }
+  .dl-result .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .dl-history {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 12px;
+    padding: 16px; margin-top: 20px;
+  }
+  .dl-history h3 { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+  .history-item {
+    display: flex; gap: 10px; padding: 8px; border-bottom: 1px solid rgba(255,255,255,.04);
+    font-size: 12px; align-items: center;
+  }
+  [data-theme="light"] .history-item { border-bottom-color: rgba(0,0,0,.06); }
+  .history-item:last-child { border-bottom: none; }
+  .history-item .mini-thumb { width: 40px; height: 40px; border-radius: 6px; background: var(--bg); overflow: hidden; flex-shrink: 0; }
+  .history-item .mini-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+  .bulk-result { margin-top: 14px; }
+  .bulk-result .bulk-item { padding: 10px; background: var(--bg); border-radius: 8px; margin-bottom: 6px; font-size: 13px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .bulk-result .bulk-item.success { border-left: 3px solid var(--grn); }
+  .bulk-result .bulk-item.failed { border-left: 3px solid var(--red); opacity: 0.6; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/home.html" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/home.html" class="nav-link" data-en="Tools" data-he="כלים">Tools</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <a href="/home.html" class="page-back" data-en="← All Tools" data-he="כל הכלים →">← All Tools</a>
+  <h1 class="page-title" data-en="📥 Video Downloader" data-he="📥 מוריד סרטונים">📥 Video Downloader</h1>
+  <p class="page-sub" data-en="Download TikTok, Instagram Reels, YouTube Shorts — no watermark." data-he="הורד TikTok, Instagram Reels, YouTube Shorts — ללא סימן מים.">Download TikTok, Instagram Reels, YouTube Shorts — no watermark.</p>
+
+  <div id="hiw-dl"></div>
+  <script>
+    const HIW_DL = {
+      steps: [
+        { icon: '🔗', en: 'Paste a TikTok, Instagram, or YouTube URL', he: 'הדבק קישור TikTok, Instagram, או YouTube' },
+        { icon: '⚡', en: 'AI fetches the video without watermark (1 credit)', he: 'AI מוציא את הסרטון ללא סימן מים (1 credit)' },
+        { icon: '📥', en: 'Click download — save to your device', he: 'לחץ download — שמור למכשיר שלך' },
+      ],
+      example: {
+        en: 'Paste a competitor\'s viral TikTok → get the clean video to remix or study.',
+        he: 'הדבק TikTok ויראלי של מתחרה → קבל את הסרטון הנקי ללימוד או רמיקס.'
+      }
+    };
+    document.addEventListener('DOMContentLoaded',()=>{if(typeof buildHowItWorks==='function')buildHowItWorks('hiw-dl',HIW_DL)});
+  </script>
+
+  <!-- Mode toggle -->
+  <div class="dl-mode-toggle">
+    <button id="modeSingle" class="on" onclick="setMode('single')">🎬 <span data-en="Single Video" data-he="סרטון אחד">Single Video</span></button>
+    <button id="modeBulk" onclick="setMode('bulk')">📦 <span data-en="Bulk Download" data-he="הורדה מרובה">Bulk Download</span></button>
+  </div>
+
+  <!-- Single -->
+  <div class="dl-input-wrap" id="singleMode">
+    <input type="text" id="urlInput" placeholder="https://www.tiktok.com/@user/video/... or Instagram Reel or YouTube Short" oninput="detectUrl()">
+    <div class="dl-platforms">
+      <span class="platform-chip" id="p-tiktok">⚫ TikTok</span>
+      <span class="platform-chip" id="p-instagram">📸 Instagram</span>
+      <span class="platform-chip" id="p-youtube">▶️ YouTube</span>
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:14px;font-size:15px;" onclick="download()" id="dlBtn">
+      📥 <span data-en="Download ⚡1" data-he="הורד ⚡1">Download ⚡1</span>
+    </button>
+  </div>
+
+  <!-- Bulk -->
+  <div class="dl-input-wrap" id="bulkMode" style="display:none;">
+    <textarea id="bulkInput" rows="6" placeholder="Paste one URL per line&#10;https://www.tiktok.com/@user/video/123&#10;https://www.instagram.com/reel/ABC&#10;..."></textarea>
+    <p style="font-size:12px;color:var(--txd);margin-bottom:10px;" data-en="1 credit per video. Max 20 URLs at once." data-he="1 credit לסרטון. מקסימום 20 כתובות בבת אחת.">1 credit per video. Max 20 URLs at once.</p>
+    <button class="btn btn-primary" style="width:100%;font-size:15px;" onclick="bulkDownload()" id="bulkBtn">
+      📦 <span data-en="Download All" data-he="הורד הכל">Download All</span>
+    </button>
+  </div>
+
+  <!-- Result -->
+  <div class="dl-result" id="result"></div>
+  <div class="bulk-result" id="bulkResult"></div>
+
+  <!-- History -->
+  <div class="dl-history" id="history">
+    <h3>🕒 <span data-en="Recent Downloads" data-he="הורדות אחרונות">Recent Downloads</span></h3>
+    <div id="historyList"></div>
+  </div>
+</div>
+
+<script src="../js/ai.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/crypto.js"></script>
+<script src="../js/common.js"></script>
+<script src="../js/business.js"></script>
+<script>
+if (!isLoggedIn()) window.location.replace('/auth.html');
+
+let mode = 'single';
+let history = JSON.parse(localStorage.getItem('bq_dl_history') || '[]');
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('modeSingle').classList.toggle('on', m === 'single');
+  document.getElementById('modeBulk').classList.toggle('on', m === 'bulk');
+  document.getElementById('singleMode').style.display = m === 'single' ? 'block' : 'none';
+  document.getElementById('bulkMode').style.display = m === 'bulk' ? 'block' : 'none';
+}
+
+function detectUrl() {
+  const url = document.getElementById('urlInput').value.toLowerCase();
+  const platforms = ['tiktok', 'instagram', 'youtube'];
+  const matchers = {
+    tiktok: ['tiktok.com', 'vm.tiktok', 'vt.tiktok'],
+    instagram: ['instagram.com'],
+    youtube: ['youtube.com', 'youtu.be']
+  };
+  platforms.forEach(p => {
+    const chip = document.getElementById('p-' + p);
+    const matches = matchers[p].some(m => url.includes(m));
+    chip.classList.toggle('active', matches);
+  });
+}
+
+async function download() {
+  const url = document.getElementById('urlInput').value.trim();
+  if (!url) { showToast(lang === 'he' ? 'הדבק כתובת' : 'Paste a URL', 'err'); return; }
+
+  const credits = getCredits();
+  if (credits < 1) { showNoCreditModal(); return; }
+
+  const ok = await confirmCredit(lang === 'he' ? 'הורדת סרטון' : 'Download Video');
+  if (!ok) return;
+
+  const btn = document.getElementById('dlBtn');
+  btn.disabled = true;
+  btn.innerHTML = '⏳ ' + (lang === 'he' ? 'מוריד... 30-60 שניות' : 'Downloading... 30-60 seconds');
+
+  try {
+    const data = await apiCall('/api/downloader/get', { method: 'POST', body: { url } });
+    renderResult(data);
+    addToHistory(data, url);
+
+    const user = getCachedUser();
+    if (user && data.credits !== undefined) {
+      user.credits = data.credits;
+      setCachedUser(user);
+      if (typeof updateCreditDisplay === 'function') updateCreditDisplay();
+    }
+
+    showToast(lang === 'he' ? '✓ מוכן' : '✓ Ready', 'ok');
+  } catch (err) {
+    showToast(err.message, 'err');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '📥 <span>' + (lang === 'he' ? 'הורד ⚡1' : 'Download ⚡1') + '</span>';
+}
+
+function renderResult(data) {
+  const d = data.data;
+  const h = lang === 'he';
+  const el = document.getElementById('result');
+  el.innerHTML = `
+    <div class="header">
+      <div class="thumb">${d.thumbnail ? `<img src="${escHtml(d.thumbnail)}" alt="">` : '🎬'}</div>
+      <div class="info">
+        <div class="title">${escHtml(d.title?.substring(0, 120) || 'Video')}</div>
+        ${d.author ? `<div class="author">@${escHtml(d.author)}</div>` : ''}
+        <div class="meta">${escHtml(data.platform.toUpperCase())}${d.duration ? ' · ' + d.duration + 's' : ''}</div>
+      </div>
+    </div>
+    ${d.note ? `<p style="font-size:12px;background:var(--bg);padding:10px;border-radius:8px;color:var(--txd);margin-bottom:10px;">${escHtml(d.note)}</p>` : ''}
+    <div class="actions">
+      ${d.videoUrl ? `<a href="${escHtml(d.videoUrl)}" download="${data.platform}-${Date.now()}.mp4" target="_blank" rel="noopener" class="btn btn-primary" style="flex:1;">📥 ${h ? 'הורד' : 'Download'}</a>` : ''}
+      ${d.videoUrl ? `<a href="${escHtml(d.videoUrl)}" target="_blank" rel="noopener" class="btn" style="flex:1;">👁️ ${h ? 'צפה' : 'Preview'}</a>` : ''}
+      <button class="btn" onclick="copyLink('${escHtml(d.videoUrl)}')">🔗 ${h ? 'העתק' : 'Copy'}</button>
+    </div>`;
+  el.classList.add('show');
+}
+
+async function bulkDownload() {
+  const text = document.getElementById('bulkInput').value.trim();
+  if (!text) { showToast(lang === 'he' ? 'הדבק כתובות' : 'Paste URLs', 'err'); return; }
+
+  const urls = text.split('\n').map(u => u.trim()).filter(Boolean).slice(0, 20);
+  if (urls.length === 0) return;
+
+  const credits = getCredits();
+  if (credits < urls.length) { showNoCreditModal(); return; }
+
+  const ok = await confirmCredit(`${lang === 'he' ? 'הורדה מרובה' : 'Bulk Download'} — ${urls.length} ${lang === 'he' ? 'סרטונים' : 'videos'}`);
+  if (!ok) return;
+
+  const btn = document.getElementById('bulkBtn');
+  btn.disabled = true;
+
+  const resultEl = document.getElementById('bulkResult');
+  resultEl.innerHTML = `<h3 style="font-size:14px;margin-bottom:10px;">⏳ ${lang === 'he' ? 'מוריד...' : 'Downloading...'}</h3>`;
+
+  const results = [];
+  for (let i = 0; i < urls.length; i++) {
+    const url = urls[i];
+    btn.innerHTML = `⏳ ${i + 1}/${urls.length}`;
+    try {
+      const data = await apiCall('/api/downloader/get', { method: 'POST', body: { url } });
+      results.push({ url, success: true, data });
+      addToHistory(data, url);
+    } catch (err) {
+      results.push({ url, success: false, error: err.message });
+    }
+  }
+
+  // Update credits final
+  try {
+    const user = await fetchUser();
+    if (typeof updateCreditDisplay === 'function') updateCreditDisplay();
+  } catch {}
+
+  renderBulkResults(results);
+  btn.disabled = false;
+  btn.innerHTML = '📦 <span>' + (lang === 'he' ? 'הורד הכל' : 'Download All') + '</span>';
+}
+
+function renderBulkResults(results) {
+  const h = lang === 'he';
+  const el = document.getElementById('bulkResult');
+  const success = results.filter(r => r.success).length;
+  el.innerHTML = `
+    <h3 style="font-size:14px;margin-bottom:10px;">✓ ${success}/${results.length} ${h ? 'הושלמו' : 'completed'}</h3>
+    ${results.map(r => `
+      <div class="bulk-item ${r.success ? 'success' : 'failed'}">
+        <div style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+          ${r.success ? '✓' : '✗'} ${escHtml(r.url.substring(0, 60))}
+        </div>
+        ${r.success && r.data.data?.videoUrl ? `<a href="${escHtml(r.data.data.videoUrl)}" download target="_blank" class="btn btn-sm btn-primary">📥</a>` : ''}
+      </div>`).join('')}`;
+}
+
+function copyLink(url) {
+  navigator.clipboard.writeText(url);
+  showToast(lang === 'he' ? '✓ הועתק' : '✓ Copied', 'ok');
+}
+
+function addToHistory(data, url) {
+  history.unshift({
+    url,
+    platform: data.platform,
+    title: data.data?.title || '',
+    thumbnail: data.data?.thumbnail || '',
+    videoUrl: data.data?.videoUrl || '',
+    date: new Date().toISOString()
+  });
+  if (history.length > 30) history.length = 30;
+  localStorage.setItem('bq_dl_history', JSON.stringify(history));
+  renderHistory();
+}
+
+function renderHistory() {
+  const el = document.getElementById('historyList');
+  if (history.length === 0) {
+    el.innerHTML = `<p style="color:var(--txd);font-size:12px;text-align:center;padding:10px;">${lang === 'he' ? 'אין הורדות עדיין' : 'No downloads yet'}</p>`;
+    return;
+  }
+  el.innerHTML = history.slice(0, 10).map(h => `
+    <div class="history-item">
+      <div class="mini-thumb">${h.thumbnail ? `<img src="${escHtml(h.thumbnail)}" alt="">` : '🎬'}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(h.title?.substring(0, 60) || h.url)}</div>
+        <div style="color:var(--txd);font-size:10px;">${escHtml(h.platform.toUpperCase())} · ${new Date(h.date).toLocaleDateString()}</div>
+      </div>
+      ${h.videoUrl ? `<a href="${escHtml(h.videoUrl)}" download target="_blank" style="color:var(--ac);text-decoration:none;">📥</a>` : ''}
+    </div>`).join('');
+}
+
+renderHistory();
+</script>
+</body>
+</html>

@@ -193,6 +193,25 @@ export default {
         return corsResponse(env, await handleReceiptExtract(request, env));
       }
 
+      // ── Content Intelligence ──
+      if (path === '/api/content/scan' && request.method === 'POST') {
+        return corsResponse(env, await handleContentScan(request, env));
+      }
+      if (path === '/api/content/moodboard' && request.method === 'GET') {
+        return corsResponse(env, await handleMoodboardList(request, env));
+      }
+      if (path === '/api/content/save' && request.method === 'POST') {
+        return corsResponse(env, await handleMoodboardSave(request, env));
+      }
+      if (path.startsWith('/api/content/moodboard/') && request.method === 'DELETE') {
+        return corsResponse(env, await handleMoodboardDelete(request, env, path));
+      }
+
+      // ── Video Downloader ──
+      if (path === '/api/downloader/get' && request.method === 'POST') {
+        return corsResponse(env, await handleVideoDownload(request, env));
+      }
+
       if (path === '/api/health') {
         return corsResponse(env, json({ ok: true, ts: Date.now() }));
       }
@@ -2587,6 +2606,328 @@ async function handleBusinessCRUD(request, env, collection, itemId) {
   }
 
   return json({ error: 'Method not allowed' }, 405);
+}
+
+// ── Apify Helper ──
+async function runApifyActor(env, actorSlug, input, pollSeconds = 60) {
+  const apifyToken = env.APIFY_TOKEN;
+  if (!apifyToken) throw new Error('Apify not configured');
+
+  const runRes = await fetch(`https://api.apify.com/v2/acts/${actorSlug}/runs?token=${apifyToken}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input)
+  });
+  const runData = await runRes.json();
+  const runId = runData.data?.id;
+  if (!runId) throw new Error('Apify start failed: ' + (runData.error?.message || 'unknown'));
+
+  // Poll
+  const maxAttempts = Math.ceil(pollSeconds / 2);
+  for (let i = 0; i < maxAttempts; i++) {
+    await new Promise(r => setTimeout(r, 2000));
+    const s = await fetch(`https://api.apify.com/v2/actor-runs/${runId}?token=${apifyToken}`);
+    const sd = await s.json();
+    const status = sd.data?.status;
+    if (status === 'SUCCEEDED') break;
+    if (status === 'FAILED' || status === 'ABORTED' || status === 'TIMED-OUT') {
+      throw new Error('Apify run failed: ' + status);
+    }
+  }
+
+  const dataRes = await fetch(`https://api.apify.com/v2/actor-runs/${runId}/dataset/items?token=${apifyToken}`);
+  return await dataRes.json();
+}
+
+// ── Content Scan (Instagram) ──
+async function handleContentScan(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  if (!(await checkRateLimit(user.email, env))) {
+    return json({ error: 'Rate limit exceeded' }, 429);
+  }
+
+  const updated = checkMonthlyReset(user);
+  if (updated.credits < 2) {
+    return json({ error: 'Need 2 credits', credits: updated.credits }, 402);
+  }
+
+  const { username } = await request.json();
+  if (!username) return json({ error: 'username required' }, 400);
+
+  const cleanUser = username.replace(/^@/, '').replace(/^https?:\/\/(www\.)?(instagram|facebook)\.com\//, '').replace(/\/$/, '').split('?')[0].split('/')[0];
+
+  // Use apify/instagram-scraper for posts
+  let posts;
+  try {
+    const items = await runApifyActor(env, 'apify~instagram-post-scraper', {
+      username: [cleanUser],
+      resultsLimit: 30
+    }, 90);
+    posts = items;
+  } catch (e) {
+    // Fallback: try the profile-scraper which includes latestPosts
+    try {
+      const items = await runApifyActor(env, 'apify~instagram-profile-scraper', {
+        usernames: [cleanUser],
+        resultsLimit: 30
+      }, 60);
+      if (items.length > 0 && items[0].latestPosts) {
+        posts = items[0].latestPosts;
+      } else {
+        throw new Error('No posts found');
+      }
+    } catch (e2) {
+      return json({ error: 'Instagram scrape failed: ' + e.message }, 502);
+    }
+  }
+
+  if (!posts || posts.length === 0) {
+    return json({ error: 'No posts found for @' + cleanUser }, 404);
+  }
+
+  // Normalize posts
+  const normalized = posts.map(p => ({
+    id: p.id || p.shortCode || Date.now() + Math.random(),
+    shortCode: p.shortCode,
+    url: p.url || (p.shortCode ? `https://www.instagram.com/p/${p.shortCode}/` : ''),
+    caption: p.caption || '',
+    likes: p.likesCount || 0,
+    comments: p.commentsCount || 0,
+    videoViews: p.videoViewCount || p.videoPlayCount || 0,
+    type: p.type || (p.videoUrl ? 'Video' : 'Image'),
+    thumbnail: p.displayUrl || p.thumbnailUrl || '',
+    videoUrl: p.videoUrl || '',
+    timestamp: p.timestamp || p.taken_at || null,
+    hashtags: p.hashtags || (p.caption || '').match(/#\w+/g) || [],
+    engagement: (p.likesCount || 0) + (p.commentsCount || 0)
+  }));
+
+  // Sort by engagement desc
+  normalized.sort((a, b) => b.engagement - a.engagement);
+
+  // Compute analytics
+  const total = normalized.length;
+  const avgLikes = Math.round(normalized.reduce((s, p) => s + p.likes, 0) / total);
+  const avgComments = Math.round(normalized.reduce((s, p) => s + p.comments, 0) / total);
+  const topPost = normalized[0];
+
+  // Best day
+  const dayMap = {};
+  normalized.forEach(p => {
+    if (!p.timestamp) return;
+    const d = new Date(p.timestamp).toLocaleDateString('en-US', { weekday: 'long' });
+    dayMap[d] = (dayMap[d] || 0) + p.engagement;
+  });
+  const bestDay = Object.entries(dayMap).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Unknown';
+
+  // Best type
+  const typeMap = {};
+  normalized.forEach(p => {
+    const t = p.type || 'Image';
+    if (!typeMap[t]) typeMap[t] = { sum: 0, count: 0 };
+    typeMap[t].sum += p.engagement;
+    typeMap[t].count += 1;
+  });
+  const typePerf = Object.entries(typeMap).map(([t, v]) => ({ type: t, avg: Math.round(v.sum / v.count), count: v.count }));
+  typePerf.sort((a, b) => b.avg - a.avg);
+
+  // Top hashtags
+  const tagCount = {};
+  normalized.forEach(p => {
+    (p.hashtags || []).forEach(h => {
+      const tag = (typeof h === 'string' ? h : h.name || '').toLowerCase();
+      if (tag) tagCount[tag] = (tagCount[tag] || 0) + 1;
+    });
+  });
+  const topTags = Object.entries(tagCount).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([t, c]) => ({ tag: t, count: c }));
+
+  const analytics = {
+    username: cleanUser,
+    totalPosts: total,
+    avgLikes,
+    avgComments,
+    topPost: topPost ? { url: topPost.url, likes: topPost.likes, caption: (topPost.caption || '').substring(0, 120) } : null,
+    bestDay,
+    typePerformance: typePerf,
+    topHashtags: topTags
+  };
+
+  // Deduct 2 credits
+  updated.credits -= 2;
+  updated.creditsUsedThisMonth = (updated.creditsUsedThisMonth || 0) + 2;
+  await env.BQ_USERS.put(`user:${updated.email}`, JSON.stringify(updated));
+  await logCreditUsage(updated.email, 'content-scan', '@' + cleanUser, env);
+
+  return json({ ok: true, analytics, posts: normalized.slice(0, 30), credits: updated.credits });
+}
+
+// ── Moodboard ──
+async function handleMoodboardList(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const raw = await env.BQ_USERS.get(`moodboard:${user.email}`);
+  const items = raw ? JSON.parse(raw) : [];
+  return json({ ok: true, items, count: items.length });
+}
+
+async function handleMoodboardSave(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const post = await request.json();
+  const key = `moodboard:${user.email}`;
+  const raw = await env.BQ_USERS.get(key);
+  const items = raw ? JSON.parse(raw) : [];
+
+  const newItem = {
+    id: Date.now().toString(36) + Math.random().toString(36).substring(2, 6),
+    savedAt: new Date().toISOString(),
+    sourceUsername: post.sourceUsername || '',
+    url: post.url || '',
+    thumbnail: (post.thumbnail || '').substring(0, 3000),
+    caption: (post.caption || '').substring(0, 500),
+    likes: post.likes || 0,
+    comments: post.comments || 0,
+    type: post.type || 'Image',
+    hashtags: post.hashtags || [],
+    notes: post.notes || ''
+  };
+
+  items.unshift(newItem);
+  if (items.length > 100) items.length = 100;
+  await env.BQ_USERS.put(key, JSON.stringify(items));
+  return json({ ok: true, item: newItem });
+}
+
+async function handleMoodboardDelete(request, env, path) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const id = path.split('/').pop();
+  const key = `moodboard:${user.email}`;
+  const raw = await env.BQ_USERS.get(key);
+  const items = raw ? JSON.parse(raw) : [];
+
+  const filtered = items.filter(i => i.id !== id);
+  if (filtered.length === items.length) return json({ error: 'Not found' }, 404);
+  await env.BQ_USERS.put(key, JSON.stringify(filtered));
+  return json({ ok: true, count: filtered.length });
+}
+
+// ── Video Downloader ──
+async function handleVideoDownload(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  if (!(await checkRateLimit(user.email, env))) {
+    return json({ error: 'Rate limit exceeded' }, 429);
+  }
+
+  const updated = checkMonthlyReset(user);
+  if (updated.credits < 1) {
+    return json({ error: 'Need 1 credit', credits: updated.credits }, 402);
+  }
+
+  const { url } = await request.json();
+  if (!url) return json({ error: 'url required' }, 400);
+
+  // Detect platform
+  const platform = detectPlatform(url);
+  if (!platform) return json({ error: 'Unsupported URL. Supported: TikTok, Instagram, YouTube' }, 400);
+
+  let videoData;
+  try {
+    if (platform === 'tiktok') {
+      videoData = await scrapeTikTok(env, url);
+    } else if (platform === 'instagram') {
+      videoData = await scrapeInstagram(env, url);
+    } else if (platform === 'youtube') {
+      videoData = await scrapeYouTube(env, url);
+    }
+  } catch (e) {
+    return json({ error: 'Download failed: ' + e.message }, 502);
+  }
+
+  if (!videoData || !videoData.videoUrl) {
+    return json({ error: 'Could not extract video. Make sure URL is public.' }, 404);
+  }
+
+  // Deduct credit
+  updated.credits -= 1;
+  updated.creditsUsedThisMonth = (updated.creditsUsedThisMonth || 0) + 1;
+  await env.BQ_USERS.put(`user:${updated.email}`, JSON.stringify(updated));
+  await logCreditUsage(updated.email, 'downloader', platform + ': ' + (videoData.title || 'video'), env);
+
+  return json({ ok: true, platform, data: videoData, credits: updated.credits });
+}
+
+function detectPlatform(url) {
+  const u = url.toLowerCase();
+  if (u.includes('tiktok.com') || u.includes('vm.tiktok') || u.includes('vt.tiktok')) return 'tiktok';
+  if (u.includes('instagram.com')) return 'instagram';
+  if (u.includes('youtube.com') || u.includes('youtu.be')) return 'youtube';
+  return null;
+}
+
+async function scrapeTikTok(env, url) {
+  const items = await runApifyActor(env, 'clockworks~tiktok-scraper', {
+    postURLs: [url],
+    resultsPerPage: 1,
+    shouldDownloadVideos: false
+  }, 45);
+  if (!items || !items.length) throw new Error('No data returned');
+  const p = items[0];
+  return {
+    videoUrl: p.videoMeta?.downloadAddr || p.videoUrl || '',
+    thumbnail: p.videoMeta?.coverUrl || p['covers.default'] || '',
+    title: p.text || '',
+    author: p.authorMeta?.name || '',
+    duration: p.videoMeta?.duration || null,
+    platform: 'tiktok'
+  };
+}
+
+async function scrapeInstagram(env, url) {
+  // Use instagram-post-scraper
+  const items = await runApifyActor(env, 'apify~instagram-post-scraper', {
+    directUrls: [url],
+    resultsLimit: 1
+  }, 60);
+  if (!items || !items.length) throw new Error('No data returned');
+  const p = items[0];
+  return {
+    videoUrl: p.videoUrl || '',
+    thumbnail: p.displayUrl || '',
+    title: p.caption || '',
+    author: p.ownerUsername || '',
+    platform: 'instagram'
+  };
+}
+
+async function scrapeYouTube(env, url) {
+  const items = await runApifyActor(env, 'streamers~youtube-scraper', {
+    startUrls: [{ url }],
+    maxResults: 1
+  }, 45);
+  if (!items || !items.length) throw new Error('No data returned');
+  const v = items[0];
+  return {
+    videoUrl: v.url || url,
+    thumbnail: v.thumbnailUrl || '',
+    title: v.title || '',
+    author: v.channelName || '',
+    duration: v.duration || null,
+    note: 'YouTube: direct download not available via Apify. Use the URL with a yt-dlp client or use Chrome extension.',
+    platform: 'youtube'
+  };
 }
 
 // ── Receipt AI Extraction ──

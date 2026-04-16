@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Content Spy</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  body { display: flex; flex-direction: column; }
+
+  .cs-input-row { display: flex; gap: 8px; margin-bottom: 18px; }
+  .cs-input-row input { flex: 1; padding: 14px 16px; border: 1px solid var(--ac); border-radius: 10px; background: var(--bg); color: var(--tx); font-family: inherit; font-size: 15px; min-height: 48px; }
+
+  /* Analytics cards */
+  .cs-analytics { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 20px; }
+  .cs-card { background: var(--sf); border: 1px solid var(--bd); border-radius: 12px; padding: 14px; text-align: center; }
+  .cs-card .n { font-size: 20px; font-weight: 900; color: var(--ac); }
+  .cs-card .l { font-size: 11px; color: var(--txd); margin-top: 2px; }
+
+  .cs-section { margin-bottom: 18px; }
+  .cs-section h3 { font-size: 14px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+
+  .tag-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag-chip { padding: 4px 10px; background: var(--acd); color: var(--ac); border-radius: 6px; font-size: 12px; font-weight: 600; }
+
+  /* Post grid */
+  .cs-posts { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+  .cs-post {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 12px;
+    overflow: hidden; position: relative; transition: all .2s;
+  }
+  .cs-post:hover { border-color: var(--ac); transform: translateY(-2px); }
+  .cs-post .thumb { width: 100%; aspect-ratio: 1; background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 32px; overflow: hidden; position: relative; }
+  .cs-post .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .cs-post .type-badge { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,.6); color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; }
+  .cs-post .save-btn {
+    position: absolute; top: 8px; left: 8px; width: 32px; height: 32px; border-radius: 50%;
+    background: rgba(0,0,0,.6); border: none; color: #fff; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; font-size: 16px;
+    backdrop-filter: blur(4px); transition: all .2s;
+  }
+  .cs-post .save-btn.saved { background: var(--red); animation: heartPop .3s; }
+  @keyframes heartPop { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.3); } }
+  .cs-post .body { padding: 10px 12px; }
+  .cs-post .caption { font-size: 12px; line-height: 1.4; color: var(--txd); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 8px; }
+  .cs-post .stats { display: flex; gap: 10px; font-size: 11px; color: var(--txd); }
+  .cs-post .stats .num { color: var(--ac); font-weight: 700; }
+  .cs-post .actions { display: flex; gap: 4px; margin-top: 8px; }
+  .cs-post .actions button, .cs-post .actions a { flex: 1; padding: 6px; background: var(--bg); border: 1px solid var(--bd); border-radius: 6px; color: var(--tx); font-family: inherit; font-size: 11px; cursor: pointer; text-decoration: none; text-align: center; transition: all .2s; }
+  .cs-post .actions button:hover, .cs-post .actions a:hover { border-color: var(--ac); color: var(--ac); }
+
+  .cs-empty { text-align: center; padding: 60px 20px; color: var(--txd); }
+  .cs-empty .icon { font-size: 60px; margin-bottom: 14px; }
+
+  .cs-loading { text-align: center; padding: 40px; color: var(--txd); }
+  .cs-loading .spinner { display: inline-block; width: 28px; height: 28px; border: 3px solid var(--bd); border-top-color: var(--ac); border-radius: 50%; animation: spin .8s linear infinite; margin-bottom: 10px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 700px) {
+    .cs-analytics { grid-template-columns: 1fr 1fr; }
+    .cs-input-row { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/home.html" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/home.html" class="nav-link" data-en="Tools" data-he="כלים">Tools</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <a href="/home.html" class="page-back" data-en="← All Tools" data-he="כל הכלים →">← All Tools</a>
+  <h1 class="page-title" data-en="🔍 Content Spy" data-he="🔍 מרגל תוכן">🔍 Content Spy</h1>
+  <p class="page-sub" data-en="See what's working for your competitors. Learn from their top posts." data-he="ראה מה עובד למתחרים שלך. למד מהפוסטים המובילים שלהם.">See what's working for your competitors. Learn from their top posts.</p>
+
+  <div id="hiw-spy"></div>
+  <script>
+    const HIW_SPY = {
+      steps: [
+        { icon: '🎯', en: 'Enter a competitor\'s Instagram username', he: 'הכנס שם משתמש אינסטגרם של מתחרה' },
+        { icon: '🤖', en: 'AI scans their top 30 posts and ranks by engagement', he: 'AI סורק את 30 הפוסטים המובילים ומדרג לפי אינטראקציה' },
+        { icon: '💡', en: 'See what works → save ideas → apply to your content', he: 'ראה מה עובד → שמור רעיונות → יישם בתוכן שלך' },
+      ],
+      example: {
+        en: 'Scan @goldremodeling → find that Saturday kitchen reveals get 10x more likes than weekday progress photos.',
+        he: 'סרוק @goldremodeling → גלה שחשיפת מטבח בשבת מקבלת פי 10 יותר לייקים מתמונות התקדמות באמצע השבוע.'
+      }
+    };
+    document.addEventListener('DOMContentLoaded',()=>{if(typeof buildHowItWorks==='function')buildHowItWorks('hiw-spy',HIW_SPY)});
+  </script>
+
+  <div class="cs-input-row">
+    <input type="text" id="usernameInput" placeholder="@goldremodeling or instagram.com/username" spellcheck="false">
+    <button class="btn btn-primary" style="min-width:140px;" onclick="scan()" id="scanBtn">
+      🔍 <span data-en="Scan ⚡2" data-he="סרוק ⚡2">Scan ⚡2</span>
+    </button>
+  </div>
+
+  <div id="results"></div>
+
+  <div style="margin-top:20px;padding:14px;background:var(--sf);border:1px solid var(--bd);border-radius:10px;font-size:12px;color:var(--txd);text-align:center;">
+    <a href="/tools/moodboard.html" style="color:var(--ac);">💖 <span data-en="View My Moodboard" data-he="ראה את המוד בורד שלי">View My Moodboard</span> →</a>
+  </div>
+</div>
+
+<script src="../js/ai.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/crypto.js"></script>
+<script src="../js/common.js"></script>
+<script src="../js/business.js"></script>
+<script>
+if (!isLoggedIn()) window.location.replace('/auth.html');
+
+let currentScan = null;
+let savedIds = new Set();
+
+async function loadMoodboard() {
+  try {
+    const data = await apiCall('/api/content/moodboard');
+    savedIds = new Set((data.items || []).map(i => i.url));
+  } catch {}
+}
+
+async function scan() {
+  const input = document.getElementById('usernameInput').value.trim();
+  if (!input) { showToast(lang === 'he' ? 'הכנס שם משתמש' : 'Enter a username', 'err'); return; }
+
+  const credits = getCredits();
+  if (credits < 2) { showNoCreditModal(); return; }
+
+  const ok = await confirmCredit(lang === 'he' ? 'סריקת תוכן (2 קרדיטים)' : 'Content Scan (2 credits)');
+  if (!ok) return;
+
+  const btn = document.getElementById('scanBtn');
+  btn.disabled = true;
+  btn.innerHTML = '⏳ ' + (lang === 'he' ? 'סורק...' : 'Scanning...');
+
+  document.getElementById('results').innerHTML = `
+    <div class="cs-loading">
+      <div class="spinner"></div>
+      <p>${lang === 'he' ? 'מושך את 30 הפוסטים המובילים... זה יכול לקחת 30-60 שניות' : 'Fetching top 30 posts... this takes 30-60 seconds'}</p>
+    </div>`;
+
+  try {
+    const data = await apiCall('/api/content/scan', { method: 'POST', body: { username: input } });
+    currentScan = data;
+
+    // Update credits
+    const user = getCachedUser();
+    if (user && data.credits !== undefined) {
+      user.credits = data.credits;
+      setCachedUser(user);
+      if (typeof updateCreditDisplay === 'function') updateCreditDisplay();
+    }
+
+    await loadMoodboard();
+    renderResults();
+    showToast(lang === 'he' ? '✓ סריקה הושלמה' : '✓ Scan complete', 'ok');
+  } catch (err) {
+    document.getElementById('results').innerHTML = `<div class="cs-empty"><div class="icon">❌</div><p>${escHtml(err.message)}</p></div>`;
+    showToast(err.message, 'err');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '🔍 <span>' + (lang === 'he' ? 'סרוק ⚡2' : 'Scan ⚡2') + '</span>';
+}
+
+function renderResults() {
+  if (!currentScan) return;
+  const a = currentScan.analytics;
+  const posts = currentScan.posts;
+  const h = lang === 'he';
+
+  const topPostHtml = a.topPost ? `
+    <div class="cs-section">
+      <h3>🏆 ${h ? 'הפוסט המוביל' : 'Top Post'}</h3>
+      <div style="background:var(--acd);border:1px solid var(--ac);border-radius:10px;padding:14px;font-size:13px;line-height:1.6;">
+        <strong>${a.topPost.likes.toLocaleString()} ${h ? 'לייקים' : 'likes'}</strong><br>
+        "${escHtml(a.topPost.caption)}..."
+        <br><a href="${escHtml(a.topPost.url)}" target="_blank" rel="noopener" style="color:var(--ac);margin-top:6px;display:inline-block;">${h ? 'צפה בפוסט →' : 'View post →'}</a>
+      </div>
+    </div>` : '';
+
+  const typeHtml = a.typePerformance.length > 0 ? `
+    <div class="cs-section">
+      <h3>📊 ${h ? 'ביצועים לפי סוג' : 'Performance by Type'}</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        ${a.typePerformance.map(t => `
+          <div style="flex:1;min-width:120px;background:var(--bg);padding:10px;border-radius:8px;text-align:center;">
+            <div style="font-size:13px;font-weight:700;">${escHtml(t.type)}</div>
+            <div style="font-size:11px;color:var(--txd);margin-top:2px;">${t.count} ${h ? 'פוסטים' : 'posts'}</div>
+            <div style="font-size:16px;font-weight:900;color:var(--ac);margin-top:4px;">${t.avg.toLocaleString()}</div>
+            <div style="font-size:10px;color:var(--txd);">${h ? 'ממוצע' : 'avg engagement'}</div>
+          </div>`).join('')}
+      </div>
+    </div>` : '';
+
+  const tagsHtml = a.topHashtags.length > 0 ? `
+    <div class="cs-section">
+      <h3>🔖 ${h ? 'האשטגים מובילים' : 'Top Hashtags'}</h3>
+      <div class="tag-row">${a.topHashtags.map(t => `<span class="tag-chip">${escHtml(t.tag)} (${t.count})</span>`).join('')}</div>
+    </div>` : '';
+
+  const postsHtml = `
+    <div class="cs-section">
+      <h3>📸 ${h ? 'כל הפוסטים — ממוינים לפי אינטראקציה' : 'All Posts — sorted by engagement'}</h3>
+      <div class="cs-posts">
+        ${posts.map(p => renderPost(p, a.username)).join('')}
+      </div>
+    </div>`;
+
+  document.getElementById('results').innerHTML = `
+    <div class="cs-analytics">
+      <div class="cs-card"><div class="n">${a.totalPosts}</div><div class="l">${h ? 'פוסטים' : 'Posts'}</div></div>
+      <div class="cs-card"><div class="n">${a.avgLikes.toLocaleString()}</div><div class="l">${h ? 'לייקים ממוצע' : 'Avg Likes'}</div></div>
+      <div class="cs-card"><div class="n">${a.avgComments.toLocaleString()}</div><div class="l">${h ? 'תגובות ממוצע' : 'Avg Comments'}</div></div>
+      <div class="cs-card"><div class="n" style="font-size:14px;">${escHtml(a.bestDay)}</div><div class="l">${h ? 'יום הכי טוב' : 'Best Day'}</div></div>
+    </div>
+    ${topPostHtml}
+    ${typeHtml}
+    ${tagsHtml}
+    ${postsHtml}`;
+}
+
+function renderPost(p, sourceUsername) {
+  const h = lang === 'he';
+  const saved = savedIds.has(p.url);
+  const captionShort = (p.caption || '').substring(0, 80);
+  return `<div class="cs-post">
+    <div class="thumb">
+      ${p.thumbnail ? `<img src="${escHtml(p.thumbnail)}" alt="">` : '📷'}
+      <span class="type-badge">${escHtml(p.type)}</span>
+      <button class="save-btn ${saved ? 'saved' : ''}" onclick='savePost(${JSON.stringify({...p, sourceUsername}).replace(/'/g,"&#39;")})' title="Save to moodboard">${saved ? '❤️' : '🤍'}</button>
+    </div>
+    <div class="body">
+      <div class="caption">${escHtml(captionShort)}${p.caption && p.caption.length > 80 ? '…' : ''}</div>
+      <div class="stats">
+        <span>❤️ <span class="num">${(p.likes || 0).toLocaleString()}</span></span>
+        <span>💬 <span class="num">${(p.comments || 0).toLocaleString()}</span></span>
+      </div>
+      <div class="actions">
+        <a href="${escHtml(p.url)}" target="_blank" rel="noopener">${h ? 'פתח' : 'Open'}</a>
+        <button onclick='inspireMe(${JSON.stringify({...p, sourceUsername}).replace(/'/g,"&#39;")})'>${h ? 'השראה' : 'Inspire'}</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+async function savePost(post) {
+  try {
+    if (savedIds.has(post.url)) {
+      // Already saved, maybe show a toast
+      showToast(lang === 'he' ? 'כבר שמור' : 'Already saved', 'info');
+      return;
+    }
+    await apiCall('/api/content/save', { method: 'POST', body: post });
+    savedIds.add(post.url);
+    // Update button in UI
+    renderResults();
+    showToast(lang === 'he' ? '💖 נשמר למוד בורד' : '💖 Saved to moodboard', 'ok');
+  } catch (err) { showToast(err.message, 'err'); }
+}
+
+function inspireMe(post) {
+  // Store context and open chat
+  localStorage.setItem('bq_chat_context', JSON.stringify({
+    prompt: `I liked this post from @${post.sourceUsername}: "${post.caption?.substring(0, 200)}" (${post.likes} likes). It was a ${post.type}. Generate a similar but unique post idea for my construction business, including caption and hashtags.`,
+    autoSend: true
+  }));
+  window.location.href = '/chat.html';
+}
+
+loadMoodboard();
+
+// Enter to scan
+document.getElementById('usernameInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') scan();
+});
+</script>
+</body>
+</html>
