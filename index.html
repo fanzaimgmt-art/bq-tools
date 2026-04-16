@@ -261,35 +261,67 @@
   }
   .waitlist-form input:focus { outline: none; border-color: var(--ac); }
 
-  /* ── Video Showcase ── */
+  /* ── Video Showcase (animated thumbnails) ── */
   .video-showcase {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
-    max-width: 920px; margin: 0 auto 8px;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+    max-width: 1100px; margin: 0 auto 8px;
   }
   .vs-card {
-    border-radius: 12px; overflow: hidden; text-decoration: none; transition: all .2s;
-    border: 1px solid var(--bd);
+    border-radius: 14px; overflow: hidden; text-decoration: none;
+    transition: all .3s cubic-bezier(.4,0,.2,1);
+    border: 1px solid var(--bd); position: relative;
   }
-  .vs-card:hover { border-color: var(--ac); transform: translateY(-2px); opacity: 1; }
+  .vs-card:hover {
+    border-color: var(--ac); transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(232,197,71,.15); opacity: 1;
+  }
   .vs-thumb {
     aspect-ratio: 16/9; background: linear-gradient(135deg,#3a2d1f,#5a4a3a);
     display: flex; align-items: center; justify-content: center; position: relative;
+    overflow: hidden;
   }
+  /* Ken Burns effect on the background image */
+  .vs-thumb {
+    background-size: cover !important;
+    background-position: center !important;
+    animation: kenBurns 14s ease-in-out infinite alternate;
+  }
+  .vs-card:nth-child(2) .vs-thumb { animation-delay: -2s; }
+  .vs-card:nth-child(3) .vs-thumb { animation-delay: -4s; }
+  .vs-card:nth-child(4) .vs-thumb { animation-delay: -6s; }
+  .vs-card:nth-child(5) .vs-thumb { animation-delay: -8s; }
+  .vs-card:nth-child(6) .vs-thumb { animation-delay: -10s; }
+  @keyframes kenBurns {
+    0% { background-size: 100% auto !important; background-position: center center !important; }
+    50% { background-size: 115% auto !important; background-position: 55% 45% !important; }
+    100% { background-size: 110% auto !important; background-position: 45% 55% !important; }
+  }
+
   .vs-play {
-    width: 52px; height: 52px; border-radius: 50%; background: rgba(0,0,0,.6);
-    border: 2px solid rgba(255,255,255,.4); display: flex; align-items: center;
-    justify-content: center; font-size: 22px; color: #fff; transition: all .25s;
-    backdrop-filter: blur(4px); z-index: 1;
+    width: 64px; height: 64px; border-radius: 50%; background: rgba(0,0,0,.65);
+    border: 2px solid rgba(255,255,255,.5); display: flex; align-items: center;
+    justify-content: center; font-size: 26px; color: #fff;
+    transition: all .3s cubic-bezier(.4,0,.2,1);
+    backdrop-filter: blur(6px); z-index: 2; position: relative;
+    animation: pulsePlay 2.5s ease-in-out infinite;
   }
-  .vs-card:hover .vs-play { background: var(--ac); color: var(--bg); border-color: var(--ac); transform: scale(1.15); }
+  @keyframes pulsePlay {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(232,197,71,.6); }
+    50% { box-shadow: 0 0 0 12px rgba(232,197,71,0); }
+  }
+  .vs-card:hover .vs-play {
+    background: var(--ac); color: var(--bg); border-color: var(--ac);
+    transform: scale(1.2); animation: none;
+  }
   .vs-thumb::after {
     content: ''; position: absolute; inset: 0;
-    background: linear-gradient(to top, rgba(0,0,0,.5) 0%, transparent 50%);
+    background: linear-gradient(to top, rgba(0,0,0,.6) 0%, transparent 55%);
     pointer-events: none;
   }
   .vs-label {
-    position: absolute; bottom: 8px; left: 8px; font-size: 11px; font-weight: 700;
-    color: #fff; background: rgba(0,0,0,.5); padding: 3px 8px; border-radius: 6px;
+    position: absolute; bottom: 10px; left: 10px; font-size: 13px; font-weight: 700;
+    color: #fff; background: rgba(0,0,0,.65); padding: 6px 12px; border-radius: 8px;
+    z-index: 2;
     backdrop-filter: blur(4px);
   }
 
@@ -395,6 +427,7 @@
     <a href="/directory.html" class="nav-link" data-en="Directory" data-he="ספר עסקים">Directory</a>
     <a href="#pricing" class="nav-link" data-en="Pricing" data-he="מחירים">Pricing</a>
     <a href="/auth.html" class="btn btn-sm" id="navProBtn" data-en="Pro" data-he="Pro">Pro</a>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">☀️</button>
     <div class="lang-toggle">
       <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
       <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>

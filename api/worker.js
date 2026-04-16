@@ -1856,52 +1856,66 @@ const NEWS_CATEGORIES = [
     id: 'industry',
     label: 'Industry News',
     icon: '🗞️',
-    prompt: 'Search for the latest construction and remodeling industry news in Los Angeles and nationwide from today. Return the top 5 stories as JSON array: [{"title":"...","summary":"2-3 sentences","source":"publication name","url":"source URL if known","image":null}]. Focus on: major projects, market trends, material prices, labor market. JSON only, no markdown.',
+    prompt: 'Generate 8 construction and remodeling industry news items relevant to Los Angeles contractors in 2026. Focus on: major projects, market trends, material prices, labor market, housing starts, permit data. Return as JSON array: [{"title":"...","summary":"2-3 sentences","source":"publication name like ENR, Construction Dive, LA Business Journal","url":"https://plausible-source-url","image":null,"amazonUrl":null}]. JSON only, no markdown.',
+  },
+  {
+    id: 'videos',
+    label: 'Top Videos This Week',
+    icon: '🎬',
+    prompt: 'Recommend 8 valuable YouTube videos construction contractors should watch. Mix of: business advice, tool reviews, technique tutorials, industry insights, motivational content from established channels. Return as JSON array with real channel names: [{"title":"video title","summary":"what you learn, 1-2 sentences","source":"YouTube channel name","url":"https://www.youtube.com/results?search_query=URL-encoded-search-query","image":null,"videoEmbed":"https://www.youtube.com/embed/VIDEO_ID_PLACEHOLDER","amazonUrl":null}]. Use realistic channel names like The Build Show, Essential Craftsman, Hammer & Hand, Matt Risinger, Pro Tool Reviews. Keep videoEmbed as the search URL format since we cannot confirm real video IDs. JSON only.',
   },
   {
     id: 'shops',
     label: 'New Shops & Suppliers',
     icon: '🏪',
-    prompt: 'List 3-5 notable construction supply stores, lumber yards, or building material suppliers in the Los Angeles area that contractors should know about. Include big-box stores with recent updates and specialty suppliers. Return as JSON array: [{"title":"store name","summary":"what they offer, location, why notable","source":"Google Maps","url":null,"image":null,"rating":"4.5/5"}]. JSON only.',
+    prompt: 'List 6 notable construction supply stores, lumber yards, tile shops, or building material suppliers in the Los Angeles area contractors should know about. Include location notes. Return as JSON array: [{"title":"store name","summary":"what they offer, location, why notable","source":"Google Maps","url":"https://www.google.com/maps/search/URL-ENCODED-STORE-NAME","image":null,"rating":"4.5/5","amazonUrl":null}]. JSON only.',
   },
   {
     id: 'products',
-    label: 'New Products',
+    label: 'New Products & Tools',
     icon: '🔧',
-    prompt: 'What are 3 notable new construction products, tools, or building materials released or trending in 2026? Focus on things contractors and remodelers would actually use. Return as JSON array: [{"title":"product name","summary":"what it does, why it matters, price range","source":"manufacturer","url":null,"image":null}]. JSON only.',
+    prompt: 'Recommend 8 notable construction products, power tools, or building materials trending in 2026. Focus on things contractors and remodelers would actually buy and use daily. Return as JSON array: [{"title":"product name","summary":"what it does, why it matters, typical price","source":"manufacturer","url":null,"image":null,"amazonUrl":"https://www.amazon.com/s?k=URL-ENCODED-PRODUCT-NAME"}]. Include an Amazon search URL for each so we can monetize with affiliate links later. JSON only.',
   },
   {
     id: 'tech',
     label: 'New Technology',
     icon: '🤖',
-    prompt: 'What are 3 recent construction technology developments? Include AI tools, drones, 3D printing, project management software, or smart building tech relevant to contractors. Return as JSON array: [{"title":"...","summary":"2-3 sentences","source":"...","url":null,"image":null}]. JSON only.',
+    prompt: 'Recommend 6 recent construction technology developments. AI tools, drones, 3D printing, project management software, smart building tech, AR/VR for contractors. Return as JSON array: [{"title":"...","summary":"2-3 sentences","source":"publication or company name","url":null,"image":null,"amazonUrl":null}]. JSON only.',
   },
   {
     id: 'law',
     label: 'California Law Updates',
     icon: '📋',
-    prompt: 'What are the most recent California construction law updates, building code changes, permit requirements, or OSHA regulation changes that affect contractors in 2026? Return 3-5 items as JSON array: [{"title":"law/code name","summary":"what changed, who it affects, deadline","source":"CA.gov or relevant authority","url":null,"image":null}]. JSON only.',
+    prompt: 'List 6 important California construction law updates, building code changes, permit requirements, or OSHA regulation changes for 2026 affecting contractors. Title 24, CalGreen, CSLB, LADBS, labor laws, wildfire codes. Return as JSON array: [{"title":"law/code name","summary":"what changed, who it affects, deadline","source":"CSLB, LADBS, or CA.gov","url":null,"image":null,"amazonUrl":null}]. JSON only.',
   },
   {
     id: 'jobs',
-    label: 'Job Seekers',
+    label: 'Job Seekers / Runners',
     icon: '👷',
-    prompt: 'Generate 5 realistic job seeker profiles for construction workers, helpers, and runners looking for work in Los Angeles. Make them realistic but fictional. Return as JSON array: [{"title":"Name — Role","summary":"experience, skills, availability, what they are looking for","source":"BQ Tools","url":null,"image":null}]. JSON only.',
+    prompt: 'Generate 6 realistic job seeker profiles for construction workers, helpers, runners, and skilled tradesmen looking for work in Los Angeles. Fictional but realistic. Return as JSON array: [{"title":"Name — Role","summary":"experience, skills, availability, what they want","source":"BQ Tools Network","url":null,"image":null,"amazonUrl":null}]. JSON only.',
   },
   {
     id: 'tips',
     label: 'Business Tips',
     icon: '💡',
-    prompt: 'Give 3 actionable business tips for small construction/remodeling companies. Topics: getting more clients, managing projects, pricing, marketing, client relationships, or scaling. Make each tip specific and practical. Return as JSON array: [{"title":"tip title","summary":"detailed actionable advice in 2-3 sentences","source":"BQ Tools","url":null,"image":null}]. JSON only.',
+    prompt: 'Provide 6 actionable business tips for small construction/remodeling companies. Topics: getting clients, managing projects, pricing, marketing, scaling, avoiding common mistakes. Each tip specific and practical. Return as JSON array: [{"title":"tip title","summary":"detailed actionable advice in 2-3 sentences","source":"BQ Tools","url":null,"image":null,"amazonUrl":null}]. JSON only.',
+  },
+  {
+    id: 'deals',
+    label: 'Amazon Deals',
+    icon: '🛒',
+    prompt: 'Recommend 8 construction tools and supplies that contractors buy frequently on Amazon. Mix of: power tools, hand tools, safety gear, measuring instruments, fasteners. Return as JSON array: [{"title":"product name","summary":"what it is, why contractors need it, typical Amazon price range","source":"Amazon","url":null,"image":null,"amazonUrl":"https://www.amazon.com/s?k=URL-ENCODED-SEARCH-TERM"}]. These will have my affiliate tag added later. JSON only.',
   },
 ];
 
-async function refreshNews(env) {
+async function refreshNews(env, force = false) {
   const today = new Date().toISOString().split('T')[0];
 
-  // Check if already generated today
-  const existing = await env.BQ_USERS.get(`news:${today}`);
-  if (existing) return; // Already done
+  // Check if already generated today (skip if force=true)
+  if (!force) {
+    const existing = await env.BQ_USERS.get(`news:${today}`);
+    if (existing) return; // Already done
+  }
 
   const results = {};
 
@@ -1960,6 +1974,6 @@ async function handleNewsArchive(request, env) {
 
 async function handleAdminNewsRefresh(request, env) {
   if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
-  await refreshNews(env);
+  await refreshNews(env, true); // force refresh
   return json({ ok: true, message: 'News refreshed' });
 }

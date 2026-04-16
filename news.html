@@ -8,10 +8,44 @@
 <style>
   body { display: flex; flex-direction: column; }
 
-  .news-header { margin-bottom: 20px; }
+  .news-header {
+    margin-bottom: 20px; display: flex; align-items: center;
+    justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  }
   .news-header h1 { font-size: 26px; font-weight: 900; margin-bottom: 4px; }
   .news-header h1 .accent { color: var(--ac); }
   .news-header .news-date { font-size: 13px; color: var(--txd); }
+
+  .news-prefs-btn {
+    padding: 8px 14px; border: 1px solid var(--bd); border-radius: 10px;
+    background: var(--sf); color: var(--txd); cursor: pointer;
+    font-family: 'Heebo', sans-serif; font-size: 13px; min-height: 40px;
+    display: inline-flex; align-items: center; gap: 6px; transition: all .2s;
+  }
+  .news-prefs-btn:hover { border-color: var(--ac); color: var(--ac); }
+
+  /* Preferences panel */
+  .prefs-panel {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 14px;
+    padding: 18px; margin-bottom: 20px; display: none;
+  }
+  .prefs-panel.open { display: block; animation: slideDown .3s ease; }
+  @keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+  .prefs-panel h3 { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+  .prefs-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 8px;
+  }
+  .pref-item {
+    display: flex; align-items: center; gap: 8px; padding: 10px;
+    border: 1px solid var(--bd); border-radius: 8px; cursor: pointer;
+    transition: all .2s; background: var(--bg);
+  }
+  .pref-item:hover { border-color: var(--ac); }
+  .pref-item.on { border-color: var(--ac); background: var(--acd); }
+  .pref-item input { accent-color: var(--ac); width: 16px; height: 16px; }
+  .pref-item .pref-icon { font-size: 16px; }
+  .pref-item .pref-label { font-size: 13px; font-weight: 600; flex: 1; }
 
   /* Tabs */
   .news-tabs {
@@ -24,7 +58,7 @@
     font-size: 13px; cursor: pointer; white-space: nowrap; transition: all .15s;
     min-height: 40px; display: flex; align-items: center; gap: 4px;
   }
-  .news-tab:hover { border-color: var(--ac); color: var(--ac); }
+  .news-tab:hover { border-color: var(--ac); color: var(--ac); transform: translateY(-1px); }
   .news-tab.on { background: var(--acd); border-color: var(--ac); color: var(--ac); font-weight: 700; }
   .news-tab .tab-icon { font-size: 15px; }
   .news-tab .tab-count {
@@ -33,59 +67,91 @@
   }
 
   /* News cards */
-  .news-grid { display: flex; flex-direction: column; gap: 12px; }
+  .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
 
   .news-card {
     background: var(--sf); border: 1px solid var(--bd); border-radius: 14px;
-    padding: 18px; transition: all .2s; display: flex; gap: 14px;
+    padding: 0; transition: all .25s cubic-bezier(.4,0,.2,1); overflow: hidden;
+    display: flex; flex-direction: column;
   }
-  .news-card:hover { border-color: var(--ac); }
-  .news-card-img {
-    width: 80px; height: 80px; border-radius: 10px; background: var(--bg);
-    flex-shrink: 0; display: flex; align-items: center; justify-content: center;
-    font-size: 32px; color: var(--txd); overflow: hidden;
+  .news-card:hover { border-color: var(--ac); transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,.15); }
+  .news-card-media {
+    aspect-ratio: 16/9; background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 40px; color: var(--txd); overflow: hidden; position: relative;
   }
-  .news-card-img img { width: 100%; height: 100%; object-fit: cover; }
-  .news-card-body { flex: 1; min-width: 0; }
+  .news-card-media iframe { width: 100%; height: 100%; border: 0; }
+  .news-card-media img { width: 100%; height: 100%; object-fit: cover; }
+  .news-card-media .play-overlay {
+    position: absolute; inset: 0; display: flex; align-items: center;
+    justify-content: center; background: linear-gradient(180deg, transparent, rgba(0,0,0,.4));
+    pointer-events: none;
+  }
+  .news-card-media .play-overlay::before {
+    content: '▶'; width: 56px; height: 56px; border-radius: 50%;
+    background: rgba(0,0,0,.6); border: 2px solid rgba(255,255,255,.4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; color: #fff; backdrop-filter: blur(4px);
+    transition: all .25s;
+  }
+  .news-card:hover .play-overlay::before { background: var(--ac); color: var(--bg); transform: scale(1.15); }
+
+  .news-card-body { padding: 16px; flex: 1; display: flex; flex-direction: column; }
   .news-card-title {
-    font-size: 15px; font-weight: 700; margin-bottom: 4px; line-height: 1.4;
+    font-size: 15px; font-weight: 700; margin-bottom: 6px; line-height: 1.4;
   }
   .news-card-summary {
-    font-size: 13px; color: var(--txd); line-height: 1.6; margin-bottom: 8px;
+    font-size: 13px; color: var(--txd); line-height: 1.6; margin-bottom: 12px; flex: 1;
   }
   .news-card-meta {
     display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--txd);
+    flex-wrap: wrap;
   }
   .news-card-source {
-    background: var(--bg); padding: 2px 8px; border-radius: 6px; font-weight: 600;
+    background: var(--bg); padding: 3px 8px; border-radius: 6px; font-weight: 600;
+    border: 1px solid var(--bd);
   }
   .news-card-rating { color: var(--ac); font-weight: 700; }
-  .news-card-link {
-    color: var(--ac); text-decoration: none; font-weight: 600; font-size: 12px;
-    margin-left: auto;
+  .news-card-actions {
+    display: flex; gap: 6px; margin-top: 12px; padding-top: 12px;
+    border-top: 1px solid rgba(255,255,255,.04);
   }
-  .news-card-link:hover { text-decoration: underline; opacity: 1; }
+  [data-theme="light"] .news-card-actions { border-top-color: rgba(0,0,0,.06); }
+  .news-card-btn {
+    flex: 1; padding: 8px; border: 1px solid var(--bd); border-radius: 8px;
+    background: var(--bg); color: var(--tx); font-family: inherit; font-size: 12px;
+    font-weight: 600; cursor: pointer; text-decoration: none; text-align: center;
+    transition: all .2s; min-height: 36px; display: flex; align-items: center;
+    justify-content: center; gap: 4px;
+  }
+  .news-card-btn:hover { border-color: var(--ac); color: var(--ac); opacity: 1; }
+  .news-card-btn.amazon {
+    background: linear-gradient(135deg, #ff9f43, #ffa502); color: #fff; border: none;
+  }
+  .news-card-btn.amazon:hover { filter: brightness(1.1); transform: scale(1.02); }
 
   /* Empty / Loading */
   .news-empty {
-    text-align: center; padding: 40px 20px; color: var(--txd);
+    text-align: center; padding: 60px 20px; color: var(--txd); grid-column: 1 / -1;
   }
-  .news-empty .icon { font-size: 48px; margin-bottom: 12px; }
-  .news-empty p { font-size: 14px; line-height: 1.6; }
+  .news-empty .icon { font-size: 56px; margin-bottom: 14px; }
+  .news-empty p { font-size: 14px; line-height: 1.6; margin-bottom: 16px; }
 
   .news-loading {
-    text-align: center; padding: 40px; color: var(--txd); font-size: 14px;
+    text-align: center; padding: 60px; color: var(--txd); font-size: 14px;
+    grid-column: 1 / -1;
   }
   .news-loading .spinner {
-    display: inline-block; width: 24px; height: 24px; border: 3px solid var(--bd);
+    display: inline-block; width: 28px; height: 28px; border: 3px solid var(--bd);
     border-top-color: var(--ac); border-radius: 50%; animation: spin .8s linear infinite;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
   /* Archive */
   .news-archive {
-    margin-top: 20px; display: flex; align-items: center; gap: 8px;
+    margin-top: 24px; display: flex; align-items: center; gap: 8px;
+    padding: 14px; background: var(--sf); border: 1px solid var(--bd); border-radius: 10px;
   }
   .news-archive input {
     padding: 8px 12px; border: 1px solid var(--bd); border-radius: 8px;
@@ -94,9 +160,17 @@
   }
   .news-archive input:focus { outline: none; border-color: var(--ac); }
 
+  .refresh-btn {
+    padding: 8px 14px; border: 1px solid var(--bd); border-radius: 8px;
+    background: var(--acd); color: var(--ac); cursor: pointer;
+    font-family: 'Heebo', sans-serif; font-size: 13px; min-height: 40px;
+    font-weight: 600; transition: all .2s;
+  }
+  .refresh-btn:hover { background: var(--ac); color: var(--bg); }
+  .refresh-btn:disabled { opacity: .5; cursor: not-allowed; }
+
   @media (max-width: 600px) {
-    .news-card { flex-direction: column; }
-    .news-card-img { width: 100%; height: 140px; }
+    .news-grid { grid-template-columns: 1fr; }
     .news-header h1 { font-size: 22px; }
   }
 </style>
@@ -116,8 +190,24 @@
 
 <div class="page">
   <div class="news-header">
-    <h1>📰 <span data-en="What's New Today" data-he="מה חדש היום" class="accent">What's New Today</span></h1>
-    <span class="news-date" id="newsDate"></span>
+    <div>
+      <h1>📰 <span data-en="What's New Today" data-he="מה חדש היום" class="accent">What's New Today</span></h1>
+      <span class="news-date" id="newsDate"></span>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="news-prefs-btn" onclick="togglePrefs()">
+        ⚙️ <span data-en="Preferences" data-he="העדפות">Preferences</span>
+      </button>
+      <button class="refresh-btn" id="refreshBtn" onclick="refreshNow()">
+        🔄 <span data-en="Refresh" data-he="רענן">Refresh</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Preferences Panel -->
+  <div class="prefs-panel" id="prefsPanel">
+    <h3 data-en="Choose which categories to show:" data-he="בחר אילו קטגוריות להציג:">Choose which categories to show:</h3>
+    <div class="prefs-grid" id="prefsGrid"></div>
   </div>
 
   <!-- Tabs -->
@@ -133,8 +223,9 @@
 
   <!-- Archive -->
   <div class="news-archive">
-    <span style="font-size:13px;color:var(--txd);" data-en="Archive:" data-he="ארכיון:">Archive:</span>
+    <span style="font-size:13px;color:var(--txd);" data-en="📅 Archive:" data-he="📅 ארכיון:">📅 Archive:</span>
     <input type="date" id="archiveDate" onchange="loadArchive()">
+    <button class="news-card-btn" style="flex:0 0 auto;" onclick="loadNews()" data-en="← Today" data-he="← היום">← Today</button>
   </div>
 </div>
 
@@ -144,11 +235,12 @@
 <script src="js/common.js"></script>
 <script>
 let newsData = null;
-let activeTab = 'industry';
+let activeTab = null;
+let prefs = JSON.parse(localStorage.getItem('bq_news_prefs') || '{}');
 
 const CATEGORY_ICONS = {
-  industry: '🗞️', shops: '🏪', products: '🔧', tech: '🤖',
-  law: '📋', jobs: '👷', tips: '💡'
+  industry: '🗞️', videos: '🎬', shops: '🏪', products: '🔧',
+  tech: '🤖', law: '📋', jobs: '👷', tips: '💡', deals: '🛒'
 };
 
 async function loadNews(dateParam) {
@@ -162,19 +254,29 @@ async function loadNews(dateParam) {
     if (!data.news) {
       grid.innerHTML = `<div class="news-empty">
         <div class="icon">📰</div>
-        <p data-en="No news yet. The daily update runs at 8am PT.<br>Check back soon!" data-he="אין חדשות עדיין. העדכון היומי רץ ב-8 בבוקר.<br>חזור בקרוב!">${lang === 'he' ? 'אין חדשות עדיין. העדכון היומי רץ ב-8 בבוקר.<br>חזור בקרוב!' : 'No news yet. The daily update runs at 8am PT.<br>Check back soon!'}</p>
+        <p data-en="No news yet. Click Refresh to generate today's news." data-he="אין חדשות עדיין. לחץ רענן ליצירת החדשות של היום.">${lang === 'he' ? 'אין חדשות עדיין. לחץ רענן ליצירת החדשות של היום.' : "No news yet. Click Refresh to generate today's news."}</p>
       </div>`;
       return;
     }
 
     newsData = data.news;
     document.getElementById('newsDate').textContent = newsData.date;
-
-    // Mark as visited
     localStorage.setItem('bq_news_last_visit', newsData.date);
 
+    buildPrefs();
     buildTabs();
-    renderCategory(activeTab);
+
+    // Set active tab to first enabled category
+    const enabled = getEnabledCategories();
+    if (enabled.length > 0) {
+      if (!activeTab || !enabled.includes(activeTab)) activeTab = enabled[0];
+      renderCategory(activeTab);
+    } else {
+      grid.innerHTML = `<div class="news-empty">
+        <div class="icon">⚙️</div>
+        <p>${lang === 'he' ? 'כל הקטגוריות מבוטלות. פתח העדפות והפעל קטגוריות.' : 'All categories disabled. Open Preferences to enable some.'}</p>
+      </div>`;
+    }
   } catch (err) {
     grid.innerHTML = `<div class="news-empty">
       <div class="icon">❌</div>
@@ -183,11 +285,50 @@ async function loadNews(dateParam) {
   }
 }
 
+function getEnabledCategories() {
+  if (!newsData || !newsData.categories) return [];
+  return Object.keys(newsData.categories).filter(id => prefs[id] !== false);
+}
+
+function buildPrefs() {
+  const el = document.getElementById('prefsGrid');
+  if (!newsData || !newsData.categories) return;
+
+  el.innerHTML = Object.entries(newsData.categories).map(([id, cat]) => {
+    const on = prefs[id] !== false;
+    return `<label class="pref-item${on ? ' on' : ''}">
+      <input type="checkbox" ${on ? 'checked' : ''} onchange="togglePref('${id}', this.checked)">
+      <span class="pref-icon">${cat.icon || CATEGORY_ICONS[id] || '📰'}</span>
+      <span class="pref-label">${cat.label}</span>
+    </label>`;
+  }).join('');
+}
+
+function togglePref(id, on) {
+  prefs[id] = on;
+  localStorage.setItem('bq_news_prefs', JSON.stringify(prefs));
+  buildPrefs();
+  buildTabs();
+  // If active tab disabled, switch
+  if (activeTab === id && !on) {
+    const enabled = getEnabledCategories();
+    activeTab = enabled[0] || null;
+  }
+  if (activeTab) renderCategory(activeTab);
+  else document.getElementById('newsGrid').innerHTML = `<div class="news-empty"><div class="icon">⚙️</div><p>${lang === 'he' ? 'כל הקטגוריות מבוטלות' : 'All categories disabled'}</p></div>`;
+}
+
+function togglePrefs() {
+  document.getElementById('prefsPanel').classList.toggle('open');
+}
+
 function buildTabs() {
   const tabs = document.getElementById('newsTabs');
   if (!newsData || !newsData.categories) return;
 
-  tabs.innerHTML = Object.entries(newsData.categories).map(([id, cat]) => {
+  const enabled = getEnabledCategories();
+  tabs.innerHTML = enabled.map(id => {
+    const cat = newsData.categories[id];
     const count = cat.items ? cat.items.length : 0;
     const on = id === activeTab ? ' on' : '';
     return `<button class="news-tab${on}" onclick="selectTab('${id}')">
@@ -204,10 +345,27 @@ function selectTab(id) {
   renderCategory(id);
 }
 
+function getYouTubeEmbed(item) {
+  // Extract video ID from various YouTube URL formats
+  const urls = [item.videoEmbed, item.url].filter(Boolean);
+  for (const u of urls) {
+    // youtube.com/embed/VIDEO_ID
+    let m = u.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/);
+    if (m) return `https://www.youtube.com/embed/${m[1]}`;
+    // youtu.be/VIDEO_ID
+    m = u.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+    if (m) return `https://www.youtube.com/embed/${m[1]}`;
+    // youtube.com/watch?v=VIDEO_ID
+    m = u.match(/youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/);
+    if (m) return `https://www.youtube.com/embed/${m[1]}`;
+  }
+  return null;
+}
+
 function renderCategory(id) {
   const grid = document.getElementById('newsGrid');
   if (!newsData || !newsData.categories || !newsData.categories[id]) {
-    grid.innerHTML = '<div class="news-empty"><div class="icon">📭</div><p>No content in this category</p></div>';
+    grid.innerHTML = '<div class="news-empty"><div class="icon">📭</div><p>No content</p></div>';
     return;
   }
 
@@ -216,32 +374,48 @@ function renderCategory(id) {
   const h = lang === 'he';
 
   if (items.length === 0) {
-    grid.innerHTML = '<div class="news-empty"><div class="icon">📭</div><p>No items yet</p></div>';
+    grid.innerHTML = '<div class="news-empty"><div class="icon">📭</div><p>No items in this category yet</p></div>';
     return;
   }
 
   grid.innerHTML = items.map(item => {
     const icon = cat.icon || CATEGORY_ICONS[id] || '📰';
-    const imgHtml = item.image
-      ? `<img src="${escHtml(item.image)}" alt="">`
-      : icon;
-    const ratingHtml = item.rating
-      ? `<span class="news-card-rating">⭐ ${escHtml(item.rating)}</span>`
-      : '';
-    const linkHtml = item.url
-      ? `<a href="${escHtml(item.url)}" target="_blank" rel="noopener" class="news-card-link">${h ? 'קרא עוד →' : 'Read more →'}</a>`
-      : '';
+    const embedUrl = (id === 'videos') ? getYouTubeEmbed(item) : null;
+
+    let mediaHtml;
+    if (embedUrl) {
+      mediaHtml = `<iframe src="${embedUrl}" allowfullscreen loading="lazy"></iframe>`;
+    } else if (item.image) {
+      mediaHtml = `<img src="${escHtml(item.image)}" alt=""><div class="play-overlay"></div>`;
+    } else {
+      mediaHtml = `<span>${icon}</span>`;
+    }
+
+    const ratingHtml = item.rating ? `<span class="news-card-rating">⭐ ${escHtml(item.rating)}</span>` : '';
+    const sourceUrl = item.url ? escHtml(item.url) : null;
+
+    let actionsHtml = '';
+    if (sourceUrl) {
+      actionsHtml += `<a href="${sourceUrl}" target="_blank" rel="noopener" class="news-card-btn">${h ? 'קרא עוד' : 'Read More'} →</a>`;
+    }
+    if (item.amazonUrl) {
+      // Note: Add ?tag=YOUR_AMAZON_TAG here when ready for affiliate
+      const amazonUrl = item.amazonUrl.includes('?')
+        ? item.amazonUrl + '&tag=bqtools-20'
+        : item.amazonUrl + '?tag=bqtools-20';
+      actionsHtml += `<a href="${escHtml(amazonUrl)}" target="_blank" rel="noopener" class="news-card-btn amazon">🛒 ${h ? 'קנה באמזון' : 'Buy on Amazon'}</a>`;
+    }
 
     return `<div class="news-card">
-      <div class="news-card-img">${imgHtml}</div>
+      <div class="news-card-media">${mediaHtml}</div>
       <div class="news-card-body">
         <div class="news-card-title">${escHtml(item.title || '')}</div>
         <div class="news-card-summary">${escHtml(item.summary || '')}</div>
         <div class="news-card-meta">
           <span class="news-card-source">${escHtml(item.source || 'BQ Tools')}</span>
           ${ratingHtml}
-          ${linkHtml}
         </div>
+        ${actionsHtml ? `<div class="news-card-actions">${actionsHtml}</div>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -256,6 +430,31 @@ function escHtml(s) {
 function loadArchive() {
   const date = document.getElementById('archiveDate').value;
   if (date) loadNews(date);
+}
+
+async function refreshNow() {
+  const btn = document.getElementById('refreshBtn');
+  btn.disabled = true;
+  const orig = btn.innerHTML;
+  btn.innerHTML = `<div class="spinner" style="width:14px;height:14px;border-width:2px;margin:0;"></div> ${lang === 'he' ? 'מרענן...' : 'Refreshing...'}`;
+
+  try {
+    // Try admin refresh first (silent fail if not admin)
+    try {
+      await fetch(API_URL + '/api/admin/news/refresh', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer bqadmin2026' }
+      });
+    } catch {}
+    // Wait a moment for KV to propagate
+    await new Promise(r => setTimeout(r, 1500));
+    await loadNews();
+    showToast(lang === 'he' ? 'חדשות עודכנו' : 'News refreshed', 'ok');
+  } catch (err) {
+    showToast(err.message || 'Failed', 'err');
+  }
+  btn.disabled = false;
+  btn.innerHTML = orig;
 }
 
 // Init

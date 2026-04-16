@@ -1,6 +1,28 @@
 // ── BQ Tools — Shared Common JS ──
 
 let lang = localStorage.getItem('bq_lang') || 'en';
+let theme = localStorage.getItem('bq_theme') || 'dark';
+
+// ── Theme Toggle (Day/Night) ──
+function setTheme(t) {
+  theme = t;
+  localStorage.setItem('bq_theme', t);
+  if (t === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+  }
+  // Update all theme toggle buttons
+  document.querySelectorAll('.theme-toggle').forEach(btn => {
+    btn.textContent = t === 'light' ? '🌙' : '☀️';
+    btn.title = t === 'light' ? 'Switch to dark mode' : 'Switch to light mode';
+  });
+}
+function toggleTheme() {
+  setTheme(theme === 'light' ? 'dark' : 'light');
+}
+// Apply theme immediately on script load (before DOMContentLoaded to avoid flash)
+if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
 
 // ── Language Toggle ──
 function setLang(l) {
@@ -918,6 +940,9 @@ function buildAppNav() {
       </div>`
     : '';
 
+  // Theme toggle
+  const themeToggle = `<button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">${theme === 'light' ? '🌙' : '☀️'}</button>`;
+
   // Auth area
   let authHtml = '';
   if (loggedIn && user) {
@@ -931,6 +956,7 @@ function buildAppNav() {
     <div class="nav-right">
       ${linksHtml}
       ${creditPill}
+      ${themeToggle}
       ${authHtml}
     </div>`;
 
