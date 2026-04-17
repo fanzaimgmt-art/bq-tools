@@ -113,7 +113,7 @@ Key: "credits:{email}" → [{ date, tool, action, creditCost, projectTitle }]
   - $19.99 = 150 credits (Crypto: $12.99)
 
 **4. PAYMENT — Manual for now:**
-- PayPal: User clicks PayPal link (`https://www.paypal.com/ncp/payment/2LA7B7PZTHN54`), pays, then sends transaction ID
+- PayPal: per-tier hosted buttons — `2Z5X5PPL26R2L` (credits_25), `65YNKHNBL9V3G` (credits_60), `WKVG2RPF7JEDE` (credits_150), `G7EG5WBG8VSDG` (pro_monthly). After payment PayPal redirects to `/payment-success.html?tier={tier}` where the user submits their Transaction ID.
 - Crypto wallets:
   - SOL: `AuQHCMvYob1ejox3KtkjJwKWAT5cmBVdBHcpLNQXrZsB`
   - BTC: `bc1puz0rmvg9lqmv72sd0pw0md6p86899xjwq5sz2rc07s9fuqf3edgq9kgz5y`

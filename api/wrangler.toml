@@ -9,6 +9,7 @@ GEMINI_MODEL_FALLBACK = "gemini-2.0-flash"
 ALLOWED_ORIGIN = "https://bq-tools.fanzai-mgmt.workers.dev"
 FREE_CREDITS = "5"
 GOOGLE_CLIENT_ID = "704767034441-ljp9b1a874bdi9rqpodr8p4l5rmvbtdj.apps.googleusercontent.com"
+# STRIPE_ENABLED = "false"   ← uncomment and set to "true" after Stripe verification + secrets are set
 
 [[kv_namespaces]]
 binding = "BQ_USERS"

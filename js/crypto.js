@@ -62,17 +62,69 @@ function openCryptoModal() {
       ${walletBlock('btc')}
 
       <div style="background:var(--sf);border:1px solid var(--bd);border-radius:8px;padding:14px;font-size:14px;color:var(--txd);line-height:1.7;text-align:left;">
-        <span data-en="Send <b style='color:var(--ac)'>$9.74</b> in SOL or BTC to the address above, then email your tx hash to:" data-he="שלח <b style='color:var(--ac)'>$9.74</b> ב-SOL או BTC לכתובת למעלה, ואז שלח את ה-tx hash למייל:">Send <b style="color:var(--ac)">$9.74</b> in SOL or BTC to the address above, then email your tx hash to:</span>
-        <div style="margin-top:8px;text-align:center;">
-          <a href="mailto:fanzai.mgmt@gmail.com?subject=BQ%20Pro%20Crypto%20Payment&body=Tx%20Hash%3A%20" style="color:var(--ac);font-weight:700;font-size:16px;">fanzai.mgmt@gmail.com</a>
+        <span data-en="Send <b style='color:var(--ac)'>$9.74</b> in SOL or BTC to the address above, then paste your tx hash below:" data-he="שלח <b style='color:var(--ac)'>$9.74</b> ב-SOL או BTC לכתובת למעלה, ואז הדבק את ה-tx hash למטה:">Send <b style="color:var(--ac)">$9.74</b> in SOL or BTC to the address above, then paste your tx hash below:</span>
+      </div>
+
+      <div style="margin-top:12px;text-align:left;">
+        <label style="font-size:12px;color:var(--txd);display:block;margin-bottom:4px;">Your Email</label>
+        <input id="_cryptoEmail" type="email" placeholder="you@example.com"
+          style="width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--sf);color:var(--tx);font-size:13px;box-sizing:border-box;margin-bottom:10px;">
+        <label style="font-size:12px;color:var(--txd);display:block;margin-bottom:4px;">Transaction Hash</label>
+        <input id="_cryptoTxHash" type="text" placeholder="Paste SOL or BTC tx hash"
+          style="width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--sf);color:var(--tx);font-family:monospace;font-size:12px;box-sizing:border-box;margin-bottom:10px;" autocomplete="off">
+        <div id="_cryptoErr" style="display:none;color:#ff5050;font-size:13px;margin-bottom:8px;"></div>
+        <div id="_cryptoSuccess" style="display:none;background:rgba(81,207,102,.12);border:1px solid rgba(81,207,102,.3);border-radius:8px;padding:10px;font-size:13px;color:var(--grn);margin-bottom:8px;">
+          ✅ Received! Credits will be added within 12 hours. Usually 2-4 hours during business hours.
         </div>
-        <div style="margin-top:8px;font-size:14px;text-align:center;" data-en="You'll receive your Pro code within 24 hours." data-he="תקבל את קוד ה-Pro תוך 24 שעות.">You'll receive your Pro code within 24 hours.</div>
+        <button id="_cryptoSubmitBtn" onclick="_cryptoSubmitTx()" class="btn btn-primary" style="width:100%;">Submit Tx Hash</button>
       </div>
     </div>`;
 
   document.body.appendChild(m);
   requestAnimationFrame(() => m.classList.add('open'));
   if (typeof setLang === 'function') setLang(lang);
+
+  const storedEmail = localStorage.getItem('bq_user_email') || '';
+  const emailInput = m.querySelector('#_cryptoEmail');
+  if (emailInput && storedEmail) emailInput.value = storedEmail;
+}
+
+async function _cryptoSubmitTx() {
+  const email = document.getElementById('_cryptoEmail')?.value.trim() || '';
+  const txHash = document.getElementById('_cryptoTxHash')?.value.trim() || '';
+  const errEl = document.getElementById('_cryptoErr');
+  const successEl = document.getElementById('_cryptoSuccess');
+  const btn = document.getElementById('_cryptoSubmitBtn');
+  if (errEl) errEl.style.display = 'none';
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (errEl) { errEl.textContent = 'Enter a valid email.'; errEl.style.display = ''; }
+    return;
+  }
+  if (!txHash || txHash.length < 20) {
+    if (errEl) { errEl.textContent = 'Paste your transaction hash (at least 20 characters).'; errEl.style.display = ''; }
+    return;
+  }
+
+  if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
+  try {
+    const res = await fetch('/api/payments/crypto/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tier: 'pro_monthly', amount: 9.74, transactionId: txHash, userEmail: email })
+    });
+    const data = await res.json();
+    if (res.ok && data.ok) {
+      if (successEl) successEl.style.display = '';
+      if (btn) btn.style.display = 'none';
+    } else {
+      if (errEl) { errEl.textContent = data.error || 'Submission failed. Try again.'; errEl.style.display = ''; }
+      if (btn) { btn.disabled = false; btn.textContent = 'Submit Tx Hash'; }
+    }
+  } catch {
+    if (errEl) { errEl.textContent = 'Network error. Please try again.'; errEl.style.display = ''; }
+    if (btn) { btn.disabled = false; btn.textContent = 'Submit Tx Hash'; }
+  }
 }
 
 function copyAddr(id) {

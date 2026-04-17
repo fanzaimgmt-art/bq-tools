@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Admin — Payments</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  body { display: flex; flex-direction: column; min-height: 100vh; background: var(--bg); }
+  .admin-wrap { max-width: 1100px; margin: 32px auto; padding: 0 16px; width: 100%; }
+
+  /* Password gate */
+  #gate { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 16px; }
+  #gate h2 { font-size: 22px; font-weight: 800; }
+  #gate .gate-box { background: var(--sf); border: 1px solid var(--bd); border-radius: 16px; padding: 32px; width: 100%; max-width: 360px; }
+  #gate label { display: block; font-size: 13px; color: var(--txd); margin-bottom: 8px; }
+  #gate button { width: 100%; margin-top: 14px; }
+
+  /* Controls bar */
+  .controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; align-items: center; }
+  .controls select, .controls input { flex: 1; min-width: 140px; }
+  .controls .refresh-btn { flex: none; }
+  .badge-count { background: var(--ac); color: #000; border-radius: 99px; padding: 2px 10px; font-size: 12px; font-weight: 800; margin-left: 6px; }
+
+  /* Table card */
+  .table-card { background: var(--sf); border: 1px solid var(--bd); border-radius: 16px; overflow: hidden; margin-bottom: 24px; }
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { background: var(--bg); color: var(--txd); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; padding: 10px 14px; text-align: left; white-space: nowrap; }
+  td { padding: 11px 14px; border-top: 1px solid var(--bd); vertical-align: middle; }
+  tr:hover td { background: rgba(255,255,255,.02); }
+
+  /* Status pills */
+  .pill { display: inline-block; border-radius: 99px; padding: 3px 10px; font-size: 12px; font-weight: 700; }
+  .pill-pending  { background: rgba(232,197,71,.18); color: var(--ac); }
+  .pill-fulfilled { background: rgba(81,207,102,.18); color: var(--grn); }
+  .pill-rejected { background: rgba(255,107,107,.18); color: var(--red); }
+
+  /* Method icon */
+  .method-label { font-size: 13px; }
+
+  /* TxID copy */
+  .txid-wrap { display: flex; align-items: center; gap: 6px; }
+  .txid-text { font-size: 12px; font-family: monospace; color: var(--txd); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: default; }
+  .copy-btn { flex: none; background: var(--bg); border: 1px solid var(--bd); border-radius: 6px; padding: 3px 8px; font-size: 11px; cursor: pointer; color: var(--txd); transition: border-color .2s, color .2s; }
+  .copy-btn:hover { border-color: var(--ac); color: var(--ac); }
+
+  /* Action buttons */
+  .actions-cell { display: flex; gap: 8px; align-items: center; flex-wrap: nowrap; }
+  .btn-grant { background: rgba(81,207,102,.15); border: 1px solid var(--grn); color: var(--grn); border-radius: 8px; padding: 7px 14px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; min-height: 38px; transition: background .2s; }
+  .btn-grant:hover { background: rgba(81,207,102,.28); }
+  .btn-reject { background: rgba(255,107,107,.12); border: 1px solid var(--red); color: var(--red); border-radius: 8px; padding: 7px 14px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; min-height: 38px; transition: background .2s; }
+  .btn-reject:hover { background: rgba(255,107,107,.25); }
+  .btn-disabled { opacity: 0.4; pointer-events: none; }
+
+  /* Checkbox */
+  .row-check { width: 16px; height: 16px; cursor: pointer; accent-color: var(--ac); }
+
+  /* Bulk actions */
+  .bulk-bar { background: var(--sf); border: 1px solid var(--bd); border-radius: 12px; padding: 14px 18px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 24px; }
+  .bulk-bar span { font-size: 14px; color: var(--txd); }
+  .btn-bulk { background: rgba(232,197,71,.12); border: 1px solid var(--ac); color: var(--ac); border-radius: 8px; padding: 8px 18px; font-size: 14px; font-weight: 700; cursor: pointer; min-height: 40px; }
+  .btn-bulk:hover { background: rgba(232,197,71,.24); }
+  .btn-bulk:disabled { opacity: 0.4; cursor: default; }
+
+  /* Empty state */
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--txd); }
+  .empty-state p { margin-bottom: 16px; font-size: 16px; }
+
+  /* Toast */
+  #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--sf); border: 1px solid var(--bd); border-radius: 10px; padding: 12px 22px; font-size: 14px; font-weight: 600; z-index: 9999; opacity: 0; transition: opacity .25s; pointer-events: none; box-shadow: 0 4px 20px rgba(0,0,0,.4); }
+  #toast.show { opacity: 1; }
+  #toast.ok  { border-color: var(--grn); color: var(--grn); }
+  #toast.err { border-color: var(--red);  color: var(--red); }
+
+  /* Auto-refresh indicator */
+  .refresh-info { font-size: 12px; color: var(--txd); margin-left: auto; }
+
+  /* Mobile */
+  @media (max-width: 600px) {
+    .controls { flex-direction: column; }
+    .controls select, .controls input { width: 100%; }
+    td, th { padding: 8px 10px; }
+    .txid-text { max-width: 70px; }
+    .actions-cell { flex-direction: column; gap: 6px; }
+    .btn-grant, .btn-reject { width: 100%; text-align: center; }
+    .bulk-bar { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/admin.html" class="nav-link">Admin</a>
+  </div>
+</nav>
+
+<!-- Password gate -->
+<div id="gate">
+  <div class="gate-box">
+    <h2>💳 Payments Admin</h2>
+    <p style="font-size:14px;color:var(--txd);margin:8px 0 20px;">Enter the admin password to continue.</p>
+    <label for="adminPass">Admin Password</label>
+    <input class="input" type="password" id="adminPass" placeholder="bqadmin2026" autocomplete="current-password">
+    <button class="btn btn-primary" onclick="unlock()">Unlock</button>
+    <div id="gateErr" style="margin-top:10px;font-size:13px;color:var(--red);display:none;"></div>
+  </div>
+</div>
+
+<!-- Main content (hidden until unlocked) -->
+<div id="mainContent" style="display:none;" class="admin-wrap">
+
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;flex-wrap:wrap;">
+    <h1 style="font-size:24px;font-weight:800;margin:0;">💳 Payment Queue</h1>
+    <span id="pendingBadge" class="badge-count" style="display:none;"></span>
+    <a href="/admin/dashboard.html" style="margin-left:auto;font-size:13px;color:var(--txd);">← Dashboard</a>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <select class="input" id="statusFilter" onchange="applyFilters()">
+      <option value="pending">Pending</option>
+      <option value="fulfilled">Fulfilled</option>
+      <option value="rejected">Rejected</option>
+      <option value="all">All</option>
+    </select>
+    <input class="input" type="text" id="emailSearch" placeholder="Search by email…" oninput="applyFilters()">
+    <button class="btn refresh-btn" onclick="loadPayments()">↻ Refresh</button>
+    <span class="refresh-info" id="refreshInfo">Auto-refresh every 30s</span>
+  </div>
+
+  <!-- Bulk actions bar -->
+  <div class="bulk-bar">
+    <span id="selectedCount">0 selected</span>
+    <button class="btn-bulk" id="bulkApproveBtn" onclick="bulkApprove()" disabled>✅ Approve Selected</button>
+  </div>
+
+  <!-- Table -->
+  <div class="table-card">
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th><input type="checkbox" id="selectAll" class="row-check" onchange="toggleSelectAll(this)"></th>
+            <th>Submitted</th>
+            <th>Email</th>
+            <th>Tier</th>
+            <th>Amount</th>
+            <th>Method</th>
+            <th>Transaction ID</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="paymentsBody">
+          <tr><td colspan="9" class="empty-state"><p>Loading…</p></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="empty-state" id="emptyState" style="display:none;">
+    <p>No pending payments.</p>
+    <a href="/admin/dashboard.html" class="btn">← Back to Dashboard</a>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+const API_URL = 'https://bq-tools-api.fanzai-mgmt.workers.dev';
+let adminPass = '';
+let allPayments = [];
+let refreshTimer = null;
+
+/* ── Auth ─────────────────────────────────────────────── */
+function getAdminPass() { return adminPass; }
+
+async function adminFetch(path, opts = {}) {
+  const res = await fetch(API_URL + path, {
+    ...opts,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + getAdminPass(),
+      ...(opts.headers || {})
+    }
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+async function unlock() {
+  const pw = document.getElementById('adminPass').value.trim();
+  if (!pw) { showGateErr('Enter the admin password.'); return; }
+  try {
+    // Validate by hitting the list endpoint
+    adminPass = pw;
+    await adminFetch('/api/admin/payments/list?status=pending');
+    sessionStorage.setItem('adminPass', pw);
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+    loadPayments();
+    startAutoRefresh();
+  } catch (e) {
+    adminPass = '';
+    showGateErr('Invalid password or server error: ' + e.message);
+  }
+}
+
+function showGateErr(msg) {
+  const el = document.getElementById('gateErr');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+// Restore session on reload
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = sessionStorage.getItem('adminPass');
+  if (saved) {
+    document.getElementById('adminPass').value = saved;
+    adminPass = saved;
+    unlock();
+  }
+  document.getElementById('adminPass').addEventListener('keydown', e => {
+    if (e.key === 'Enter') unlock();
+  });
+});
+
+/* ── Data loading ─────────────────────────────────────── */
+async function loadPayments() {
+  const status = document.getElementById('statusFilter').value;
+  try {
+    const data = await adminFetch('/api/admin/payments/list?status=' + status);
+    allPayments = Array.isArray(data) ? data : (data.payments || []);
+    applyFilters();
+    updatePendingBadge();
+    document.getElementById('refreshInfo').textContent = 'Updated ' + new Date().toLocaleTimeString();
+  } catch (e) {
+    showToast('Failed to load: ' + e.message, 'err');
+  }
+}
+
+function updatePendingBadge() {
+  const pending = allPayments.filter(p => p.status === 'pending').length;
+  const badge = document.getElementById('pendingBadge');
+  if (pending > 0) {
+    badge.textContent = pending + ' pending';
+    badge.style.display = 'inline-block';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+/* ── Filtering ────────────────────────────────────────── */
+function applyFilters() {
+  const search = document.getElementById('emailSearch').value.toLowerCase().trim();
+  const filtered = allPayments.filter(p => {
+    if (!search) return true;
+    return (p.email || p.userEmail || '').toLowerCase().includes(search);
+  });
+  renderTable(filtered);
+}
+
+/* ── Rendering ────────────────────────────────────────── */
+function fmtDate(ts) {
+  if (!ts) return '—';
+  const d = new Date(ts);
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' ' +
+         d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+}
+
+function fmtMethod(method) {
+  if (!method) return '—';
+  return method.toLowerCase() === 'paypal' ? '💳 PayPal' : '⛓ Crypto';
+}
+
+function statusPill(status) {
+  const cls = { pending: 'pill-pending', fulfilled: 'pill-fulfilled', rejected: 'pill-rejected' }[status] || 'pill-pending';
+  return `<span class="pill ${cls}">${status || 'pending'}</span>`;
+}
+
+function renderTable(rows) {
+  const tbody = document.getElementById('paymentsBody');
+  const empty = document.getElementById('emptyState');
+
+  if (!rows.length) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = rows.map(p => {
+    const email = p.email || p.userEmail || '—';
+    const isPending = (p.status || 'pending') === 'pending';
+    const key = escapeAttr(p.key || '');
+    const txid = p.transactionId || '—';
+    const shortTx = txid.length > 20 ? txid.slice(0, 20) + '…' : txid;
+    const credits = tierCredits(p.tier);
+
+    return `<tr data-key="${key}" data-status="${p.status || 'pending'}">
+      <td>${isPending ? `<input type="checkbox" class="row-check row-select" data-key="${key}" onchange="updateBulkCount()">` : ''}</td>
+      <td style="white-space:nowrap;">${fmtDate(p.submittedAt)}</td>
+      <td style="font-size:13px;">${escapeHtml(email)}</td>
+      <td><strong>${escapeHtml(p.tier || '—')}</strong></td>
+      <td style="font-weight:700;">$${p.amount || '—'}</td>
+      <td class="method-label">${fmtMethod(p.method)}</td>
+      <td>
+        <div class="txid-wrap">
+          <span class="txid-text" title="${escapeAttr(txid)}">${escapeHtml(shortTx)}</span>
+          <button class="copy-btn" onclick="copyTx('${escapeAttr(txid)}')">Copy</button>
+        </div>
+      </td>
+      <td>${statusPill(p.status)}</td>
+      <td>
+        <div class="actions-cell">
+          ${isPending ? `
+            <button class="btn-grant" onclick="grantPayment('${key}','${escapeAttr(email)}','${escapeAttr(p.transactionId || '')}','${credits}')">✅ Grant</button>
+            <button class="btn-reject" onclick="rejectPayment('${key}','${escapeAttr(email)}')">❌ Reject</button>
+          ` : '<span style="font-size:13px;color:var(--txd);">—</span>'}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function tierCredits(tier) {
+  const map = { credits_25: 25, credits_60: 60, credits_150: 150, pro_monthly: 'Pro (30d)' };
+  return map[tier] ?? '?';
+}
+
+/* ── Actions ──────────────────────────────────────────── */
+async function grantPayment(key, email, txid, credits) {
+  const msg = `Grant ${credits} credits to ${email}?\n\nTransaction ID: ${txid}`;
+  if (!confirm(msg)) return;
+  await doVerify(key, 'grant');
+}
+
+async function rejectPayment(key, email) {
+  const reason = prompt(`Reject payment from ${email}?\n\nEnter rejection reason (optional):`);
+  if (reason === null) return; // user cancelled
+  await doVerify(key, 'reject', reason);
+}
+
+async function doVerify(key, action, reason) {
+  try {
+    const body = { key, action };
+    if (reason) body.reason = reason;
+    await adminFetch('/api/admin/payments/verify', {
+      method: 'POST',
+      body: JSON.stringify(body)
+    });
+    showToast(action === 'grant' ? '✅ Payment granted!' : '❌ Payment rejected.', 'ok');
+    await loadPayments();
+  } catch (e) {
+    showToast('Error: ' + e.message, 'err');
+  }
+}
+
+/* ── Bulk ─────────────────────────────────────────────── */
+function toggleSelectAll(cb) {
+  document.querySelectorAll('.row-select').forEach(c => { c.checked = cb.checked; });
+  updateBulkCount();
+}
+
+function updateBulkCount() {
+  const selected = document.querySelectorAll('.row-select:checked').length;
+  document.getElementById('selectedCount').textContent = selected + ' selected';
+  document.getElementById('bulkApproveBtn').disabled = selected === 0;
+  document.getElementById('selectAll').checked =
+    selected > 0 && selected === document.querySelectorAll('.row-select').length;
+}
+
+async function bulkApprove() {
+  const checked = [...document.querySelectorAll('.row-select:checked')];
+  if (!checked.length) return;
+  if (!confirm(`Approve ${checked.length} payment(s)?`)) return;
+  document.getElementById('bulkApproveBtn').disabled = true;
+  let ok = 0, fail = 0;
+  for (const cb of checked) {
+    try {
+      await adminFetch('/api/admin/payments/verify', {
+        method: 'POST',
+        body: JSON.stringify({ key: cb.dataset.key, action: 'grant' })
+      });
+      ok++;
+    } catch { fail++; }
+  }
+  showToast(`Approved ${ok}${fail ? ', ' + fail + ' failed' : ''}.`, fail ? 'err' : 'ok');
+  await loadPayments();
+}
+
+/* ── Auto-refresh ─────────────────────────────────────── */
+function startAutoRefresh() {
+  if (refreshTimer) clearInterval(refreshTimer);
+  refreshTimer = setInterval(() => {
+    if (!document.hidden) loadPayments();
+  }, 30000);
+}
+
+/* ── Helpers ──────────────────────────────────────────── */
+function copyTx(text) {
+  navigator.clipboard.writeText(text).then(() => showToast('Copied!', 'ok'));
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function escapeAttr(s) {
+  return String(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+let toastTimer;
+function showToast(msg, type = 'ok') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = ''; }, 3000);
+}
+</script>
+</body>
+</html>

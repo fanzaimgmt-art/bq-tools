@@ -874,7 +874,44 @@ const HIW_CONFIGS = {
 
 // ── Buy Credits Modal ──
 
-function showBuyCreditsModal() {
+// Expose globally so pages with hardcoded PayPal links can call this instead.
+// tier: 'credits_25' | 'credits_60' | 'credits_150' | 'pro_monthly' (optional)
+window.openBuyCreditsModal = function(tier) { showBuyCreditsModal(tier); };
+
+const _TIER_META = {
+  credits_25:   { label: '25 credits',      amount: 4.99,  display: '$4.99',  paypalBtn: '2Z5X5PPL26R2L' },
+  credits_60:   { label: '60 credits',      amount: 9.99,  display: '$9.99',  paypalBtn: '65YNKHNBL9V3G' },
+  credits_150:  { label: '150 credits',     amount: 19.99, display: '$19.99', paypalBtn: 'WKVG2RPF7JEDE' },
+  pro_monthly:  { label: 'Pro (1 month)',   amount: 14.99, display: '$14.99', paypalBtn: 'G7EG5WBG8VSDG' },
+};
+
+function _paypalTierCard(tier, meta, isPopular, isBest, cryptoPrice) {
+  const popularBadge = isPopular
+    ? `<div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--ac);color:var(--bg);font-size:10px;font-weight:700;padding:2px 10px;border-radius:6px;">POPULAR</div>` : '';
+  const bestBadge = isBest
+    ? `<div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:2px 10px;border-radius:6px;">BEST VALUE</div>` : '';
+  const border = isPopular ? '2px solid var(--ac)' : '1px solid var(--bd)';
+  const labelColor = isPopular ? 'color:var(--ac);' : '';
+  const [qty] = meta.label.split(' ');
+  return `
+    <div style="flex:1;min-width:140px;background:var(--bg);border:${border};border-radius:12px;padding:16px 12px;position:relative;">
+      ${popularBadge}${bestBadge}
+      <div style="font-size:20px;font-weight:900;${labelColor}">${qty}</div>
+      <div style="font-size:12px;color:var(--txd);margin-bottom:2px;">credits</div>
+      <div style="font-size:18px;font-weight:700;margin-bottom:10px;">${meta.display}</div>
+      <button onclick="_bcmPayStep('${tier}', this.closest('.modal-overlay'))"
+        class="btn ${isPopular ? 'btn-primary' : ''} btn-sm"
+        style="width:100%;font-size:12px;margin-bottom:6px;">PayPal</button>
+      <button disabled class="btn btn-sm stripe-card-btn" data-tier="${tier}"
+        title="Coming soon — card payments being set up"
+        style="width:100%;font-size:11px;margin-bottom:6px;opacity:0.5;cursor:not-allowed;">&#x1F4B3; Pay with Card (Coming Soon)</button>
+      <button onclick="openCryptoModal();this.closest('.modal-overlay').remove();"
+        class="btn btn-sm"
+        style="width:100%;font-size:11px;border-color:rgba(81,207,102,.3);color:var(--grn);">Crypto ${cryptoPrice}<br><span style="font-size:10px;">35% OFF</span></button>
+    </div>`;
+}
+
+function showBuyCreditsModal(preselectedTier) {
   _closeDropdown();
   const credits = typeof getCredits === 'function' ? getCredits() : 0;
   const creditsWord = t({ en: 'credits remaining', he: 'קרדיטים', es: 'créditos disponibles' });
@@ -884,54 +921,133 @@ function showBuyCreditsModal() {
   m.className = 'modal-overlay';
   m.innerHTML = `
     <div class="modal-card" style="max-width:540px;text-align:center;">
-      <div style="font-size:36px;margin-bottom:8px;">⚡</div>
-      <h3 style="margin-bottom:4px;">${t({ en: 'Buy Credits', he: 'קנה קרדיטים', es: 'Comprar Créditos' })}</h3>
-      <p style="font-size:14px;color:var(--txd);margin-bottom:16px;">${youHave} <b style="color:var(--ac);">${credits}</b> ${creditsWord}</p>
+      <div id="_bcmStep1">
+        <div style="font-size:36px;margin-bottom:8px;">⚡</div>
+        <h3 style="margin-bottom:4px;">${t({ en: 'Buy Credits', he: 'קנה קרדיטים', es: 'Comprar Créditos' })}</h3>
+        <p style="font-size:14px;color:var(--txd);margin-bottom:16px;">${youHave} <b style="color:var(--ac);">${credits}</b> ${creditsWord}</p>
 
-      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
-        <!-- 25 credits -->
-        <div style="flex:1;min-width:140px;background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:16px 12px;">
-          <div style="font-size:20px;font-weight:900;">25</div>
-          <div style="font-size:12px;color:var(--txd);margin-bottom:2px;">credits</div>
-          <div style="font-size:18px;font-weight:700;margin-bottom:2px;">$4.99</div>
-          <div style="font-size:11px;color:var(--txd);margin-bottom:10px;">~$0.20/credit</div>
-          <a href="https://www.paypal.com/ncp/payment/2LA7B7PZTHN54" target="_blank" rel="noopener" class="btn btn-sm" style="width:100%;font-size:12px;margin-bottom:6px;">PayPal</a>
-          <button onclick="openCryptoModal();this.closest('.modal-overlay').remove();" class="btn btn-sm" style="width:100%;font-size:11px;border-color:rgba(81,207,102,.3);color:var(--grn);">Crypto $3.24<br><span style="font-size:10px;">35% OFF</span></button>
+        <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+          ${_paypalTierCard('credits_25',  _TIER_META.credits_25,  false, false, '$3.24')}
+          ${_paypalTierCard('credits_60',  _TIER_META.credits_60,  true,  false, '$6.49')}
+          ${_paypalTierCard('credits_150', _TIER_META.credits_150, false, true,  '$12.99')}
         </div>
-        <!-- 60 credits -->
-        <div style="flex:1;min-width:140px;background:var(--bg);border:2px solid var(--ac);border-radius:12px;padding:16px 12px;position:relative;">
-          <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--ac);color:var(--bg);font-size:10px;font-weight:700;padding:2px 10px;border-radius:6px;">POPULAR</div>
-          <div style="font-size:20px;font-weight:900;color:var(--ac);">60</div>
-          <div style="font-size:12px;color:var(--txd);margin-bottom:2px;">credits</div>
-          <div style="font-size:18px;font-weight:700;margin-bottom:2px;">$9.99</div>
-          <div style="font-size:11px;color:var(--txd);margin-bottom:10px;">~$0.17/credit</div>
-          <a href="https://www.paypal.com/ncp/payment/2LA7B7PZTHN54" target="_blank" rel="noopener" class="btn btn-primary btn-sm" style="width:100%;font-size:12px;margin-bottom:6px;">PayPal</a>
-          <button onclick="openCryptoModal();this.closest('.modal-overlay').remove();" class="btn btn-sm" style="width:100%;font-size:11px;border-color:rgba(81,207,102,.3);color:var(--grn);">Crypto $6.49<br><span style="font-size:10px;">35% OFF</span></button>
+
+        <p style="font-size:12px;color:var(--txd);margin-bottom:14px;line-height:1.5;">1 credit = 1 AI Analysis, Report, Estimate, Social Post, or Assistant message</p>
+
+        <div style="background:var(--acd);border-radius:10px;padding:12px;margin-bottom:14px;">
+          <p style="font-size:13px;color:var(--ac);font-weight:600;margin-bottom:6px;">${t({ en: 'Need Pro? Get 50 credits/month for $14.99', he: 'צריך Pro? 50 קרדיטים בחודש ב-$14.99', es: '¿Necesitas Pro? Obtén 50 créditos al mes por $14.99' })}</p>
+          <button onclick="showProModal()" class="btn btn-sm" style="font-size:12px;">${t({ en: 'Upgrade to Pro →', he: 'שדרג ל-Pro →', es: 'Hazte Pro →' })}</button>
         </div>
-        <!-- 150 credits -->
-        <div style="flex:1;min-width:140px;background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:16px 12px;position:relative;">
-          <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:2px 10px;border-radius:6px;">BEST VALUE</div>
-          <div style="font-size:20px;font-weight:900;">150</div>
-          <div style="font-size:12px;color:var(--txd);margin-bottom:2px;">credits</div>
-          <div style="font-size:18px;font-weight:700;margin-bottom:2px;">$19.99</div>
-          <div style="font-size:11px;color:var(--txd);margin-bottom:10px;">~$0.13/credit</div>
-          <a href="https://www.paypal.com/ncp/payment/2LA7B7PZTHN54" target="_blank" rel="noopener" class="btn btn-sm" style="width:100%;font-size:12px;margin-bottom:6px;">PayPal</a>
-          <button onclick="openCryptoModal();this.closest('.modal-overlay').remove();" class="btn btn-sm" style="width:100%;font-size:11px;border-color:rgba(81,207,102,.3);color:var(--grn);">Crypto $12.99<br><span style="font-size:10px;">35% OFF</span></button>
-        </div>
+
+        <button onclick="this.closest('.modal-overlay').remove()" class="btn" style="width:100%;">${t({ en: 'Close', he: 'סגור', es: 'Cerrar' })}</button>
       </div>
 
-      <p style="font-size:12px;color:var(--txd);margin-bottom:14px;line-height:1.5;">1 credit = 1 AI Analysis, Report, Estimate, Social Post, or Assistant message</p>
-
-      <div style="background:var(--acd);border-radius:10px;padding:12px;margin-bottom:14px;">
-        <p style="font-size:13px;color:var(--ac);font-weight:600;margin-bottom:6px;">${t({ en: 'Need Pro? Get 50 credits/month for $14.99', he: 'צריך Pro? 50 קרדיטים בחודש ב-$14.99', es: '¿Necesitas Pro? Obtén 50 créditos al mes por $14.99' })}</p>
-        <button onclick="showProModal()" class="btn btn-sm" style="font-size:12px;">${t({ en: 'Upgrade to Pro →', he: 'שדרג ל-Pro →', es: 'Hazte Pro →' })}</button>
+      <div id="_bcmStep2" style="display:none;">
+        <div style="font-size:36px;margin-bottom:8px;">💳</div>
+        <h3 style="margin-bottom:4px;" id="_bcmStep2Title">Confirm Payment</h3>
+        <div id="_bcmPayInstructions" style="background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:14px;text-align:left;font-size:13px;line-height:1.7;"></div>
+        <div style="margin-bottom:12px;text-align:left;">
+          <label style="font-size:12px;color:var(--txd);display:block;margin-bottom:4px;">Your Email</label>
+          <input id="_bcmEmail" type="email" placeholder="you@example.com" style="width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--sf);color:var(--tx);font-size:14px;box-sizing:border-box;">
+        </div>
+        <div style="margin-bottom:16px;text-align:left;">
+          <label style="font-size:12px;color:var(--txd);display:block;margin-bottom:4px;">PayPal Transaction ID</label>
+          <input id="_bcmTxId" type="text" placeholder="e.g. 5ML65651RH787232V" style="width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--sf);color:var(--tx);font-size:14px;box-sizing:border-box;" autocomplete="off">
+        </div>
+        <div id="_bcmSuccess" style="display:none;background:rgba(81,207,102,.12);border:1px solid rgba(81,207,102,.3);border-radius:10px;padding:14px;margin-bottom:14px;font-size:14px;color:var(--grn);line-height:1.6;">
+          ✅ Thanks! Credits will be added within 12 hours. Check your email for confirmation.<br>
+          <span style="font-size:12px;color:var(--txd);">Usually 2-4 hours during business hours.</span>
+        </div>
+        <div id="_bcmError" style="display:none;background:rgba(255,80,80,.1);border:1px solid rgba(255,80,80,.3);border-radius:8px;padding:10px;margin-bottom:12px;font-size:13px;color:#ff5050;"></div>
+        <button id="_bcmSubmitBtn" onclick="_bcmSubmit(this.closest('.modal-overlay'))" class="btn btn-primary" style="width:100%;margin-bottom:10px;">Submit</button>
+        <button onclick="_bcmGoBack(this.closest('.modal-overlay'))" class="btn" style="width:100%;">← Back</button>
       </div>
-
-      <button onclick="this.closest('.modal-overlay').remove()" class="btn" style="width:100%;">${t({ en: 'Close', he: 'סגור', es: 'Cerrar' })}</button>
     </div>`;
+
   document.body.appendChild(m);
   requestAnimationFrame(() => m.classList.add('open'));
   m.onclick = (e) => { if (e.target === m) m.remove(); };
+
+  // Pre-fill email from localStorage
+  const storedEmail = localStorage.getItem('bq_user_email') || '';
+  const emailInput = m.querySelector('#_bcmEmail');
+  if (emailInput && storedEmail) emailInput.value = storedEmail;
+
+  // If a tier was preselected, jump directly to step 2
+  if (preselectedTier && _TIER_META[preselectedTier]) {
+    _bcmPayStep(preselectedTier, m);
+  }
+}
+
+// Open PayPal in new tab and show confirmation form for the chosen tier
+function _bcmPayStep(tier, modalEl) {
+  const meta = _TIER_META[tier];
+  if (!meta) return;
+  const payUrl = `https://www.paypal.com/ncp/payment/${meta.paypalBtn}`;
+  modalEl.dataset.bcmTier = tier;
+  modalEl.querySelector('#_bcmStep1').style.display = 'none';
+  const step2 = modalEl.querySelector('#_bcmStep2');
+  step2.style.display = '';
+  modalEl.querySelector('#_bcmStep2Title').textContent = `Confirm — ${meta.label} (${meta.display})`;
+  modalEl.querySelector('#_bcmPayInstructions').innerHTML = `
+    <b>Step 1:</b> <a href="${payUrl}" target="_blank" rel="noopener" style="color:var(--ac);">Open PayPal payment page ↗</a><br>
+    <b style="color:#ff5050;">Send exactly ${meta.display} USD</b> — amount is pre-filled on the PayPal page.<br><br>
+    <b>Step 2:</b> After payment succeeds, copy your <b>Transaction ID</b> from the PayPal confirmation email or PayPal activity, paste it below, and click Submit.`;
+  // Open PayPal in new tab immediately
+  window.open(payUrl, '_blank', 'noopener');
+}
+
+function _bcmGoBack(modalEl) {
+  modalEl.querySelector('#_bcmStep1').style.display = '';
+  modalEl.querySelector('#_bcmStep2').style.display = 'none';
+  modalEl.querySelector('#_bcmSuccess').style.display = 'none';
+  modalEl.querySelector('#_bcmError').style.display = 'none';
+}
+
+async function _bcmSubmit(modalEl) {
+  const tier = modalEl.dataset.bcmTier;
+  const email = modalEl.querySelector('#_bcmEmail').value.trim();
+  const txId = modalEl.querySelector('#_bcmTxId').value.trim();
+  const errEl = modalEl.querySelector('#_bcmError');
+  const successEl = modalEl.querySelector('#_bcmSuccess');
+  const submitBtn = modalEl.querySelector('#_bcmSubmitBtn');
+  errEl.style.display = 'none';
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errEl.textContent = 'Please enter a valid email address.';
+    errEl.style.display = '';
+    return;
+  }
+  if (!txId || !/^[a-zA-Z0-9]{10,40}$/.test(txId)) {
+    errEl.textContent = 'Transaction ID must be 10-40 alphanumeric characters (no spaces).';
+    errEl.style.display = '';
+    return;
+  }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Submitting…';
+  try {
+    const res = await fetch('/api/payments/paypal/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tier, amount: _TIER_META[tier].amount, transactionId: txId, userEmail: email })
+    });
+    const data = await res.json();
+    if (res.ok && data.ok) {
+      successEl.style.display = '';
+      submitBtn.style.display = 'none';
+    } else {
+      errEl.textContent = data.error || 'Submission failed. Please try again.';
+      errEl.style.display = '';
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Submit';
+    }
+  } catch {
+    errEl.textContent = 'Network error. Please try again.';
+    errEl.style.display = '';
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Submit';
+  }
 }
 
 // ── Pro Upgrade Modal ──
@@ -953,12 +1069,15 @@ function showProModal() {
 
       <div style="background:var(--acd);border-radius:12px;padding:16px;margin-bottom:16px;">
         <div style="font-size:32px;font-weight:900;color:var(--ac);">$14.99<span style="font-size:16px;font-weight:400;color:var(--txd);">/mo</span></div>
-        <div style="font-size:12px;color:var(--txd);margin-bottom:14px;">${t({ en: 'Billed monthly. Cancel anytime.', he: 'חיוב חודשי. ביטול בכל עת.', es: 'Cobro mensual. Cancela cuando quieras.' })}</div>
-        <a href="https://www.paypal.com/ncp/payment/2LA7B7PZTHN54" target="_blank" rel="noopener" class="btn btn-primary" style="width:100%;font-size:15px;margin-bottom:8px;">PayPal →</a>
+        <div style="font-size:12px;color:var(--txd);margin-bottom:14px;">${t({ en: 'Monthly — pay again each month. Automated renewal coming soon.', he: 'חודשי — תשלום מחדש מדי חודש. חידוש אוטומטי בקרוב.', es: 'Mensual — paga de nuevo cada mes. Renovación automática próximamente.' })}</div>
+        <button onclick="this.closest('.modal-overlay').remove();openBuyCreditsModal('pro_monthly')" class="btn btn-primary" style="width:100%;font-size:15px;margin-bottom:8px;">${t({ en: '💳 Upgrade to Pro — $14.99/month (manual renewal)', he: '💳 שדרג ל-Pro — $14.99/חודש (חידוש ידני)', es: '💳 Hazte Pro — $14.99/mes (renovación manual)' })}</button>
+        <button disabled class="btn stripe-card-btn" data-tier="pro_monthly"
+          title="Coming soon — card payments being set up"
+          style="width:100%;font-size:13px;margin-bottom:8px;opacity:0.5;cursor:not-allowed;">&#x1F4B3; Pay with Card (Coming Soon)</button>
         <button onclick="openCryptoModal();this.closest('.modal-overlay').remove();" class="btn" style="width:100%;font-size:13px;border-color:rgba(81,207,102,.3);color:var(--grn);">${t({ en: 'Crypto — 35% OFF ($9.74/mo)', he: 'קריפטו — 35% הנחה ($9.74 לחודש)', es: 'Cripto — 35% OFF ($9.74/mes)' })}</button>
       </div>
 
-      <p style="font-size:12px;color:var(--txd);margin-bottom:14px;">${t({ en: 'After payment, email us at support@bqprod.com with your receipt to activate Pro.', he: 'לאחר התשלום שלח מייל ל-support@bqprod.com עם הקבלה להפעלת Pro.', es: 'Tras el pago, envíanos tu recibo a support@bqprod.com para activar Pro.' })}</p>
+      <p style="font-size:12px;color:var(--txd);margin-bottom:14px;">${t({ en: 'Submit your PayPal Transaction ID — Pro activates within 12 hours.', he: 'הגש את מזהה העסקה שלך ב-PayPal — Pro יופעל תוך 12 שעות.', es: 'Envía tu ID de transacción de PayPal — Pro se activa en 12 horas.' })}</p>
 
       <button onclick="this.closest('.modal-overlay').remove()" class="btn" style="width:100%;">${t({ en: 'Close', he: 'סגור', es: 'Cerrar' })}</button>
     </div>`;
@@ -1285,4 +1404,43 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }).catch(() => {});
   }
+
+  // Stripe feature flag: enable card-payment buttons when Stripe is live
+  fetch('/api/config/flags').then(r => r.json()).then(f => {
+    if (f.stripeEnabled) {
+      document.querySelectorAll('.stripe-card-btn').forEach(btn => {
+        btn.disabled = false;
+        btn.style.opacity = '';
+        btn.style.cursor = '';
+        btn.title = '';
+        btn.textContent = '\uD83D\uDCB3 Pay with Card';
+        btn.onclick = function() {
+          // Map PayPal tier names (credits_25) to Stripe tier names (credit_25)
+          const stripeMap = { credits_25: 'credit_25', credits_60: 'credit_60', credits_150: 'credit_150', pro_monthly: 'pro_monthly' };
+          _stripeCheckout(stripeMap[this.dataset.tier] || this.dataset.tier, this.closest('.modal-overlay'));
+        };
+      });
+    }
+  }).catch(() => { /* flags endpoint unavailable — keep buttons disabled */ });
 });
+
+async function _stripeCheckout(tier, modalEl) {
+  const token = localStorage.getItem('bq_token') || '';
+  if (!token) { showToast('Please log in to pay with card', 'err'); return; }
+  try {
+    const res = await fetch('/api/payments/stripe/create-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ tier }),
+    });
+    const data = await res.json();
+    if (res.ok && data.url) {
+      if (modalEl) modalEl.remove();
+      window.location.href = data.url;
+    } else {
+      showToast(data.error || 'Card checkout failed. Try PayPal for now.', 'err');
+    }
+  } catch {
+    showToast('Network error. Please try PayPal for now.', 'err');
+  }
+}

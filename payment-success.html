@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Payment Received</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  body { display: flex; flex-direction: column; min-height: 100vh; }
+  .ps-wrap { max-width: 520px; width: 92%; margin: 0 auto; padding: 40px 0; flex: 1; }
+  .ps-hero { text-align: center; margin-bottom: 24px; }
+  .ps-hero .emoji { font-size: 56px; margin-bottom: 10px; }
+  .ps-hero h1 { font-size: 26px; font-weight: 900; margin-bottom: 8px; }
+  .ps-hero .sub { font-size: 14px; color: var(--txd); line-height: 1.6; }
+  .ps-card {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 14px;
+    padding: 22px; margin-bottom: 14px;
+  }
+  .ps-tier-row {
+    background: var(--acd); border-radius: 10px; padding: 14px;
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 16px;
+  }
+  .ps-tier-label { font-size: 13px; color: var(--txd); }
+  .ps-tier-val { font-size: 17px; font-weight: 800; color: var(--ac); }
+  .ps-instructions {
+    font-size: 14px; color: var(--tx); line-height: 1.6; margin-bottom: 16px;
+  }
+  .ps-form label {
+    display: block; font-size: 12px; color: var(--txd); margin-bottom: 6px;
+  }
+  .ps-form input {
+    width: 100%; padding: 12px; border: 1px solid var(--bd); border-radius: 10px;
+    background: var(--bg); color: var(--tx); font-size: 15px;
+    box-sizing: border-box; font-family: inherit;
+  }
+  .ps-form input:focus { outline: none; border-color: var(--ac); }
+  .ps-hint { font-size: 12px; color: var(--txd); margin-top: 6px; line-height: 1.5; }
+  .ps-success {
+    display: none; background: rgba(81,207,102,.12);
+    border: 1px solid rgba(81,207,102,.3); border-radius: 10px;
+    padding: 16px; font-size: 14px; color: var(--grn); line-height: 1.6;
+  }
+  .ps-error {
+    display: none; background: rgba(255,80,80,.1);
+    border: 1px solid rgba(255,80,80,.3); border-radius: 8px;
+    padding: 10px 12px; font-size: 13px; color: #ff5050;
+    margin-bottom: 12px;
+  }
+  .ps-notlogged {
+    text-align: center; padding: 20px 0;
+  }
+  .ps-notlogged p { color: var(--txd); font-size: 14px; margin-bottom: 16px; line-height: 1.6; }
+</style>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#e8c547">
+<link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png">
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/home.html" class="nav-link" data-en="Tools" data-es="Herramientas" data-he="כלים">Tools</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="ps-wrap">
+  <div class="ps-hero">
+    <div class="emoji">🎉</div>
+    <h1 data-en="Thanks for your payment!" data-es="¡Gracias por tu pago!" data-he="תודה על התשלום!">Thanks for your payment!</h1>
+    <p class="sub" data-en="One last step — give us your PayPal Transaction ID so we can credit your account." data-es="Un último paso — danos tu ID de transacción de PayPal para acreditar tu cuenta." data-he="שלב אחרון — תן לנו את מזהה העסקה של PayPal כדי שנזכה את החשבון שלך.">One last step — give us your PayPal Transaction ID so we can credit your account.</p>
+  </div>
+
+  <div class="ps-card" id="psLoggedIn" style="display:none;">
+    <div class="ps-tier-row">
+      <div>
+        <div class="ps-tier-label" data-en="You purchased" data-es="Compraste" data-he="רכשת">You purchased</div>
+        <div class="ps-tier-val" id="tierLabel">—</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="ps-tier-label" data-en="Amount" data-es="Monto" data-he="סכום">Amount</div>
+        <div class="ps-tier-val" id="tierAmount">—</div>
+      </div>
+    </div>
+
+    <div class="ps-instructions" data-en="Paste your PayPal Transaction ID below. You'll find it in the confirmation email from PayPal, or in your PayPal Activity page." data-es="Pega tu ID de transacción de PayPal abajo. Lo encontrarás en el email de confirmación o en la página de actividad de PayPal." data-he="הדבק את מזהה העסקה של PayPal למטה. תמצא אותו במייל האישור מ-PayPal או בעמוד הפעילות שלך.">
+      Paste your PayPal Transaction ID below. You'll find it in the confirmation email from PayPal, or in your PayPal Activity page.
+    </div>
+
+    <div class="ps-error" id="psError"></div>
+
+    <form class="ps-form" id="psForm" onsubmit="return submitTxId(event)">
+      <label for="txIdInput" data-en="PayPal Transaction ID" data-es="ID de transacción de PayPal" data-he="מזהה עסקה של PayPal">PayPal Transaction ID</label>
+      <input type="text" id="txIdInput" placeholder="e.g. 5ML65651RH787232V" autocomplete="off" required>
+      <p class="ps-hint" data-en="10–40 letters and numbers. No spaces." data-es="10–40 letras y números. Sin espacios." data-he="10–40 אותיות וספרות. ללא רווחים.">10–40 letters and numbers. No spaces.</p>
+      <button type="submit" class="btn btn-primary" style="width:100%;margin-top:14px;" id="psSubmitBtn" data-en="Submit Transaction ID" data-es="Enviar ID de transacción" data-he="שלח מזהה עסקה">Submit Transaction ID</button>
+    </form>
+
+    <div class="ps-success" id="psSuccess">
+      ✅ <span data-en="Got it! Credits will be added within 2–4 hours. You'll get an email confirmation." data-es="¡Recibido! Los créditos se agregarán en 2–4 horas. Recibirás un email de confirmación." data-he="קיבלנו! הקרדיטים יתווספו תוך 2–4 שעות. תקבל אישור במייל.">Got it! Credits will be added within 2–4 hours. You'll get an email confirmation.</span>
+      <div style="margin-top:12px;">
+        <a href="/home.html" class="btn btn-primary" style="font-size:14px;" data-en="Back to Tools" data-es="Volver a Herramientas" data-he="חזרה לכלים">Back to Tools</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="ps-card ps-notlogged" id="psNotLoggedIn" style="display:none;">
+    <div style="font-size:36px;margin-bottom:8px;">🔒</div>
+    <p data-en="Please log in first to claim your credits." data-es="Por favor inicia sesión para reclamar tus créditos." data-he="אנא התחבר תחילה כדי לקבל את הקרדיטים שלך.">Please log in first to claim your credits.</p>
+    <a href="#" id="loginBtn" class="btn btn-primary" style="display:inline-block;min-width:180px;" data-en="Log In" data-es="Iniciar sesión" data-he="התחבר">Log In</a>
+  </div>
+</div>
+
+<footer class="footer" style="width:100%;">
+  <div class="footer-brand">&copy; 2026 BQ Production LLC. All rights reserved.</div>
+  <div class="footer-legal">
+    <a href="/privacy.html" data-en="Privacy" data-he="פרטיות">Privacy</a><span>|</span>
+    <a href="/terms.html" data-en="Terms" data-he="תנאים">Terms</a><span>|</span>
+    <a href="/refund.html" data-en="Refunds" data-he="החזרים">Refunds</a>
+  </div>
+</footer>
+
+<script src="js/ai.js"></script>
+<script src="js/common.js"></script>
+<script>
+const TIER_INFO = {
+  credits_25:  { label: '25 Credits',     amount: 4.99  },
+  credits_60:  { label: '60 Credits',     amount: 9.99  },
+  credits_150: { label: '150 Credits',    amount: 19.99 },
+  pro_monthly: { label: 'Pro (1 Month)',  amount: 14.99 },
+};
+
+function getTierFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const raw = (params.get('tier') || '').trim();
+  return TIER_INFO[raw] ? raw : null;
+}
+
+function initPage() {
+  const tier = getTierFromUrl();
+  const info = tier ? TIER_INFO[tier] : null;
+
+  const loggedIn = typeof isLoggedIn === 'function' && isLoggedIn();
+
+  if (!loggedIn) {
+    const notLogged = document.getElementById('psNotLoggedIn');
+    notLogged.style.display = '';
+    const next = '/payment-success.html' + window.location.search;
+    document.getElementById('loginBtn').href = '/auth.html?next=' + encodeURIComponent(next);
+    return;
+  }
+
+  document.getElementById('psLoggedIn').style.display = '';
+
+  if (info) {
+    document.getElementById('tierLabel').textContent = info.label;
+    document.getElementById('tierAmount').textContent = '$' + info.amount.toFixed(2);
+  } else {
+    document.getElementById('tierLabel').textContent = '—';
+    document.getElementById('tierAmount').textContent = '—';
+  }
+}
+
+async function submitTxId(e) {
+  e.preventDefault();
+  const tier = getTierFromUrl();
+  const info = tier ? TIER_INFO[tier] : null;
+  const errEl = document.getElementById('psError');
+  const successEl = document.getElementById('psSuccess');
+  const form = document.getElementById('psForm');
+  const btn = document.getElementById('psSubmitBtn');
+  const txId = document.getElementById('txIdInput').value.trim();
+
+  errEl.style.display = 'none';
+
+  if (!info) {
+    errEl.textContent = 'Missing or invalid tier in URL. Please contact support with your transaction ID.';
+    errEl.style.display = '';
+    return false;
+  }
+  if (!/^[a-zA-Z0-9]{10,40}$/.test(txId)) {
+    errEl.textContent = 'Transaction ID must be 10–40 letters and numbers, no spaces.';
+    errEl.style.display = '';
+    return false;
+  }
+
+  const user = (typeof getCachedUser === 'function') ? getCachedUser() : null;
+  const userEmail = (user && user.email) || localStorage.getItem('bq_user_email') || '';
+  if (!userEmail) {
+    errEl.textContent = 'Could not determine your email. Please log in again.';
+    errEl.style.display = '';
+    return false;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Submitting…';
+
+  try {
+    const res = await fetch('/api/payments/paypal/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tier,
+        amount: info.amount,
+        transactionId: txId,
+        userEmail
+      })
+    });
+    const data = await res.json();
+    if (res.ok && data.ok) {
+      form.style.display = 'none';
+      successEl.style.display = 'block';
+    } else {
+      errEl.textContent = data.error || 'Submission failed. Please try again.';
+      errEl.style.display = '';
+      btn.disabled = false;
+      btn.textContent = 'Submit Transaction ID';
+    }
+  } catch {
+    errEl.textContent = 'Network error. Please try again.';
+    errEl.style.display = '';
+    btn.disabled = false;
+    btn.textContent = 'Submit Transaction ID';
+  }
+  return false;
+}
+
+document.addEventListener('DOMContentLoaded', initPage);
+</script>
+</body>
+</html>

@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Admin — Dashboard</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  body { display: flex; flex-direction: column; min-height: 100vh; background: var(--bg); }
+  .admin-wrap { max-width: 900px; margin: 32px auto; padding: 0 16px; width: 100%; }
+
+  /* Password gate */
+  #gate { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 16px; }
+  .gate-box { background: var(--sf); border: 1px solid var(--bd); border-radius: 16px; padding: 32px; width: 100%; max-width: 360px; }
+  .gate-box h2 { font-size: 22px; font-weight: 800; margin: 0 0 8px; }
+  .gate-box label { display: block; font-size: 13px; color: var(--txd); margin: 16px 0 8px; }
+  .gate-box button { width: 100%; margin-top: 14px; }
+
+  /* Section cards */
+  .section-card { background: var(--sf); border: 1px solid var(--bd); border-radius: 16px; padding: 24px; margin-bottom: 24px; }
+  .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+  .section-header h2 { font-size: 18px; font-weight: 800; margin: 0; }
+  .section-header a { margin-left: auto; font-size: 13px; color: var(--ac); font-weight: 600; }
+
+  /* Big badge */
+  .big-badge { display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 50%; background: rgba(232,197,71,.15); font-size: 26px; font-weight: 900; color: var(--ac); flex-shrink: 0; }
+  .big-badge.pulse { animation: badgePulse 1s ease-in-out 3; }
+  @keyframes badgePulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.18); } }
+
+  /* Mini payment rows */
+  .mini-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--bd); flex-wrap: wrap; }
+  .mini-row:first-child { border-top: none; }
+  .mini-email { flex: 1; font-size: 13px; min-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mini-meta { font-size: 12px; color: var(--txd); white-space: nowrap; }
+  .mini-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .btn-g { background: rgba(81,207,102,.15); border: 1px solid var(--grn); color: var(--grn); border-radius: 7px; padding: 6px 12px; font-size: 13px; font-weight: 700; cursor: pointer; min-height: 36px; }
+  .btn-g:hover { background: rgba(81,207,102,.28); }
+  .btn-r { background: rgba(255,107,107,.12); border: 1px solid var(--red); color: var(--red); border-radius: 7px; padding: 6px 12px; font-size: 13px; font-weight: 700; cursor: pointer; min-height: 36px; }
+  .btn-r:hover { background: rgba(255,107,107,.25); }
+
+  /* Stats grid */
+  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .stat-box { background: var(--bg); border: 1px solid var(--bd); border-radius: 12px; padding: 16px; text-align: center; }
+  .stat-num { font-size: 28px; font-weight: 900; color: var(--ac); }
+  .stat-label { font-size: 12px; color: var(--txd); margin-top: 4px; }
+
+  /* Alerts list */
+  .alert-item { padding: 10px 0; border-top: 1px solid var(--bd); font-size: 13px; display: flex; gap: 8px; align-items: flex-start; }
+  .alert-item:first-child { border-top: none; }
+  .alert-time { color: var(--txd); font-size: 12px; white-space: nowrap; flex-shrink: 0; }
+  .alert-msg { flex: 1; }
+  .empty-txt { color: var(--txd); font-size: 14px; text-align: center; padding: 20px 0; }
+
+  /* Notification button */
+  .notif-btn { background: none; border: 1px solid var(--bd); border-radius: 8px; padding: 6px 12px; font-size: 13px; cursor: pointer; color: var(--txd); transition: border-color .2s, color .2s; }
+  .notif-btn:hover { border-color: var(--ac); color: var(--ac); }
+
+  /* Toast */
+  #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--sf); border: 1px solid var(--bd); border-radius: 10px; padding: 12px 22px; font-size: 14px; font-weight: 600; z-index: 9999; opacity: 0; transition: opacity .25s; pointer-events: none; box-shadow: 0 4px 20px rgba(0,0,0,.4); }
+  #toast.show { opacity: 1; }
+  #toast.ok  { border-color: var(--grn); color: var(--grn); }
+  #toast.err { border-color: var(--red); color: var(--red); }
+
+  /* Mobile */
+  @media (max-width: 600px) {
+    .stats-grid { grid-template-columns: 1fr; }
+    .mini-actions { width: 100%; }
+    .btn-g, .btn-r { flex: 1; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/admin.html" class="nav-link">Admin</a>
+  </div>
+</nav>
+
+<!-- Password gate -->
+<div id="gate">
+  <div class="gate-box">
+    <h2>🏠 Admin Dashboard</h2>
+    <p style="font-size:14px;color:var(--txd);margin:0;">Enter the admin password to continue.</p>
+    <label for="adminPass">Admin Password</label>
+    <input class="input" type="password" id="adminPass" placeholder="bqadmin2026" autocomplete="current-password">
+    <button class="btn btn-primary" onclick="unlock()">Unlock</button>
+    <div id="gateErr" style="margin-top:10px;font-size:13px;color:var(--red);display:none;"></div>
+  </div>
+</div>
+
+<!-- Main content -->
+<div id="mainContent" style="display:none;" class="admin-wrap">
+
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;flex-wrap:wrap;">
+    <h1 style="font-size:24px;font-weight:800;margin:0;">Admin Dashboard</h1>
+    <button class="notif-btn" id="notifBtn" onclick="requestNotifPermission()" style="display:none;">🔔 Enable alerts</button>
+    <span style="margin-left:auto;font-size:12px;color:var(--txd);" id="lastPoll">—</span>
+  </div>
+
+  <!-- Section A: Pending Payments -->
+  <div class="section-card">
+    <div class="section-header">
+      <div class="big-badge" id="pendingBadge">—</div>
+      <div>
+        <h2>💰 Pending Payments</h2>
+        <div style="font-size:13px;color:var(--txd);">Payments awaiting approval</div>
+      </div>
+      <a href="/admin/payments.html">View all →</a>
+    </div>
+    <div id="pendingRows">
+      <div class="empty-txt">Loading…</div>
+    </div>
+  </div>
+
+  <!-- Section B: Today's Stats -->
+  <div class="section-card">
+    <div class="section-header">
+      <h2>📊 Today's Stats</h2>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-num" id="statSignups">—</div>
+        <div class="stat-label">Signups today</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="statRevenue">$—</div>
+        <div class="stat-label">Credits sold today</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="statFulfilled">—</div>
+        <div class="stat-label">Payments fulfilled today</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section C: Recent Activity -->
+  <div class="section-card">
+    <div class="section-header">
+      <h2>🔔 Recent Activity</h2>
+      <span style="font-size:12px;color:var(--txd);margin-left:auto;" id="alertsStatus">Polling every 30s</span>
+    </div>
+    <div id="alertsList">
+      <div class="empty-txt">No recent activity.</div>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+const API_URL = 'https://bq-tools-api.fanzai-mgmt.workers.dev';
+let adminPass = '';
+let pollTimer = null;
+let allPayments = [];
+// Capped in-memory list of alerts
+const MAX_ALERTS = 20;
+let alertsLog = [];
+let lastAlertCount = 0;
+
+/* ── Auth ─────────────────────────────────────────────── */
+function getAdminPass() { return adminPass; }
+
+async function adminFetch(path, opts = {}) {
+  const res = await fetch(API_URL + path, {
+    ...opts,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + getAdminPass(),
+      ...(opts.headers || {})
+    }
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+async function unlock() {
+  const pw = document.getElementById('adminPass').value.trim();
+  if (!pw) { showGateErr('Enter the admin password.'); return; }
+  try {
+    adminPass = pw;
+    await adminFetch('/api/admin/payments/list?status=pending');
+    sessionStorage.setItem('adminPass', pw);
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+    await loadAll();
+    startPolling();
+    maybeShowNotifButton();
+  } catch (e) {
+    adminPass = '';
+    showGateErr('Invalid password or server error: ' + e.message);
+  }
+}
+
+function showGateErr(msg) {
+  const el = document.getElementById('gateErr');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = sessionStorage.getItem('adminPass');
+  if (saved) {
+    document.getElementById('adminPass').value = saved;
+    adminPass = saved;
+    unlock();
+  }
+  document.getElementById('adminPass').addEventListener('keydown', e => {
+    if (e.key === 'Enter') unlock();
+  });
+});
+
+/* ── Load all data ────────────────────────────────────── */
+async function loadAll() {
+  await Promise.allSettled([loadPayments(), pollAlerts()]);
+}
+
+async function loadPayments() {
+  try {
+    const data = await adminFetch('/api/admin/payments/list?status=all');
+    allPayments = Array.isArray(data) ? data : (data.payments || []);
+    renderPendingSection();
+    renderTodayStats();
+  } catch (e) {
+    console.error('Payments load error:', e);
+  }
+}
+
+/* ── Pending section ──────────────────────────────────── */
+function renderPendingSection() {
+  const pending = allPayments.filter(p => (p.status || 'pending') === 'pending');
+  const badge = document.getElementById('pendingBadge');
+  badge.textContent = pending.length;
+
+  const container = document.getElementById('pendingRows');
+  if (!pending.length) {
+    container.innerHTML = '<div class="empty-txt">No pending payments. <a href="/admin/payments.html">View all →</a></div>';
+    return;
+  }
+
+  const top3 = pending.slice(0, 3);
+  container.innerHTML = top3.map(p => {
+    const email = p.email || p.userEmail || '—';
+    const key = escapeAttr(p.key || '');
+    const credits = tierCredits(p.tier);
+    return `<div class="mini-row">
+      <div class="mini-email" title="${escapeAttr(email)}">${escapeHtml(email)}</div>
+      <div class="mini-meta">${escapeHtml(p.tier || '—')} · $${p.amount || '—'} · ${fmtMethod(p.method)}</div>
+      <div class="mini-actions">
+        <button class="btn-g" onclick="grantPayment('${key}','${escapeAttr(email)}','${escapeAttr(p.transactionId || '')}','${credits}')">✅</button>
+        <button class="btn-r" onclick="rejectPayment('${key}','${escapeAttr(email)}')">❌</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  if (pending.length > 3) {
+    container.insertAdjacentHTML('beforeend',
+      `<div style="text-align:center;padding-top:12px;">
+        <a href="/admin/payments.html" style="font-size:13px;color:var(--ac);font-weight:600;">+ ${pending.length - 3} more → View all</a>
+      </div>`
+    );
+  }
+}
+
+function tierCredits(tier) {
+  const map = { credits_25: 25, credits_60: 60, credits_150: 150, pro_monthly: 'Pro (30d)' };
+  return map[tier] ?? '?';
+}
+
+/* ── Today's stats ────────────────────────────────────── */
+function renderTodayStats() {
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const todayTs = todayStart.getTime();
+
+  const todayAll = allPayments.filter(p => {
+    const ts = new Date(p.submittedAt).getTime();
+    return ts >= todayTs;
+  });
+
+  const fulfilled = todayAll.filter(p => p.status === 'fulfilled');
+  const revenue = fulfilled.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+
+  document.getElementById('statSignups').textContent = '—'; // no endpoint available
+  document.getElementById('statRevenue').textContent = '$' + revenue.toFixed(0);
+  document.getElementById('statFulfilled').textContent = fulfilled.length;
+}
+
+/* ── Alerts polling ───────────────────────────────────── */
+async function pollAlerts() {
+  try {
+    const data = await adminFetch('/api/admin/alerts');
+    const incoming = Array.isArray(data) ? data : (data.alerts || []);
+
+    if (incoming.length > 0) {
+      // Prepend new alerts, keep capped at MAX_ALERTS
+      alertsLog = [...incoming, ...alertsLog].slice(0, MAX_ALERTS);
+      renderAlerts();
+
+      if (incoming.length > lastAlertCount || lastAlertCount === 0) {
+        handleNewAlerts(incoming);
+      }
+    }
+    lastAlertCount = incoming.length;
+    document.getElementById('lastPoll').textContent = 'Last poll: ' + new Date().toLocaleTimeString();
+  } catch (e) {
+    console.error('Alerts poll error:', e);
+  }
+}
+
+function handleNewAlerts(alerts) {
+  // Flash badge
+  const badge = document.getElementById('pendingBadge');
+  badge.classList.remove('pulse');
+  void badge.offsetWidth; // force reflow
+  badge.classList.add('pulse');
+
+  // Browser notification
+  if (Notification.permission === 'granted' && alerts.length) {
+    const first = alerts[0];
+    const email = first.email || first.userEmail || 'unknown';
+    new Notification('BQ Admin', {
+      body: '💰 New payment from ' + email,
+      icon: '/favicon.ico'
+    });
+  }
+
+  // Audio beep (WebAudio oscillator)
+  playBeep();
+}
+
+function playBeep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.35);
+  } catch (e) { /* audio not supported */ }
+}
+
+function renderAlerts() {
+  const container = document.getElementById('alertsList');
+  if (!alertsLog.length) {
+    container.innerHTML = '<div class="empty-txt">No recent activity.</div>';
+    return;
+  }
+  container.innerHTML = alertsLog.map(a => {
+    const msg = a.message || buildAlertMsg(a);
+    const ts = a.timestamp || a.submittedAt || '';
+    return `<div class="alert-item">
+      <span class="alert-time">${ts ? fmtDate(ts) : 'now'}</span>
+      <span class="alert-msg">${escapeHtml(msg)}</span>
+    </div>`;
+  }).join('');
+}
+
+function buildAlertMsg(a) {
+  const email = a.email || a.userEmail || '?';
+  const tier = a.tier || '';
+  const amount = a.amount ? '$' + a.amount : '';
+  return `New payment from ${email}${tier ? ' — ' + tier : ''}${amount ? ' (' + amount + ')' : ''}`;
+}
+
+/* ── Polling loop ─────────────────────────────────────── */
+function startPolling() {
+  if (pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(async () => {
+    if (!document.hidden) {
+      await pollAlerts();
+      await loadPayments();
+    }
+  }, 30000);
+}
+
+/* ── Notification permission ──────────────────────────── */
+function maybeShowNotifButton() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    document.getElementById('notifBtn').style.display = 'inline-block';
+  }
+}
+
+async function requestNotifPermission() {
+  const perm = await Notification.requestPermission();
+  document.getElementById('notifBtn').style.display = 'none';
+  if (perm === 'granted') showToast('Notifications enabled!', 'ok');
+}
+
+/* ── Grant / Reject (mini rows) ───────────────────────── */
+async function grantPayment(key, email, txid, credits) {
+  const msg = `Grant ${credits} credits to ${email}?\n\nTransaction ID: ${txid}`;
+  if (!confirm(msg)) return;
+  await doVerify(key, 'grant');
+}
+
+async function rejectPayment(key, email) {
+  const reason = prompt(`Reject payment from ${email}?\n\nEnter rejection reason (optional):`);
+  if (reason === null) return;
+  await doVerify(key, 'reject', reason);
+}
+
+async function doVerify(key, action, reason) {
+  try {
+    const body = { key, action };
+    if (reason) body.reason = reason;
+    await adminFetch('/api/admin/payments/verify', {
+      method: 'POST',
+      body: JSON.stringify(body)
+    });
+    showToast(action === 'grant' ? '✅ Payment granted!' : '❌ Payment rejected.', 'ok');
+    await loadPayments();
+  } catch (e) {
+    showToast('Error: ' + e.message, 'err');
+  }
+}
+
+/* ── Helpers ──────────────────────────────────────────── */
+function fmtDate(ts) {
+  if (!ts) return '—';
+  const d = new Date(ts);
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' ' +
+         d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+}
+
+function fmtMethod(method) {
+  if (!method) return '—';
+  return method.toLowerCase() === 'paypal' ? '💳 PayPal' : '⛓ Crypto';
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function escapeAttr(s) {
+  return String(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+let toastTimer;
+function showToast(msg, type = 'ok') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = ''; }, 3000);
+}
+</script>
+</body>
+</html>

@@ -277,6 +277,39 @@ export default {
         return corsResponse(env, json({ ok: true, ts: Date.now() }));
       }
 
+      // ── Payment Routes ──
+      if (path === '/api/payments/paypal/submit' && request.method === 'POST') {
+        return corsResponse(env, await handlePaypalSubmit(request, env));
+      }
+      if (path === '/api/payments/crypto/submit' && request.method === 'POST') {
+        return corsResponse(env, await handleCryptoSubmit(request, env));
+      }
+      // ── Stripe Routes (gated: only active when STRIPE_ENABLED === "true") ──
+      if (path === '/api/payments/stripe/create-session' && request.method === 'POST') {
+        if (env.STRIPE_ENABLED !== 'true') return corsResponse(env, json({ error: 'Stripe not enabled yet' }, 503));
+        return corsResponse(env, await handleStripeCreateSession(request, env));
+      }
+      if (path === '/api/payments/stripe/webhook' && request.method === 'POST') {
+        if (env.STRIPE_ENABLED !== 'true') return json({ error: 'Stripe not enabled yet' }, 503);
+        // Webhook: no CORS wrapper — raw response; Stripe doesn't need CORS headers
+        return handleStripeWebhook(request, env);
+      }
+      // ── Feature Flags (public) ──
+      if (path === '/api/config/flags' && request.method === 'GET') {
+        return corsResponse(env, json({ stripeEnabled: env.STRIPE_ENABLED === 'true' }));
+      }
+
+      // ── Admin Payment Routes ──
+      if (path === '/api/admin/payments/list' && request.method === 'GET') {
+        return corsResponse(env, await handleAdminPaymentsList(request, env));
+      }
+      if (path === '/api/admin/payments/verify' && request.method === 'POST') {
+        return corsResponse(env, await handleAdminPaymentsVerify(request, env));
+      }
+      if (path === '/api/admin/alerts' && request.method === 'GET') {
+        return corsResponse(env, await handleAdminAlerts(request, env));
+      }
+
       return corsResponse(env, json({ error: 'Not found' }, 404));
     } catch (err) {
       console.error('Worker error:', err);
@@ -4192,4 +4225,346 @@ async function handleBrainLearn(request, env) {
   await learnFromAction(user.email, action, data || {}, env);
   const brain = await getBrain(user.email, env);
   return json({ ok: true, brain });
+}
+
+// ── Payment Submission Handlers ──
+
+const TIER_AMOUNTS = { credits_25: 4.99, credits_60: 9.99, credits_150: 19.99, pro_monthly: 14.99 };
+
+async function _paymentRateLimit(email, env) {
+  const bucket = Math.floor(Date.now() / 3600000); // 1-hour bucket
+  const rlKey = `rl:paypal:${email}:${bucket}`;
+  const count = parseInt((await env.BQ_USERS.get(rlKey)) || '0', 10);
+  if (count >= 3) return false;
+  await env.BQ_USERS.put(rlKey, String(count + 1), { expirationTtl: 3700 });
+  return true;
+}
+
+async function _pushAdminAlert(entry, env) {
+  const raw = await env.BQ_USERS.get('admin_alerts');
+  const alerts = raw ? JSON.parse(raw) : [];
+  alerts.unshift(entry);
+  if (alerts.length > 50) alerts.length = 50;
+  await env.BQ_USERS.put('admin_alerts', JSON.stringify(alerts));
+}
+
+async function handlePaypalSubmit(request, env) {
+  let body;
+  try { body = await request.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
+
+  const { tier, amount, transactionId, userEmail } = body;
+
+  if (!TIER_AMOUNTS[tier]) return json({ error: 'Invalid tier' }, 400);
+  if (typeof userEmail !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userEmail)) {
+    return json({ error: 'Invalid email' }, 400);
+  }
+  if (typeof transactionId !== 'string' || !/^[a-zA-Z0-9]{10,40}$/.test(transactionId)) {
+    return json({ error: 'Transaction ID must be 10-40 alphanumeric characters' }, 400);
+  }
+  if (typeof amount !== 'number' || Math.abs(amount - TIER_AMOUNTS[tier]) > 0.001) {
+    return json({ error: `Amount must be ${TIER_AMOUNTS[tier]} for ${tier}` }, 400);
+  }
+
+  const allowed = await _paymentRateLimit(userEmail, env);
+  if (!allowed) return json({ error: 'Too many submissions. Try again in an hour.' }, 429);
+
+  const ts = Date.now();
+  const kvKey = `pending_payment:${ts}:${userEmail}`;
+  await env.BQ_USERS.put(kvKey, JSON.stringify({
+    status: 'pending', method: 'paypal', tier, amount, transactionId,
+    userEmail, submittedAt: new Date(ts).toISOString()
+  }));
+
+  await _pushAdminAlert({ type: 'payment_submitted', email: userEmail, tier, amount, ts }, env);
+
+  return json({ ok: true, message: 'Thanks! Credits will be added within 12 hours. Check your email for confirmation.' });
+}
+
+async function handleCryptoSubmit(request, env) {
+  let body;
+  try { body = await request.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
+
+  const { tier, amount, transactionId, userEmail } = body;
+
+  if (!TIER_AMOUNTS[tier]) return json({ error: 'Invalid tier' }, 400);
+  if (typeof userEmail !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userEmail)) {
+    return json({ error: 'Invalid email' }, 400);
+  }
+  // Crypto tx hashes are longer and may include hex chars; allow 20-100 alphanumeric/hex
+  if (typeof transactionId !== 'string' || !/^[a-zA-Z0-9]{20,100}$/.test(transactionId)) {
+    return json({ error: 'Transaction hash must be 20-100 alphanumeric characters' }, 400);
+  }
+  if (typeof amount !== 'number' || amount <= 0) {
+    return json({ error: 'Invalid amount' }, 400);
+  }
+
+  const allowed = await _paymentRateLimit(userEmail, env);
+  if (!allowed) return json({ error: 'Too many submissions. Try again in an hour.' }, 429);
+
+  const ts = Date.now();
+  const kvKey = `pending_payment:${ts}:${userEmail}`;
+  await env.BQ_USERS.put(kvKey, JSON.stringify({
+    status: 'pending', method: 'crypto', tier, amount, transactionId,
+    userEmail, submittedAt: new Date(ts).toISOString()
+  }));
+
+  await _pushAdminAlert({ type: 'payment_submitted', email: userEmail, tier, amount, ts }, env);
+
+  return json({ ok: true, message: 'Thanks! Credits will be added within 12 hours. Check your email for confirmation.' });
+}
+
+// ── Admin Payment Handlers ──
+
+async function handleAdminPaymentsList(request, env) {
+  if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 401);
+
+  const url = new URL(request.url);
+  const statusFilter = url.searchParams.get('status') || 'pending';
+
+  const listed = await env.BQ_USERS.list({ prefix: 'pending_payment:' });
+  const records = [];
+  for (const key of listed.keys) {
+    const raw = await env.BQ_USERS.get(key.name);
+    if (!raw) continue;
+    const rec = JSON.parse(raw);
+    rec._key = key.name;
+    if (statusFilter === 'all' || rec.status === statusFilter) {
+      records.push(rec);
+    }
+  }
+  // Newest first (keys are pending_payment:<ts>:<email>, ts ascending)
+  records.sort((a, b) => (b._key > a._key ? 1 : -1));
+  return json({ ok: true, records });
+}
+
+async function handleAdminPaymentsVerify(request, env) {
+  if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 401);
+
+  let body;
+  try { body = await request.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
+  const { key, action, reason } = body;
+
+  if (!key || !action) return json({ error: 'key and action required' }, 400);
+  if (!['grant', 'reject'].includes(action)) return json({ error: 'action must be grant or reject' }, 400);
+
+  const raw = await env.BQ_USERS.get(key);
+  if (!raw) return json({ error: 'Payment record not found' }, 404);
+  const rec = JSON.parse(raw);
+
+  if (action === 'reject') {
+    rec.status = 'rejected';
+    rec.rejectedReason = reason || '';
+    rec.rejectedAt = new Date().toISOString();
+    await env.BQ_USERS.put(key, JSON.stringify(rec));
+    return json({ ok: true, record: rec });
+  }
+
+  // action === 'grant'
+  const userDataRaw = await env.BQ_USERS.get(`user:${rec.userEmail}`);
+  if (!userDataRaw) return json({ error: `User not found: ${rec.userEmail}` }, 404);
+  const userData = JSON.parse(userDataRaw);
+
+  const CREDIT_GRANTS = { credits_25: 25, credits_60: 60, credits_150: 150 };
+  if (CREDIT_GRANTS[rec.tier] !== undefined) {
+    userData.credits = (userData.credits || 0) + CREDIT_GRANTS[rec.tier];
+  } else if (rec.tier === 'pro_monthly') {
+    userData.isPro = true;
+    userData.proExpires = Date.now() + 30 * 24 * 60 * 60 * 1000;
+  } else {
+    return json({ error: `Unknown tier: ${rec.tier}` }, 400);
+  }
+
+  await env.BQ_USERS.put(`user:${rec.userEmail}`, JSON.stringify(userData));
+
+  rec.status = 'fulfilled';
+  rec.fulfilledAt = new Date().toISOString();
+  await env.BQ_USERS.put(key, JSON.stringify(rec));
+
+  return json({ ok: true, record: rec, creditsNow: userData.credits, isPro: userData.isPro });
+}
+
+async function handleAdminAlerts(request, env) {
+  if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 401);
+
+  const raw = await env.BQ_USERS.get('admin_alerts');
+  const alerts = raw ? JSON.parse(raw) : [];
+  // Clear after read (best-effort atomic)
+  await env.BQ_USERS.delete('admin_alerts');
+  return json({ ok: true, alerts });
+}
+
+// ── Stripe Integration (INACTIVE until env.STRIPE_ENABLED === "true") ──
+//
+// Products/prices to create in Stripe dashboard (one-time unless noted):
+//   price_credits_25   — $4.99 one-time  → env.STRIPE_PRICE_CREDITS_25
+//   price_credits_60   — $9.99 one-time  → env.STRIPE_PRICE_CREDITS_60
+//   price_credits_150  — $19.99 one-time → env.STRIPE_PRICE_CREDITS_150
+//   price_pro_monthly  — $14.99 recurring/month → env.STRIPE_PRICE_PRO_MONTHLY
+//
+// Secrets to set via `wrangler secret put`:
+//   STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET,
+//   STRIPE_PRICE_CREDITS_25, STRIPE_PRICE_CREDITS_60,
+//   STRIPE_PRICE_CREDITS_150, STRIPE_PRICE_PRO_MONTHLY
+//
+// Toggle live: set STRIPE_ENABLED = "true" in wrangler.toml and redeploy.
+
+// Maps tier name → { priceIdEnvKey, mode, credits, isPro }
+const STRIPE_TIER_CONFIG = {
+  credit_25:   { priceIdEnvKey: 'STRIPE_PRICE_CREDITS_25',  mode: 'payment',      credits: 25,  isPro: false },
+  credit_60:   { priceIdEnvKey: 'STRIPE_PRICE_CREDITS_60',  mode: 'payment',      credits: 60,  isPro: false },
+  credit_150:  { priceIdEnvKey: 'STRIPE_PRICE_CREDITS_150', mode: 'payment',      credits: 150, isPro: false },
+  pro_monthly: { priceIdEnvKey: 'STRIPE_PRICE_PRO_MONTHLY', mode: 'subscription', credits: 0,   isPro: true  },
+};
+
+async function handleStripeCreateSession(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  let body;
+  try { body = await request.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
+
+  const { tier } = body;
+  const tierConf = STRIPE_TIER_CONFIG[tier];
+  if (!tierConf) return json({ error: 'Invalid tier' }, 400);
+
+  const priceId = env[tierConf.priceIdEnvKey];
+  if (!priceId) return json({ error: `Price ID not configured for ${tier}` }, 500);
+
+  const origin = env.ALLOWED_ORIGIN || new URL(request.url).origin;
+  const params = new URLSearchParams({
+    'payment_method_types[]': 'card',
+    mode: tierConf.mode,
+    'line_items[0][price]': priceId,
+    'line_items[0][quantity]': '1',
+    'success_url': `${origin}/home.html?payment=success`,
+    'cancel_url': `${origin}/home.html?payment=cancel`,
+    'metadata[tier]': tier,
+    'metadata[userEmail]': user.email,
+  });
+
+  const resp = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${env.STRIPE_SECRET_KEY}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: params.toString(),
+  });
+
+  const data = await resp.json();
+  if (!resp.ok) {
+    console.error('[stripe] create-session error:', data);
+    return json({ error: data?.error?.message || 'Stripe error' }, 502);
+  }
+
+  return json({ url: data.url });
+}
+
+// Verify Stripe webhook signature using Web Crypto (timing-safe HMAC-SHA256).
+// Header format: "t=<timestamp>,v1=<hex_sig>[,v1=<hex_sig2>...]"
+async function _verifyStripeSignature(rawBody, sigHeader, secret) {
+  const parts = sigHeader.split(',');
+  const tPart = parts.find(p => p.startsWith('t='));
+  const v1Parts = parts.filter(p => p.startsWith('v1='));
+  if (!tPart || v1Parts.length === 0) return false;
+
+  const t = tPart.slice(2);
+  const payload = `${t}.${rawBody}`;
+  const enc = new TextEncoder();
+
+  const key = await crypto.subtle.importKey(
+    'raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+  );
+  const sigBuf = await crypto.subtle.sign('HMAC', key, enc.encode(payload));
+  const computed = Array.from(new Uint8Array(sigBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+  // Timing-safe compare against each v1 candidate
+  for (const v1 of v1Parts) {
+    const candidate = v1.slice(3);
+    if (candidate.length !== computed.length) continue;
+    const ca = new TextEncoder().encode(computed);
+    const cb = new TextEncoder().encode(candidate);
+    let diff = 0;
+    for (let i = 0; i < ca.length; i++) diff |= ca[i] ^ cb[i];
+    if (diff === 0) return true;
+  }
+  return false;
+}
+
+async function handleStripeWebhook(request, env) {
+  const sigHeader = request.headers.get('stripe-signature');
+  if (!sigHeader) return new Response('Missing signature', { status: 400 });
+
+  const rawBody = await request.text();
+  const valid = await _verifyStripeSignature(rawBody, sigHeader, env.STRIPE_WEBHOOK_SECRET);
+  if (!valid) {
+    console.error('[stripe] webhook signature mismatch');
+    return new Response('Invalid signature', { status: 400 });
+  }
+
+  let event;
+  try { event = JSON.parse(rawBody); } catch { return new Response('Invalid JSON', { status: 400 }); }
+
+  // Idempotency: dedupe by event.id (TTL 7 days = 604800s)
+  const dedupeKey = `stripe_event:${event.id}`;
+  const already = await env.BQ_USERS.get(dedupeKey);
+  if (already) {
+    console.log('[stripe] duplicate event, skipping:', event.id);
+    return new Response('ok', { status: 200 });
+  }
+  await env.BQ_USERS.put(dedupeKey, '1', { expirationTtl: 604800 });
+
+  const eventType = event.type;
+  let metadata;
+  if (eventType === 'checkout.session.completed') {
+    metadata = event.data?.object?.metadata;
+  } else if (eventType === 'invoice.payment_succeeded') {
+    // For subscriptions: metadata lives on the subscription, but Stripe also
+    // echoes it on the invoice's subscription_details.metadata (API >= 2022-11-15)
+    metadata = event.data?.object?.subscription_details?.metadata
+      || event.data?.object?.lines?.data?.[0]?.metadata;
+  } else {
+    // Unhandled event type — acknowledge without action
+    return new Response('ok', { status: 200 });
+  }
+
+  if (!metadata?.tier || !metadata?.userEmail) {
+    console.error('[stripe] missing metadata in event:', event.id);
+    return new Response('Missing metadata', { status: 400 });
+  }
+
+  const { tier, userEmail } = metadata;
+  const tierConf = STRIPE_TIER_CONFIG[tier];
+  if (!tierConf) {
+    console.error('[stripe] unknown tier in metadata:', tier);
+    return new Response('Unknown tier', { status: 400 });
+  }
+
+  const userRaw = await env.BQ_USERS.get(`user:${userEmail.toLowerCase()}`);
+  if (!userRaw) {
+    console.error('[stripe] user not found:', userEmail);
+    return new Response('User not found', { status: 404 });
+  }
+  const userData = JSON.parse(userRaw);
+
+  if (tierConf.credits > 0) {
+    userData.credits = (userData.credits || 0) + tierConf.credits;
+  }
+  if (tierConf.isPro) {
+    userData.isPro = true;
+    // Set/extend Pro expiry by 30 days from now
+    const expiry = Date.now() + 30 * 24 * 60 * 60 * 1000;
+    userData.proExpires = Math.max(userData.proExpires || 0, expiry);
+    if (!userData.resetDate) {
+      const next = new Date();
+      next.setMonth(next.getMonth() + 1);
+      userData.resetDate = next.toISOString();
+    }
+  }
+
+  await env.BQ_USERS.put(`user:${userEmail.toLowerCase()}`, JSON.stringify(userData));
+  console.log(`[stripe] granted tier=${tier} to ${userEmail} (event ${event.id})`);
+
+  return new Response('ok', { status: 200 });
 }
