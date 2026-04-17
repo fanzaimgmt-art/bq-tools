@@ -217,12 +217,6 @@
       <span class="ht-cost free">FREE</span>
       <span class="ht-tip">Compare any 2 photos in seconds</span>
     </a>
-    <a href="/tools/compare.html" class="home-tool ht-g-blue">
-      <span class="ht-icon">🧠</span>
-      <span class="ht-name" data-en="AI Analysis" data-es="Análisis IA" data-he="ניתוח AI">AI Analysis</span>
-      <span class="ht-cost">1 credit</span>
-      <span class="ht-tip">AI finds issues before clients do</span>
-    </a>
     <a href="/tools/report.html" class="home-tool ht-g-blue">
       <span class="ht-icon">📄</span>
       <span class="ht-name" data-en="Quick Report" data-es="Reporte Rápido" data-he="דוח מהיר">Quick Report</span>
@@ -586,9 +580,21 @@ async function saveBrain() {
     }
     function showExtInfo() {
       const h = lang === 'he';
-      alert(h
-        ? 'התוסף בשלבי פרסום ב-Chrome Web Store. בינתיים, אפשר להתקין ידנית: הורד את הקבצים מ-~/Projects/bq-tools-extension, פתח chrome://extensions, הפעל Developer mode, לחץ Load unpacked, ובחר את התיקיה.'
-        : 'The extension is pending Chrome Web Store review. In the meantime, install manually: download files from ~/Projects/bq-tools-extension, open chrome://extensions, enable Developer mode, click Load unpacked, and select the folder.');
+      const m = document.createElement('div');
+      m.className = 'modal-overlay';
+      m.innerHTML = `
+        <div class="modal-card" style="max-width:380px;text-align:center;">
+          <div style="font-size:32px;margin-bottom:12px;">🌐</div>
+          <h3 style="margin-bottom:8px;">${h ? 'תוסף Chrome — בקרוב' : 'Chrome Extension — Coming Soon'}</h3>
+          <p style="color:var(--txd);font-size:14px;margin-bottom:20px;">${h
+            ? 'התוסף נמצא בתהליך אישור ב-Chrome Web Store ויהיה זמין בקרוב.'
+            : 'The extension is currently under review on the Chrome Web Store and will be available soon.'
+          }</p>
+          <button class="btn btn-primary" style="width:100%;" onclick="this.closest('.modal-overlay').remove()">${h ? 'סגור' : 'Close'}</button>
+        </div>`;
+      document.body.appendChild(m);
+      requestAnimationFrame(() => m.classList.add('open'));
+      m.addEventListener('click', e => { if (e.target === m) m.remove(); });
     }
   </script>
 </body>
