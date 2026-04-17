@@ -188,8 +188,9 @@ Respond JSON only:
 
 function copyCaption() {
   const text = document.getElementById('captionBox').textContent + '\n\n' + document.getElementById('hashtagBox').textContent;
-  navigator.clipboard.writeText(text);
-  showToast(lang === 'he' ? 'הועתק!' : 'Copied!', 'ok');
+  navigator.clipboard.writeText(text)
+    .then(() => showToast(lang === 'he' ? 'הועתק!' : 'Copied!', 'ok'))
+    .catch(() => showToast(lang === 'he' ? 'לא ניתן להעתיק' : 'Could not copy', 'err'));
 }
 
 let spTaskId = null;
@@ -198,13 +199,16 @@ let spPollInterval = null;
 async function generatePromoImage() {
   if (!requirePro()) return;
 
-  const ok = await confirmCredit(lang === 'he' ? 'תמונת פרומו' : 'Generate Visual');
+  const ok = await confirmCredit(lang === 'he' ? 'תמונת פרומו' : 'Generate Visual', 5);
   if (!ok) return;
 
   const btn = document.getElementById('promoBtn');
   btn.disabled = true;
   btn.textContent = '⏳ Generating...';
   document.getElementById('promoResult').style.display = 'none';
+
+  // Guard against double-tap leaking a previous interval
+  if (spPollInterval) { clearInterval(spPollInterval); spPollInterval = null; }
 
   const desc = document.getElementById('workDesc').value.trim();
   const photoB64 = photoSrc ? photoSrc.split(',')[1] : null;

@@ -127,7 +127,7 @@ async function generateContract() {
   const credits = getCredits();
   if (credits < 2) { showNoCreditModal(); return; }
 
-  const ok = await confirmCredit(lang === 'he' ? 'יצירת חוזה (2 קרדיטים)' : 'Generate Contract (2 credits)');
+  const ok = await confirmCredit(lang === 'he' ? 'יצירת חוזה' : 'Generate Contract', 2);
   if (!ok) return;
 
   const btn = document.getElementById('genBtn');

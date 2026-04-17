@@ -307,7 +307,7 @@ let nbPollInterval = null;
 async function generateVisual() {
   if (!requirePro()) return;
 
-  const ok = await confirmCredit(lang === 'he' ? 'צור ויזואל' : 'Generate Visual');
+  const ok = await confirmCredit(lang === 'he' ? 'צור ויזואל' : 'Generate Visual', 5);
   if (!ok) return;
 
   const btn = document.getElementById('visualBtn');

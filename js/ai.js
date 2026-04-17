@@ -186,12 +186,13 @@ function parseAIJSON(text) {
 
 // ── Credit Confirmation ──
 
-function confirmCredit(actionName) {
+function confirmCredit(actionName, creditCount = 1) {
   return new Promise(resolve => {
     const credits = getCredits();
-    const msg = lang === 'he'
-      ? `פעולה זו תשתמש ב-1 קרדיט ⚡\n(נשאר: ${credits})\n\nלהמשיך?`
-      : `This will use 1 credit ⚡\n(${credits} remaining)\n\nContinue?`;
+    const h = lang === 'he';
+    const titleText = creditCount === 1
+      ? (h ? 'השתמש ב-1 קרדיט' : 'Use 1 Credit')
+      : (h ? `השתמש ב-${creditCount} קרדיטים` : `Use ${creditCount} Credits`);
 
     // Use a nice modal instead of confirm()
     const m = document.createElement('div');
@@ -199,12 +200,12 @@ function confirmCredit(actionName) {
     m.innerHTML = `
       <div class="modal-card" style="max-width:360px;text-align:center;">
         <div style="font-size:32px;margin-bottom:12px;">⚡</div>
-        <h3 style="margin-bottom:8px;" data-en="Use 1 Credit" data-he="השתמש ב-1 קרדיט">${lang === 'he' ? 'השתמש ב-1 קרדיט' : 'Use 1 Credit'}</h3>
+        <h3 style="margin-bottom:8px;">${titleText}</h3>
         <p style="color:var(--txd);font-size:14px;margin-bottom:6px;">${actionName}</p>
-        <p style="color:var(--ac);font-size:18px;font-weight:700;margin-bottom:20px;">⚡ ${credits} ${lang === 'he' ? 'נשאר' : 'remaining'}</p>
+        <p style="color:var(--ac);font-size:18px;font-weight:700;margin-bottom:20px;">⚡ ${credits} ${h ? 'נשאר' : 'remaining'}</p>
         <div style="display:flex;gap:8px;">
-          <button class="btn" style="flex:1;" id="creditCancel">${lang === 'he' ? 'ביטול' : 'Cancel'}</button>
-          <button class="btn btn-primary" style="flex:1;" id="creditConfirm">${lang === 'he' ? 'המשך' : 'Continue'}</button>
+          <button class="btn" style="flex:1;" id="creditCancel">${h ? 'ביטול' : 'Cancel'}</button>
+          <button class="btn btn-primary" style="flex:1;" id="creditConfirm">${h ? 'המשך' : 'Continue'}</button>
         </div>
       </div>`;
     document.body.appendChild(m);
