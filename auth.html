@@ -250,6 +250,19 @@
 <script>
 let currentEmail = '';
 
+// Return validated next URL (must be relative, starting with '/') or null.
+function _getNextUrl() {
+  const raw = new URLSearchParams(window.location.search).get('next');
+  if (raw && raw.startsWith('/') && !raw.startsWith('//')) return raw;
+  return null;
+}
+
+// Redirect after a successful login — honors ?next= for relative URLs.
+function _postLoginRedirect() {
+  const next = _getNextUrl();
+  window.location.href = next || '/home.html';
+}
+
 // Google Sign-In callback
 async function handleGoogleCallback(response) {
   if (!response.credential) return;
@@ -274,8 +287,7 @@ async function handleGoogleCallback(response) {
     if (data.user.isNew) {
       setTimeout(() => { window.location.href = '/onboarding.html'; }, 500);
     } else {
-      showStep('stepProfile');
-      renderProfile();
+      setTimeout(() => { _postLoginRedirect(); }, 500);
     }
   } catch (err) {
     showMsg(err.message, 'err');
@@ -362,8 +374,9 @@ async function doVerify() {
         return;
       }
 
-      showStep('stepProfile');
-      renderProfile();
+      // Redirect to ?next= destination if set, otherwise home
+      setTimeout(() => { _postLoginRedirect(); }, 500);
+      return;
     }
   } catch (err) {
     showMsg(err.message, 'err');
@@ -403,11 +416,11 @@ function renderProfile() {
   `;
 }
 
-// On load — if already logged in, redirect to home (not profile view).
+// On load — if already logged in, honor ?next= or redirect to /home.html.
 // Use ?stay=1 if you explicitly want to view account info on this page.
 const _urlParams = new URLSearchParams(window.location.search);
 if (isLoggedIn() && !_urlParams.has('stay')) {
-  window.location.replace('/home.html');
+  window.location.replace(_getNextUrl() || '/home.html');
 } else if (isLoggedIn()) {
   fetchUser().then(() => {
     showStep('stepProfile');
