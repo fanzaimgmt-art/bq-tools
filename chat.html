@@ -812,6 +812,7 @@ async function autoExtractMemory(userMsg, aiResponse) {
           updatedAt: new Date().toISOString(),
           generated: true
         });
+        if (mems.length > 200) mems.splice(0, mems.length - 200);
         localStorage.setItem('bq_memories', JSON.stringify(mems));
         // Also save to server
         apiCall('/api/memories', { method: 'POST', body: { content: userMsg.substring(0, 200), category: p.cat, importance: 3 } }).catch(() => {});
