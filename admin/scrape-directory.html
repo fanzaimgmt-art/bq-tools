@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Admin — Scrape Directory</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  body { display: flex; flex-direction: column; min-height: 100vh; background: var(--bg); }
+  .admin-wrap { max-width: 680px; margin: 40px auto; padding: 0 16px; width: 100%; }
+  .admin-card { background: var(--sf); border: 1px solid var(--bd); border-radius: 16px; padding: 28px; margin-bottom: 20px; }
+  .admin-card h2 { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+  .admin-card p { color: var(--txd); font-size: 14px; margin-bottom: 20px; }
+  .cost-badge {
+    display: inline-block; padding: 4px 12px; border-radius: 6px;
+    background: rgba(232,197,71,.15); color: var(--ac); font-size: 13px; font-weight: 600;
+    margin-bottom: 20px;
+  }
+  .progress-wrap { display: none; margin: 16px 0; }
+  .progress-bar-outer {
+    height: 8px; background: var(--bd); border-radius: 99px; overflow: hidden; margin-bottom: 8px;
+  }
+  .progress-bar-inner {
+    height: 100%; background: var(--ac); border-radius: 99px; width: 0%;
+    transition: width .4s ease;
+  }
+  .progress-status { font-size: 13px; color: var(--txd); }
+  .result-box { display: none; background: var(--bg); border: 1px solid var(--bd); border-radius: 10px; padding: 16px; margin-top: 16px; font-size: 14px; line-height: 1.8; }
+  .result-box.ok { border-color: var(--grn); }
+  .result-box.err { border-color: var(--red); }
+  .row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+  .field { flex: 1; min-width: 180px; }
+  .field label { display: block; font-size: 13px; color: var(--txd); margin-bottom: 6px; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/admin.html" class="nav-link">Admin</a>
+  </div>
+</nav>
+
+<div class="admin-wrap">
+  <div class="admin-card">
+    <h2>🗺️ Scrape LA Contractors</h2>
+    <p>Uses Apify → Google Maps to seed the directory with real local businesses. Each can later claim their listing for free Pro access.</p>
+    <div class="cost-badge">💰 ~$10 estimated for 500 results</div>
+
+    <div class="row" style="margin-bottom:14px;">
+      <div class="field">
+        <label>Search Query</label>
+        <input class="input" type="text" id="queryInput" value="construction contractor Los Angeles" placeholder="e.g. roofing company Los Angeles">
+      </div>
+      <div class="field" style="max-width:120px;">
+        <label>Max Results</label>
+        <input class="input" type="number" id="maxInput" value="500" min="5" max="500">
+      </div>
+    </div>
+
+    <div style="margin-bottom:12px;">
+      <label style="font-size:13px;color:var(--txd);display:block;margin-bottom:6px;">Admin Password</label>
+      <input class="input" type="password" id="adminPass" placeholder="bqadmin2026">
+    </div>
+
+    <button class="btn btn-primary" id="scrapeBtn" onclick="startScrape()" style="width:100%;">
+      🚀 Scrape 500 LA Contractors
+    </button>
+
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-bar-outer">
+        <div class="progress-bar-inner" id="progressBar"></div>
+      </div>
+      <div class="progress-status" id="progressStatus">Starting scrape...</div>
+    </div>
+
+    <div class="result-box" id="resultBox"></div>
+  </div>
+
+  <div class="admin-card">
+    <h2>📥 Import from Existing Run</h2>
+    <p>If you already have a runId from a previous scrape, import its results here.</p>
+    <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+      <div style="flex:1;">
+        <label style="font-size:13px;color:var(--txd);display:block;margin-bottom:6px;">Apify Run ID</label>
+        <input class="input" type="text" id="runIdInput" placeholder="abc123xyz">
+      </div>
+      <button class="btn" onclick="importRun()" style="min-width:120px;">Import Results</button>
+    </div>
+    <div class="result-box" id="importResultBox"></div>
+  </div>
+</div>
+
+<script>
+const API_URL = 'https://bq-tools-api.fanzai-mgmt.workers.dev';
+
+function getAdminPass() {
+  return document.getElementById('adminPass').value;
+}
+
+async function adminFetch(path, opts = {}) {
+  const res = await fetch(API_URL + path, {
+    ...opts,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + getAdminPass(),
+      ...(opts.headers || {})
+    }
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+let pollInterval = null;
+let activeRunId = null;
+
+async function startScrape() {
+  const query = document.getElementById('queryInput').value.trim();
+  const max = parseInt(document.getElementById('maxInput').value) || 500;
+
+  if (!query) { alert('Enter a search query'); return; }
+
+  const btn = document.getElementById('scrapeBtn');
+  if (!getAdminPass()) { alert('Enter admin password'); return; }
+
+  // Clear any running poll before starting a new one
+  if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+
+  btn.disabled = true;
+  btn.textContent = 'Starting...';
+
+  document.getElementById('progressWrap').style.display = 'block';
+  document.getElementById('progressBar').style.width = '5%';
+  document.getElementById('progressStatus').textContent = 'Starting Apify scrape...';
+  document.getElementById('resultBox').style.display = 'none';
+
+  try {
+    const data = await adminFetch('/api/admin/scrape-directory', {
+      method: 'POST',
+      body: JSON.stringify({ query, maxResults: max })
+    });
+
+    activeRunId = data.runId;
+    document.getElementById('progressBar').style.width = '10%';
+    document.getElementById('progressStatus').textContent = `Run started: ${activeRunId} — polling status...`;
+    btn.textContent = 'Scraping...';
+
+    // Poll status every 6 seconds
+    pollInterval = setInterval(() => pollStatus(max), 6000);
+
+  } catch (err) {
+    showResult('resultBox', 'err', '✗ ' + err.message);
+    btn.disabled = false;
+    btn.textContent = '🚀 Scrape 500 LA Contractors';
+  }
+}
+
+async function pollStatus(maxExpected) {
+  if (!activeRunId) return;
+  try {
+    const data = await adminFetch('/api/admin/scrape-status?runId=' + activeRunId);
+    const { status, itemCount } = data;
+
+    const pct = Math.min(10 + Math.round((itemCount / (maxExpected || 500)) * 75), 85);
+    document.getElementById('progressBar').style.width = pct + '%';
+    document.getElementById('progressStatus').textContent = `${status} — ${itemCount} places found so far...`;
+
+    if (status === 'SUCCEEDED') {
+      clearInterval(pollInterval);
+      document.getElementById('progressStatus').textContent = `Done! ${itemCount} places scraped. Importing...`;
+      document.getElementById('progressBar').style.width = '90%';
+      await doImport(activeRunId);
+    } else if (status === 'FAILED' || status === 'ABORTED' || status === 'TIMED-OUT') {
+      clearInterval(pollInterval);
+      showResult('resultBox', 'err', `✗ Apify run ${status}`);
+      resetBtn();
+    }
+  } catch (err) {
+    clearInterval(pollInterval);
+    showResult('resultBox', 'err', '✗ Poll error: ' + err.message);
+    resetBtn();
+  }
+}
+
+async function doImport(runId) {
+  try {
+    const data = await adminFetch('/api/admin/import-results', {
+      method: 'POST',
+      body: JSON.stringify({ runId })
+    });
+    document.getElementById('progressBar').style.width = '100%';
+    showResult('resultBox', 'ok',
+      `✅ Import complete!\n` +
+      `📊 Total scraped: ${data.total}\n` +
+      `✅ Imported: ${data.imported}\n` +
+      `⏭️ Skipped (existing): ${data.skipped}\n` +
+      (data.skippedNames?.length ? `\nSkipped: ${data.skippedNames.join(', ')}` : '')
+    );
+  } catch (err) {
+    showResult('resultBox', 'err', '✗ Import failed: ' + err.message);
+  }
+  resetBtn();
+}
+
+async function importRun() {
+  const runId = document.getElementById('runIdInput').value.trim();
+  if (!runId) { alert('Enter a Run ID'); return; }
+  if (!getAdminPass()) { alert('Enter admin password'); return; }
+  document.getElementById('importResultBox').style.display = 'none';
+  try {
+    const data = await adminFetch('/api/admin/import-results', {
+      method: 'POST',
+      body: JSON.stringify({ runId })
+    });
+    showResult('importResultBox', 'ok',
+      `✅ Import complete!\n` +
+      `📊 Total: ${data.total} | Imported: ${data.imported} | Skipped: ${data.skipped}`
+    );
+  } catch (err) {
+    showResult('importResultBox', 'err', '✗ ' + err.message);
+  }
+}
+
+function showResult(id, type, msg) {
+  const el = document.getElementById(id);
+  el.style.display = 'block';
+  el.className = 'result-box ' + type;
+  el.style.whiteSpace = 'pre-wrap';
+  el.textContent = msg;
+}
+
+function resetBtn() {
+  const btn = document.getElementById('scrapeBtn');
+  btn.disabled = false;
+  btn.textContent = '🚀 Scrape 500 LA Contractors';
+  activeRunId = null;
+}
+</script>
+</body>
+</html>

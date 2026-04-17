@@ -115,9 +115,18 @@
   <button class="btn btn-primary btn-large" style="width:100%;" onclick="cleanUpSketch()" id="cleanBtn" data-en="🧠 Clean Up with AI" data-he="🧠 נקה עם AI">🧠 Clean Up with AI</button>
 
   <div id="resultSection" style="display:none;margin-top:16px;text-align:center;">
-    <p style="font-size:14px;color:var(--ac);margin-bottom:8px;" data-en="AI cleaned your sketch into a sharper version. The result is a text-based description — for a visual blueprint, export your sketch and use an AI image tool." data-he="AI ניקה את הסקיצה שלך. התוצאה היא תיאור טקסטואלי — לשרטוט ויזואלי, ייצא את הסקיצה ושתמש בכלי תמונת AI.">AI Analysis</p>
+    <p style="font-size:14px;color:var(--ac);margin-bottom:8px;">AI Analysis</p>
     <div class="card" id="cleanResult" style="text-align:left;font-size:13px;line-height:1.7;"></div>
-    <button class="btn" style="margin-top:10px;" onclick="exportSketch()" data-en="📥 Export Sketch PNG" data-he="📥 ייצוא סקיצה PNG">📥 Export Sketch PNG</button>
+    <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;">
+      <button class="btn" onclick="exportSketch()" data-en="📥 Export PNG" data-he="📥 ייצוא PNG">📥 Export PNG</button>
+      <button class="btn btn-primary" onclick="generateVisual()" id="visualBtn" data-en="🎨 Generate Visual (5 credits)" data-he="🎨 צור ויזואל (5 קרדיטים)">🎨 Generate Visual (5 credits)</button>
+    </div>
+    <div id="visualResult" style="margin-top:14px;display:none;">
+      <img id="visualImg" style="max-width:100%;border-radius:12px;border:1px solid var(--bd);" alt="Generated visual">
+      <div style="margin-top:8px;">
+        <a id="visualDownload" class="btn" download="bq-visual.png" data-en="⬇️ Download" data-he="⬇️ הורד">⬇️ Download</a>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -290,6 +299,71 @@ function exportSketch() {
   link.href = uploadedSketch || canvas.toDataURL('image/png');
   link.click();
   showToast(lang === 'he' ? 'סקיצה יוצאה!' : 'Sketch exported!', 'ok');
+}
+
+let nbTaskId = null;
+let nbPollInterval = null;
+
+async function generateVisual() {
+  if (!requirePro()) return;
+
+  const btn = document.getElementById('visualBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Starting...';
+  document.getElementById('visualResult').style.display = 'none';
+
+  // Use the clean_description from the last AI analysis as the prompt
+  const cleanDesc = document.querySelector('#cleanResult p:last-of-type')?.textContent
+    || document.getElementById('sketchDesc').value.trim()
+    || 'Architectural blueprint, clean technical drawing, professional construction plan';
+
+  const sketchB64 = (uploadedSketch || canvas.toDataURL('image/png')).split(',')[1];
+
+  try {
+    const data = await apiCall('/api/nanobanana/generate', {
+      method: 'POST',
+      body: {
+        prompt: `Professional architectural blueprint rendering: ${cleanDesc}. Technical drawing style, clean lines, precise.`,
+        referenceImage: sketchB64,
+        width: 1024,
+        height: 1024
+      }
+    });
+
+    nbTaskId = data.taskId;
+    btn.textContent = '⏳ Generating...';
+    nbPollInterval = setInterval(pollVisual, 4000);
+  } catch (err) {
+    showToast('Error: ' + err.message, 'err');
+    btn.disabled = false;
+    btn.textContent = lang === 'he' ? '🎨 צור ויזואל (5 קרדיטים)' : '🎨 Generate Visual (5 credits)';
+  }
+}
+
+async function pollVisual() {
+  if (!nbTaskId) return;
+  try {
+    const data = await apiCall('/api/nanobanana/status?taskId=' + nbTaskId);
+    if (data.status === 'completed' && data.imageUrl) {
+      clearInterval(nbPollInterval);
+      document.getElementById('visualImg').src = data.imageUrl;
+      document.getElementById('visualDownload').href = data.imageUrl;
+      document.getElementById('visualResult').style.display = 'block';
+      const btn = document.getElementById('visualBtn');
+      btn.disabled = false;
+      btn.textContent = lang === 'he' ? '🎨 צור ויזואל (5 קרדיטים)' : '🎨 Generate Visual (5 credits)';
+      showToast('Visual ready!', 'ok');
+    } else if (data.status === 'failed') {
+      clearInterval(nbPollInterval);
+      showToast('Generation failed', 'err');
+      const btn = document.getElementById('visualBtn');
+      btn.disabled = false;
+      btn.textContent = '🎨 Generate Visual (5 credits)';
+    }
+  } catch (err) {
+    clearInterval(nbPollInterval);
+    showToast('Poll error: ' + err.message, 'err');
+  }
 }
 </script>
 </body>

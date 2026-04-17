@@ -57,6 +57,15 @@ export default {
       if (path === '/api/admin/scrape-directory' && request.method === 'POST') {
         return corsResponse(env, await handleAdminScrapeDirectory(request, env));
       }
+      if (path === '/api/admin/scrape-status' && request.method === 'GET') {
+        return corsResponse(env, await handleAdminScrapeStatus(request, env));
+      }
+      if (path === '/api/admin/import-results' && request.method === 'POST') {
+        return corsResponse(env, await handleAdminImportResults(request, env));
+      }
+      if (path === '/api/directory/claim' && request.method === 'POST') {
+        return corsResponse(env, await handleDirectoryClaim(request, env));
+      }
       if (path === '/api/credits/add' && request.method === 'POST') {
         return corsResponse(env, await handleAddCredits(request, env));
       }
@@ -218,6 +227,14 @@ export default {
       }
       if (path === '/api/kinovi/status' && request.method === 'GET') {
         return corsResponse(env, await handleKinoviStatus(request, env));
+      }
+
+      // ── NanoBanana (PiAPI / Flux image gen) ──
+      if (path === '/api/nanobanana/generate' && request.method === 'POST') {
+        return corsResponse(env, await handleNanoBananaGenerate(request, env));
+      }
+      if (path === '/api/nanobanana/status' && request.method === 'GET') {
+        return corsResponse(env, await handleNanoBananaStatus(request, env));
       }
 
       if (path === '/api/health') {
@@ -1227,6 +1244,7 @@ async function updateDirectoryIndex(email, listing, env) {
     photoCount: (listing.photos || []).length,
     reviewCount: (listing.reviews || []).length,
     locationCount: (listing.locations || []).length,
+    seeded: listing.seeded || false,
     updatedAt: listing.updatedAt || listing.createdAt
   });
 
@@ -1572,14 +1590,13 @@ async function handleAdminScrapeDirectory(request, env) {
   if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
 
   const apifyToken = env.APIFY_TOKEN;
-  if (!apifyToken) return json({ error: 'Apify not configured' }, 500);
+  if (!apifyToken) return json({ error: 'APIFY_TOKEN secret not set' }, 500);
 
   const { query, maxResults } = await request.json();
   if (!query) return json({ error: 'query required' }, 400);
-  const max = Math.min(Math.max(parseInt(maxResults) || 20, 5), 100);
+  const max = Math.min(Math.max(parseInt(maxResults) || 20, 5), 500);
 
-  // Start Google Maps scraper
-  let runId;
+  // Fire-and-forget: start Apify run, return runId immediately
   try {
     const runRes = await fetch(`https://api.apify.com/v2/acts/compass~crawler-google-places/runs?token=${apifyToken}`, {
       method: 'POST',
@@ -1593,46 +1610,79 @@ async function handleAdminScrapeDirectory(request, env) {
       })
     });
     const runData = await runRes.json();
-    runId = runData.data?.id;
-    if (!runId) throw new Error('Failed to start scraper: ' + JSON.stringify(runData));
+    const runId = runData.data?.id;
+    if (!runId) throw new Error(JSON.stringify(runData.error || runData));
+
+    return json({ ok: true, runId, query, max,
+      message: `Scrape started (${max} places). Poll GET /api/admin/scrape-status?runId=${runId} then POST /api/admin/import-results.` });
   } catch (e) {
     return json({ error: 'Scraper start failed: ' + e.message }, 502);
   }
+}
 
-  // Poll for results (max 60 seconds)
-  let attempts = 0;
-  while (attempts < 30) {
-    await new Promise(r => setTimeout(r, 2000));
-    const statusRes = await fetch(`https://api.apify.com/v2/actor-runs/${runId}?token=${apifyToken}`);
-    const statusData = await statusRes.json();
-    const status = statusData.data?.status;
-    if (status === 'SUCCEEDED') break;
-    if (status === 'FAILED' || status === 'ABORTED') {
-      return json({ error: 'Scraper failed: ' + status }, 502);
-    }
-    attempts++;
-  }
+const APIFY_RUN_ID_RE = /^[a-zA-Z0-9]{10,30}$/;
 
-  // Get results
-  const dataRes = await fetch(`https://api.apify.com/v2/actor-runs/${runId}/dataset/items?token=${apifyToken}`);
+async function apifyGet(path, apifyToken) {
+  return fetch(`https://api.apify.com/v2${path}`, {
+    headers: { Authorization: `Bearer ${apifyToken}` }
+  });
+}
+
+async function handleAdminScrapeStatus(request, env) {
+  if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
+  const apifyToken = env.APIFY_TOKEN;
+  if (!apifyToken) return json({ error: 'APIFY_TOKEN not set' }, 500);
+
+  const url = new URL(request.url);
+  const runId = url.searchParams.get('runId');
+  if (!runId || !APIFY_RUN_ID_RE.test(runId)) return json({ error: 'Invalid runId' }, 400);
+
+  const res = await apifyGet(`/actor-runs/${runId}`, apifyToken);
+  const data = await res.json();
+  const run = data.data;
+  if (!run) return json({ error: 'Run not found' }, 404);
+
+  return json({
+    ok: true,
+    runId,
+    status: run.status,          // RUNNING | SUCCEEDED | FAILED | ABORTED
+    itemCount: run.stats?.itemCount || 0,
+    finishedAt: run.finishedAt || null
+  });
+}
+
+async function handleAdminImportResults(request, env) {
+  if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
+  const apifyToken = env.APIFY_TOKEN;
+  if (!apifyToken) return json({ error: 'APIFY_TOKEN not set' }, 500);
+
+  const { runId } = await request.json();
+  if (!runId || !APIFY_RUN_ID_RE.test(runId)) return json({ error: 'Invalid runId' }, 400);
+
+  // Verify run succeeded
+  const statusRes = await apifyGet(`/actor-runs/${runId}`, apifyToken);
+  const statusData = await statusRes.json();
+  const status = statusData.data?.status;
+  if (status !== 'SUCCEEDED') return json({ error: 'Run not ready: ' + status }, 400);
+
+  const dataRes = await apifyGet(`/actor-runs/${runId}/dataset/items`, apifyToken);
+  if (!dataRes.ok) return json({ error: 'Failed to fetch Apify results: ' + dataRes.status }, 502);
   const items = await dataRes.json();
+  if (!Array.isArray(items)) return json({ error: 'Unexpected Apify response format' }, 502);
 
-  // Import each result as a free directory listing
   let imported = 0;
   const skipped = [];
+  const newEntries = [];
 
   for (const item of items) {
     if (!item.title) continue;
 
-    // Generate a fake email key from business name (no real email)
     const slug = item.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').substring(0, 40);
     const fakeEmail = `maps-${slug}@directory.bqtools`;
 
-    // Check if already exists
     const existing = await env.BQ_USERS.get(`directory:${fakeEmail}`);
     if (existing) { skipped.push(item.title); continue; }
 
-    // Guess business type from category
     const cat = (item.categoryName || '').toLowerCase();
     let bizType = 'Other';
     if (cat.includes('general contractor') || cat.includes('contractor')) bizType = 'General Contractor';
@@ -1641,8 +1691,6 @@ async function handleAdminScrapeDirectory(request, env) {
     else if (cat.includes('roof')) bizType = 'Roofer';
     else if (cat.includes('landscape') || cat.includes('lawn')) bizType = 'Landscaper';
     else if (cat.includes('interior') || cat.includes('design')) bizType = 'Interior Designer';
-    else if (cat.includes('plumb')) bizType = 'Other';
-    else if (cat.includes('electric')) bizType = 'Other';
 
     const listing = {
       email: fakeEmail,
@@ -1665,15 +1713,15 @@ async function handleAdminScrapeDirectory(request, env) {
       yearsInBusiness: '',
       rating: item.totalScore || 0,
       reviewCount: item.reviewsCount || 0,
+      seeded: true,
       scrapedFrom: 'google-maps',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
 
-    // Add location if coordinates available
     if (item.location?.lat && item.location?.lng) {
       listing.locations.push({
-        address: item.address || query,
+        address: item.address || '',
         lat: item.location.lat,
         lng: item.location.lng,
         projectTitle: '',
@@ -1683,18 +1731,94 @@ async function handleAdminScrapeDirectory(request, env) {
     }
 
     await env.BQ_USERS.put(`directory:${fakeEmail}`, JSON.stringify(listing));
-    await updateDirectoryIndex(fakeEmail, listing, env);
+    newEntries.push({
+      email: fakeEmail,
+      businessName: listing.businessName,
+      type: listing.type,
+      tier: listing.tier,
+      logo: listing.logo,
+      phone: listing.phone,
+      description: listing.description.substring(0, 120),
+      photoCount: 0,
+      reviewCount: listing.reviewCount,
+      locationCount: listing.locations.length,
+      seeded: true,
+      updatedAt: listing.updatedAt
+    });
     imported++;
   }
 
-  return json({
-    ok: true,
-    query,
-    total: items.length,
-    imported,
-    skipped: skipped.length,
-    skippedNames: skipped.slice(0, 10)
-  });
+  // Single bulk index update (avoids per-item race conditions)
+  if (newEntries.length > 0) {
+    const indexKey = 'directory:index';
+    const rawIndex = await env.BQ_USERS.get(indexKey);
+    const index = rawIndex ? JSON.parse(rawIndex) : [];
+    const existingEmails = new Set(newEntries.map(e => e.email));
+    const merged = index.filter(e => !existingEmails.has(e.email)).concat(newEntries);
+    await env.BQ_USERS.put(indexKey, JSON.stringify(merged));
+  }
+
+  return json({ ok: true, runId, total: items.length, imported, skipped: skipped.length, skippedNames: skipped.slice(0, 10) });
+}
+
+// ── Directory Claim (seeded listing → real owner) ──
+
+async function handleDirectoryClaim(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const { listingEmail } = await request.json();
+  if (!listingEmail) return json({ error: 'listingEmail required' }, 400);
+
+  const rawListing = await env.BQ_USERS.get(`directory:${listingEmail}`);
+  if (!rawListing) return json({ error: 'Listing not found' }, 404);
+
+  const listing = JSON.parse(rawListing);
+  if (!listing.seeded) return json({ error: 'This listing is not available for claiming' }, 400);
+
+  // Domain match check (if listing has a website)
+  if (listing.website) {
+    try {
+      const siteUrl = listing.website.startsWith('http') ? listing.website : 'https://' + listing.website;
+      const websiteDomain = new URL(siteUrl).hostname.replace(/^www\./, '');
+      const userDomain = user.email.split('@')[1];
+      if (websiteDomain && userDomain && websiteDomain !== userDomain) {
+        return json({ error: `Your email domain (${userDomain}) must match the business website (${websiteDomain}) to claim this listing.` }, 403);
+      }
+    } catch (_) { /* skip domain check if URL parse fails */ }
+  }
+
+  // Prevent double-listing
+  const existingUserListing = await env.BQ_USERS.get(`directory:${user.email}`);
+  if (existingUserListing) return json({ error: 'You already have a directory listing' }, 400);
+
+  const now = new Date();
+  const proUntil = new Date(now);
+  proUntil.setDate(proUntil.getDate() + 30);
+
+  listing.email = user.email;
+  listing.seeded = false;
+  listing.claimed = true;
+  listing.claimedAt = now.toISOString();
+  listing.tier = 'pro';
+  listing.proUntil = proUntil.toISOString();
+  listing.updatedAt = now.toISOString();
+
+  // Save under real email, delete seeded key
+  await env.BQ_USERS.put(`directory:${user.email}`, JSON.stringify(listing));
+  await env.BQ_USERS.delete(`directory:${listingEmail}`);
+
+  // Update index: add real email entry, remove seeded entry
+  const indexKey = 'directory:index';
+  const rawIndex = await env.BQ_USERS.get(indexKey);
+  if (rawIndex) {
+    const index = JSON.parse(rawIndex).filter(e => e.email !== listingEmail);
+    await env.BQ_USERS.put(indexKey, JSON.stringify(index));
+  }
+  await updateDirectoryIndex(user.email, listing, env);
+
+  return json({ ok: true, message: 'Listing claimed! You have 30 days of Pro access free.' });
 }
 
 // ── Memories ──
@@ -3094,4 +3218,88 @@ async function handleKinoviStatus(request, env) {
   });
   const data = await res.json();
   return json(data, res.status);
+}
+
+// ── NanoBanana / PiAPI (Flux Image Generation) ──
+// Uses PiAPI as backend. Set PIAPI_KEY secret in Cloudflare.
+// NanoBanana Pro is built on PiAPI's Flux models.
+
+async function handleNanoBananaGenerate(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const piApiKey = env.PIAPI_KEY;
+  if (!piApiKey) return json({ error: 'PIAPI_KEY not configured. Set secret in Cloudflare dashboard.' }, 500);
+
+  const { prompt, referenceImage, width = 1024, height = 1024 } = await request.json();
+  if (!prompt) return json({ error: 'prompt required' }, 400);
+  if (!prompt.trim().length) return json({ error: 'prompt cannot be empty' }, 400);
+
+  // Credit check (5 credits for image gen)
+  let updated = { ...user };
+  updated = checkMonthlyReset(updated);
+  if (updated.credits < 5) return json({ error: 'Not enough credits (need 5)' }, 402);
+
+  const isImg2Img = !!referenceImage;
+  const taskInput = isImg2Img
+    ? { prompt, image: referenceImage, strength: 0.75, width, height, guidance_scale: 3.5 }
+    : { prompt, width, height, guidance_scale: 3.5, num_inference_steps: 28 };
+
+  const model = isImg2Img ? 'Qubico/flux1-dev-img2img' : 'Qubico/flux1-dev';
+  const taskType = isImg2Img ? 'img2img' : 'txt2img';
+
+  const res = await fetch('https://api.piapi.ai/api/v1/task', {
+    method: 'POST',
+    headers: {
+      'X-API-KEY': piApiKey,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ model, task_type: taskType, input: taskInput })
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    return json({ error: 'PiAPI error: ' + errText }, 502);
+  }
+
+  const data = await res.json();
+  const taskId = data?.data?.task_id;
+  if (!taskId) return json({ error: 'No task_id returned: ' + JSON.stringify(data) }, 502);
+
+  // Deduct credits
+  updated.credits -= 5;
+  updated.creditsUsedThisMonth = (updated.creditsUsedThisMonth || 0) + 5;
+  await env.BQ_USERS.put(`user:${updated.email}`, JSON.stringify(updated));
+  await logCreditUsage(updated.email, 'nanobanana-generate', prompt.substring(0, 60), env);
+
+  return json({ ok: true, taskId, credits: updated.credits });
+}
+
+async function handleNanoBananaStatus(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const piApiKey = env.PIAPI_KEY;
+  if (!piApiKey) return json({ error: 'PIAPI_KEY not configured' }, 500);
+
+  const url = new URL(request.url);
+  const taskId = url.searchParams.get('taskId');
+  if (!taskId) return json({ error: 'taskId required' }, 400);
+
+  const res = await fetch(`https://api.piapi.ai/api/v1/task/${taskId}`, {
+    headers: { 'X-API-KEY': piApiKey }
+  });
+
+  if (!res.ok) return json({ error: 'PiAPI status check failed' }, 502);
+
+  const data = await res.json();
+  const taskData = data?.data;
+  if (!taskData) return json({ error: 'No task data' }, 502);
+
+  const status = taskData.status; // pending | processing | completed | failed
+  const imageUrl = taskData.output?.image_url || taskData.output?.image_urls?.[0] || null;
+
+  return json({ ok: true, taskId, status, imageUrl });
 }

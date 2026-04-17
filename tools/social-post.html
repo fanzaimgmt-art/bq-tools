@@ -94,7 +94,16 @@
     <h3 data-en="Your Caption" data-he="הקפשן שלך">Your Caption</h3>
     <div class="caption-box" id="captionBox"></div>
     <div class="hashtags" id="hashtagBox"></div>
-    <button class="btn btn-primary" style="width:100%;" onclick="copyCaption()" data-en="📋 Copy to Clipboard" data-he="📋 העתק ללוח">📋 Copy to Clipboard</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+      <button class="btn btn-primary" style="flex:1;" onclick="copyCaption()" data-en="📋 Copy Caption" data-he="📋 העתק">📋 Copy Caption</button>
+      <button class="btn" style="flex:1;" onclick="generatePromoImage()" id="promoBtn" data-en="🎨 Generate Image (5 cr)" data-he="🎨 צור תמונה (5 קר)">🎨 Generate Image (5 cr)</button>
+    </div>
+    <div id="promoResult" style="margin-top:12px;display:none;">
+      <img id="promoImg" style="max-width:100%;border-radius:12px;border:1px solid var(--bd);" alt="Promo image">
+      <div style="margin-top:8px;">
+        <a id="promoDownload" class="btn" download="bq-promo.png" data-en="⬇️ Download" data-he="⬇️ הורד">⬇️ Download</a>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -181,6 +190,63 @@ function copyCaption() {
   const text = document.getElementById('captionBox').textContent + '\n\n' + document.getElementById('hashtagBox').textContent;
   navigator.clipboard.writeText(text);
   showToast(lang === 'he' ? 'הועתק!' : 'Copied!', 'ok');
+}
+
+let spTaskId = null;
+let spPollInterval = null;
+
+async function generatePromoImage() {
+  if (!requirePro()) return;
+
+  const btn = document.getElementById('promoBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Generating...';
+  document.getElementById('promoResult').style.display = 'none';
+
+  const desc = document.getElementById('workDesc').value.trim();
+  const photoB64 = photoSrc ? photoSrc.split(',')[1] : null;
+
+  const prompt = `Professional construction company promotional photo for ${platform}, ${desc}. ` +
+    `Stunning before/after remodel photography, dramatic lighting, magazine quality, highly detailed, photorealistic.`;
+
+  try {
+    const body = { prompt, width: 1024, height: 1024 };
+    if (photoB64) body.referenceImage = photoB64;
+
+    const data = await apiCall('/api/nanobanana/generate', { method: 'POST', body });
+    spTaskId = data.taskId;
+    spPollInterval = setInterval(pollPromo, 4000);
+  } catch (err) {
+    showToast('Error: ' + err.message, 'err');
+    btn.disabled = false;
+    btn.textContent = '🎨 Generate Image (5 cr)';
+  }
+}
+
+async function pollPromo() {
+  if (!spTaskId) return;
+  try {
+    const data = await apiCall('/api/nanobanana/status?taskId=' + spTaskId);
+    if (data.status === 'completed' && data.imageUrl) {
+      clearInterval(spPollInterval);
+      document.getElementById('promoImg').src = data.imageUrl;
+      document.getElementById('promoDownload').href = data.imageUrl;
+      document.getElementById('promoResult').style.display = 'block';
+      const btn = document.getElementById('promoBtn');
+      btn.disabled = false;
+      btn.textContent = '🎨 Generate Image (5 cr)';
+      showToast('Image ready!', 'ok');
+    } else if (data.status === 'failed') {
+      clearInterval(spPollInterval);
+      showToast('Image generation failed', 'err');
+      const btn = document.getElementById('promoBtn');
+      btn.disabled = false;
+      btn.textContent = '🎨 Generate Image (5 cr)';
+    }
+  } catch (err) {
+    clearInterval(spPollInterval);
+    showToast('Poll error: ' + err.message, 'err');
+  }
 }
 </script>
 </body>

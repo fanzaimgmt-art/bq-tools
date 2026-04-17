@@ -81,6 +81,12 @@
   }
   .badge-featured { background: var(--acd); color: var(--ac); }
   .badge-pro { background: rgba(116,185,255,.12); color: var(--blu); }
+  .badge-claim {
+    background: rgba(52,211,153,.12); color: #10b981;
+    border: 1px solid rgba(52,211,153,.3);
+    cursor: pointer;
+  }
+  .badge-claim:hover { background: rgba(52,211,153,.22); }
 
   /* ── Empty state ── */
   .dir-empty {
@@ -278,17 +284,21 @@ function renderListings(listings) {
     return;
   }
 
-  grid.innerHTML = listings.map(l => {
+  listingsForClaim = listings;
+  grid.innerHTML = listings.map((l, i) => {
     const isFeatured = l.tier === 'featured';
     const isPro = l.tier === 'pro';
+    const isSeeded = l.seeded === true;
     const logoHTML = l.logo
       ? `<img src="${l.logo}" class="dir-card-logo" alt="">`
       : `<div class="dir-card-logo-placeholder">${(l.businessName || '?')[0].toUpperCase()}</div>`;
-    const badge = isFeatured
-      ? `<span class="dir-card-badge badge-featured">⭐ FEATURED</span>`
-      : isPro
-        ? `<span class="dir-card-badge badge-pro">PRO</span>`
-        : '';
+    const badge = isSeeded
+      ? `<span class="dir-card-badge badge-claim" data-idx="${i}" onclick="handleClaimClick(event,this)">🏷️ Claim this listing</span>`
+      : isFeatured
+        ? `<span class="dir-card-badge badge-featured">⭐ FEATURED</span>`
+        : isPro
+          ? `<span class="dir-card-badge badge-pro">PRO</span>`
+          : '';
 
     return `
       <a href="/directory-profile.html?email=${encodeURIComponent(l.email)}" class="dir-card ${isFeatured ? 'featured-card' : ''}">
@@ -479,6 +489,42 @@ async function submitLocation() {
 
   btn.disabled = false;
   btn.textContent = lang === 'he' ? 'שמור מיקום' : 'Save Location';
+}
+
+let listingsForClaim = [];
+
+function handleClaimClick(e, el) {
+  e.preventDefault();
+  e.stopPropagation();
+  const idx = parseInt(el.getAttribute('data-idx'));
+  const l = listingsForClaim[idx];
+  if (!l) return;
+  claimListing(e, l.email, l.businessName || '');
+}
+
+// Claim seeded listing
+async function claimListing(e, listingEmail, businessName) {
+  e.preventDefault();
+  e.stopPropagation();
+
+  if (!isLoggedIn()) {
+    showToast('Login first to claim this listing', 'err');
+    setTimeout(() => { window.location.href = '/auth.html?next=' + encodeURIComponent(window.location.href); }, 1200);
+    return;
+  }
+
+  if (!confirm(`Claim "${businessName}"?\n\nYour email domain must match the business website.\nAfter claiming you get 30 days Pro free.`)) return;
+
+  try {
+    const data = await apiCall('/api/directory/claim', {
+      method: 'POST',
+      body: { listingEmail }
+    });
+    showToast(data.message || 'Listing claimed!', 'ok');
+    setTimeout(() => loadListings(), 1500);
+  } catch (err) {
+    showToast(err.message || 'Claim failed', 'err');
+  }
 }
 
 // Init
