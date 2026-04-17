@@ -121,6 +121,26 @@
     .home-greeting { flex-direction: column; align-items: flex-start; }
     [dir="rtl"] .home-greeting { align-items: flex-end; }
   }
+
+  /* ── Demo videos: fade in on hover, icon fades out ── */
+  .home-tool .tool-demo {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; border-radius: 14px;
+    opacity: 0; transition: opacity 0.25s ease;
+    pointer-events: none;
+  }
+  .home-tool:hover .tool-demo { opacity: 1; }
+  .home-tool:hover .ht-icon { opacity: 0; transition: opacity 0.2s ease; }
+  .home-tool .ht-icon { transition: opacity 0.25s ease, transform 0.3s ease; }
+  /* Keep text readable over video with a dark overlay */
+  .home-tool:has(.tool-demo):hover::after {
+    content: ''; position: absolute; inset: 0; border-radius: 14px;
+    background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.1) 60%);
+    pointer-events: none; z-index: 1;
+  }
+  .home-tool:has(.tool-demo) .ht-name,
+  .home-tool:has(.tool-demo) .ht-cost,
+  .home-tool:has(.tool-demo) .ht-tip { position: relative; z-index: 2; }
 </style>
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#e8c547">
@@ -191,6 +211,7 @@
   </div>
   <div class="home-tools">
     <a href="/tools/compare.html" class="home-tool ht-g-cyan">
+      <video class="tool-demo" src="/img/demos/compare-demo.mp4" autoplay muted loop playsinline preload="none"></video>
       <span class="ht-icon">🔀</span>
       <span class="ht-name" data-en="Compare" data-es="Comparar" data-he="השוואה">Compare</span>
       <span class="ht-cost free">FREE</span>
@@ -209,6 +230,7 @@
       <span class="ht-tip">Generate a PDF report instantly</span>
     </a>
     <a href="/tools/estimate.html" class="home-tool ht-g-green">
+      <video class="tool-demo" src="/img/demos/estimate-demo.mp4" autoplay muted loop playsinline preload="none"></video>
       <span class="ht-icon">💰</span>
       <span class="ht-name" data-en="Smart Estimate" data-es="Estimado Inteligente" data-he="הערכת עלות">Smart Estimate</span>
       <span class="ht-cost">1 credit</span>
@@ -245,6 +267,7 @@
       <span class="ht-tip">Deep dive on any IG profile</span>
     </a>
     <a href="/chat.html" class="home-tool ht-g-cyan">
+      <video class="tool-demo" src="/img/demos/chat-demo.mp4" autoplay muted loop playsinline preload="none"></video>
       <span class="ht-icon">💬</span>
       <span class="ht-name" data-en="AI Chat" data-es="Chat IA" data-he="צ'אט AI">AI Chat</span>
       <span class="ht-cost">1-6 credits</span>
@@ -269,6 +292,7 @@
       <span class="ht-tip">Build visual mood boards fast</span>
     </a>
     <a href="/tools/quote.html" class="home-tool ht-g-gold">
+      <video class="tool-demo" src="/img/demos/quote-demo.mp4" autoplay muted loop playsinline preload="none"></video>
       <span class="ht-icon">📝</span>
       <span class="ht-name" data-en="Quote Generator" data-es="Generador de Cotizaciones" data-he="מחולל הצעות">Quote Generator</span>
       <span class="ht-cost">1 credit</span>
@@ -293,6 +317,7 @@
       <span class="ht-tip">Turn photos into cinematic clips</span>
     </a>
     <a href="/tools/ad-creator.html" class="home-tool ht-g-gold" style="border-color:rgba(255,159,67,.4);">
+      <video class="tool-demo" src="/img/demos/ad-creator-demo.mp4" autoplay muted loop playsinline preload="none"></video>
       <span class="ht-icon">🎨</span>
       <span class="ht-name" data-en="Auto Ad Creator" data-he="יוצר מודעות">Auto Ad Creator</span>
       <span class="ht-cost" style="background:rgba(255,159,67,.15);color:#ff9f43;">20 credits</span>
@@ -305,6 +330,7 @@
       <span class="ht-tip">Teach AI your brand voice</span>
     </a>
     <a href="/business.html" class="home-tool ht-g-gold" style="border-color:var(--ac);background:linear-gradient(135deg,var(--sf),var(--acd));">
+      <video class="tool-demo" src="/img/demos/directory-demo.mp4" autoplay muted loop playsinline preload="none"></video>
       <span class="ht-icon">💼</span>
       <span class="ht-name" data-en="Business Suite" data-es="Suite de Negocio" data-he="חבילת עסק">Business Suite</span>
       <span class="ht-cost" style="background:var(--ac);color:var(--bg);font-weight:800;">8 TOOLS</span>
