@@ -280,7 +280,7 @@ export default {
       return corsResponse(env, json({ error: 'Not found' }, 404));
     } catch (err) {
       console.error('Worker error:', err);
-      return corsResponse(env, json({ error: err.message || 'Internal error' }, 500));
+      return corsResponse(env, json({ error: 'Internal error' }, 500));
     }
   }
 };
@@ -694,7 +694,7 @@ Use THESE rates whenever possible. If this project isn't covered by their histor
       aiResponse = await callGeminiAPI(env, finalPrompt, images || []);
     } catch (geminiErr) {
       console.error('Gemini also failed:', geminiErr.message);
-      return json({ error: `AI failed: ${claudeErr.message}` }, 502);
+      return json({ error: 'AI service temporarily unavailable' }, 502);
     }
   }
 
@@ -3580,13 +3580,17 @@ async function handleKinoviCreate(request, env) {
   if (!kinoviKey) return json({ error: 'KINOVI_API_KEY not configured' }, 500);
 
   const body = await request.json();
+  // Allowlist: only forward known safe fields; cap duration to prevent abuse
+  const { prompt, style, imageUrl } = body;
+  const duration = Math.min(Number(body.duration) || 5, 10);
+  const safeBody = { prompt, style, duration, imageUrl };
   const res = await fetch('https://kinovi.ai/api/v1/jobs/createTask', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${kinoviKey}`,
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify(body)
+    body: JSON.stringify(safeBody)
   });
   const data = await res.json();
   return json(data, res.status);
@@ -3853,7 +3857,8 @@ Write a complete video ad script. Respond ONLY with valid JSON:
     const match = rawText.match(/\{[\s\S]*\}/);
     plan = JSON.parse(match ? match[0] : rawText);
   } catch (e) {
-    return json({ error: 'Failed to parse AI script: ' + rawText.substring(0, 200) }, 500);
+    console.error('Failed to parse AI script:', rawText.substring(0, 500));
+    return json({ error: 'AI response malformed; please retry' }, 500);
   }
 
   // Step b: Start NanoBanana tasks for each scene frame
