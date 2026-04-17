@@ -264,6 +264,10 @@
 <script src="../js/common.js"></script>
 <script src="../js/assistant.js"></script>
 <script>
+function escHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
 // ── State ──
 let photos = [];  // { b64, src }
 let logoB64 = null;
@@ -280,7 +284,14 @@ function renderPhotoGrid() {
   photos.forEach((p, i) => {
     const slot = document.createElement('div');
     slot.className = 'photo-slot';
-    slot.innerHTML = `<img src="${p.src}"><button class="rm" onclick="removePhoto(${i})">✕</button>`;
+    const img = document.createElement('img');
+    img.src = p.src; // data: URL from FileReader — safe property assignment
+    const rmBtn = document.createElement('button');
+    rmBtn.className = 'rm';
+    rmBtn.textContent = '✕';
+    rmBtn.addEventListener('click', () => removePhoto(i));
+    slot.appendChild(img);
+    slot.appendChild(rmBtn);
     grid.appendChild(slot);
   });
   if (photos.length < MAX_PHOTOS) {
@@ -435,8 +446,8 @@ async function generateAd() {
     <div class="scene-card" id="scene-${i}">
       <div class="scene-img" id="scene-img-${i}" style="display:flex;align-items:center;justify-content:center;font-size:24px;">⏳</div>
       <div class="scene-body">
-        <div class="scene-title">${s.title || 'Scene ' + (i+1)}</div>
-        ${s.overlay ? `<div class="scene-overlay">"${s.overlay}"</div>` : ''}
+        <div class="scene-title">${escHtml(s.title || 'Scene ' + (i+1))}</div>
+        ${s.overlay ? `<div class="scene-overlay">"${escHtml(s.overlay)}"</div>` : ''}
         <div class="scene-status" id="scene-st-${i}">Generating frame...</div>
       </div>
     </div>
@@ -506,7 +517,7 @@ async function pollAllFrames() {
           if (data.status === 'completed' && data.imageUrl) {
             frameUrls[idx] = data.imageUrl;
             const imgEl = document.getElementById('scene-img-' + idx);
-            if (imgEl) { imgEl.style.cssText = ''; imgEl.innerHTML = `<img src="${data.imageUrl}" class="scene-img">`; }
+            if (imgEl) { imgEl.style.cssText = ''; const fi = document.createElement('img'); fi.src = data.imageUrl; fi.className = 'scene-img'; imgEl.replaceChildren(fi); }
             const stEl = document.getElementById('scene-st-' + idx);
             if (stEl) stEl.textContent = 'Frame ready ✓';
             resolved++;

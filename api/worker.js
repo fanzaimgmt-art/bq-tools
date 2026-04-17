@@ -333,11 +333,13 @@ async function checkRateLimit(email, env) {
   return true;
 }
 
-// Admin auth check
+// Admin auth check — no fallback; returns false if ADMIN_PASSWORD is unset
 function isAdmin(request, env) {
+  const secret = env.ADMIN_PASSWORD;
+  if (!secret) return false;
   const auth = request.headers.get('Authorization') || '';
   const password = auth.replace('Bearer ', '');
-  return password === (env.ADMIN_PASSWORD || 'bqadmin2026');
+  return password === secret;
 }
 
 // ── Auth Routes ──
@@ -3579,14 +3581,22 @@ async function handleAdCreatorGenerate(request, env) {
   const piApiKey = env.PIAPI_KEY;
   if (!piApiKey) return json({ error: 'PIAPI_KEY not configured' }, 500);
 
+  if (!(await checkRateLimit(user.email, env))) {
+    return json({ error: 'Rate limit exceeded' }, 429);
+  }
+
   const { photos, logo, description, style, duration } = await request.json();
   if (!description) return json({ error: 'Business description required' }, 400);
   if (!photos || !Array.isArray(photos) || photos.length < 1) return json({ error: 'At least 1 photo required' }, 400);
 
-  // Credit check — 20 credits
+  // Credit check + deduct optimistically before calling external APIs
   let updated = { ...user };
   updated = checkMonthlyReset(updated);
   if (updated.credits < 20) return json({ error: 'Not enough credits (need 20)' }, 402);
+  updated.credits -= 20;
+  updated.creditsUsedThisMonth = (updated.creditsUsedThisMonth || 0) + 20;
+  await env.BQ_USERS.put(`user:${updated.email}`, JSON.stringify(updated));
+  await logCreditUsage(updated.email, 'ad-creator', description.substring(0, 60), env);
 
   // Step a: Claude writes script + scene breakdown
   const styleGuide = {
@@ -3643,8 +3653,8 @@ Write a complete video ad script. Respond ONLY with valid JSON:
   });
 
   if (!claudeRes.ok) {
-    const errText = await claudeRes.text();
-    return json({ error: 'Claude API error: ' + errText }, 502);
+    console.error('Claude API error:', claudeRes.status, await claudeRes.text());
+    return json({ error: 'Script generation failed. Please try again.' }, 502);
   }
 
   const claudeData = await claudeRes.json();
@@ -3680,12 +3690,6 @@ Write a complete video ad script. Respond ONLY with valid JSON:
     scenesWithTasks.push({ ...scene, taskId });
   }
 
-  // Deduct credits
-  updated.credits -= 20;
-  updated.creditsUsedThisMonth = (updated.creditsUsedThisMonth || 0) + 20;
-  await env.BQ_USERS.put(`user:${updated.email}`, JSON.stringify(updated));
-  await logCreditUsage(updated.email, 'ad-creator', description.substring(0, 60), env);
-
   return json({
     ok: true,
     tagline: plan.tagline,
@@ -3698,10 +3702,24 @@ Write a complete video ad script. Respond ONLY with valid JSON:
 
 // ── ElevenLabs TTS Proxy ──
 
+// Allowlisted ElevenLabs voice IDs (Rachel, Josh, Adam, Elli, Arnold, Domi)
+const ALLOWED_VOICE_IDS = new Set([
+  '21m00Tcm4TlvDq8ikWAM', // Rachel
+  'TxGEqnHWrfWFTfGW9XjX', // Josh
+  'pNInz6obpgDQGcFmaJgB', // Adam
+  'MF3mGyEYCl7XYWbV9V6O', // Elli
+  '7iF53csdtOkJJV9Imouh', // Arnold
+  'AZnzlk1XvdvUeBnXmlld', // Domi
+]);
+
 async function handleTTSGenerate(request, env) {
   const token = request.headers.get('Authorization')?.replace('Bearer ', '');
   const user = await getUserByToken(token, env);
   if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  if (!(await checkRateLimit(user.email, env))) {
+    return json({ error: 'Rate limit exceeded' }, 429);
+  }
 
   const elevenKey = env.ELEVENLABS_API_KEY;
   if (!elevenKey) return json({ error: 'ELEVENLABS_API_KEY not configured' }, 500);
@@ -3709,6 +3727,7 @@ async function handleTTSGenerate(request, env) {
   const { text, voiceId = '21m00Tcm4TlvDq8ikWAM' } = await request.json(); // default: Rachel
   if (!text) return json({ error: 'text required' }, 400);
   if (text.length > 2000) return json({ error: 'Text too long (max 2000 chars)' }, 400);
+  if (!ALLOWED_VOICE_IDS.has(voiceId)) return json({ error: 'Invalid voiceId' }, 400);
 
   const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
     method: 'POST',
@@ -3738,12 +3757,15 @@ async function handleTTSGenerate(request, env) {
 
 // ── Admin: Save generated ad to client account ──
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 async function handleAdminSaveClientAd(request, env) {
-  const adminPass = request.headers.get('Authorization')?.replace('Bearer ', '');
-  if (adminPass !== env.ADMIN_PASS) return json({ error: 'Unauthorized' }, 401);
+  if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 401);
 
   const { clientEmail, adUrl, description, template, tagline, voiceover } = await request.json();
   if (!clientEmail || !adUrl) return json({ error: 'clientEmail and adUrl required' }, 400);
+  if (!EMAIL_RE.test(clientEmail) || clientEmail.length > 254) return json({ error: 'Invalid email' }, 400);
+  if (!adUrl.startsWith('https://')) return json({ error: 'adUrl must be an https URL' }, 400);
 
   const userRaw = await env.BQ_USERS.get(`user:${clientEmail.toLowerCase()}`);
   if (!userRaw) return json({ error: 'Client not found' }, 404);
@@ -3769,11 +3791,12 @@ async function handleAdminSaveClientAd(request, env) {
 // ── Admin: Notify client that their video is ready ──
 
 async function handleAdminNotifyClient(request, env) {
-  const adminPass = request.headers.get('Authorization')?.replace('Bearer ', '');
-  if (adminPass !== env.ADMIN_PASS) return json({ error: 'Unauthorized' }, 401);
+  if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 401);
 
   const { clientEmail, type = 'video_ready', adUrl } = await request.json();
   if (!clientEmail) return json({ error: 'clientEmail required' }, 400);
+  if (!EMAIL_RE.test(clientEmail) || clientEmail.length > 254) return json({ error: 'Invalid email' }, 400);
+  const safeAdUrl = (adUrl && adUrl.startsWith('https://')) ? adUrl : null;
 
   const userRaw = await env.BQ_USERS.get(`user:${clientEmail.toLowerCase()}`);
   if (!userRaw) return json({ error: 'Client not found' }, 404);
@@ -3781,7 +3804,7 @@ async function handleAdminNotifyClient(request, env) {
 
   // If MailChannels (free Cloudflare email relay) is available, send an email
   const emailBody = type === 'video_ready'
-    ? `Hi ${user.name || 'there'},\n\nYour AI video is ready!\n\nView and download it here:\n${adUrl || 'Log in to your BQ Tools account to see it.'}\n\nBQ Tools Team`
+    ? `Hi ${user.name || 'there'},\n\nYour AI video is ready!\n\nView and download it here:\n${safeAdUrl || 'Log in to your BQ Tools account to see it.'}\n\nBQ Tools Team`
     : `Hi ${user.name || 'there'},\n\nYou have a new notification from BQ Tools.\n\nBQ Tools Team`;
 
   try {
@@ -3799,9 +3822,9 @@ async function handleAdminNotifyClient(request, env) {
     if (mailRes.ok || mailRes.status === 202) {
       return json({ ok: true, sent: true, email: user.email });
     }
-    // MailChannels not available — return ok anyway (admin can notify manually)
-    return json({ ok: true, sent: false, reason: 'Email relay unavailable', email: user.email });
+    // MailChannels not available — inform admin (do NOT silently return ok)
+    return json({ ok: false, sent: false, reason: 'Email relay unavailable', email: user.email }, 502);
   } catch (_) {
-    return json({ ok: true, sent: false, reason: 'Email relay error', email: user.email });
+    return json({ ok: false, sent: false, reason: 'Email relay error', email: user.email }, 502);
   }
 }

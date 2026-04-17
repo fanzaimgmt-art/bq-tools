@@ -260,7 +260,14 @@ function renderPhotoGrid() {
   photos.forEach((p, i) => {
     const slot = document.createElement('div');
     slot.className = 'photo-slot';
-    slot.innerHTML = `<img src="${p.src}"><button class="rm" onclick="removePhoto(${i})">✕</button>`;
+    const img = document.createElement('img');
+    img.src = p.src;
+    const rmBtn = document.createElement('button');
+    rmBtn.className = 'rm';
+    rmBtn.textContent = '✕';
+    rmBtn.addEventListener('click', () => removePhoto(i));
+    slot.appendChild(img);
+    slot.appendChild(rmBtn);
     grid.appendChild(slot);
   });
   if (photos.length < MAX_PHOTOS) {
@@ -379,8 +386,7 @@ async function startGenerate() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + getPass(),
-        'X-Admin-Client': clientEmail  // hint for server (future use)
+        'Authorization': 'Bearer ' + getPass()
       },
       body: JSON.stringify({
         photos: photos.map(p => p.b64),
@@ -518,7 +524,7 @@ async function pollAdminFrames(scenes) {
           if (data.status === 'completed' && data.imageUrl) {
             frameUrls[idx] = data.imageUrl;
             const imgEl = document.getElementById('adm-img-' + idx);
-            if (imgEl) imgEl.innerHTML = `<img src="${data.imageUrl}">`;
+            if (imgEl) { const fi = document.createElement('img'); fi.src = data.imageUrl; imgEl.replaceChildren(fi); }
             const stEl = document.getElementById('adm-st-' + idx);
             if (stEl) stEl.textContent = 'Frame ready ✓';
             done++;
