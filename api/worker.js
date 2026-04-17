@@ -748,6 +748,10 @@ Use THESE rates whenever possible. If this project isn't covered by their histor
 
 // ── Multi-Model Chat ──
 
+// Claude models as of April 2026:
+// - claude-haiku-4-5-20251001 — fast, cheap (~$0.80/M input)
+// - claude-sonnet-4-6 — balanced
+// - claude-opus-4-7 — most capable
 const MODEL_MAP = {
   // Claude
   'claude-haiku': { type: 'claude', model: 'claude-haiku-4-5-20251001', cost: 1 },
