@@ -196,7 +196,7 @@
 
   <div class="actions-row">
     <button class="btn btn-primary btn-large" style="flex:2;" onclick="saveInvoice('Draft')" id="saveDraftBtn">💾 <span data-en="Save Draft" data-he="שמור טיוטה" data-es="Guardar Borrador">Save Draft</span></button>
-    <button class="btn btn-primary btn-large" style="flex:2;" onclick="saveInvoice('Sent')">📧 <span data-en="Save & Mark Sent" data-he="שמור וסמן נשלח" data-es="Guardar y Marcar como Enviado">Save & Mark Sent</span></button>
+    <button class="btn btn-primary btn-large" style="flex:2;" onclick="saveInvoice('Sent')" id="saveSentBtn">📧 <span data-en="Save & Mark Sent" data-he="שמור וסמן נשלח" data-es="Guardar y Marcar como Enviado">Save & Mark Sent</span></button>
   </div>
 
   <!-- Preview -->
@@ -340,6 +340,10 @@ async function saveInvoice(status) {
     showToast(lang === 'he' ? 'הוסף לפחות פריט אחד' : 'Add at least one line item', 'err');
     return;
   }
+  const draftBtn = document.getElementById('saveDraftBtn');
+  const sentBtn = document.getElementById('saveSentBtn');
+  if (draftBtn) draftBtn.disabled = true;
+  if (sentBtn) sentBtn.disabled = true;
   const validItems = items.filter(it => it.description);
   const sub = validItems.reduce((s, it) => s + (parseFloat(it.total) || 0), 0);
   const taxRate = parseFloat(document.getElementById('taxRate').value) || 0;
@@ -386,6 +390,10 @@ async function saveInvoice(status) {
     renderOutstanding();
     showToast('✓ ' + (status === 'Draft' ? (lang === 'he' ? 'טיוטה נשמרה' : 'Draft saved') : (lang === 'he' ? 'נשלח' : 'Marked as sent')), 'ok');
   } catch (err) { showToast(err.message, 'err'); }
+  finally {
+    if (draftBtn) draftBtn.disabled = false;
+    if (sentBtn) sentBtn.disabled = false;
+  }
 }
 
 function renderPreview(inv) {
