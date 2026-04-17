@@ -244,8 +244,15 @@ function injectProfileAvatar() {
 }
 
 function doLogout() {
-  localStorage.removeItem('bq_token');
-  localStorage.removeItem('bq_user');
+  // Remove all bq_* keys — whitelist approach avoids leaving stale session data
+  // on shared devices. Non-session prefs (lang, theme) are intentionally kept.
+  const keep = new Set(['bq_lang', 'bq_theme', 'bq_cookie_consent', 'bq_pwa_dismissed']);
+  const toRemove = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith('bq_') && !keep.has(k)) toRemove.push(k);
+  }
+  toRemove.forEach(k => localStorage.removeItem(k));
   window.location.href = '/';
 }
 
