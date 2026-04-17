@@ -373,7 +373,7 @@ function handleAdminCheckAuth(request, env) {
   if (!secret) return json({ ok: false, reason: 'ADMIN_PASSWORD not set in worker env — add it to [vars] in wrangler.toml and redeploy' });
   const auth = request.headers.get('Authorization') || '';
   const password = auth.replace('Bearer ', '');
-  if (password !== secret) return json({ ok: false, reason: 'password mismatch', hint: `received ${password.length} chars, expected ${secret.length} chars` });
+  if (password !== secret) return json({ ok: false, reason: 'password mismatch' });
   return json({ ok: true });
 }
 
@@ -394,12 +394,10 @@ async function handleRegister(request, env) {
   // Check if user already exists
   const existing = await env.BQ_USERS.get(`user:${emailLower}`);
 
-  // MVP: return code on screen (Phase 2: send via email)
   return json({
     ok: true,
-    code, // REMOVE THIS IN PRODUCTION — show on screen for MVP only
     isNew: !existing,
-    message: `Your verification code is: ${code}`
+    message: `Verification code sent to ${email}`
   });
 }
 
@@ -1136,6 +1134,10 @@ async function handleMonthlyTip(request, env) {
   const token = request.headers.get('Authorization')?.replace('Bearer ', '');
   const user = await getUserByToken(token, env);
   if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  if (!(await checkRateLimit(user.email, env))) {
+    return json({ error: 'Rate limit exceeded' }, 429);
+  }
 
   // Check if we already have a recent tip
   const tipKey = `tip:${user.email}`;
@@ -2220,7 +2222,6 @@ async function runNightlyTasks(env) {
     results.analytics = 'error: ' + e.message;
   }
 
-  console.log('[cron] nightly tasks done:', JSON.stringify(results));
 }
 
 // Trigger a small Apify scrape (20 results) to grow the directory incrementally
@@ -3626,6 +3627,10 @@ async function handleAdCreatorSuggestDescription(request, env) {
   const user = await getUserByToken(token, env);
   if (!user) return json({ error: 'Unauthorized' }, 401);
 
+  if (!(await checkRateLimit(user.email, env))) {
+    return json({ error: 'Rate limit exceeded' }, 429);
+  }
+
   const claudeApiKey = env.CLAUDE_API_KEY;
   if (!claudeApiKey) return json({ error: 'CLAUDE_API_KEY not configured' }, 500);
 
@@ -4080,6 +4085,10 @@ async function handleBrainLearn(request, env) {
   const token = request.headers.get('Authorization')?.replace('Bearer ', '');
   const user = await getUserByToken(token, env);
   if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  if (!(await checkRateLimit(user.email, env))) {
+    return json({ error: 'Rate limit exceeded' }, 429);
+  }
 
   const { action, data } = await request.json();
   if (!action) return json({ error: 'action required' }, 400);
