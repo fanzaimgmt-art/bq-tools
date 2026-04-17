@@ -782,8 +782,9 @@ async function assembleFinal(videoUrls, audioB64, tagline, cta) {
   if (!window.FFmpeg) {
     await loadScript('https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js');
   }
-  const { FFmpeg, fetchFile } = window.FFmpeg || {};
-  if (!FFmpeg) throw new Error('FFmpeg.wasm failed to load');
+  const FFmpegLib = window.FFmpeg || {};
+  const FFmpeg = FFmpegLib.FFmpeg || FFmpegLib.createFFmpeg;
+  if (typeof FFmpeg !== 'function') throw new Error('FFmpeg.wasm constructor not found — CDN load failed');
 
   const ffmpeg = new FFmpeg();
   await ffmpeg.load();
