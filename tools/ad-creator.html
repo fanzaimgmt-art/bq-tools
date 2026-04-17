@@ -510,7 +510,7 @@ function goToStep(n) {
 
   // Auto-suggest description when entering step 3 (only if field is empty)
   if (n === 3 && !document.getElementById('bizDesc').value.trim()) {
-    suggestDescription();
+    suggestDescription(true); // silent=true on auto-trigger
   }
 
   // Init sub-stories on step 4
@@ -519,14 +519,14 @@ function goToStep(n) {
   }
 }
 
-async function suggestDescription() {
+async function suggestDescription(silent = false) {
   if (photos.length < 1) return;
   const btn = document.getElementById('suggestBtn');
   const statusEl = document.getElementById('suggestStatus');
   btn.disabled = true;
-  btn.textContent = '⏳ Analyzing...';
+  btn.textContent = '🧠 Analyzing...';
   statusEl.style.display = 'block';
-  statusEl.textContent = 'Analyzing your photos with AI...';
+  statusEl.textContent = '🧠 Analyzing your photos...';
 
   try {
     const data = await apiCall('/api/ad-creator/suggest-description', {
@@ -536,9 +536,14 @@ async function suggestDescription() {
     if (data.suggestion) {
       document.getElementById('bizDesc').value = data.suggestion;
       statusEl.textContent = '✓ AI suggestion ready — edit it or use as is';
+    } else {
+      statusEl.textContent = 'No suggestion returned — enter your description manually';
+      if (!silent) showToast('Could not generate suggestion — type your description', 'err');
     }
   } catch (err) {
+    console.error('Suggest failed:', err);
     statusEl.textContent = 'Could not suggest — enter your description manually';
+    if (!silent) showToast('AI suggestion failed: ' + err.message, 'err');
   }
 
   btn.disabled = false;

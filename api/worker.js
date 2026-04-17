@@ -3624,6 +3624,13 @@ async function handleAdCreatorSuggestDescription(request, env) {
   const { photos } = await request.json();
   if (!photos || !Array.isArray(photos) || photos.length < 1) return json({ error: 'photos required' }, 400);
 
+  // Load User Brain for context (enrich suggestion with known business info)
+  const brain = await getBrain(user.email, env);
+  const brainParts = [brain.business_type, brain.service_area, brain.typical_clients].filter(Boolean);
+  const brainContext = brainParts.length
+    ? ` Context about this business: ${brainParts.join(', ')}.`
+    : '';
+
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'x-api-key': claudeApiKey, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' },
@@ -3637,7 +3644,7 @@ async function handleAdCreatorSuggestDescription(request, env) {
             type: 'image',
             source: { type: 'base64', media_type: 'image/jpeg', data: b64 }
           })),
-          { type: 'text', text: 'Look at these construction/remodeling work photos. Write ONE short sentence (10 words max) describing this business for a video ad. Format: "Type of work, City CA" — e.g. "Kitchen & bathroom remodeling, Los Angeles CA". Respond with ONLY the sentence.' }
+          { type: 'text', text: `Look at these construction/remodeling work photos.${brainContext} Write ONE short sentence (10–12 words) describing this business for a video ad. Format: "Type of work for target clients, City CA" — e.g. "Premium kitchen remodeling for luxury homeowners, Los Angeles CA". Respond with ONLY the sentence.` }
         ]
       }]
     })
@@ -3646,10 +3653,14 @@ async function handleAdCreatorSuggestDescription(request, env) {
   if (!res.ok) {
     const errText = await res.text();
     console.error('Claude suggest error:', res.status, errText);
-    return json({ error: 'Suggestion failed' }, 502);
+    return json({ error: `Suggestion failed (Claude ${res.status})` }, 502);
   }
 
   const data = await res.json();
+  if (data.error) {
+    console.error('Claude suggest API error:', data.error);
+    return json({ error: data.error.message || 'Claude error' }, 502);
+  }
   const suggestion = (data.content?.[0]?.text || '').trim().replace(/^["']|["']$/g, '');
   return json({ ok: true, suggestion });
 }
