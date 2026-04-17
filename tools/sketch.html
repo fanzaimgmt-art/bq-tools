@@ -307,6 +307,9 @@ let nbPollInterval = null;
 async function generateVisual() {
   if (!requirePro()) return;
 
+  const ok = await confirmCredit(lang === 'he' ? 'צור ויזואל' : 'Generate Visual');
+  if (!ok) return;
+
   const btn = document.getElementById('visualBtn');
   btn.disabled = true;
   btn.textContent = '⏳ Starting...';

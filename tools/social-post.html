@@ -198,6 +198,9 @@ let spPollInterval = null;
 async function generatePromoImage() {
   if (!requirePro()) return;
 
+  const ok = await confirmCredit(lang === 'he' ? 'תמונת פרומו' : 'Generate Visual');
+  if (!ok) return;
+
   const btn = document.getElementById('promoBtn');
   btn.disabled = true;
   btn.textContent = '⏳ Generating...';

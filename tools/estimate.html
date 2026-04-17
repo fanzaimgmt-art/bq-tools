@@ -80,7 +80,7 @@
       const data = await apiCall('/api/training/knowledge');
       const tip = document.getElementById('trainingTip');
       const text = document.getElementById('trainingTipText');
-      const h = lang === 'he';
+      const h = document.documentElement.lang === 'he';
       tip.style.display = 'block';
       if (data.knowledge?.trained) {
         tip.style.background = 'rgba(81,207,102,.08)';

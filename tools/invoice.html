@@ -42,8 +42,8 @@
   .ip-business h2 { font-size: 22px; font-weight: 900; margin-bottom: 4px; }
   .ip-business p { font-size: 12px; color: #666; line-height: 1.5; }
   .ip-meta { text-align: right; font-size: 13px; color: #444; }
-  .ip-meta .inv-label { font-size: 28px; font-weight: 900; color: #b8860b; letter-spacing: -0.01em; margin-bottom: 4px; line-height: 1; }
-  .ip-meta .inv-num { font-size: 14px; font-weight: 700; color: #b8860b; }
+  .ip-meta .inv-label { font-size: 28px; font-weight: 900; color: var(--ac); letter-spacing: -0.01em; margin-bottom: 4px; line-height: 1; }
+  .ip-meta .inv-num { font-size: 14px; font-weight: 700; color: var(--ac); }
   [dir="rtl"] .ip-meta { text-align: left; }
 
   .ip-client { background: #faf8f0; padding: 14px 18px; border-radius: 8px; margin-bottom: 20px; }
@@ -55,9 +55,9 @@
   .ip-table td { padding: 10px; border-bottom: 1px solid #eee; }
   .ip-table td.num, .ip-table th.num { text-align: right; }
 
-  .ip-totals { margin-left: auto; width: 280px; padding: 12px 14px; background: #faf8f0; border-radius: 8px; margin-bottom: 16px; }
+  .ip-totals { margin-left: auto; max-width: 280px; width: 100%; padding: 12px 14px; background: #faf8f0; border-radius: 8px; margin-bottom: 16px; }
   .ip-totals .t-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; }
-  .ip-totals .t-row.final { border-top: 2px solid #b8860b; margin-top: 6px; padding-top: 8px; font-size: 18px; font-weight: 700; color: #b8860b; }
+  .ip-totals .t-row.final { border-top: 2px solid var(--ac); margin-top: 6px; padding-top: 8px; font-size: 18px; font-weight: 700; color: var(--ac); }
   .ip-totals .t-row.due { color: #d63031; font-weight: 700; }
 
   .ip-payment { background: #eaf4ff; border: 1px solid #b4d4f0; border-radius: 8px; padding: 12px; font-size: 12px; color: #444; margin-bottom: 14px; }
@@ -100,7 +100,7 @@
   </div>
 
   <!-- Outstanding summary -->
-  <div id="outstandingBar" style="display:none;background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+  <div id="outstandingBar" style="display:none;background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:12px 16px;margin-bottom:16px;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
     <div>
       <div style="font-size:11px;color:var(--txd);text-transform:uppercase;letter-spacing:.5px;" data-en="Outstanding Invoices" data-he="חשבוניות לתשלום" data-es="Facturas Pendientes">Outstanding Invoices</div>
       <div style="font-size:22px;font-weight:900;color:var(--ac);" id="outstandingAmount">$0</div>

@@ -7,6 +7,10 @@
 <link rel="stylesheet" href="../style.css">
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#e8c547">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BQ Tools">
+<meta name="mobile-web-app-capable" content="yes">
 <style>
   body { display: flex; flex-direction: column; }
 
@@ -114,8 +118,8 @@
   }
   .badge-wait { background: rgba(255,255,255,.05); color: var(--txd); }
   .badge-run  { background: rgba(232,197,71,.15); color: var(--ac); }
-  .badge-done { background: rgba(52,211,153,.12); color: #10b981; }
-  .badge-fail { background: rgba(255,100,100,.12); color: #f87171; }
+  .badge-done { background: rgba(52,211,153,.12); color: var(--grn); }
+  .badge-fail { background: rgba(255,100,100,.12); color: var(--red); }
 
   .scene-grid {
     display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px;

@@ -119,6 +119,7 @@
 <script src="../js/crypto.js"></script>
 <script src="../js/ai.js"></script>
 <script src="../js/common.js"></script>
+<script src="../js/business.js"></script>
 <script src="../js/assistant.js"></script>
 <script>
 let photos = [];
@@ -177,11 +178,11 @@ function createPage() {
   const preview = document.getElementById('preview');
   preview.classList.add('on');
   preview.innerHTML = `
-    <h2>${page.name}</h2>
-    <div class="cp-meta">${page.date}${biz ? ' — ' + biz : ''}</div>
-    <div class="cp-desc">${page.desc}</div>
+    <h2>${escHtml(page.name)}</h2>
+    <div class="cp-meta">${escHtml(page.date)}${biz ? ' — ' + escHtml(biz) : ''}</div>
+    <div class="cp-desc">${escHtml(page.desc)}</div>
     <div class="cp-photos">${page.photos.map(s => `<img src="${s}">`).join('')}</div>
-    ${biz || phone || email ? `<div class="cp-contact"><strong>${biz}</strong>${phone ? '<br>' + phone : ''}${email ? '<br>' + email : ''}</div>` : ''}
+    ${biz || phone || email ? `<div class="cp-contact"><strong>${escHtml(biz)}</strong>${phone ? '<br>' + escHtml(phone) : ''}${email ? '<br>' + escHtml(email) : ''}</div>` : ''}
     <div class="cp-footer">Powered by <a href="https://bqprod.pages.dev">BQ Tools</a> — Get yours free</div>`;
 
   const shareBox = document.getElementById('shareBox');
@@ -208,11 +209,11 @@ if (window.location.hash.startsWith('#view=')) {
       const preview = document.getElementById('preview');
       preview.classList.add('on');
       preview.innerHTML = `
-        <h2>${page.name}</h2>
-        <div class="cp-meta">${page.date}${page.biz ? ' — ' + page.biz : ''}</div>
-        <div class="cp-desc">${page.desc}</div>
+        <h2>${escHtml(page.name)}</h2>
+        <div class="cp-meta">${escHtml(page.date)}${page.biz ? ' — ' + escHtml(page.biz) : ''}</div>
+        <div class="cp-desc">${escHtml(page.desc)}</div>
         <div class="cp-photos">${page.photos.map(s => `<img src="${s}">`).join('')}</div>
-        ${page.biz || page.phone || page.email ? `<div class="cp-contact"><strong>${page.biz}</strong>${page.phone ? '<br>' + page.phone : ''}${page.email ? '<br>' + page.email : ''}</div>` : ''}
+        ${page.biz || page.phone || page.email ? `<div class="cp-contact"><strong>${escHtml(page.biz)}</strong>${page.phone ? '<br>' + escHtml(page.phone) : ''}${page.email ? '<br>' + escHtml(page.email) : ''}</div>` : ''}
         <div class="cp-footer">Powered by <a href="https://bqprod.pages.dev">BQ Tools</a> — Get yours free</div>`;
     });
   }

@@ -48,7 +48,7 @@
     padding: 32px;
     max-width: 700px;
     margin: 20px auto 0;
-    font-family: 'Inter', Georgia, serif;
+    font-family: var(--font-en);
     display: none;
   }
   .report-preview.on { display: block; animation: fadeIn .3s ease; }
@@ -228,7 +228,7 @@ Respond JSON only:
       <h2>${r.project_title}</h2>
       <div class="report-date">${today}${client ? ' — ' + client : ''}</div>
       <div class="report-section"><h3>Project Overview</h3><p>${r.overview}</p></div>
-      <div class="report-section"><h3>Work Completed</h3><ul>${r.work_completed.map(w => '<li>' + w + '</li>').join('')}</ul></div>
+      <div class="report-section"><h3>Work Completed</h3><ul>${(r.work_completed || []).map(w => '<li>' + w + '</li>').join('')}</ul></div>
       ${r.materials_noted?.length ? `<div class="report-section"><h3>Materials</h3><ul>${r.materials_noted.map(m => '<li>' + m + '</li>').join('')}</ul></div>` : ''}
       <div class="report-section"><h3>AI Quality Assessment</h3><div class="report-score">${r.quality_score}/10</div><p>${r.quality_notes}</p></div>
       ${r.recommendations ? `<div class="report-section"><h3>Recommendations</h3><p>${r.recommendations}</p></div>` : ''}
@@ -253,7 +253,7 @@ function exportReportPDF() {
   w.document.write(`
     <html><head><title>Project Report</title>
     <style>
-      body { font-family: 'Inter', Georgia, serif; padding: 40px; color: #222; max-width: 700px; margin: 0 auto; }
+      body { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif; padding: 40px; color: #222; max-width: 700px; margin: 0 auto; }
       h2 { font-size: 24px; margin-bottom: 4px; }
       h3 { font-size: 14px; color: #555; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid #ddd; }
       p, li { font-size: 14px; line-height: 1.7; }

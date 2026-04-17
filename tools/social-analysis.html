@@ -296,7 +296,7 @@ function exportAnalysis() {
   if (!lastResult) return;
   const w = window.open('', '_blank');
   w.document.write(`<html><head><title>Social Analysis — ${lastResult.profile_name || ''}</title>
-    <style>body{font-family:var(--font-en);padding:40px;max-width:700px;margin:0 auto;color:#222;}
+    <style>body{font-family:'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;padding:40px;max-width:700px;margin:0 auto;color:#222;}
     h1{font-size:24px;}h2{font-size:16px;color:#555;margin-top:20px;}
     .score{font-size:48px;font-weight:900;color:#e8c547;}.footer{font-size:10px;color:#aaa;text-align:center;margin-top:30px;border-top:1px solid #eee;padding-top:10px;}</style></head>
     <body><h1>Social Media Analysis: ${lastResult.profile_name || ''}</h1>

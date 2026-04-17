@@ -163,9 +163,11 @@ function editNote(id) {
   // For now, save locally
   item.notes = note;
   render();
-  // Also save to server by deleting + re-creating
+  // Also save to server by deleting + re-creating, then reload from server
   apiCall(`/api/content/moodboard/${id}`, { method: 'DELETE' }).then(() => {
-    apiCall('/api/content/save', { method: 'POST', body: { ...item, id: undefined } });
+    return apiCall('/api/content/save', { method: 'POST', body: { ...item, id: undefined } });
+  }).then(() => {
+    init();
   }).catch(() => {});
   showToast(lang === 'he' ? 'עודכן' : 'Updated', 'ok');
 }

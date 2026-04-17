@@ -188,7 +188,7 @@
 
 <!-- Nav -->
 <nav class="nav">
-  <a href="/" class="nav-logo">BQ <span>Compare</span></a>
+  <a href="/" class="nav-logo">BQ <span>Tools</span></a>
   <div class="nav-right">
     <a href="/" class="nav-link" data-en="← Back" data-es="← Atrás" data-he="חזור →">← Back</a>
     <a href="/auth.html" class="btn btn-sm" id="navProBtn" data-en="Pro" data-he="Pro">Pro</a>
@@ -478,12 +478,17 @@ function exportImage() {
   // BEFORE
   ctx.fillStyle = 'rgba(0,0,0,0.6)';
   const bm = ctx.measureText('BEFORE');
-  ctx.beginPath(); ctx.roundRect(pad, pad, bm.width + 16, fs + 8, 8); ctx.fill();
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(pad, pad, bm.width + 16, fs + 8, 8);
+  else ctx.rect(pad, pad, bm.width + 16, fs + 8);
+  ctx.fill();
   ctx.fillStyle = '#ff6b6b'; ctx.fillText('BEFORE', pad + 8, pad + fs + 1);
   // AFTER
   const am = ctx.measureText('AFTER');
   ctx.fillStyle = 'rgba(0,0,0,0.6)';
-  ctx.beginPath(); ctx.roundRect(w - am.width - 16 - pad, pad, am.width + 16, fs + 8, 8); ctx.fill();
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(w - am.width - 16 - pad, pad, am.width + 16, fs + 8, 8);
+  else ctx.rect(w - am.width - 16 - pad, pad, am.width + 16, fs + 8);
   ctx.fillStyle = '#51cf66'; ctx.fillText('AFTER', w - am.width - 8 - pad, pad + fs + 1);
 
   // Watermark
@@ -531,7 +536,7 @@ async function saveToGallery() {
     result_summary: 'Comparison saved'
   });
 
-  trackAction('compare', Date.now());
+  trackAction('compare', null);
   showToast(lang === 'he' ? 'נשמר לגלריה!' : 'Saved to Gallery!', 'ok');
 }
 
