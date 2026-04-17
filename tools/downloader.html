@@ -294,6 +294,7 @@ async function bulkDownload() {
   // Update credits final
   try {
     const user = await fetchUser();
+    if (user) setCachedUser(user);
     if (typeof updateCreditDisplay === 'function') updateCreditDisplay();
   } catch {}
 
