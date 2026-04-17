@@ -754,13 +754,15 @@ async function pollVideoJob(taskId, sceneIdx) {
       try {
         const data = await apiCall('/api/kinovi/status?taskId=' + taskId);
         const status = data.status || data.data?.status;
-        const url = data.videoUrl || data.url || data.data?.videoUrl || data.data?.output;
-        if (status === 'completed' || status === 'SUCCEEDED' || url) {
+        // Kinovi returns { status: 'success', output: [{ url: '...' }] }
+        const url = (data.output && data.output[0]?.url)
+          || data.videoUrl || data.url || data.data?.videoUrl || data.data?.output;
+        if (status === 'success' || status === 'completed' || status === 'SUCCEEDED' || url) {
           clearInterval(interval);
           const stEl = document.getElementById('scene-st-' + sceneIdx);
           if (stEl) stEl.textContent = 'Video clip ready ✓';
           resolve(url || null);
-        } else if (status === 'failed' || status === 'FAILED') {
+        } else if (status === 'fail' || status === 'failed' || status === 'FAILED') {
           clearInterval(interval); resolve(null);
         }
       } catch (_) {}
