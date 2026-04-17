@@ -172,7 +172,16 @@ function createPage() {
   const page = { id, name, desc, photos: photos.slice(0, 10), biz, phone, email, date: new Date().toISOString().split('T')[0] };
 
   pages.unshift(page);
-  localStorage.setItem('bq_client_pages', JSON.stringify(pages));
+  try {
+    localStorage.setItem('bq_client_pages', JSON.stringify(pages));
+  } catch (e) {
+    if (e.name === 'QuotaExceededError' || e.code === 22) {
+      pages.shift(); // remove the item we just added
+      showToast(lang === 'he' ? 'אחסון מלא — מחק דף ישן תחילה' : 'Too many saved pages — delete an old one first', 'err');
+      return;
+    }
+    throw e;
+  }
 
   // Show preview
   const preview = document.getElementById('preview');
