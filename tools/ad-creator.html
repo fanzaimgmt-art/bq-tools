@@ -723,10 +723,14 @@ async function animateFrames(frameUrls) {
       const res = await apiCall('/api/kinovi/create', {
         method: 'POST',
         body: {
-          imageUrl: imgUrl,
-          prompt,
-          duration: 5,
-          quality: 'standard'
+          model: 'seedance-20',
+          inputs: {
+            mode: 'keyframe',
+            firstFrame: imgUrl,
+            prompt,
+            duration: 5,
+            aspectRatio: '9:16'
+          }
         }
       });
 
