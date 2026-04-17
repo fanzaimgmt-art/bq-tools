@@ -15,7 +15,6 @@ GOOGLE_CLIENT_ID = "704767034441-ljp9b1a874bdi9rqpodr8p4l5rmvbtdj.apps.googleuse
 binding = "BQ_USERS"
 id = "e75722f0f0f44c1994c95bc98b4386a9"
 
-# Daily news cron — currently disabled (free plan).
-# To enable: upgrade to Workers Paid ($5/mo), then uncomment below and redeploy.
-# [triggers]
-# crons = ["0 16 * * *"]  # 8am PT
+[triggers]
+# 8am PT = 16:00 UTC. Runs: news refresh + scrape 20 new contractors + re-engagement + analytics digest.
+crons = ["0 16 * * *"]

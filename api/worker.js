@@ -2,9 +2,9 @@
 // Cloudflare Worker that proxies AI calls, manages credits, auth, and admin.
 
 export default {
-  // ── Cron Trigger: daily news refresh ──
+  // ── Cron Trigger: nightly tasks (8am PT) ──
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(refreshNews(env));
+    ctx.waitUntil(runNightlyTasks(env));
   },
 
   async fetch(request, env) {
@@ -2148,6 +2148,251 @@ const NEWS_CATEGORIES = [
     prompt: 'Recommend 8 construction tools and supplies that contractors buy frequently on Amazon. Mix of: power tools, hand tools, safety gear, measuring instruments, fasteners. Return as JSON array: [{"title":"product name","summary":"what it is, why contractors need it, typical Amazon price range","source":"Amazon","url":null,"image":null,"amazonUrl":"https://www.amazon.com/s?k=URL-ENCODED-SEARCH-TERM"}]. These will have my affiliate tag added later. JSON only.',
   },
 ];
+
+// ── Nightly orchestrator ──
+
+async function runNightlyTasks(env) {
+  const results = {};
+
+  // 1) News refresh
+  try {
+    await refreshNews(env);
+    results.news = 'ok';
+  } catch (e) {
+    results.news = 'error: ' + e.message;
+  }
+
+  // 2) Scrape 20 new contractors (non-blocking fire-and-forget via Apify)
+  try {
+    results.scrape = await nightlyScrapeContractors(env);
+  } catch (e) {
+    results.scrape = 'error: ' + e.message;
+  }
+
+  // 3) Re-engagement emails (users inactive >= 7 days, Pro active)
+  try {
+    results.reengagement = await nightlyReengagement(env);
+  } catch (e) {
+    results.reengagement = 'error: ' + e.message;
+  }
+
+  // 4) Analytics digest to admin email
+  try {
+    results.analytics = await nightlyAnalyticsDigest(env, results);
+  } catch (e) {
+    results.analytics = 'error: ' + e.message;
+  }
+
+  console.log('[cron] nightly tasks done:', JSON.stringify(results));
+}
+
+// Trigger a small Apify scrape (20 results) to grow the directory incrementally
+async function nightlyScrapeContractors(env) {
+  const apifyToken = env.APIFY_TOKEN;
+  if (!apifyToken) return 'skipped: APIFY_TOKEN not set';
+
+  const queries = [
+    'roofing contractor Los Angeles',
+    'kitchen remodel contractor Los Angeles',
+    'bathroom remodel Los Angeles',
+    'general contractor Los Angeles',
+    'deck builder Los Angeles',
+  ];
+  // Pick a query based on the day of week to vary results
+  const query = queries[new Date().getDay() % queries.length];
+
+  const startRes = await fetch('https://api.apify.com/v2/acts/compass~crawler-google-places/runs', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apifyToken}`
+    },
+    body: JSON.stringify({
+      searchStringsArray: [query],
+      maxCrawledPlacesPerSearch: 20,
+      language: 'en',
+      maxImages: 0,
+      exportPlaceUrls: false
+    })
+  });
+
+  if (!startRes.ok) return 'apify start failed: ' + startRes.status;
+  const { data: runData } = await startRes.json();
+  const runId = runData?.id;
+  if (!runId) return 'no runId';
+
+  // Poll up to 5 minutes (50 × 6s)
+  for (let i = 0; i < 50; i++) {
+    await new Promise(r => setTimeout(r, 6000));
+    const statusRes = await fetch(`https://api.apify.com/v2/acts/compass~crawler-google-places/runs/${runId}`, {
+      headers: { Authorization: `Bearer ${apifyToken}` }
+    });
+    if (!statusRes.ok) continue;
+    const { data: s } = await statusRes.json();
+    if (s.status === 'SUCCEEDED') {
+      // Import results
+      const imported = await nightlyImportApifyRun(runId, apifyToken, env);
+      return `imported ${imported} new listings`;
+    }
+    if (['FAILED', 'ABORTED', 'TIMED-OUT'].includes(s.status)) {
+      return `apify run ${s.status}`;
+    }
+  }
+  return 'timed out waiting for apify run ' + runId;
+}
+
+// Import items from a completed Apify run into the directory KV
+async function nightlyImportApifyRun(runId, apifyToken, env) {
+  const dataRes = await fetch(
+    `https://api.apify.com/v2/acts/compass~crawler-google-places/runs/${runId}/dataset/items?format=json&clean=true&limit=50`,
+    { headers: { Authorization: `Bearer ${apifyToken}` } }
+  );
+  if (!dataRes.ok) return 0;
+  const items = await dataRes.json();
+  if (!Array.isArray(items)) return 0;
+
+  const indexKey = 'directory:index';
+  const indexRaw = await env.BQ_USERS.get(indexKey);
+  const index = indexRaw ? JSON.parse(indexRaw) : [];
+  const existingKeys = new Set(index.map(e => e.placeId || e.name?.toLowerCase()));
+
+  const newEntries = [];
+  for (const place of items) {
+    const placeId = place.placeId || place.id;
+    const name = place.title || place.name;
+    if (!name) continue;
+    if (existingKeys.has(placeId) || existingKeys.has(name.toLowerCase())) continue;
+
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const listing = {
+      name,
+      slug,
+      placeId: placeId || null,
+      phone: place.phone || place.phoneUnformatted || '',
+      website: place.website || '',
+      address: place.address || place.street || '',
+      city: place.city || 'Los Angeles',
+      state: place.state || 'CA',
+      category: place.categoryName || place.categories?.[0] || 'Contractor',
+      rating: place.totalScore || place.rating || null,
+      reviewCount: place.reviewsCount || 0,
+      seeded: true,
+      email: null,
+      plan: 'free',
+      createdAt: new Date().toISOString()
+    };
+    await env.BQ_USERS.put(`directory:${slug}`, JSON.stringify(listing));
+    newEntries.push({ slug, name, placeId, category: listing.category, seeded: true });
+    existingKeys.add(placeId || name.toLowerCase());
+  }
+
+  if (newEntries.length > 0) {
+    const updatedIndex = [...index, ...newEntries];
+    await env.BQ_USERS.put(indexKey, JSON.stringify(updatedIndex));
+  }
+  return newEntries.length;
+}
+
+// Send re-engagement emails to Pro users inactive >= 7 days
+async function nightlyReengagement(env) {
+  // List all user keys (KV list, up to 1000)
+  const list = await env.BQ_USERS.list({ prefix: 'user:' });
+  const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  let sent = 0;
+
+  for (const key of list.keys) {
+    try {
+      const raw = await env.BQ_USERS.get(key.name);
+      if (!raw) continue;
+      const user = JSON.parse(raw);
+
+      // Only contact Pro users who haven't logged in for 7+ days
+      if (!user.pro) continue;
+      const lastSeen = user.lastSeenAt ? new Date(user.lastSeenAt).getTime() : 0;
+      if (lastSeen > cutoff) continue;
+
+      // Avoid spamming: skip if re-engagement email sent within last 14 days
+      const lastReeng = user.lastReengagementAt ? new Date(user.lastReengagementAt).getTime() : 0;
+      if (lastReeng > Date.now() - 14 * 24 * 60 * 60 * 1000) continue;
+
+      const mailRes = await fetch('https://api.mailchannels.net/tx/v1/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          personalizations: [{ to: [{ email: user.email, name: user.name || user.email }] }],
+          from: { email: 'hello@bq-tools.com', name: 'BQ Tools' },
+          subject: 'Your BQ Tools account is waiting for you 👋',
+          content: [{
+            type: 'text/plain',
+            value: `Hi ${user.name || 'there'},\n\nWe noticed you haven't logged in to BQ Tools for a while. Your Pro account has ${user.credits || 0} credits ready to use!\n\nLog in at https://bq-tools.fanzai-mgmt.workers.dev\n\nBQ Tools Team`
+          }]
+        })
+      });
+
+      if (mailRes.ok || mailRes.status === 202) {
+        user.lastReengagementAt = new Date().toISOString();
+        await env.BQ_USERS.put(key.name, JSON.stringify(user));
+        sent++;
+      }
+    } catch (_) { /* skip this user, continue loop */ }
+  }
+  return `sent ${sent} re-engagement emails`;
+}
+
+// Send analytics digest to admin
+async function nightlyAnalyticsDigest(env, taskResults) {
+  const adminEmail = env.ADMIN_DIGEST_EMAIL || 'fanzai.mgmt@gmail.com';
+
+  // Count users
+  const userList = await env.BQ_USERS.list({ prefix: 'user:' });
+  const totalUsers = userList.keys.length;
+
+  // Count Pro users + total credits
+  let proUsers = 0;
+  let totalCredits = 0;
+  for (const key of userList.keys) {
+    try {
+      const raw = await env.BQ_USERS.get(key.name);
+      if (!raw) continue;
+      const u = JSON.parse(raw);
+      if (u.pro) proUsers++;
+      totalCredits += u.credits || 0;
+    } catch (_) {}
+  }
+
+  // Count directory listings
+  const dirList = await env.BQ_USERS.list({ prefix: 'directory:' });
+  const totalListings = dirList.keys.filter(k => k.name !== 'directory:index').length;
+
+  const date = new Date().toISOString().split('T')[0];
+  const body = [
+    `BQ Tools — Daily Digest (${date})`,
+    '',
+    `Users: ${totalUsers} total, ${proUsers} Pro`,
+    `Credits in circulation: ${totalCredits}`,
+    `Directory listings: ${totalListings}`,
+    '',
+    'Nightly task results:',
+    `  News: ${taskResults.news || 'n/a'}`,
+    `  Scrape: ${taskResults.scrape || 'n/a'}`,
+    `  Re-engagement: ${taskResults.reengagement || 'n/a'}`,
+    '',
+    'BQ Tools Cron'
+  ].join('\n');
+
+  await fetch('https://api.mailchannels.net/tx/v1/send', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      personalizations: [{ to: [{ email: adminEmail }] }],
+      from: { email: 'cron@bq-tools.com', name: 'BQ Tools Cron' },
+      subject: `📊 BQ Tools Digest — ${date}`,
+      content: [{ type: 'text/plain', value: body }]
+    })
+  });
+
+  return `digest sent to ${adminEmail}`;
+}
 
 async function refreshNews(env, force = false) {
   const today = new Date().toISOString().split('T')[0];
