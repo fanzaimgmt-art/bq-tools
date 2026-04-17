@@ -51,11 +51,16 @@ async function apiCall(path, opts = {}) {
   const data = await res.json();
 
   if (res.status === 401) {
-    // Token expired or invalid
+    // Admin routes use a separate credential — do NOT wipe user session on failure
+    if (opts.adminPassword) {
+      throw new Error(lang === 'he' ? 'סיסמת אדמין שגויה' : 'Wrong admin password');
+    }
+    // Token expired or invalid — clear user session and redirect
     localStorage.removeItem('bq_token');
     localStorage.removeItem('bq_user');
     if (!opts.noRedirect) {
-      window.location.href = '/auth.html';
+      const next = encodeURIComponent(window.location.pathname);
+      window.location.href = `/auth.html?next=${next}`;
     }
     throw new Error(lang === 'he' ? 'יש להתחבר מחדש' : 'Please log in again');
   }
