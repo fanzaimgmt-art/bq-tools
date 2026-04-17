@@ -293,6 +293,56 @@
     </a>
   </div>
 
+  <!-- BQ Brain widget -->
+  <div id="brainWidget" style="display:none;background:linear-gradient(135deg,var(--sf),rgba(232,197,71,.05));border:1px solid rgba(232,197,71,.3);border-radius:14px;padding:16px 18px;margin-bottom:24px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:22px;">🧠</span>
+        <div>
+          <div style="font-size:14px;font-weight:800;color:var(--ac);" data-en="BQ Brain knows you" data-he="מוח BQ מכיר אותך">BQ Brain knows you</div>
+          <div style="font-size:11px;color:var(--txd);" data-en="Your AI gets smarter after every action" data-he="ה-AI שלך מתחכם עם כל פעולה">Your AI gets smarter after every action</div>
+        </div>
+      </div>
+      <button onclick="toggleBrainEdit()" style="background:none;border:1px solid var(--bd);border-radius:8px;color:var(--txd);font-size:12px;padding:5px 10px;cursor:pointer;" data-en="Edit" data-he="ערוך">Edit</button>
+    </div>
+    <div id="brainSummary" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+    <!-- Edit panel (hidden by default) -->
+    <div id="brainEditPanel" style="display:none;margin-top:14px;border-top:1px solid var(--bd);padding-top:14px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+        <div>
+          <label style="font-size:11px;color:var(--txd);display:block;margin-bottom:4px;" data-en="Business Type" data-he="סוג עסק">Business Type</label>
+          <input class="input" id="brainBusinessType" placeholder="e.g. Kitchen remodeling" style="font-size:13px;">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--txd);display:block;margin-bottom:4px;" data-en="Service Area" data-he="אזור שירות">Service Area</label>
+          <input class="input" id="brainServiceArea" placeholder="e.g. Los Angeles, CA" style="font-size:13px;">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--txd);display:block;margin-bottom:4px;" data-en="Typical Clients" data-he="לקוחות אופייניים">Typical Clients</label>
+          <select class="input" id="brainClients" style="font-size:13px;">
+            <option value="">Select...</option>
+            <option value="luxury">Luxury</option>
+            <option value="mid-range">Mid-range</option>
+            <option value="budget">Budget</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--txd);display:block;margin-bottom:4px;" data-en="Tone of Voice" data-he="טון דיבור">Tone of Voice</label>
+          <select class="input" id="brainTone" style="font-size:13px;">
+            <option value="professional">Professional</option>
+            <option value="casual">Casual</option>
+            <option value="luxurious">Luxurious</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:11px;color:var(--txd);display:block;margin-bottom:4px;" data-en="Common Materials (comma separated)" data-he="חומרים נפוצים (מופרדים בפסיק)">Common Materials</label>
+        <input class="input" id="brainMaterials" placeholder="quartz, hardwood, tile..." style="font-size:13px;">
+      </div>
+      <button class="btn btn-primary" onclick="saveBrain()" style="font-size:13px;padding:8px 16px;" data-en="Save Brain" data-he="שמור">Save Brain</button>
+    </div>
+  </div>
+
   <!-- Quick Stats -->
   <div class="home-section">
     <h2 data-en="Quick Stats" data-es="Estadísticas Rápidas" data-he="סטטיסטיקה">Quick Stats</h2>
@@ -399,6 +449,79 @@ async function loadHome() {
 }
 
 loadHome();
+loadBrain();
+
+// ── Brain widget ──
+let _brainData = null;
+
+async function loadBrain() {
+  try {
+    const data = await apiCall('/api/brain');
+    if (!data.brain) return;
+    _brainData = data.brain;
+    renderBrainWidget(data.brain);
+  } catch (_) {}
+}
+
+function renderBrainWidget(brain) {
+  const counts = brain.action_counts || {};
+  const total = Object.values(counts).reduce((a, b) => a + b, 0);
+  if (total === 0 && !brain.business_type) return; // nothing learned yet
+
+  const widget = document.getElementById('brainWidget');
+  widget.style.display = 'block';
+
+  const tags = [];
+  if (brain.business_type) tags.push({ icon: '🏗️', text: brain.business_type });
+  if (brain.service_area) tags.push({ icon: '📍', text: brain.service_area });
+  if (brain.typical_clients) tags.push({ icon: '👥', text: brain.typical_clients });
+  if (brain.tone_of_voice) tags.push({ icon: '🎯', text: brain.tone_of_voice });
+  if (brain.price_range?.avg > 0) tags.push({ icon: '💰', text: `avg $${(brain.price_range.avg / 1000).toFixed(0)}K` });
+  if ((brain.common_materials || []).length > 0) tags.push({ icon: '🪵', text: brain.common_materials.slice(0, 3).join(', ') });
+
+  document.getElementById('brainSummary').innerHTML = tags.map(t =>
+    `<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;background:rgba(232,197,71,.1);border:1px solid rgba(232,197,71,.2);font-size:12px;color:var(--tx);">${t.icon} ${t.text}</span>`
+  ).join('');
+
+  // Populate edit fields
+  if (_brainData) {
+    document.getElementById('brainBusinessType').value = brain.business_type || '';
+    document.getElementById('brainServiceArea').value = brain.service_area || '';
+    document.getElementById('brainClients').value = brain.typical_clients || '';
+    document.getElementById('brainTone').value = brain.tone_of_voice || 'professional';
+    document.getElementById('brainMaterials').value = (brain.common_materials || []).join(', ');
+  }
+}
+
+function toggleBrainEdit() {
+  const panel = document.getElementById('brainEditPanel');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+
+async function saveBrain() {
+  const materials = document.getElementById('brainMaterials').value
+    .split(',').map(s => s.trim()).filter(Boolean);
+
+  const updates = {
+    business_type: document.getElementById('brainBusinessType').value.trim(),
+    service_area: document.getElementById('brainServiceArea').value.trim(),
+    typical_clients: document.getElementById('brainClients').value,
+    tone_of_voice: document.getElementById('brainTone').value,
+    common_materials: materials
+  };
+
+  try {
+    const data = await apiCall('/api/brain', { method: 'PUT', body: updates });
+    if (data.brain) {
+      _brainData = data.brain;
+      renderBrainWidget(data.brain);
+      document.getElementById('brainEditPanel').style.display = 'none';
+      showToast('Brain updated!', 'ok');
+    }
+  } catch (err) {
+    showToast('Save failed: ' + err.message, 'err');
+  }
+}
 </script>
 </body>
 </html>

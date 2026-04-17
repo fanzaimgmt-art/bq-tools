@@ -7,7 +7,7 @@ export default {
     ctx.waitUntil(runNightlyTasks(env));
   },
 
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     // CORS preflight
     if (request.method === 'OPTIONS') {
       return corsResponse(env, new Response(null, { status: 204 }));
@@ -162,7 +162,7 @@ export default {
         return corsResponse(env, await handleQuoteSave(request, env));
       }
       if (path === '/api/quotes/generate' && request.method === 'POST') {
-        return corsResponse(env, await handleQuoteGenerate(request, env));
+        return corsResponse(env, await handleQuoteGenerate(request, env, ctx));
       }
       if (path.startsWith('/api/quotes/') && request.method === 'PUT') {
         return corsResponse(env, await handleQuoteUpdate(request, env, path));
@@ -239,7 +239,7 @@ export default {
 
       // ── Auto Ad Creator ──
       if (path === '/api/ad-creator/generate' && request.method === 'POST') {
-        return corsResponse(env, await handleAdCreatorGenerate(request, env));
+        return corsResponse(env, await handleAdCreatorGenerate(request, env, ctx));
       }
       if (path === '/api/ad-creator/suggest-description' && request.method === 'POST') {
         return corsResponse(env, await handleAdCreatorSuggestDescription(request, env));
@@ -260,6 +260,17 @@ export default {
 
       if (path === '/api/admin/check-auth' && request.method === 'GET') {
         return corsResponse(env, handleAdminCheckAuth(request, env));
+      }
+
+      // ── User Brain ──
+      if (path === '/api/brain' && request.method === 'GET') {
+        return corsResponse(env, await handleBrainGet(request, env));
+      }
+      if (path === '/api/brain' && request.method === 'PUT') {
+        return corsResponse(env, await handleBrainUpdate(request, env));
+      }
+      if (path === '/api/brain/learn' && request.method === 'POST') {
+        return corsResponse(env, await handleBrainLearn(request, env));
       }
 
       if (path === '/api/health') {
@@ -2770,7 +2781,7 @@ async function handleQuoteDelete(request, env, path) {
   return json({ ok: true, count: filtered.length });
 }
 
-async function handleQuoteGenerate(request, env) {
+async function handleQuoteGenerate(request, env, ctx) {
   const token = request.headers.get('Authorization')?.replace('Bearer ', '');
   const user = await getUserByToken(token, env);
   if (!user) return json({ error: 'Unauthorized' }, 401);
@@ -2861,6 +2872,11 @@ All prices in USD. Tax is ${location && location.toLowerCase().includes('los ang
   updated.creditsUsedThisMonth = (updated.creditsUsedThisMonth || 0) + 1;
   await env.BQ_USERS.put(`user:${updated.email}`, JSON.stringify(updated));
   await logCreditUsage(updated.email, 'quote-generate', quote.projectTitle || 'Quote', env);
+
+  // Background brain learning — non-blocking
+  if (ctx) ctx.waitUntil(learnFromAction(updated.email, 'quote', {
+    projectDescription, location, clientName, total: quote.total, projectTitle: quote.projectTitle
+  }, env));
 
   return json({
     ok: true,
@@ -3638,7 +3654,7 @@ async function handleAdCreatorSuggestDescription(request, env) {
   return json({ ok: true, suggestion });
 }
 
-async function handleAdCreatorGenerate(request, env) {
+async function handleAdCreatorGenerate(request, env, ctx) {
   const token = request.headers.get('Authorization')?.replace('Bearer ', '');
   const user = await getUserByToken(token, env);
   if (!user) return json({ error: 'Unauthorized' }, 401);
@@ -3761,6 +3777,11 @@ Write a complete video ad script. Respond ONLY with valid JSON:
 
     scenesWithTasks.push({ ...scene, taskId });
   }
+
+  // Background brain learning — non-blocking
+  if (ctx) ctx.waitUntil(learnFromAction(updated.email, 'ad', {
+    description, style, subStory, tagline: plan.tagline
+  }, env));
 
   return json({
     ok: true,
@@ -3899,4 +3920,152 @@ async function handleAdminNotifyClient(request, env) {
   } catch (_) {
     return json({ ok: false, sent: false, reason: 'Email relay error', email: user.email }, 502);
   }
+}
+
+// ────────────────────────────────────────────────────────
+// ── User Brain — auto-learning knowledge about the user's business ──
+// ────────────────────────────────────────────────────────
+
+const BRAIN_DEFAULT = {
+  business_type: '',
+  service_area: '',
+  typical_clients: '',
+  common_materials: [],
+  price_range: { min: 0, max: 0, avg: 0 },
+  tone_of_voice: 'professional',
+  style_preferences: [],
+  action_counts: { quotes: 0, estimates: 0, ads: 0, reports: 0 },
+  last_learned_at: null,
+  updated_at: null
+};
+
+async function getBrain(email, env) {
+  const raw = await env.BQ_USERS.get(`brain:${email}`);
+  if (!raw) return { ...BRAIN_DEFAULT };
+  try { return { ...BRAIN_DEFAULT, ...JSON.parse(raw) }; } catch { return { ...BRAIN_DEFAULT }; }
+}
+
+async function saveBrain(email, brain, env) {
+  brain.updated_at = new Date().toISOString();
+  await env.BQ_USERS.put(`brain:${email}`, JSON.stringify(brain));
+}
+
+async function learnFromAction(email, actionType, data, env) {
+  const claudeApiKey = env.CLAUDE_API_KEY;
+  if (!claudeApiKey) return; // silently skip if key not configured
+
+  const brain = await getBrain(email, env);
+
+  // Increment action count
+  brain.action_counts = brain.action_counts || {};
+  brain.action_counts[actionType] = (brain.action_counts[actionType] || 0) + 1;
+
+  // Build prompt for Claude to extract insights
+  const prompt = `You are analyzing a contractor's business activity to update their business profile.
+
+Current profile:
+${JSON.stringify(brain, null, 2)}
+
+New action: ${actionType}
+Action data: ${JSON.stringify(data)}
+
+Based on this action, extract business insights. Return ONLY a JSON object with fields to UPDATE (omit unchanged fields):
+{
+  "business_type": "string or null",
+  "service_area": "string or null",
+  "typical_clients": "luxury|mid-range|budget or null",
+  "common_materials": ["material1", ...] or null,
+  "price_range": {"min": 0, "max": 0, "avg": 0} or null,
+  "tone_of_voice": "professional|casual|luxurious or null",
+  "style_preferences": ["style1", ...] or null
+}
+
+Rules:
+- Only include fields where you have high confidence from this action
+- For price_range, update intelligently using running average
+- For arrays (materials, styles), MERGE with existing, no duplicates, max 8 items
+- Return null for fields you cannot confidently infer
+- Keep responses minimal — only clear signals`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'x-api-key': claudeApiKey, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: env.CLAUDE_MODEL || 'claude-3-5-haiku-20241022',
+        max_tokens: 300,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    if (!res.ok) return;
+    const claudeData = await res.json();
+    const rawText = claudeData.content?.[0]?.text || '';
+    const match = rawText.match(/\{[\s\S]*\}/);
+    if (!match) return;
+    const updates = JSON.parse(match[0]);
+
+    // Merge updates into brain
+    for (const [key, val] of Object.entries(updates)) {
+      if (val === null || val === undefined) continue;
+      if (Array.isArray(val) && Array.isArray(brain[key])) {
+        // Merge arrays, deduplicate, limit to 8
+        brain[key] = [...new Set([...brain[key], ...val])].slice(0, 8);
+      } else if (key === 'price_range' && val.avg && brain.price_range) {
+        // Running average for price
+        const count = brain.action_counts.quotes || 1;
+        brain.price_range = {
+          min: Math.min(brain.price_range.min || val.min, val.min),
+          max: Math.max(brain.price_range.max || val.max, val.max),
+          avg: Math.round(((brain.price_range.avg || val.avg) * (count - 1) + val.avg) / count)
+        };
+      } else if (val !== '') {
+        brain[key] = val;
+      }
+    }
+
+    brain.last_learned_at = new Date().toISOString();
+    await saveBrain(email, brain, env);
+  } catch (_) { /* non-fatal */ }
+}
+
+// ── Brain API handlers ──
+
+async function handleBrainGet(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+  const brain = await getBrain(user.email, env);
+  return json({ ok: true, brain });
+}
+
+async function handleBrainUpdate(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const updates = await request.json();
+  const brain = await getBrain(user.email, env);
+
+  const ALLOWED_FIELDS = ['business_type', 'service_area', 'typical_clients', 'common_materials',
+    'price_range', 'tone_of_voice', 'style_preferences'];
+  for (const field of ALLOWED_FIELDS) {
+    if (updates[field] !== undefined) brain[field] = updates[field];
+  }
+
+  await saveBrain(user.email, brain, env);
+  return json({ ok: true, brain });
+}
+
+async function handleBrainLearn(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const { action, data } = await request.json();
+  if (!action) return json({ error: 'action required' }, 400);
+
+  await learnFromAction(user.email, action, data || {}, env);
+  const brain = await getBrain(user.email, env);
+  return json({ ok: true, brain });
 }
