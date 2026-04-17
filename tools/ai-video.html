@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ AI Video — Powered by Seedance 2</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  body { display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+
+  /* ── Page layout ── */
+  .page { width: 92%; max-width: 720px; margin: 0 auto; padding: 24px 0 60px; }
+
+  .page-header { margin-bottom: 28px; }
+  .page-header h1 {
+    font-size: 28px; font-weight: 800; letter-spacing: -0.02em;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .page-header h1 .badge {
+    font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px;
+    background: rgba(232,197,71,.15); color: var(--ac); letter-spacing: 1px;
+    text-transform: uppercase; vertical-align: middle;
+  }
+  .page-header p { font-size: 14px; color: var(--txd); margin-top: 6px; }
+
+  /* ── API Key Banner ── */
+  .key-banner {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 16px; border-radius: 10px;
+    background: var(--sf); border: 1px solid var(--bd);
+    margin-bottom: 20px; font-size: 13px; color: var(--txd);
+  }
+  .key-banner.has-key { border-color: rgba(81,207,102,.3); background: rgba(81,207,102,.05); }
+  .key-banner .key-dot {
+    width: 8px; height: 8px; border-radius: 50%; background: var(--red); flex-shrink: 0;
+  }
+  .key-banner.has-key .key-dot { background: var(--grn); }
+  .key-banner .key-text { flex: 1; }
+  .key-banner button { font-size: 12px; padding: 5px 12px; }
+
+  /* ── Mode tabs ── */
+  .mode-tabs {
+    display: flex; gap: 2px; background: var(--sf); border: 1px solid var(--bd);
+    border-radius: 10px; padding: 3px; margin-bottom: 20px;
+  }
+  .mode-tab {
+    flex: 1; padding: 10px 14px; border: none; border-radius: 8px;
+    background: transparent; color: var(--txd); font-family: var(--font-en);
+    font-size: 14px; font-weight: 600; cursor: pointer; transition: all .2s;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+  }
+  .mode-tab.on { background: var(--bg); color: var(--ac); }
+  .mode-tab:hover:not(.on) { color: var(--tx); }
+
+  /* ── Card ── */
+  .card {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 14px;
+    padding: 22px; margin-bottom: 14px;
+  }
+  .card-title {
+    font-size: 12px; font-weight: 700; color: var(--txd); text-transform: uppercase;
+    letter-spacing: 0.08em; margin-bottom: 12px;
+  }
+
+  /* ── Prompt ── */
+  .prompt-wrap { position: relative; }
+  .prompt-wrap textarea {
+    width: 100%; min-height: 110px; padding: 14px 16px; border: 1px solid var(--bd);
+    border-radius: 10px; background: var(--bg); color: var(--tx);
+    font-family: var(--font-en); font-size: 14px; line-height: 1.6; resize: vertical;
+    box-sizing: border-box; transition: border-color .2s;
+  }
+  .prompt-wrap textarea:focus { outline: none; border-color: var(--ac); }
+  .prompt-wrap textarea::placeholder { color: rgba(255,255,255,.25); }
+  .char-count { position: absolute; bottom: 10px; right: 12px; font-size: 11px; color: var(--txd); }
+
+  /* ── Image upload ── */
+  .img-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .img-drop {
+    flex: 1; min-width: 140px; aspect-ratio: 16/10; border: 2px dashed var(--bd);
+    border-radius: 10px; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; cursor: pointer; transition: all .2s; position: relative;
+    overflow: hidden; background: var(--bg);
+  }
+  .img-drop:hover, .img-drop.dg { border-color: var(--ac); background: var(--acd); }
+  .img-drop.has-img { border-style: solid; border-color: var(--bd); }
+  .img-drop .dl { font-size: 12px; font-weight: 700; color: var(--ac); margin-top: 6px; z-index: 2; }
+  .img-drop .ds { font-size: 10px; color: var(--txd); z-index: 2; }
+  .img-drop .di { font-size: 28px; opacity: .3; }
+  .img-drop.has-img .dl, .img-drop.has-img .ds, .img-drop.has-img .di { display: none; }
+  .img-drop .preview-img {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+    border-radius: 8px;
+  }
+  .img-drop .clear-btn {
+    position: absolute; top: 6px; right: 6px; z-index: 5;
+    width: 22px; height: 22px; border-radius: 50%; background: rgba(0,0,0,.7);
+    border: none; color: #fff; font-size: 13px; cursor: pointer;
+    display: none; align-items: center; justify-content: center;
+  }
+  .img-drop.has-img .clear-btn { display: flex; }
+  .img-drop input[type="file"] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 3;
+  }
+  .img-drop.has-img input[type="file"] { display: none; }
+  .img-label {
+    font-size: 11px; font-weight: 700; color: var(--txd); text-align: center;
+    margin-top: 6px; text-transform: uppercase; letter-spacing: 0.05em;
+  }
+
+  /* ── Settings grid ── */
+  .settings-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  }
+  .setting-field label {
+    display: block; font-size: 11px; font-weight: 700; color: var(--txd);
+    text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px;
+  }
+  .setting-field select {
+    width: 100%; padding: 9px 12px; border: 1px solid var(--bd); border-radius: 8px;
+    background: var(--bg); color: var(--tx); font-family: var(--font-en);
+    font-size: 13px; cursor: pointer; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23888' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center;
+    padding-right: 28px;
+  }
+  .setting-field select:focus { outline: none; border-color: var(--ac); }
+
+  /* Duration slider */
+  .dur-field { grid-column: 1 / -1; }
+  .dur-row { display: flex; align-items: center; gap: 10px; }
+  .dur-row input[type="range"] { flex: 1; accent-color: var(--ac); }
+  .dur-val {
+    font-size: 16px; font-weight: 900; color: var(--ac); min-width: 50px; text-align: right;
+  }
+
+  /* ── Credit estimate ── */
+  .credit-est {
+    display: flex; align-items: center; gap: 8px; padding: 10px 14px;
+    background: var(--acd); border: 1px solid rgba(232,197,71,.2);
+    border-radius: 8px; font-size: 13px; margin-bottom: 16px;
+  }
+  .credit-est .ci-label { color: var(--txd); }
+  .credit-est .ci-val { font-weight: 900; color: var(--ac); }
+  .credit-est .ci-usd { font-size: 11px; color: var(--txd); }
+
+  /* ── Generate button ── */
+  .gen-btn {
+    width: 100%; padding: 16px; border: none; border-radius: 12px;
+    background: var(--ac); color: var(--bg); font-family: var(--font-en);
+    font-size: 16px; font-weight: 800; cursor: pointer; transition: all .25s;
+    display: flex; align-items: center; justify-content: center; gap: 9px;
+    letter-spacing: 0.02em;
+  }
+  .gen-btn:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-1px); }
+  .gen-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+  .gen-btn.loading { background: #333; color: var(--txd); }
+
+  /* ── Result ── */
+  .result-area { margin-top: 20px; }
+  .result-card {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 14px;
+    overflow: hidden; animation: fadeIn .4s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .result-card video {
+    width: 100%; display: block; background: #000; max-height: 420px;
+  }
+  .result-footer {
+    padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 10px;
+  }
+  .result-meta { font-size: 12px; color: var(--txd); }
+  .result-actions { display: flex; gap: 8px; }
+
+  /* ── Status / progress ── */
+  .status-card {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 14px;
+    padding: 36px 24px; text-align: center; margin-top: 20px;
+    animation: fadeIn .3s ease;
+  }
+  .status-icon { font-size: 40px; margin-bottom: 12px; }
+  .status-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+  .status-sub { font-size: 13px; color: var(--txd); }
+  .progress-bar-wrap {
+    width: 80%; max-width: 300px; height: 4px; background: var(--bd);
+    border-radius: 2px; margin: 16px auto 0; overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%; background: var(--ac); border-radius: 2px;
+    animation: progressPulse 2s ease-in-out infinite;
+    width: 60%;
+  }
+  @keyframes progressPulse {
+    0% { width: 20%; margin-left: 0%; }
+    50% { width: 60%; margin-left: 20%; }
+    100% { width: 20%; margin-left: 80%; }
+  }
+
+  /* ── History ── */
+  .history-section { margin-top: 32px; }
+  .history-title {
+    font-size: 13px; font-weight: 700; color: var(--txd);
+    text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px;
+  }
+  .history-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .hist-card {
+    border-radius: 10px; overflow: hidden; border: 1px solid var(--bd);
+    cursor: pointer; transition: all .2s; position: relative;
+  }
+  .hist-card:hover { border-color: var(--ac); transform: translateY(-2px); }
+  .hist-card video { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; }
+  .hist-card .hist-meta {
+    padding: 6px 8px; font-size: 10px; color: var(--txd); background: var(--sf);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  /* ── Key Modal ── */
+  .key-modal-backdrop {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7);
+    backdrop-filter: blur(6px); z-index: 500;
+    align-items: center; justify-content: center; padding: 20px;
+  }
+  .key-modal-backdrop.open { display: flex; }
+  .key-modal {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 16px;
+    padding: 32px 28px; max-width: 440px; width: 100%; position: relative;
+  }
+  .key-modal h3 { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
+  .key-modal p { font-size: 13px; color: var(--txd); line-height: 1.6; margin-bottom: 20px; }
+  .key-modal input {
+    width: 100%; padding: 12px 14px; border: 1px solid var(--bd); border-radius: 8px;
+    background: var(--bg); color: var(--tx); font-family: monospace; font-size: 13px;
+    box-sizing: border-box; margin-bottom: 14px;
+  }
+  .key-modal input:focus { outline: none; border-color: var(--ac); }
+  .key-modal .modal-close {
+    position: absolute; top: 14px; right: 16px; background: transparent;
+    border: none; color: var(--txd); font-size: 22px; cursor: pointer;
+    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+    border-radius: 50%; transition: all .2s;
+  }
+  .key-modal .modal-close:hover { background: var(--bd); color: var(--tx); }
+
+  @media (max-width: 600px) {
+    .settings-grid { grid-template-columns: 1fr; }
+    .dur-field { grid-column: 1; }
+    .img-row { flex-direction: column; }
+    .history-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#e8c547">
+  <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png">
+</head>
+<body>
+
+<!-- Nav -->
+<nav class="nav">
+  <a href="/" class="nav-logo">BQ <span>Video</span></a>
+  <div class="nav-right">
+    <a href="/" class="nav-link">← Home</a>
+    <button class="theme-toggle" onclick="toggleTheme()">☀️</button>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <h1>🎬 AI Video <span class="badge">Seedance 2</span></h1>
+    <p>Text-to-video &amp; image-to-video powered by Kinovi (Seedance 2.0 by ByteDance)</p>
+  </div>
+
+  <!-- API Key Banner -->
+  <div class="key-banner" id="keyBanner">
+    <div class="key-dot"></div>
+    <span class="key-text">No Kinovi API key set</span>
+    <button class="btn btn-sm" onclick="openKeyModal()">Set Key</button>
+  </div>
+
+  <!-- Mode Tabs -->
+  <div class="mode-tabs">
+    <button class="mode-tab on" id="tabT2V" onclick="setMode('t2v')">✍️ Text to Video</button>
+    <button class="mode-tab" id="tabI2V" onclick="setMode('i2v')">🖼️ Image to Video</button>
+  </div>
+
+  <!-- Prompt Card -->
+  <div class="card">
+    <div class="card-title">Prompt</div>
+    <div class="prompt-wrap">
+      <textarea id="promptInput" placeholder="Describe the video you want to generate...
+e.g. A contractor power-washing a driveway, cinematic, golden hour lighting, slow motion" maxlength="4000" oninput="updateCharCount()"></textarea>
+      <span class="char-count"><span id="charCount">0</span>/4000</span>
+    </div>
+  </div>
+
+  <!-- Image Upload (I2V only) -->
+  <div class="card" id="imgCard" style="display:none;">
+    <div class="card-title">Reference Images</div>
+    <div class="img-row">
+      <div>
+        <div class="img-drop" id="dropFirst">
+          <span class="di">🖼️</span>
+          <span class="dl">First Frame</span>
+          <span class="ds">Starting image</span>
+          <img class="preview-img" id="previewFirst" style="display:none;" alt="First frame">
+          <button class="clear-btn" onclick="clearImg('first')" title="Remove">×</button>
+          <input type="file" id="inputFirst" accept="image/*" onchange="loadImg('first', this)">
+        </div>
+        <div class="img-label">First Frame</div>
+      </div>
+      <div>
+        <div class="img-drop" id="dropLast">
+          <span class="di">🖼️</span>
+          <span class="dl">Last Frame</span>
+          <span class="ds">Optional ending</span>
+          <img class="preview-img" id="previewLast" style="display:none;" alt="Last frame">
+          <button class="clear-btn" onclick="clearImg('last')" title="Remove">×</button>
+          <input type="file" id="inputLast" accept="image/*" onchange="loadImg('last', this)">
+        </div>
+        <div class="img-label">Last Frame (optional)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Card -->
+  <div class="card">
+    <div class="card-title">Settings</div>
+    <div class="settings-grid">
+      <div class="setting-field">
+        <label>Model</label>
+        <select id="modelSel" onchange="updateEstimate()">
+          <option value="seedance2-fast">⚡ Fast (28 cr/sec)</option>
+          <option value="seedance-20" selected>🎯 Pro (40 cr/sec)</option>
+        </select>
+      </div>
+      <div class="setting-field">
+        <label>Aspect Ratio</label>
+        <select id="aspectSel">
+          <option value="16:9" selected>16:9 — Landscape</option>
+          <option value="9:16">9:16 — Portrait</option>
+          <option value="1:1">1:1 — Square</option>
+          <option value="4:3">4:3 — Classic</option>
+          <option value="21:9">21:9 — Cinematic</option>
+        </select>
+      </div>
+      <div class="setting-field">
+        <label>Resolution</label>
+        <select id="resSel" onchange="updateEstimate()">
+          <option value="720p" selected>720p — Standard</option>
+          <option value="480p">480p — Half price</option>
+        </select>
+      </div>
+      <div class="setting-field">
+        <label>Upscale</label>
+        <select id="upscaleSel" onchange="updateEstimate()">
+          <option value="" selected>No upscale</option>
+          <option value="4k">4K (+28 cr/sec)</option>
+        </select>
+      </div>
+      <div class="setting-field dur-field">
+        <label>Duration</label>
+        <div class="dur-row">
+          <input type="range" id="durSlider" min="4" max="15" value="5" oninput="updateEstimate()">
+          <span class="dur-val" id="durVal">5s</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Credit Estimate -->
+  <div class="credit-est">
+    <span>⚡</span>
+    <span class="ci-label">Estimated cost:</span>
+    <span class="ci-val" id="estCredits">200 credits</span>
+    <span class="ci-usd" id="estUsd">≈ $1.00</span>
+    <span style="flex:1;"></span>
+    <span style="font-size:11px;color:var(--txd);">Credits/sec: <span id="cps">40</span></span>
+  </div>
+
+  <!-- Generate Button -->
+  <button class="gen-btn" id="genBtn" onclick="generate()">
+    <span id="genBtnText">🎬 Generate Video</span>
+  </button>
+
+  <!-- Status / Result -->
+  <div class="result-area" id="resultArea"></div>
+
+  <!-- History -->
+  <div class="history-section" id="historySection" style="display:none;">
+    <div class="history-title">Recent generations</div>
+    <div class="history-grid" id="historyGrid"></div>
+  </div>
+
+</div>
+
+<!-- Key Modal -->
+<div class="key-modal-backdrop" id="keyModal" onclick="if(event.target===this)closeKeyModal()">
+  <div class="key-modal">
+    <button class="modal-close" onclick="closeKeyModal()">×</button>
+    <h3>🔑 Kinovi API Key</h3>
+    <p>Get your key at <strong>kinovi.ai → Account → API Keys</strong>. It's saved only in your browser — never sent to our servers without your request.</p>
+    <input type="password" id="keyInput" placeholder="Paste your Kinovi API key..." autocomplete="off">
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-primary" style="flex:1;" onclick="saveKey()">Save Key</button>
+      <button class="btn" onclick="clearKey()" style="color:var(--red);border-color:rgba(255,107,107,.3);">Clear</button>
+    </div>
+    <p style="font-size:11px;margin-top:12px;">
+      New to Kinovi? <a href="https://kinovi.ai/pricing" target="_blank" rel="noopener" style="color:var(--ac);">Start free (300 credits)</a>
+    </p>
+  </div>
+</div>
+
+<script src="../js/ai.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/common.js"></script>
+<script>
+  const KINOVI_KEY_LS = 'bq_kinovi_key';
+  let currentMode = 't2v';
+  let imgDataFirst = null;
+  let imgDataLast = null;
+  let pollTimer = null;
+  let history = JSON.parse(localStorage.getItem('bq_kinovi_history') || '[]');
+
+  // ── Init ──
+  function init() {
+    updateKeyBanner();
+    updateEstimate();
+    renderHistory();
+  }
+
+  // ── Key management ──
+  function getKey() { return localStorage.getItem(KINOVI_KEY_LS) || ''; }
+
+  function updateKeyBanner() {
+    const key = getKey();
+    const banner = document.getElementById('keyBanner');
+    const dot = banner.querySelector('.key-dot');
+    const text = banner.querySelector('.key-text');
+    if (key) {
+      banner.classList.add('has-key');
+      dot.style.background = 'var(--grn)';
+      text.textContent = 'Kinovi API key set ✓';
+      banner.querySelector('button').textContent = 'Change';
+    } else {
+      banner.classList.remove('has-key');
+      dot.style.background = 'var(--red)';
+      text.textContent = 'No Kinovi API key — set it to generate videos';
+      banner.querySelector('button').textContent = 'Set Key';
+    }
+  }
+
+  function openKeyModal() {
+    const k = getKey();
+    if (k) document.getElementById('keyInput').value = k;
+    document.getElementById('keyModal').classList.add('open');
+  }
+  function closeKeyModal() {
+    document.getElementById('keyModal').classList.remove('open');
+  }
+  function saveKey() {
+    const val = document.getElementById('keyInput').value.trim();
+    if (!val) return showToast('Paste your API key first', 'err');
+    localStorage.setItem(KINOVI_KEY_LS, val);
+    updateKeyBanner();
+    closeKeyModal();
+    showToast('API key saved ✓', 'ok');
+  }
+  function clearKey() {
+    localStorage.removeItem(KINOVI_KEY_LS);
+    document.getElementById('keyInput').value = '';
+    updateKeyBanner();
+    closeKeyModal();
+    showToast('Key removed', 'ok');
+  }
+
+  // ── Mode ──
+  function setMode(mode) {
+    currentMode = mode;
+    document.getElementById('tabT2V').classList.toggle('on', mode === 't2v');
+    document.getElementById('tabI2V').classList.toggle('on', mode === 'i2v');
+    document.getElementById('imgCard').style.display = mode === 'i2v' ? '' : 'none';
+  }
+
+  // ── Image handling ──
+  function loadImg(which, input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const data = e.target.result;
+      if (which === 'first') {
+        imgDataFirst = data;
+        const img = document.getElementById('previewFirst');
+        img.src = data; img.style.display = '';
+        document.getElementById('dropFirst').classList.add('has-img');
+      } else {
+        imgDataLast = data;
+        const img = document.getElementById('previewLast');
+        img.src = data; img.style.display = '';
+        document.getElementById('dropLast').classList.add('has-img');
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function clearImg(which) {
+    if (which === 'first') {
+      imgDataFirst = null;
+      document.getElementById('previewFirst').style.display = 'none';
+      document.getElementById('dropFirst').classList.remove('has-img');
+      document.getElementById('inputFirst').value = '';
+    } else {
+      imgDataLast = null;
+      document.getElementById('previewLast').style.display = 'none';
+      document.getElementById('dropLast').classList.remove('has-img');
+      document.getElementById('inputLast').value = '';
+    }
+  }
+
+  // ── Estimate ──
+  function updateEstimate() {
+    const model = document.getElementById('modelSel').value;
+    const dur = parseInt(document.getElementById('durSlider').value);
+    const res = document.getElementById('resSel').value;
+    const upscale = document.getElementById('upscaleSel').value;
+    document.getElementById('durVal').textContent = dur + 's';
+
+    let cps = model === 'seedance-20' ? 40 : 28;
+    if (res === '480p') cps = Math.ceil(cps / 2);
+    if (upscale === '4k') cps += 28;
+
+    const total = cps * dur;
+    const usd = (total * 0.005).toFixed(2); // ~$0.005 per credit based on Kinovi pricing
+
+    document.getElementById('estCredits').textContent = total + ' credits';
+    document.getElementById('estUsd').textContent = '≈ $' + usd;
+    document.getElementById('cps').textContent = cps;
+  }
+
+  function updateCharCount() {
+    const len = document.getElementById('promptInput').value.length;
+    document.getElementById('charCount').textContent = len;
+  }
+
+  // ── Generate ──
+  async function generate() {
+    const key = getKey();
+    if (!key) { openKeyModal(); return; }
+
+    const prompt = document.getElementById('promptInput').value.trim();
+    if (!prompt) { showToast('Add a prompt first', 'err'); return; }
+
+    if (currentMode === 'i2v' && !imgDataFirst) {
+      showToast('Upload a first frame image', 'err'); return;
+    }
+
+    setGenLoading(true);
+    showStatus('generating');
+
+    const model = document.getElementById('modelSel').value;
+    const dur = document.getElementById('durSlider').value;
+    const aspect = document.getElementById('aspectSel').value;
+    const res = document.getElementById('resSel').value;
+    const upscale = document.getElementById('upscaleSel').value;
+
+    const inputs = { prompt, duration: dur, aspectRatio: aspect, outputResolution: res };
+    if (upscale) inputs.upscaleResolution = upscale;
+    if (currentMode === 'i2v') {
+      inputs.mode = 'keyframe';
+      if (imgDataFirst) inputs.firstFrame = imgDataFirst;
+      if (imgDataLast) inputs.lastFrame = imgDataLast;
+    }
+
+    const body = { model, inputs };
+
+    try {
+      const res2 = await fetch(API_URL + '/api/kinovi/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Kinovi-Key': key
+        },
+        body: JSON.stringify(body)
+      });
+      const data = await res2.json();
+
+      if (!res2.ok || data.error) {
+        showStatus('error', data.error || 'Failed to create task');
+        setGenLoading(false);
+        return;
+      }
+
+      if (!data.taskId) {
+        showStatus('error', 'No taskId returned');
+        setGenLoading(false);
+        return;
+      }
+
+      poll(data.taskId, key, prompt, model);
+
+    } catch (e) {
+      showStatus('error', e.message || 'Network error');
+      setGenLoading(false);
+    }
+  }
+
+  function poll(taskId, key, prompt, model) {
+    let attempts = 0;
+    const maxAttempts = 120; // 10 min max
+
+    pollTimer = setInterval(async () => {
+      attempts++;
+      if (attempts > maxAttempts) {
+        clearInterval(pollTimer);
+        showStatus('error', 'Timed out after 10 minutes');
+        setGenLoading(false);
+        return;
+      }
+
+      try {
+        const res = await fetch(API_URL + '/api/kinovi/status?taskId=' + encodeURIComponent(taskId), {
+          headers: { 'X-Kinovi-Key': key }
+        });
+        const data = await res.json();
+
+        if (data.status === 'success' && data.output && data.output.length > 0) {
+          clearInterval(pollTimer);
+          const videoUrl = data.output[0].url;
+          showResult(videoUrl, data, prompt, model);
+          saveHistory({ taskId, url: videoUrl, prompt, model, ts: Date.now() });
+          setGenLoading(false);
+        } else if (data.status === 'fail') {
+          clearInterval(pollTimer);
+          showStatus('error', data.error?.message || 'Generation failed');
+          setGenLoading(false);
+        }
+        // else waiting/generating — keep polling
+      } catch(e) {
+        // network hiccup — keep trying
+      }
+    }, 5000);
+  }
+
+  // ── UI helpers ──
+  function setGenLoading(loading) {
+    const btn = document.getElementById('genBtn');
+    const txt = document.getElementById('genBtnText');
+    btn.disabled = loading;
+    btn.classList.toggle('loading', loading);
+    txt.textContent = loading ? '⏳ Generating...' : '🎬 Generate Video';
+  }
+
+  function showStatus(type, msg) {
+    const area = document.getElementById('resultArea');
+    if (type === 'generating') {
+      area.innerHTML = `
+        <div class="status-card">
+          <div class="status-icon">⏳</div>
+          <div class="status-title">Generating your video...</div>
+          <div class="status-sub">Seedance 2 is working. Usually takes 1–3 minutes.</div>
+          <div class="progress-bar-wrap"><div class="progress-bar"></div></div>
+        </div>`;
+    } else if (type === 'error') {
+      area.innerHTML = `
+        <div class="status-card">
+          <div class="status-icon">❌</div>
+          <div class="status-title">Generation failed</div>
+          <div class="status-sub">${msg || 'Unknown error'}</div>
+          <button class="btn" onclick="document.getElementById('resultArea').innerHTML=''" style="margin-top:16px;">Dismiss</button>
+        </div>`;
+    }
+  }
+
+  function showResult(url, data, prompt, model) {
+    const dur = data.completeTime && data.createTime
+      ? Math.round((data.completeTime - data.createTime) / 1000) + 's'
+      : '—';
+    const credits = data.creditsUsed || '—';
+    const w = data.output?.[0]?.width || '';
+    const h = data.output?.[0]?.height || '';
+    const res = w && h ? `${w}×${h}` : '';
+
+    document.getElementById('resultArea').innerHTML = `
+      <div class="result-card">
+        <video src="${url}" controls autoplay muted loop playsinline></video>
+        <div class="result-footer">
+          <div class="result-meta">
+            ⚡ ${credits} credits · ${res}${res ? ' · ' : ''}⏱ ${dur}
+          </div>
+          <div class="result-actions">
+            <a href="${url}" download="bq-video.mp4" class="btn btn-sm">⬇ Download</a>
+            <button class="btn btn-sm" onclick="navigator.clipboard.writeText('${url}').then(()=>showToast('Link copied!','ok'))">🔗 Copy Link</button>
+          </div>
+        </div>
+      </div>`;
+
+    showToast('Video ready! ✓', 'ok');
+  }
+
+  // ── History ──
+  function saveHistory(entry) {
+    history.unshift(entry);
+    if (history.length > 12) history = history.slice(0, 12);
+    localStorage.setItem('bq_kinovi_history', JSON.stringify(history));
+    renderHistory();
+  }
+
+  function renderHistory() {
+    if (!history.length) return;
+    const section = document.getElementById('historySection');
+    const grid = document.getElementById('historyGrid');
+    section.style.display = '';
+    grid.innerHTML = history.map(h => `
+      <div class="hist-card" onclick="playHistoryItem('${h.url}')">
+        <video src="${h.url}" muted preload="metadata" style="width:100%;aspect-ratio:16/9;object-fit:cover;"></video>
+        <div class="hist-meta">${h.prompt.substring(0, 50)}${h.prompt.length > 50 ? '…' : ''}</div>
+      </div>`).join('');
+  }
+
+  function playHistoryItem(url) {
+    document.getElementById('resultArea').innerHTML = `
+      <div class="result-card">
+        <video src="${url}" controls autoplay muted loop playsinline></video>
+        <div class="result-footer">
+          <div class="result-meta">From history</div>
+          <div class="result-actions">
+            <a href="${url}" download="bq-video.mp4" class="btn btn-sm">⬇ Download</a>
+            <button class="btn btn-sm" onclick="navigator.clipboard.writeText('${url}').then(()=>showToast('Copied!','ok'))">🔗 Copy Link</button>
+          </div>
+        </div>
+      </div>`;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeKeyModal();
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') generate();
+  });
+
+  init();
+</script>
+</body>
+</html>

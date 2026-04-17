@@ -212,6 +212,14 @@ export default {
         return corsResponse(env, await handleVideoDownload(request, env));
       }
 
+      // ── Kinovi (Seedance 2) Proxy ──
+      if (path === '/api/kinovi/create' && request.method === 'POST') {
+        return corsResponse(env, await handleKinoviCreate(request, env));
+      }
+      if (path === '/api/kinovi/status' && request.method === 'GET') {
+        return corsResponse(env, await handleKinoviStatus(request, env));
+      }
+
       if (path === '/api/health') {
         return corsResponse(env, json({ ok: true, ts: Date.now() }));
       }
@@ -3052,4 +3060,38 @@ Guess category based on vendor and items. If unreadable, return {"error":"unread
   await logCreditUsage(updated.email, 'receipt-extract', data.vendor || 'Receipt', env);
 
   return json({ ok: true, data, credits: updated.credits });
+}
+
+// ── Kinovi (Seedance 2) Proxy ──
+
+async function handleKinoviCreate(request, env) {
+  const kinoviKey = request.headers.get('X-Kinovi-Key') || env.KINOVI_API_KEY;
+  if (!kinoviKey) return json({ error: 'No Kinovi API key provided' }, 400);
+
+  const body = await request.json();
+  const res = await fetch('https://kinovi.ai/api/v1/jobs/createTask', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${kinoviKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  });
+  const data = await res.json();
+  return json(data, res.status);
+}
+
+async function handleKinoviStatus(request, env) {
+  const kinoviKey = request.headers.get('X-Kinovi-Key') || env.KINOVI_API_KEY;
+  if (!kinoviKey) return json({ error: 'No Kinovi API key provided' }, 400);
+
+  const url = new URL(request.url);
+  const taskId = url.searchParams.get('taskId');
+  if (!taskId) return json({ error: 'taskId required' }, 400);
+
+  const res = await fetch(`https://kinovi.ai/api/v1/jobs/recordInfo?taskId=${taskId}`, {
+    headers: { 'Authorization': `Bearer ${kinoviKey}` }
+  });
+  const data = await res.json();
+  return json(data, res.status);
 }
