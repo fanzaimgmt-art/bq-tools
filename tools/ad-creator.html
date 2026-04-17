@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Auto Ad Creator</title>
+<link rel="stylesheet" href="../style.css">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#e8c547">
+<style>
+  body { display: flex; flex-direction: column; }
+
+  .step-wrap { display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; }
+  .step-dot {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 13px; color: var(--txd); padding: 6px 12px;
+    border: 1px solid var(--bd); border-radius: 8px; background: var(--sf);
+  }
+  .step-dot.done { border-color: var(--grn); color: var(--grn); }
+  .step-dot.active { border-color: var(--ac); color: var(--ac); background: var(--acd); }
+
+  .photo-grid {
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    gap: 8px; margin-bottom: 10px;
+  }
+  .photo-slot {
+    aspect-ratio: 1; border: 2px dashed var(--bd); border-radius: 10px;
+    background: var(--bg); display: flex; align-items: center; justify-content: center;
+    cursor: pointer; position: relative; overflow: hidden; transition: all .2s;
+  }
+  .photo-slot:hover { border-color: var(--ac); }
+  .photo-slot img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
+  .photo-slot .rm {
+    position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,.6);
+    color: #fff; border: none; border-radius: 50%; width: 20px; height: 20px;
+    font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+  .photo-slot .add-icon { font-size: 22px; color: var(--txd); }
+
+  .style-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .style-btn {
+    flex: 1; min-width: 100px; padding: 14px; border: 1px solid var(--bd);
+    border-radius: 10px; background: var(--sf); cursor: pointer; text-align: center;
+    transition: all .2s; color: var(--tx); font-family: var(--font-en);
+  }
+  .style-btn:hover { border-color: var(--ac); }
+  .style-btn.on { border-color: var(--ac); background: var(--acd); color: var(--ac); }
+  .style-btn .icon { font-size: 24px; margin-bottom: 4px; }
+  .style-btn .label { font-size: 13px; font-weight: 700; }
+  .style-btn .sub { font-size: 11px; color: var(--txd); margin-top: 2px; }
+  .style-btn.on .sub { color: var(--ac); }
+
+  .dur-btns { display: flex; gap: 8px; margin-bottom: 14px; }
+  .dur-btn {
+    flex: 1; padding: 12px; border: 1px solid var(--bd); border-radius: 10px;
+    background: var(--sf); cursor: pointer; text-align: center; font-family: var(--font-en);
+    font-size: 15px; font-weight: 700; transition: all .2s; color: var(--tx);
+  }
+  .dur-btn.on { border-color: var(--ac); background: var(--acd); color: var(--ac); }
+
+  .progress-panel {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 12px;
+    padding: 20px; margin-top: 16px; display: none;
+  }
+  .progress-panel.on { display: block; }
+  .step-row {
+    display: flex; align-items: center; gap: 10px; padding: 8px 0;
+    border-bottom: 1px solid var(--bd); font-size: 14px;
+  }
+  .step-row:last-child { border-bottom: none; }
+  .step-icon { font-size: 18px; width: 28px; text-align: center; }
+  .step-label { flex: 1; }
+  .step-badge {
+    font-size: 12px; padding: 2px 8px; border-radius: 5px; font-weight: 600;
+  }
+  .badge-wait { background: rgba(255,255,255,.05); color: var(--txd); }
+  .badge-run  { background: rgba(232,197,71,.15); color: var(--ac); }
+  .badge-done { background: rgba(52,211,153,.12); color: #10b981; }
+  .badge-fail { background: rgba(255,100,100,.12); color: #f87171; }
+
+  .scene-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px;
+  }
+  .scene-card {
+    background: var(--bg); border: 1px solid var(--bd); border-radius: 10px;
+    overflow: hidden; font-size: 12px;
+  }
+  .scene-img { width: 100%; aspect-ratio: 16/9; object-fit: cover; background: var(--sf); }
+  .scene-body { padding: 8px 10px; }
+  .scene-title { font-weight: 700; margin-bottom: 3px; }
+  .scene-overlay { color: var(--ac); font-style: italic; }
+  .scene-status { color: var(--txd); margin-top: 3px; }
+
+  .script-box {
+    background: var(--bg); border: 1px solid var(--bd); border-radius: 10px;
+    padding: 14px; margin-top: 12px; font-size: 14px; line-height: 1.7; display: none;
+  }
+  .script-box.on { display: block; }
+  .vo-text { white-space: pre-wrap; color: var(--tx); margin-bottom: 8px; }
+  .cta-line { color: var(--ac); font-weight: 700; margin-top: 6px; }
+
+  .result-panel {
+    background: var(--sf); border: 1px solid var(--grn); border-radius: 12px;
+    padding: 20px; margin-top: 16px; display: none;
+  }
+  .result-panel.on { display: block; }
+
+  @media (max-width: 600px) {
+    .photo-grid { grid-template-columns: repeat(3, 1fr); }
+    .scene-grid { grid-template-columns: 1fr 1fr; }
+    .style-btns { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/" class="nav-link">← Back</a>
+  </div>
+</nav>
+
+<div class="page">
+  <h1 class="page-title">🎬 Auto Ad Creator</h1>
+  <p class="page-sub">Upload your photos → get a full 15s or 30s video ad with voiceover.</p>
+  <p style="font-size:13px;color:var(--ac);margin-bottom:20px;">Costs 20 credits per ad</p>
+
+  <div class="step-wrap" id="stepDots">
+    <div class="step-dot active" id="dot1">1 Photos</div>
+    <div class="step-dot" id="dot2">2 Logo</div>
+    <div class="step-dot" id="dot3">3 Business</div>
+    <div class="step-dot" id="dot4">4 Style</div>
+    <div class="step-dot" id="dot5">5 Duration</div>
+  </div>
+
+  <!-- Step 1: Photos -->
+  <div class="card" id="step1">
+    <label class="input-label">Step 1 — Upload Work Photos (3–10 photos)</label>
+    <div class="photo-grid" id="photoGrid">
+      <!-- slots rendered by JS -->
+    </div>
+    <p style="font-size:12px;color:var(--txd);">Before/after, finished work, team in action — the more variety the better.</p>
+    <button class="btn btn-primary" style="width:100%;margin-top:12px;" onclick="goToStep(2)">Next →</button>
+  </div>
+
+  <!-- Step 2: Logo -->
+  <div class="card" id="step2" style="display:none;">
+    <label class="input-label">Step 2 — Upload Logo (optional)</label>
+    <div class="upload-area" id="logoArea" style="margin-bottom:10px;">
+      <span id="logoText">Click to upload logo (PNG with transparency preferred)</span>
+      <input type="file" accept="image/*" id="logoInput">
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn" onclick="goToStep(1)">← Back</button>
+      <button class="btn btn-primary" style="flex:1;" onclick="goToStep(3)">Next →</button>
+    </div>
+  </div>
+
+  <!-- Step 3: Description -->
+  <div class="card" id="step3" style="display:none;">
+    <label class="input-label">Step 3 — Describe Your Business (1 line)</label>
+    <input class="input" id="bizDesc" placeholder="Kitchen & bathroom remodeling, Los Angeles CA" style="margin-bottom:14px;">
+    <div style="display:flex;gap:8px;">
+      <button class="btn" onclick="goToStep(2)">← Back</button>
+      <button class="btn btn-primary" style="flex:1;" onclick="goToStep(4)">Next →</button>
+    </div>
+  </div>
+
+  <!-- Step 4: Style -->
+  <div class="card" id="step4" style="display:none;">
+    <label class="input-label">Step 4 — Choose Ad Style</label>
+    <div class="style-btns">
+      <button class="style-btn on" onclick="setStyle(this,'Professional')" id="stylePro">
+        <div class="icon">🏛️</div>
+        <div class="label">Professional</div>
+        <div class="sub">Clean & trustworthy</div>
+      </button>
+      <button class="style-btn" onclick="setStyle(this,'Energetic')" id="styleEn">
+        <div class="icon">⚡</div>
+        <div class="label">Energetic</div>
+        <div class="sub">Bold & fast-paced</div>
+      </button>
+      <button class="style-btn" onclick="setStyle(this,'Luxury')" id="styleLux">
+        <div class="icon">💎</div>
+        <div class="label">Luxury</div>
+        <div class="sub">Cinematic & premium</div>
+      </button>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn" onclick="goToStep(3)">← Back</button>
+      <button class="btn btn-primary" style="flex:1;" onclick="goToStep(5)">Next →</button>
+    </div>
+  </div>
+
+  <!-- Step 5: Duration -->
+  <div class="card" id="step5" style="display:none;">
+    <label class="input-label">Step 5 — Duration</label>
+    <div class="dur-btns">
+      <button class="dur-btn on" onclick="setDuration(this,'15s')" id="dur15">⏱ 15 seconds</button>
+      <button class="dur-btn" onclick="setDuration(this,'30s')" id="dur30">⏱ 30 seconds</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <button class="btn" onclick="goToStep(4)">← Back</button>
+      <button class="btn btn-primary" style="flex:1;font-size:16px;padding:16px;" onclick="generateAd()" id="genBtn">
+        🎬 Generate Ad (20 credits)
+      </button>
+    </div>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-panel" id="progressPanel">
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:12px;">🎬 Building your ad...</h3>
+    <div class="step-row">
+      <span class="step-icon">🧠</span>
+      <span class="step-label">AI writing script & scene breakdown</span>
+      <span class="step-badge badge-wait" id="st-script">waiting</span>
+    </div>
+    <div class="step-row">
+      <span class="step-icon">🎨</span>
+      <span class="step-label">Generating scene frames (NanoBanana)</span>
+      <span class="step-badge badge-wait" id="st-frames">waiting</span>
+    </div>
+    <div class="step-row">
+      <span class="step-icon">🎥</span>
+      <span class="step-label">Animating frames into video clips (Seedance 2)</span>
+      <span class="step-badge badge-wait" id="st-video">waiting</span>
+    </div>
+    <div class="step-row">
+      <span class="step-icon">🎙️</span>
+      <span class="step-label">Generating voiceover (ElevenLabs)</span>
+      <span class="step-badge badge-wait" id="st-tts">waiting</span>
+    </div>
+    <div class="step-row">
+      <span class="step-icon">✂️</span>
+      <span class="step-label">Assembling final video (FFmpeg)</span>
+      <span class="step-badge badge-wait" id="st-ffmpeg">waiting</span>
+    </div>
+  </div>
+
+  <!-- Script preview -->
+  <div class="script-box" id="scriptBox">
+    <p style="font-size:12px;color:var(--txd);margin-bottom:8px;">VOICEOVER SCRIPT</p>
+    <div class="vo-text" id="voText"></div>
+    <div class="cta-line" id="ctaLine"></div>
+  </div>
+
+  <!-- Scene grid -->
+  <div class="scene-grid" id="sceneGrid" style="display:none;"></div>
+
+  <!-- Final result -->
+  <div class="result-panel" id="resultPanel">
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:12px;">✅ Your Ad Is Ready!</h3>
+    <video id="finalVideo" controls style="width:100%;border-radius:10px;margin-bottom:12px;" playsinline></video>
+    <a id="downloadBtn" class="btn btn-primary" download="bq-ad.mp4" style="width:100%;text-align:center;display:block;">⬇️ Download MP4</a>
+  </div>
+</div>
+
+<footer class="footer"><div class="footer-brand">Powered by BQ Tools — BQ Production LLC</div></footer>
+
+<script src="../js/auth.js"></script>
+<script src="../js/crypto.js"></script>
+<script src="../js/ai.js"></script>
+<script src="../js/common.js"></script>
+<script src="../js/assistant.js"></script>
+<script>
+// ── State ──
+let photos = [];  // { b64, src }
+let logoB64 = null;
+let adStyle = 'Professional';
+let adDuration = '15s';
+let currentStep = 1;
+
+// ── Photo slots ──
+const MAX_PHOTOS = 10;
+
+function renderPhotoGrid() {
+  const grid = document.getElementById('photoGrid');
+  grid.innerHTML = '';
+  photos.forEach((p, i) => {
+    const slot = document.createElement('div');
+    slot.className = 'photo-slot';
+    slot.innerHTML = `<img src="${p.src}"><button class="rm" onclick="removePhoto(${i})">✕</button>`;
+    grid.appendChild(slot);
+  });
+  if (photos.length < MAX_PHOTOS) {
+    const add = document.createElement('div');
+    add.className = 'photo-slot';
+    add.innerHTML = `<span class="add-icon">+</span><input type="file" accept="image/*" multiple style="position:absolute;inset:0;opacity:0;cursor:pointer;" onchange="addPhotos(this)">`;
+    grid.appendChild(add);
+  }
+}
+
+function addPhotos(input) {
+  const files = Array.from(input.files).slice(0, MAX_PHOTOS - photos.length);
+  let done = 0;
+  files.forEach(f => {
+    const r = new FileReader();
+    r.onload = ev => {
+      resizeB64(ev.target.result, 800).then(b64 => {
+        photos.push({ b64, src: ev.target.result });
+        renderPhotoGrid();
+      });
+    };
+    r.readAsDataURL(f);
+  });
+}
+
+function removePhoto(i) {
+  photos.splice(i, 1);
+  renderPhotoGrid();
+}
+
+async function resizeB64(src, maxPx) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
+      const w = Math.round(img.width * scale);
+      const h = Math.round(img.height * scale);
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(c.toDataURL('image/jpeg', 0.8).split(',')[1]);
+    };
+    img.src = src;
+  });
+}
+
+// Logo upload
+document.getElementById('logoInput').addEventListener('change', function(e) {
+  const f = e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    logoB64 = ev.target.result.split(',')[1];
+    document.getElementById('logoArea').innerHTML = `<img src="${ev.target.result}" style="max-height:80px;border-radius:6px;"><input type="file" accept="image/*" id="logoInput">`;
+    document.getElementById('logoInput').addEventListener('change', function(e2) {
+      const f2 = e2.target.files[0]; if (!f2) return;
+      const r2 = new FileReader(); r2.onload = ev2 => { logoB64 = ev2.target.result.split(',')[1]; }; r2.readAsDataURL(f2);
+    });
+  };
+  r.readAsDataURL(f);
+});
+
+function setStyle(el, s) {
+  document.querySelectorAll('.style-btn').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+  adStyle = s;
+}
+
+function setDuration(el, d) {
+  document.querySelectorAll('.dur-btn').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+  adDuration = d;
+}
+
+function goToStep(n) {
+  if (n === 2 && photos.length < 1) {
+    showToast('Upload at least 1 photo', 'err'); return;
+  }
+  if (n === 4 && !document.getElementById('bizDesc').value.trim()) {
+    showToast('Enter a business description', 'err'); return;
+  }
+  for (let i = 1; i <= 5; i++) {
+    document.getElementById('step' + i).style.display = i === n ? 'block' : 'none';
+    const dot = document.getElementById('dot' + i);
+    dot.className = 'step-dot' + (i < n ? ' done' : i === n ? ' active' : '');
+    if (i < n) dot.textContent = '✓ ' + dot.textContent.replace('✓ ', '');
+  }
+  currentStep = n;
+}
+
+// ── Status helpers ──
+function setStatus(id, state, label) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = 'step-badge badge-' + state;
+  el.textContent = label;
+}
+
+// ── Main generation flow ──
+let adScenes = [];
+
+async function generateAd() {
+  if (!requirePro()) return;
+
+  const desc = document.getElementById('bizDesc').value.trim();
+  if (!desc) { showToast('Enter a business description', 'err'); return; }
+  if (photos.length < 1) { showToast('Upload at least 1 photo', 'err'); return; }
+
+  const btn = document.getElementById('genBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Generating...';
+
+  document.getElementById('progressPanel').classList.add('on');
+  document.getElementById('sceneGrid').style.display = 'none';
+  document.getElementById('scriptBox').classList.remove('on');
+  document.getElementById('resultPanel').classList.remove('on');
+
+  // Step a+b: script + frame tasks via worker
+  setStatus('st-script', 'run', 'running');
+  let planData;
+  try {
+    planData = await apiCall('/api/ad-creator/generate', {
+      method: 'POST',
+      body: {
+        photos: photos.map(p => p.b64),
+        logo: logoB64,
+        description: desc,
+        style: adStyle,
+        duration: adDuration
+      }
+    });
+  } catch (err) {
+    setStatus('st-script', 'fail', 'failed');
+    showToast('Script generation failed: ' + err.message, 'err');
+    btn.disabled = false;
+    btn.textContent = '🎬 Generate Ad (20 credits)';
+    return;
+  }
+
+  setStatus('st-script', 'done', 'done ✓');
+  adScenes = planData.scenes || [];
+
+  // Show script
+  document.getElementById('voText').textContent = planData.voiceover || '';
+  document.getElementById('ctaLine').textContent = planData.cta ? '→ ' + planData.cta : '';
+  document.getElementById('scriptBox').classList.add('on');
+
+  // Render scene placeholders
+  const sceneGrid = document.getElementById('sceneGrid');
+  sceneGrid.style.display = 'grid';
+  sceneGrid.innerHTML = adScenes.map((s, i) => `
+    <div class="scene-card" id="scene-${i}">
+      <div class="scene-img" id="scene-img-${i}" style="display:flex;align-items:center;justify-content:center;font-size:24px;">⏳</div>
+      <div class="scene-body">
+        <div class="scene-title">${s.title || 'Scene ' + (i+1)}</div>
+        ${s.overlay ? `<div class="scene-overlay">"${s.overlay}"</div>` : ''}
+        <div class="scene-status" id="scene-st-${i}">Generating frame...</div>
+      </div>
+    </div>
+  `).join('');
+
+  // Step b: poll NanoBanana frames
+  setStatus('st-frames', 'run', 'running');
+  const frameUrls = await pollAllFrames();
+  setStatus('st-frames', 'done', 'done ✓');
+
+  // Step c: start Kinovi jobs for each frame + logo outro
+  setStatus('st-video', 'run', 'running');
+  const kinoviKey = window.__kinoviKey || '';
+  const videoUrls = await animateFrames(frameUrls, kinoviKey);
+  setStatus('st-video', 'done', 'done ✓');
+
+  // Step d: ElevenLabs voiceover
+  setStatus('st-tts', 'run', 'running');
+  let audioB64 = null;
+  try {
+    const ttsData = await apiCall('/api/tts/generate', {
+      method: 'POST',
+      body: { text: planData.voiceover || '' }
+    });
+    audioB64 = ttsData.audioB64;
+  } catch (err) {
+    console.warn('TTS failed (continuing without VO):', err.message);
+  }
+  setStatus('st-tts', audioB64 ? 'done' : 'fail', audioB64 ? 'done ✓' : 'no key');
+
+  // Step e: assemble with FFmpeg
+  setStatus('st-ffmpeg', 'run', 'running');
+  try {
+    const finalUrl = await assembleFinal(videoUrls, audioB64, planData.tagline, planData.cta);
+    setStatus('st-ffmpeg', 'done', 'done ✓');
+    document.getElementById('finalVideo').src = finalUrl;
+    document.getElementById('downloadBtn').href = finalUrl;
+    document.getElementById('resultPanel').classList.add('on');
+  } catch (err) {
+    setStatus('st-ffmpeg', 'fail', 'failed');
+    // Show individual clips as fallback
+    showToast('Assembly failed — download individual clips below', 'err');
+    videoUrls.forEach((u, i) => {
+      const el = document.getElementById('scene-st-' + i);
+      if (el && u) el.innerHTML = `<a href="${u}" target="_blank" class="btn" style="font-size:11px;padding:4px 8px;">⬇️ Clip ${i+1}</a>`;
+    });
+  }
+
+  btn.disabled = false;
+  btn.textContent = '🎬 Generate Ad (20 credits)';
+}
+
+// Poll NanoBanana for all frame images
+async function pollAllFrames() {
+  const frameUrls = new Array(adScenes.length).fill(null);
+  const pending = adScenes.map((s, i) => ({ idx: i, taskId: s.taskId })).filter(x => x.taskId);
+
+  return new Promise(resolve => {
+    let resolved = adScenes.filter(s => !s.taskId).length;
+    if (pending.length === 0) { resolve(frameUrls); return; }
+
+    const interval = setInterval(async () => {
+      const remaining = [];
+      for (const { idx, taskId } of pending) {
+        try {
+          const data = await apiCall('/api/nanobanana/status?taskId=' + taskId);
+          if (data.status === 'completed' && data.imageUrl) {
+            frameUrls[idx] = data.imageUrl;
+            const imgEl = document.getElementById('scene-img-' + idx);
+            if (imgEl) { imgEl.style.cssText = ''; imgEl.innerHTML = `<img src="${data.imageUrl}" class="scene-img">`; }
+            const stEl = document.getElementById('scene-st-' + idx);
+            if (stEl) stEl.textContent = 'Frame ready ✓';
+            resolved++;
+          } else if (data.status === 'failed') {
+            resolved++;
+            const stEl = document.getElementById('scene-st-' + idx);
+            if (stEl) stEl.textContent = 'Frame failed';
+          } else {
+            remaining.push({ idx, taskId });
+          }
+        } catch (_) { remaining.push({ idx, taskId }); }
+      }
+      pending.length = 0;
+      pending.push(...remaining);
+      if (resolved >= adScenes.length) { clearInterval(interval); resolve(frameUrls); }
+    }, 5000);
+  });
+}
+
+// Start Kinovi video jobs for each frame
+async function animateFrames(frameUrls, kinoviKey) {
+  const videoUrls = [];
+  for (let i = 0; i < adScenes.length; i++) {
+    const imgUrl = frameUrls[i];
+    if (!imgUrl) { videoUrls.push(null); continue; }
+
+    try {
+      // Start Kinovi job
+      const scene = adScenes[i];
+      const prompt = scene.visual || scene.imagePrompt || 'cinematic motion, professional';
+      const res = await apiCall('/api/kinovi/create', {
+        method: 'POST',
+        body: {
+          imageUrl: imgUrl,
+          prompt,
+          duration: 5,
+          quality: 'standard'
+        },
+        extraHeaders: kinoviKey ? { 'X-Kinovi-Key': kinoviKey } : {}
+      });
+
+      const taskId = res.task_id || res.taskId || res.data?.task_id;
+      if (!taskId) { videoUrls.push(null); continue; }
+
+      // Poll for completion
+      const videoUrl = await pollKinoviJob(taskId, kinoviKey, i);
+      videoUrls.push(videoUrl);
+    } catch (err) {
+      console.warn(`Kinovi scene ${i} failed:`, err.message);
+      videoUrls.push(null);
+    }
+  }
+  return videoUrls;
+}
+
+async function pollKinoviJob(taskId, kinoviKey, sceneIdx) {
+  return new Promise(resolve => {
+    const interval = setInterval(async () => {
+      try {
+        const data = await apiCall('/api/kinovi/status?taskId=' + taskId,
+          kinoviKey ? { extraHeaders: { 'X-Kinovi-Key': kinoviKey } } : {});
+        const status = data.status || data.data?.status;
+        const url = data.videoUrl || data.url || data.data?.videoUrl || data.data?.output;
+        if (status === 'completed' || status === 'SUCCEEDED' || url) {
+          clearInterval(interval);
+          const stEl = document.getElementById('scene-st-' + sceneIdx);
+          if (stEl) stEl.textContent = 'Video clip ready ✓';
+          resolve(url || null);
+        } else if (status === 'failed' || status === 'FAILED') {
+          clearInterval(interval); resolve(null);
+        }
+      } catch (_) {}
+    }, 5000);
+    // Timeout after 3 minutes
+    setTimeout(() => { clearInterval(interval); resolve(null); }, 180000);
+  });
+}
+
+// FFmpeg.wasm assembly (browser-side)
+async function assembleFinal(videoUrls, audioB64, tagline, cta) {
+  const validUrls = videoUrls.filter(Boolean);
+  if (validUrls.length === 0) throw new Error('No video clips to assemble');
+
+  // If only 1 clip and no audio — just return that clip
+  if (validUrls.length === 1 && !audioB64) return validUrls[0];
+
+  // Load FFmpeg.wasm
+  if (!window.FFmpeg) {
+    await loadScript('https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js');
+  }
+  const { FFmpeg, fetchFile } = window.FFmpeg || {};
+  if (!FFmpeg) throw new Error('FFmpeg.wasm failed to load');
+
+  const ffmpeg = new FFmpeg();
+  await ffmpeg.load();
+
+  // Fetch and write each clip
+  for (let i = 0; i < validUrls.length; i++) {
+    const res = await fetch(validUrls[i]);
+    const buf = await res.arrayBuffer();
+    await ffmpeg.writeFile(`clip${i}.mp4`, new Uint8Array(buf));
+  }
+
+  // Write audio if available
+  if (audioB64) {
+    const audioBuf = Uint8Array.from(atob(audioB64), c => c.charCodeAt(0));
+    await ffmpeg.writeFile('vo.mp3', audioBuf);
+  }
+
+  // Build concat list
+  let concatTxt = validUrls.map((_, i) => `file 'clip${i}.mp4'`).join('\n');
+  await ffmpeg.writeFile('list.txt', concatTxt);
+
+  // Concat clips
+  await ffmpeg.exec(['-f', 'concat', '-safe', '0', '-i', 'list.txt', '-c', 'copy', 'concat.mp4']);
+
+  // Mix audio if available
+  const outFile = 'output.mp4';
+  if (audioB64) {
+    await ffmpeg.exec(['-i', 'concat.mp4', '-i', 'vo.mp3', '-c:v', 'copy', '-c:a', 'aac',
+      '-map', '0:v', '-map', '1:a', '-shortest', outFile]);
+  } else {
+    await ffmpeg.exec(['-i', 'concat.mp4', '-c', 'copy', outFile]);
+  }
+
+  const data = await ffmpeg.readFile(outFile);
+  const blob = new Blob([data.buffer], { type: 'video/mp4' });
+  return URL.createObjectURL(blob);
+}
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script'); s.src = src;
+    s.onload = resolve; s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+// Init
+renderPhotoGrid();
+</script>
+</body>
+</html>

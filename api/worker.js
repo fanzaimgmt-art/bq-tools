@@ -237,6 +237,24 @@ export default {
         return corsResponse(env, await handleNanoBananaStatus(request, env));
       }
 
+      // ── Auto Ad Creator ──
+      if (path === '/api/ad-creator/generate' && request.method === 'POST') {
+        return corsResponse(env, await handleAdCreatorGenerate(request, env));
+      }
+
+      // ── ElevenLabs TTS Proxy ──
+      if (path === '/api/tts/generate' && request.method === 'POST') {
+        return corsResponse(env, await handleTTSGenerate(request, env));
+      }
+
+      // ── Admin Video Flow ──
+      if (path === '/api/admin/save-client-ad' && request.method === 'POST') {
+        return corsResponse(env, await handleAdminSaveClientAd(request, env));
+      }
+      if (path === '/api/admin/notify-client' && request.method === 'POST') {
+        return corsResponse(env, await handleAdminNotifyClient(request, env));
+      }
+
       if (path === '/api/health') {
         return corsResponse(env, json({ ok: true, ts: Date.now() }));
       }
@@ -3302,4 +3320,243 @@ async function handleNanoBananaStatus(request, env) {
   const imageUrl = taskData.output?.image_url || taskData.output?.image_urls?.[0] || null;
 
   return json({ ok: true, taskId, status, imageUrl });
+}
+
+// ── Auto Ad Creator ──
+// Step 1: Claude writes script + scene breakdown, starts NanoBanana frame tasks
+// Step 2 (browser): polls frames → starts Kinovi jobs → assembles with FFmpeg.wasm
+
+async function handleAdCreatorGenerate(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const piApiKey = env.PIAPI_KEY;
+  if (!piApiKey) return json({ error: 'PIAPI_KEY not configured' }, 500);
+
+  const { photos, logo, description, style, duration } = await request.json();
+  if (!description) return json({ error: 'Business description required' }, 400);
+  if (!photos || !Array.isArray(photos) || photos.length < 1) return json({ error: 'At least 1 photo required' }, 400);
+
+  // Credit check — 20 credits
+  let updated = { ...user };
+  updated = checkMonthlyReset(updated);
+  if (updated.credits < 20) return json({ error: 'Not enough credits (need 20)' }, 402);
+
+  // Step a: Claude writes script + scene breakdown
+  const styleGuide = {
+    Professional: 'Clean, authoritative, trust-building. Steady camera moves.',
+    Energetic: 'Fast cuts, bold text overlays, high energy music vibes.',
+    Luxury: 'Slow dramatic reveals, cinematic quality, premium feel.'
+  };
+  const numScenes = duration === '30s' ? 6 : 3;
+
+  const claudePrompt = `You are an expert video ad scriptwriter for construction/remodeling companies.
+Business: ${description}
+Ad Style: ${style} — ${styleGuide[style] || 'Professional'}
+Duration: ${duration} (${numScenes} scenes × 5 seconds each)
+Photos uploaded: ${photos.length} photos of their work
+
+Write a complete video ad script. Respond ONLY with valid JSON:
+{
+  "tagline": "One memorable tagline (6-8 words max)",
+  "voiceover": "Full voiceover text (${duration === '30s' ? '40-55' : '20-28'} words, natural speech)",
+  "cta": "Call to action text (5-8 words)",
+  "scenes": [
+    {
+      "id": 1,
+      "title": "Scene name",
+      "duration": 5,
+      "visual": "Detailed visual description for AI image generation (photorealistic, ${style.toLowerCase()} style)",
+      "overlay": "Text overlay on screen (optional, 3-5 words)",
+      "imagePrompt": "Optimized Flux image gen prompt: [describe exact visual], professional construction photography, ${style.toLowerCase()} style, high detail"
+    }
+  ]
+}`;
+
+  const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'x-api-key': env.CLAUDE_API_KEY,
+      'anthropic-version': '2023-06-01',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: env.CLAUDE_MODEL || 'claude-3-5-haiku-20241022',
+      max_tokens: 1024,
+      messages: [{
+        role: 'user',
+        content: [
+          ...photos.slice(0, 4).map(b64 => ({
+            type: 'image',
+            source: { type: 'base64', media_type: 'image/jpeg', data: b64 }
+          })),
+          { type: 'text', text: claudePrompt }
+        ]
+      }]
+    })
+  });
+
+  if (!claudeRes.ok) {
+    const errText = await claudeRes.text();
+    return json({ error: 'Claude API error: ' + errText }, 502);
+  }
+
+  const claudeData = await claudeRes.json();
+  const rawText = claudeData.content?.[0]?.text || '';
+  let plan;
+  try {
+    const match = rawText.match(/\{[\s\S]*\}/);
+    plan = JSON.parse(match ? match[0] : rawText);
+  } catch (e) {
+    return json({ error: 'Failed to parse AI script: ' + rawText.substring(0, 200) }, 500);
+  }
+
+  // Step b: Start NanoBanana tasks for each scene frame
+  const scenesWithTasks = [];
+  for (const scene of (plan.scenes || []).slice(0, numScenes)) {
+    let taskId = null;
+    try {
+      const imgRes = await fetch('https://api.piapi.ai/api/v1/task', {
+        method: 'POST',
+        headers: { 'X-API-KEY': piApiKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'Qubico/flux1-dev',
+          task_type: 'txt2img',
+          input: { prompt: scene.imagePrompt, width: 1024, height: 576, guidance_scale: 3.5, num_inference_steps: 28 }
+        })
+      });
+      if (imgRes.ok) {
+        const imgData = await imgRes.json();
+        taskId = imgData?.data?.task_id || null;
+      }
+    } catch (_) { /* non-fatal, scene proceeds without pre-generated frame */ }
+
+    scenesWithTasks.push({ ...scene, taskId });
+  }
+
+  // Deduct credits
+  updated.credits -= 20;
+  updated.creditsUsedThisMonth = (updated.creditsUsedThisMonth || 0) + 20;
+  await env.BQ_USERS.put(`user:${updated.email}`, JSON.stringify(updated));
+  await logCreditUsage(updated.email, 'ad-creator', description.substring(0, 60), env);
+
+  return json({
+    ok: true,
+    tagline: plan.tagline,
+    voiceover: plan.voiceover,
+    cta: plan.cta,
+    scenes: scenesWithTasks,
+    credits: updated.credits
+  });
+}
+
+// ── ElevenLabs TTS Proxy ──
+
+async function handleTTSGenerate(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const elevenKey = env.ELEVENLABS_API_KEY;
+  if (!elevenKey) return json({ error: 'ELEVENLABS_API_KEY not configured' }, 500);
+
+  const { text, voiceId = '21m00Tcm4TlvDq8ikWAM' } = await request.json(); // default: Rachel
+  if (!text) return json({ error: 'text required' }, 400);
+  if (text.length > 2000) return json({ error: 'Text too long (max 2000 chars)' }, 400);
+
+  const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+    method: 'POST',
+    headers: {
+      'xi-api-key': elevenKey,
+      'Content-Type': 'application/json',
+      'Accept': 'audio/mpeg'
+    },
+    body: JSON.stringify({
+      text,
+      model_id: 'eleven_multilingual_v2',
+      voice_settings: { stability: 0.5, similarity_boost: 0.75 }
+    })
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    return json({ error: 'ElevenLabs error: ' + errText }, 502);
+  }
+
+  // Stream audio back
+  const audioBuffer = await res.arrayBuffer();
+  const b64Audio = btoa(String.fromCharCode(...new Uint8Array(audioBuffer)));
+
+  return json({ ok: true, audioB64: b64Audio, mimeType: 'audio/mpeg' });
+}
+
+// ── Admin: Save generated ad to client account ──
+
+async function handleAdminSaveClientAd(request, env) {
+  const adminPass = request.headers.get('Authorization')?.replace('Bearer ', '');
+  if (adminPass !== env.ADMIN_PASS) return json({ error: 'Unauthorized' }, 401);
+
+  const { clientEmail, adUrl, description, template, tagline, voiceover } = await request.json();
+  if (!clientEmail || !adUrl) return json({ error: 'clientEmail and adUrl required' }, 400);
+
+  const userRaw = await env.BQ_USERS.get(`user:${clientEmail.toLowerCase()}`);
+  if (!userRaw) return json({ error: 'Client not found' }, 404);
+  const user = JSON.parse(userRaw);
+
+  if (!Array.isArray(user.generatedAds)) user.generatedAds = [];
+  user.generatedAds.unshift({
+    id: crypto.randomUUID(),
+    adUrl,
+    description: description || '',
+    template: template || '',
+    tagline: tagline || '',
+    voiceover: voiceover || '',
+    createdAt: new Date().toISOString()
+  });
+  // Keep last 50 ads per client
+  if (user.generatedAds.length > 50) user.generatedAds = user.generatedAds.slice(0, 50);
+
+  await env.BQ_USERS.put(`user:${user.email}`, JSON.stringify(user));
+  return json({ ok: true, adCount: user.generatedAds.length });
+}
+
+// ── Admin: Notify client that their video is ready ──
+
+async function handleAdminNotifyClient(request, env) {
+  const adminPass = request.headers.get('Authorization')?.replace('Bearer ', '');
+  if (adminPass !== env.ADMIN_PASS) return json({ error: 'Unauthorized' }, 401);
+
+  const { clientEmail, type = 'video_ready', adUrl } = await request.json();
+  if (!clientEmail) return json({ error: 'clientEmail required' }, 400);
+
+  const userRaw = await env.BQ_USERS.get(`user:${clientEmail.toLowerCase()}`);
+  if (!userRaw) return json({ error: 'Client not found' }, 404);
+  const user = JSON.parse(userRaw);
+
+  // If MailChannels (free Cloudflare email relay) is available, send an email
+  const emailBody = type === 'video_ready'
+    ? `Hi ${user.name || 'there'},\n\nYour AI video is ready!\n\nView and download it here:\n${adUrl || 'Log in to your BQ Tools account to see it.'}\n\nBQ Tools Team`
+    : `Hi ${user.name || 'there'},\n\nYou have a new notification from BQ Tools.\n\nBQ Tools Team`;
+
+  try {
+    const mailRes = await fetch('https://api.mailchannels.net/tx/v1/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        personalizations: [{ to: [{ email: user.email, name: user.name || user.email }] }],
+        from: { email: 'noreply@bq-tools.com', name: 'BQ Tools' },
+        subject: type === 'video_ready' ? '🎬 Your AI Video is Ready!' : '📬 BQ Tools Notification',
+        content: [{ type: 'text/plain', value: emailBody }]
+      })
+    });
+
+    if (mailRes.ok || mailRes.status === 202) {
+      return json({ ok: true, sent: true, email: user.email });
+    }
+    // MailChannels not available — return ok anyway (admin can notify manually)
+    return json({ ok: true, sent: false, reason: 'Email relay unavailable', email: user.email });
+  } catch (_) {
+    return json({ ok: true, sent: false, reason: 'Email relay error', email: user.email });
+  }
 }

@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Admin — Video Flow</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  body { display: flex; flex-direction: column; min-height: 100vh; }
+  .admin-wrap { max-width: 800px; margin: 32px auto; padding: 0 16px; width: 100%; }
+  .card { background: var(--sf); border: 1px solid var(--bd); border-radius: 16px; padding: 24px; margin-bottom: 20px; }
+  h2 { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+  .card-sub { color: var(--txd); font-size: 14px; margin-bottom: 20px; }
+
+  /* Photo upload */
+  .photo-grid {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 10px;
+  }
+  .photo-slot {
+    aspect-ratio: 1; border: 2px dashed var(--bd); border-radius: 10px;
+    background: var(--bg); display: flex; align-items: center; justify-content: center;
+    cursor: pointer; position: relative; overflow: hidden; transition: all .2s;
+  }
+  .photo-slot:hover { border-color: var(--ac); }
+  .photo-slot img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
+  .photo-slot .rm {
+    position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,.6);
+    color: #fff; border: none; border-radius: 50%; width: 20px; height: 20px;
+    font-size: 11px; cursor: pointer;
+  }
+  .photo-slot .add-icon { font-size: 22px; color: var(--txd); }
+
+  /* Template selector */
+  .template-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px;
+  }
+  .tmpl-btn {
+    padding: 14px 8px; border: 1px solid var(--bd); border-radius: 10px;
+    background: var(--bg); cursor: pointer; text-align: center; transition: all .2s;
+    font-family: var(--font-en); color: var(--tx);
+  }
+  .tmpl-btn.on { border-color: var(--ac); background: var(--acd); color: var(--ac); }
+  .tmpl-btn .icon { font-size: 24px; margin-bottom: 4px; }
+  .tmpl-btn .label { font-size: 12px; font-weight: 700; }
+
+  /* Prompt editor */
+  .prompt-area {
+    width: 100%; min-height: 100px; padding: 12px; border: 1px solid var(--bd);
+    border-radius: 8px; background: var(--bg); color: var(--tx); font-family: var(--font-en);
+    font-size: 13px; line-height: 1.6; resize: vertical; box-sizing: border-box;
+  }
+  .prompt-area:focus { outline: none; border-color: var(--ac); }
+
+  /* Cost row */
+  .cost-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 14px; background: var(--acd); border-radius: 8px; font-size: 13px;
+    margin-bottom: 14px;
+  }
+  .cost-row span { color: var(--ac); font-weight: 700; }
+
+  /* Progress */
+  .prog-panel { display: none; margin-top: 16px; }
+  .prog-panel.on { display: block; }
+  .prog-row {
+    display: flex; align-items: center; gap: 10px; padding: 8px 0;
+    border-bottom: 1px solid var(--bd); font-size: 13px;
+  }
+  .prog-row:last-child { border-bottom: none; }
+  .prog-icon { font-size: 18px; width: 26px; text-align: center; }
+  .prog-label { flex: 1; }
+  .prog-badge {
+    font-size: 11px; padding: 2px 8px; border-radius: 5px; font-weight: 600;
+  }
+  .b-wait { background: rgba(255,255,255,.05); color: var(--txd); }
+  .b-run  { background: rgba(232,197,71,.15); color: var(--ac); }
+  .b-done { background: rgba(52,211,153,.12); color: #10b981; }
+  .b-fail { background: rgba(255,100,100,.12); color: #f87171; }
+
+  /* Script preview */
+  .script-preview {
+    background: var(--bg); border: 1px solid var(--bd); border-radius: 10px;
+    padding: 14px; margin-top: 12px; font-size: 13px; line-height: 1.7; display: none;
+  }
+  .scene-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px;
+  }
+  .scene-card {
+    background: var(--bg); border: 1px solid var(--bd); border-radius: 10px; overflow: hidden;
+  }
+  .scene-img-wrap { width: 100%; aspect-ratio: 16/9; background: var(--sf); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .scene-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+  .scene-body { padding: 6px 10px; font-size: 11px; }
+  .scene-title { font-weight: 700; }
+  .scene-status { color: var(--txd); margin-top: 2px; }
+
+  /* Result */
+  .result-panel {
+    background: var(--sf); border: 1px solid #10b981; border-radius: 12px;
+    padding: 20px; margin-top: 16px; display: none;
+  }
+  .result-panel.on { display: block; }
+
+  @media (max-width: 600px) {
+    .template-grid { grid-template-columns: repeat(2, 1fr); }
+    .photo-grid { grid-template-columns: repeat(3, 1fr); }
+    .scene-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/admin.html" class="nav-link">Admin</a>
+    <a href="/admin/scrape-directory.html" class="nav-link">Scrape Dir</a>
+  </div>
+</nav>
+
+<div class="admin-wrap">
+  <div class="card">
+    <h2>🎬 Admin Video Flow</h2>
+    <p class="card-sub">Generate AI videos for clients. Uses same pipeline as Auto Ad Creator.</p>
+
+    <!-- Admin auth -->
+    <label class="input-label" style="margin-bottom:4px;">Admin Password</label>
+    <input class="input" type="password" id="adminPass" placeholder="Enter admin password" style="margin-bottom:16px;">
+
+    <!-- Client selector -->
+    <label class="input-label">Generate for Client</label>
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <select class="input" id="clientSelect" style="flex:1;">
+        <option value="">— Select a client —</option>
+      </select>
+      <button class="btn" onclick="loadClients()" title="Refresh client list">↺</button>
+    </div>
+    <div id="clientInfo" style="display:none;font-size:13px;color:var(--txd);margin-bottom:12px;padding:8px 12px;background:var(--bg);border-radius:8px;"></div>
+
+    <!-- Photos -->
+    <label class="input-label">Client Photos (drag & drop)</label>
+    <div class="photo-grid" id="photoGrid"></div>
+    <p style="font-size:12px;color:var(--txd);margin-bottom:16px;">Upload before/after or job site photos from the client</p>
+
+    <!-- Template -->
+    <label class="input-label">Template</label>
+    <div class="template-grid">
+      <button class="tmpl-btn on" onclick="setTemplate(this,'Kitchen')"><div class="icon">🍳</div><div class="label">Kitchen</div></button>
+      <button class="tmpl-btn" onclick="setTemplate(this,'Bathroom')"><div class="icon">🛁</div><div class="label">Bathroom</div></button>
+      <button class="tmpl-btn" onclick="setTemplate(this,'Deck')"><div class="icon">🏡</div><div class="label">Deck</div></button>
+      <button class="tmpl-btn" onclick="setTemplate(this,'Exterior')"><div class="icon">🏗️</div><div class="label">Exterior</div></button>
+    </div>
+
+    <!-- Client description -->
+    <label class="input-label">Client Description (paste from CRM)</label>
+    <input class="input" id="clientDesc" placeholder="Dream Kitchen Remodel, Los Angeles CA — marble counters, custom cabinets" style="margin-bottom:16px;">
+
+    <!-- Custom prompt (admin tweak) -->
+    <label class="input-label" style="cursor:pointer;" onclick="togglePrompt()">
+      ✏️ Custom Prompt Override <span id="promptToggle" style="color:var(--txd);font-weight:400;">(click to expand)</span>
+    </label>
+    <div id="promptSection" style="display:none;margin-bottom:16px;">
+      <textarea class="prompt-area" id="customPrompt" placeholder="Leave blank to use auto-generated prompt based on template + description.&#10;&#10;Override example: 'Luxury kitchen reveal, slow-motion cabinet doors opening, marble countertops catching morning light, cinematic 4K feel'"></textarea>
+    </div>
+
+    <!-- Cost -->
+    <div class="cost-row">
+      <span>Estimated Cost</span>
+      <span>20 credits (charged to admin account)</span>
+    </div>
+
+    <button class="btn btn-primary" style="width:100%;font-size:16px;padding:16px;" onclick="startGenerate()" id="genBtn">
+      🎬 Generate for Client
+    </button>
+  </div>
+
+  <!-- Progress -->
+  <div class="prog-panel card" id="progPanel">
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:12px;" id="progTitle">⏳ Generating...</h3>
+    <div class="prog-row"><span class="prog-icon">🧠</span><span class="prog-label">Writing script</span><span class="prog-badge b-wait" id="ps-script">waiting</span></div>
+    <div class="prog-row"><span class="prog-icon">🎨</span><span class="prog-label">Generating frames (NanoBanana)</span><span class="prog-badge b-wait" id="ps-frames">waiting</span></div>
+    <div class="prog-row"><span class="prog-icon">🎥</span><span class="prog-label">Animating clips (Seedance 2)</span><span class="prog-badge b-wait" id="ps-video">waiting</span></div>
+    <div class="prog-row"><span class="prog-icon">🎙️</span><span class="prog-label">Voiceover (ElevenLabs)</span><span class="prog-badge b-wait" id="ps-tts">waiting</span></div>
+    <div class="prog-row"><span class="prog-icon">✂️</span><span class="prog-label">Assembling final video</span><span class="prog-badge b-wait" id="ps-ffmpeg">waiting</span></div>
+    <div class="prog-row"><span class="prog-icon">💾</span><span class="prog-label">Saving to client account</span><span class="prog-badge b-wait" id="ps-save">waiting</span></div>
+
+    <!-- Script preview (revealed after step a) -->
+    <div class="script-preview" id="scriptPreview"></div>
+
+    <!-- Scene grid -->
+    <div class="scene-grid" id="sceneGrid" style="display:none;margin-top:12px;"></div>
+  </div>
+
+  <!-- Result -->
+  <div class="result-panel card" id="resultPanel">
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:6px;">✅ Video Ready!</h3>
+    <p style="font-size:13px;color:var(--txd);margin-bottom:12px;" id="resultClientLine"></p>
+    <video id="finalVideo" controls style="width:100%;border-radius:10px;margin-bottom:12px;" playsinline></video>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <a id="downloadBtn" class="btn btn-primary" download="bq-client-ad.mp4" style="flex:1;text-align:center;">⬇️ Download MP4</a>
+      <button class="btn" onclick="notifyClient()" id="notifyBtn" style="flex:1;">📧 Email to Client</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_URL = 'https://bq-tools-api.fanzai-mgmt.workers.dev';
+
+function getPass() { return document.getElementById('adminPass').value; }
+
+async function adminFetch(path, opts = {}) {
+  const pass = getPass();
+  if (!pass) throw new Error('Enter admin password');
+  const res = await fetch(API_URL + path, {
+    ...opts,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + pass,
+      ...(opts.headers || {})
+    }
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Request failed (' + res.status + ')');
+  return data;
+}
+
+// Load clients from /api/admin/users
+async function loadClients() {
+  const sel = document.getElementById('clientSelect');
+  sel.innerHTML = '<option value="">Loading...</option>';
+  try {
+    const data = await adminFetch('/api/admin/users');
+    const users = (data.users || []).sort((a, b) => (a.email || '').localeCompare(b.email || ''));
+    sel.innerHTML = '<option value="">— Select a client —</option>' +
+      users.map(u => `<option value="${escHtml(u.email)}">${escHtml(u.businessName || u.email)} (${u.credits} cr)</option>`).join('');
+    sel.onchange = () => showClientInfo(users.find(u => u.email === sel.value));
+  } catch (err) {
+    sel.innerHTML = '<option value="">Failed to load: ' + err.message + '</option>';
+  }
+}
+
+function showClientInfo(u) {
+  const el = document.getElementById('clientInfo');
+  if (!u) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  el.innerHTML = `📧 ${u.email} · ${u.isPro ? '⭐ Pro' : 'Free'} · ${u.credits} credits · Last login: ${u.lastLogin ? new Date(u.lastLogin).toLocaleDateString() : 'never'}`;
+}
+
+function escHtml(s) {
+  const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML;
+}
+
+// Photos
+let photos = [];
+const MAX_PHOTOS = 10;
+
+function renderPhotoGrid() {
+  const grid = document.getElementById('photoGrid');
+  grid.innerHTML = '';
+  photos.forEach((p, i) => {
+    const slot = document.createElement('div');
+    slot.className = 'photo-slot';
+    slot.innerHTML = `<img src="${p.src}"><button class="rm" onclick="removePhoto(${i})">✕</button>`;
+    grid.appendChild(slot);
+  });
+  if (photos.length < MAX_PHOTOS) {
+    const add = document.createElement('div');
+    add.className = 'photo-slot';
+    add.innerHTML = `<span class="add-icon">+</span><input type="file" accept="image/*" multiple style="position:absolute;inset:0;opacity:0;cursor:pointer;" onchange="addPhotos(this)">`;
+    grid.appendChild(add);
+  }
+}
+
+function addPhotos(input) {
+  Array.from(input.files).slice(0, MAX_PHOTOS - photos.length).forEach(f => {
+    const r = new FileReader();
+    r.onload = ev => {
+      resizeB64(ev.target.result, 800).then(b64 => {
+        photos.push({ b64, src: ev.target.result });
+        renderPhotoGrid();
+      });
+    };
+    r.readAsDataURL(f);
+  });
+}
+
+function removePhoto(i) { photos.splice(i, 1); renderPhotoGrid(); }
+
+async function resizeB64(src, maxPx) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * scale);
+      c.height = Math.round(img.height * scale);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      resolve(c.toDataURL('image/jpeg', 0.8).split(',')[1]);
+    };
+    img.src = src;
+  });
+}
+
+let activeTemplate = 'Kitchen';
+function setTemplate(el, t) {
+  document.querySelectorAll('.tmpl-btn').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+  activeTemplate = t;
+  // Auto-fill desc if empty
+  const descs = {
+    Kitchen: 'Stunning kitchen remodel, Los Angeles CA',
+    Bathroom: 'Luxury bathroom renovation, Los Angeles CA',
+    Deck: 'Custom deck & outdoor living, Los Angeles CA',
+    Exterior: 'Exterior renovation & curb appeal, Los Angeles CA'
+  };
+  const descEl = document.getElementById('clientDesc');
+  if (!descEl.value) descEl.value = descs[t];
+}
+
+function togglePrompt() {
+  const sec = document.getElementById('promptSection');
+  const tog = document.getElementById('promptToggle');
+  const hidden = sec.style.display === 'none';
+  sec.style.display = hidden ? 'block' : 'none';
+  tog.textContent = hidden ? '(click to collapse)' : '(click to expand)';
+}
+
+function setStatus(id, state, label) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = 'prog-badge b-' + state;
+  el.textContent = label;
+}
+
+// ── Main flow ──
+let generatedVideoUrl = null;
+let generatedClientEmail = null;
+let adScenes = [];
+
+async function startGenerate() {
+  const clientEmail = document.getElementById('clientSelect').value;
+  if (!clientEmail) { alert('Select a client'); return; }
+
+  const desc = document.getElementById('clientDesc').value.trim();
+  if (!desc) { alert('Enter client description'); return; }
+  if (!getPass()) { alert('Enter admin password'); return; }
+
+  const btn = document.getElementById('genBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Generating...';
+
+  document.getElementById('progPanel').classList.add('on');
+  document.getElementById('resultPanel').classList.remove('on');
+  document.getElementById('sceneGrid').style.display = 'none';
+  document.getElementById('scriptPreview').style.display = 'none';
+
+  generatedClientEmail = clientEmail;
+  const customPrompt = document.getElementById('customPrompt').value.trim();
+
+  // Build admin auth token (admin uses password as bearer - we need to call the worker AI endpoint)
+  // We'll piggyback on admin auth for ad-creator by using admin's own token if available,
+  // otherwise fall back to a special admin mode hint
+  const templatePrompts = {
+    Kitchen: 'Professional kitchen remodel showcase — before/after transformation, new appliances, custom cabinets, marble counters',
+    Bathroom: 'Luxury bathroom renovation — soaking tub, walk-in shower, premium fixtures, spa feel',
+    Deck: 'Custom outdoor living space — composite deck, pergola, outdoor kitchen, LA lifestyle',
+    Exterior: 'Complete exterior renovation — new facade, paint, landscaping, curb appeal transformation'
+  };
+
+  const finalDesc = customPrompt || `${templatePrompts[activeTemplate]}. ${desc}`;
+
+  // Step a+b: script + NanoBanana frames
+  setStatus('ps-script', 'run', 'running');
+  let planData;
+  try {
+    // Use admin fetch with the admin password. The /api/ad-creator/generate requires user auth,
+    // so we hit it via our own session (admin's account)
+    const res = await fetch(API_URL + '/api/ad-creator/generate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + getPass(),
+        'X-Admin-Client': clientEmail  // hint for server (future use)
+      },
+      body: JSON.stringify({
+        photos: photos.map(p => p.b64),
+        description: finalDesc,
+        style: activeTemplate === 'Luxury' ? 'Luxury' : activeTemplate === 'Deck' ? 'Energetic' : 'Professional',
+        duration: '30s'
+      })
+    });
+    planData = await res.json();
+    if (!planData.ok) throw new Error(planData.error || 'Generation failed');
+  } catch (err) {
+    setStatus('ps-script', 'fail', 'failed');
+    alert('Script generation failed: ' + err.message);
+    btn.disabled = false;
+    btn.textContent = '🎬 Generate for Client';
+    return;
+  }
+
+  setStatus('ps-script', 'done', 'done ✓');
+  adScenes = planData.scenes || [];
+
+  // Show script preview
+  const spEl = document.getElementById('scriptPreview');
+  spEl.style.display = 'block';
+  spEl.innerHTML = `
+    <p style="font-weight:700;margin-bottom:6px;">📝 Script Preview — show to client if needed</p>
+    <p style="color:var(--txd);font-size:12px;margin-bottom:4px;">Tagline: <em>${escHtml(planData.tagline || '')}</em></p>
+    <p style="margin-bottom:4px;white-space:pre-wrap;">${escHtml(planData.voiceover || '')}</p>
+    <p style="color:var(--ac);font-weight:600;">→ ${escHtml(planData.cta || '')}</p>
+  `;
+
+  // Scene placeholders
+  const sceneGrid = document.getElementById('sceneGrid');
+  sceneGrid.style.display = 'grid';
+  sceneGrid.innerHTML = adScenes.map((s, i) => `
+    <div class="scene-card">
+      <div class="scene-img-wrap" id="adm-img-${i}">⏳</div>
+      <div class="scene-body">
+        <div class="scene-title">${escHtml(s.title || 'Scene ' + (i+1))}</div>
+        <div class="scene-status" id="adm-st-${i}">Generating...</div>
+      </div>
+    </div>
+  `).join('');
+
+  // Step b: poll frames
+  setStatus('ps-frames', 'run', 'running');
+  const frameUrls = await pollAdminFrames(adScenes);
+  setStatus('ps-frames', 'done', 'done ✓');
+
+  // Step c: Kinovi jobs
+  setStatus('ps-video', 'run', 'running');
+  const videoUrls = await animateAdminFrames(frameUrls);
+  setStatus('ps-video', 'done', 'done ✓');
+
+  // Step d: TTS
+  setStatus('ps-tts', 'run', 'running');
+  let audioB64 = null;
+  try {
+    const ttsRes = await fetch(API_URL + '/api/tts/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getPass() },
+      body: JSON.stringify({ text: planData.voiceover || '' })
+    });
+    const ttsData = await ttsRes.json();
+    audioB64 = ttsData.audioB64 || null;
+  } catch (_) {}
+  setStatus('ps-tts', audioB64 ? 'done' : 'fail', audioB64 ? 'done ✓' : 'no key');
+
+  // Step e: assemble
+  setStatus('ps-ffmpeg', 'run', 'running');
+  let finalUrl = null;
+  try {
+    finalUrl = await assembleFinal(videoUrls, audioB64);
+    setStatus('ps-ffmpeg', 'done', 'done ✓');
+  } catch (err) {
+    setStatus('ps-ffmpeg', 'fail', 'failed');
+    console.error('Assembly error:', err);
+    // Use first available clip as fallback
+    finalUrl = videoUrls.find(Boolean) || null;
+  }
+
+  // Step f: save to client account
+  setStatus('ps-save', 'run', 'running');
+  if (finalUrl) {
+    try {
+      await adminFetch('/api/admin/save-client-ad', {
+        method: 'POST',
+        body: JSON.stringify({
+          clientEmail,
+          adUrl: finalUrl,
+          description: finalDesc,
+          template: activeTemplate,
+          tagline: planData.tagline,
+          voiceover: planData.voiceover
+        })
+      });
+      setStatus('ps-save', 'done', 'done ✓');
+    } catch (err) {
+      setStatus('ps-save', 'fail', 'failed: ' + err.message);
+    }
+  } else {
+    setStatus('ps-save', 'fail', 'no video');
+  }
+
+  // Show result
+  if (finalUrl) {
+    generatedVideoUrl = finalUrl;
+    document.getElementById('finalVideo').src = finalUrl;
+    document.getElementById('downloadBtn').href = finalUrl;
+    document.getElementById('resultClientLine').textContent = `For: ${clientEmail} · Template: ${activeTemplate}`;
+    document.getElementById('resultPanel').classList.add('on');
+  } else {
+    alert('Video generation failed — check individual clips above');
+  }
+
+  btn.disabled = false;
+  btn.textContent = '🎬 Generate for Client';
+}
+
+async function pollAdminFrames(scenes) {
+  const frameUrls = new Array(scenes.length).fill(null);
+  const pending = scenes.map((s, i) => ({ idx: i, taskId: s.taskId })).filter(x => x.taskId);
+  if (pending.length === 0) return frameUrls;
+
+  return new Promise(resolve => {
+    let done = scenes.filter(s => !s.taskId).length;
+    const iv = setInterval(async () => {
+      const remaining = [];
+      for (const { idx, taskId } of pending) {
+        try {
+          const res = await fetch(`${API_URL}/api/nanobanana/status?taskId=${taskId}`, {
+            headers: { 'Authorization': 'Bearer ' + getPass() }
+          });
+          const data = await res.json();
+          if (data.status === 'completed' && data.imageUrl) {
+            frameUrls[idx] = data.imageUrl;
+            const imgEl = document.getElementById('adm-img-' + idx);
+            if (imgEl) imgEl.innerHTML = `<img src="${data.imageUrl}">`;
+            const stEl = document.getElementById('adm-st-' + idx);
+            if (stEl) stEl.textContent = 'Frame ready ✓';
+            done++;
+          } else if (data.status === 'failed') {
+            done++;
+            const stEl = document.getElementById('adm-st-' + idx);
+            if (stEl) stEl.textContent = 'Failed';
+          } else {
+            remaining.push({ idx, taskId });
+          }
+        } catch (_) { remaining.push({ idx, taskId }); }
+      }
+      pending.length = 0; pending.push(...remaining);
+      if (done >= scenes.length) { clearInterval(iv); resolve(frameUrls); }
+    }, 5000);
+  });
+}
+
+async function animateAdminFrames(frameUrls) {
+  const videoUrls = [];
+  for (let i = 0; i < adScenes.length; i++) {
+    const imgUrl = frameUrls[i];
+    if (!imgUrl) { videoUrls.push(null); continue; }
+    try {
+      const res = await fetch(`${API_URL}/api/kinovi/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getPass() },
+        body: JSON.stringify({ imageUrl: imgUrl, prompt: adScenes[i].visual || '', duration: 5 })
+      });
+      const data = await res.json();
+      const taskId = data.task_id || data.data?.task_id;
+      if (!taskId) { videoUrls.push(null); continue; }
+      const url = await pollKinoviAdmin(taskId, i);
+      videoUrls.push(url);
+    } catch (err) { videoUrls.push(null); }
+  }
+  return videoUrls;
+}
+
+async function pollKinoviAdmin(taskId, idx) {
+  return new Promise(resolve => {
+    const iv = setInterval(async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/kinovi/status?taskId=${taskId}`, {
+          headers: { 'Authorization': 'Bearer ' + getPass() }
+        });
+        const data = await res.json();
+        const status = data.status || data.data?.status;
+        const url = data.videoUrl || data.data?.videoUrl || data.data?.output;
+        if (status === 'completed' || status === 'SUCCEEDED' || url) {
+          clearInterval(iv);
+          const stEl = document.getElementById('adm-st-' + idx);
+          if (stEl) stEl.textContent = 'Clip ready ✓';
+          resolve(url || null);
+        } else if (status === 'failed' || status === 'FAILED') {
+          clearInterval(iv); resolve(null);
+        }
+      } catch (_) {}
+    }, 5000);
+    setTimeout(() => { clearInterval(iv); resolve(null); }, 180000);
+  });
+}
+
+async function assembleFinal(videoUrls, audioB64) {
+  const validUrls = videoUrls.filter(Boolean);
+  if (validUrls.length === 0) throw new Error('No clips to assemble');
+  if (validUrls.length === 1 && !audioB64) return validUrls[0];
+
+  await loadScript('https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js');
+  const { FFmpeg } = window.FFmpeg || {};
+  if (!FFmpeg) throw new Error('FFmpeg.wasm failed to load');
+
+  const ffmpeg = new FFmpeg();
+  await ffmpeg.load();
+
+  for (let i = 0; i < validUrls.length; i++) {
+    const buf = await (await fetch(validUrls[i])).arrayBuffer();
+    await ffmpeg.writeFile(`clip${i}.mp4`, new Uint8Array(buf));
+  }
+  if (audioB64) {
+    await ffmpeg.writeFile('vo.mp3', Uint8Array.from(atob(audioB64), c => c.charCodeAt(0)));
+  }
+
+  await ffmpeg.writeFile('list.txt', validUrls.map((_, i) => `file 'clip${i}.mp4'`).join('\n'));
+  await ffmpeg.exec(['-f', 'concat', '-safe', '0', '-i', 'list.txt', '-c', 'copy', 'concat.mp4']);
+
+  if (audioB64) {
+    await ffmpeg.exec(['-i', 'concat.mp4', '-i', 'vo.mp3', '-c:v', 'copy', '-c:a', 'aac',
+      '-map', '0:v', '-map', '1:a', '-shortest', 'output.mp4']);
+  } else {
+    await ffmpeg.exec(['-i', 'concat.mp4', '-c', 'copy', 'output.mp4']);
+  }
+
+  const data = await ffmpeg.readFile('output.mp4');
+  return URL.createObjectURL(new Blob([data.buffer], { type: 'video/mp4' }));
+}
+
+function loadScript(src) {
+  return new Promise((res, rej) => {
+    const s = document.createElement('script'); s.src = src;
+    s.onload = res; s.onerror = rej; document.head.appendChild(s);
+  });
+}
+
+async function notifyClient() {
+  const btn = document.getElementById('notifyBtn');
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+  try {
+    await adminFetch('/api/admin/notify-client', {
+      method: 'POST',
+      body: JSON.stringify({ clientEmail: generatedClientEmail, type: 'video_ready' })
+    });
+    btn.textContent = '✓ Email Sent';
+  } catch (err) {
+    btn.textContent = '✗ Failed';
+    alert('Notify failed: ' + err.message);
+  }
+}
+
+// Init
+renderPhotoGrid();
+loadClients();
+</script>
+</body>
+</html>
