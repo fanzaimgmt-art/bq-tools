@@ -104,6 +104,7 @@
 <script>
 (async function(){
   try {
+    if (typeof isLoggedIn !== 'function' || !isLoggedIn()) return;
     const data = await apiCall('/api/training/knowledge');
     const tip = document.getElementById('trainingTip');
     const text = document.getElementById('trainingTipText');
