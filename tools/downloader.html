@@ -319,8 +319,9 @@ function renderBulkResults(results) {
 }
 
 function copyLink(url) {
-  navigator.clipboard.writeText(url);
-  showToast(lang === 'he' ? '✓ הועתק' : '✓ Copied', 'ok');
+  navigator.clipboard.writeText(url)
+    .then(() => showToast(lang === 'he' ? '✓ הועתק' : '✓ Copied', 'ok'))
+    .catch(() => showToast(lang === 'he' ? 'לא ניתן להעתיק — ' + url : 'Could not copy — ' + url, 'err'));
 }
 
 function addToHistory(data, url) {

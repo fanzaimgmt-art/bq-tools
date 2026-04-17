@@ -160,8 +160,9 @@ Respond JSON only:
 }
 
 function copyMsg() {
-  navigator.clipboard.writeText(document.getElementById('msgText').textContent);
-  showToast(lang === 'he' ? 'הועתק!' : 'Copied!', 'ok');
+  navigator.clipboard.writeText(document.getElementById('msgText').textContent)
+    .then(() => showToast(lang === 'he' ? 'הועתק!' : 'Copied!', 'ok'))
+    .catch(() => showToast(lang === 'he' ? 'לא ניתן להעתיק' : 'Could not copy', 'err'));
 }
 
 function openWhatsApp() {

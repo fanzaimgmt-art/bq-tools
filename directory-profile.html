@@ -203,13 +203,13 @@ async function claimListing(listingEmail) {
       body: { listingEmail }
     });
     if (data.ok) {
-      alert(data.message || (lang === 'he' ? 'הרישום נתבעל!' : 'Listing claimed!'));
+      showToast(data.message || (lang === 'he' ? 'הרישום נתבעל!' : 'Listing claimed!'), 'ok');
       window.location.reload();
     } else {
-      alert(data.error || (lang === 'he' ? 'לא ניתן לתבעל' : 'Could not claim'));
+      showToast(data.error || (lang === 'he' ? 'לא ניתן לתבעל' : 'Could not claim'), 'err');
     }
   } catch (e) {
-    alert(e.message || (lang === 'he' ? 'שגיאה' : 'Error'));
+    showToast(e.message || (lang === 'he' ? 'שגיאה' : 'Error'), 'err');
   }
 }
 
