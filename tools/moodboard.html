@@ -163,12 +163,14 @@ function editNote(id) {
   // For now, save locally
   item.notes = note;
   render();
-  // Also save to server by deleting + re-creating, then reload from server
-  apiCall(`/api/content/moodboard/${id}`, { method: 'DELETE' }).then(() => {
-    return apiCall('/api/content/save', { method: 'POST', body: { ...item, id: undefined } });
-  }).then(() => {
-    init();
-  }).catch(() => {});
+  // Update on server: delete the old record then re-create with updated notes
+  apiCall(`/api/content/moodboard/${id}`, { method: 'DELETE' })
+    .then(() => apiCall('/api/content/save', { method: 'POST', body: { ...item } }))
+    .then(res => {
+      // Sync local item id to the new server-assigned id to prevent duplicates on reload
+      if (res?.item?.id) item.id = res.item.id;
+    })
+    .catch(() => {});
   showToast(lang === 'he' ? 'עודכן' : 'Updated', 'ok');
 }
 
