@@ -16,6 +16,11 @@
   --blu: #74b9ff;
   --orange: #ff9f43;
   --amber: #ffa502;
+  /* Chat surfaces — elevated AI bubble bg, deep code bg */
+  --bg-elevated: #1a1a20;
+  --bg-deep: #05050a;
+  --shadow-bubble: 0 2px 8px rgba(0,0,0,0.12);
+  --shadow-bubble-user: 0 4px 12px rgba(232,197,71,0.18);
   /* Typography */
   --font-en: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-he: 'Rubik', 'Inter', system-ui, sans-serif;
@@ -37,6 +42,10 @@
   --red: #d63031;
   --grn: #2d9a43;
   --blu: #0984e3;
+  --bg-elevated: #f2f0ea;
+  --bg-deep: #eeece6;
+  --shadow-bubble: 0 2px 8px rgba(0,0,0,0.06);
+  --shadow-bubble-user: 0 4px 12px rgba(184,134,11,0.25);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
