@@ -152,7 +152,7 @@ function _ddHTML(user) {
     <div class="nav-dd-divider"></div>
     <button class="nav-dd-item" onclick="resetTutorial()"><span class="dd-icon">📖</span>${t({ en: 'Show Tutorial Again', he: 'הצג Tutorial שוב', es: 'Ver Tutorial' })}</button>
     <button class="nav-dd-item accent" onclick="showBuyCreditsModal()"><span class="dd-icon">🛒</span>${t({ en: 'Buy Credits', he: 'קנה קרדיטים', es: 'Comprar Créditos' })}</button>
-    ${!user.isPro ? `<a href="/auth.html" class="nav-dd-item green"><span class="dd-icon">⭐</span>${t({ en: 'Upgrade to Pro', he: 'שדרג ל-Pro', es: 'Hazte Pro' })}</a>` : ''}
+    ${!user.isPro ? `<button class="nav-dd-item green" onclick="showProModal()"><span class="dd-icon">⭐</span>${t({ en: 'Upgrade to Pro', he: 'שדרג ל-Pro', es: 'Hazte Pro' })}</button>` : ''}
     <div class="nav-dd-divider"></div>
     <button class="nav-dd-item danger" onclick="doLogout()"><span class="dd-icon">🚪</span>${t({ en: 'Sign Out', he: 'התנתק', es: 'Cerrar Sesión' })}</button>`;
 }
@@ -912,8 +912,41 @@ function showBuyCreditsModal() {
 
       <div style="background:var(--acd);border-radius:10px;padding:12px;margin-bottom:14px;">
         <p style="font-size:13px;color:var(--ac);font-weight:600;margin-bottom:6px;">${t({ en: 'Need Pro? Get 50 credits/month for $14.99', he: 'צריך Pro? 50 קרדיטים בחודש ב-$14.99', es: '¿Necesitas Pro? Obtén 50 créditos al mes por $14.99' })}</p>
-        <a href="/auth.html" class="btn btn-sm" style="font-size:12px;">${t({ en: 'Upgrade to Pro →', he: 'שדרג ל-Pro →', es: 'Hazte Pro →' })}</a>
+        <button onclick="showProModal()" class="btn btn-sm" style="font-size:12px;">${t({ en: 'Upgrade to Pro →', he: 'שדרג ל-Pro →', es: 'Hazte Pro →' })}</button>
       </div>
+
+      <button onclick="this.closest('.modal-overlay').remove()" class="btn" style="width:100%;">${t({ en: 'Close', he: 'סגור', es: 'Cerrar' })}</button>
+    </div>`;
+  document.body.appendChild(m);
+  requestAnimationFrame(() => m.classList.add('open'));
+  m.onclick = (e) => { if (e.target === m) m.remove(); };
+}
+
+// ── Pro Upgrade Modal ──
+// Shows a Pro upgrade modal for logged-in users; sends guests to /auth.html.
+function showProModal() {
+  _closeDropdown();
+  if (typeof isLoggedIn === 'function' && !isLoggedIn()) {
+    window.location.href = '/auth.html?next=' + encodeURIComponent(window.location.pathname);
+    return;
+  }
+  const h = lang === 'he';
+  const m = document.createElement('div');
+  m.className = 'modal-overlay';
+  m.innerHTML = `
+    <div class="modal-card" style="max-width:480px;text-align:center;">
+      <div style="font-size:40px;margin-bottom:8px;">⭐</div>
+      <h3 style="margin-bottom:4px;">${t({ en: 'Upgrade to Pro', he: 'שדרג ל-Pro', es: 'Hazte Pro' })}</h3>
+      <p style="font-size:14px;color:var(--txd);margin-bottom:16px;line-height:1.5;">${t({ en: '50 credits/month + priority support + Pro badge on your directory listing.', he: '50 קרדיטים בחודש + תמיכה מועדפת + תג Pro ברישום שלך.', es: '50 créditos/mes + soporte prioritario + insignia Pro en tu listado.' })}</p>
+
+      <div style="background:var(--acd);border-radius:12px;padding:16px;margin-bottom:16px;">
+        <div style="font-size:32px;font-weight:900;color:var(--ac);">$14.99<span style="font-size:16px;font-weight:400;color:var(--txd);">/mo</span></div>
+        <div style="font-size:12px;color:var(--txd);margin-bottom:14px;">${t({ en: 'Billed monthly. Cancel anytime.', he: 'חיוב חודשי. ביטול בכל עת.', es: 'Cobro mensual. Cancela cuando quieras.' })}</div>
+        <a href="https://www.paypal.com/ncp/payment/2LA7B7PZTHN54" target="_blank" rel="noopener" class="btn btn-primary" style="width:100%;font-size:15px;margin-bottom:8px;">PayPal →</a>
+        <button onclick="openCryptoModal();this.closest('.modal-overlay').remove();" class="btn" style="width:100%;font-size:13px;border-color:rgba(81,207,102,.3);color:var(--grn);">${t({ en: 'Crypto — 35% OFF ($9.74/mo)', he: 'קריפטו — 35% הנחה ($9.74 לחודש)', es: 'Cripto — 35% OFF ($9.74/mes)' })}</button>
+      </div>
+
+      <p style="font-size:12px;color:var(--txd);margin-bottom:14px;">${t({ en: 'After payment, email us at support@bqprod.com with your receipt to activate Pro.', he: 'לאחר התשלום שלח מייל ל-support@bqprod.com עם הקבלה להפעלת Pro.', es: 'Tras el pago, envíanos tu recibo a support@bqprod.com para activar Pro.' })}</p>
 
       <button onclick="this.closest('.modal-overlay').remove()" class="btn" style="width:100%;">${t({ en: 'Close', he: 'סגור', es: 'Cerrar' })}</button>
     </div>`;
