@@ -2116,6 +2116,13 @@ async function handleRedeemCode(request, env) {
   const user = await getUserByToken(token, env);
   if (!user) return json({ error: 'Unauthorized' }, 401);
 
+  // Tighter rate limit for gift-code redemption: 5 attempts per hour per user
+  const hourBucket = Math.floor(Date.now() / 3600000);
+  const redeemKey = `redeem:attempts:${user.email}:${hourBucket}`;
+  const attempts = parseInt(await env.BQ_USERS.get(redeemKey) || '0');
+  if (attempts >= 5) return json({ error: 'Too many redemption attempts. Try again later.' }, 429);
+  await env.BQ_USERS.put(redeemKey, String(attempts + 1), { expirationTtl: 7200 });
+
   const { code } = await request.json();
   if (!code) return json({ error: 'Code required' }, 400);
 
