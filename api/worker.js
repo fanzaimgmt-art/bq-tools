@@ -272,6 +272,12 @@ export default {
       if (path === '/api/brain/learn' && request.method === 'POST') {
         return corsResponse(env, await handleBrainLearn(request, env));
       }
+      if (path === '/api/brain/import-memory' && request.method === 'POST') {
+        return corsResponse(env, await handleBrainImportMemory(request, env));
+      }
+      if (path === '/api/brain/save-imported-memory' && request.method === 'POST') {
+        return corsResponse(env, await handleBrainSaveImportedMemory(request, env));
+      }
 
       if (path === '/api/health') {
         return corsResponse(env, json({ ok: true, ts: Date.now() }));
@@ -4229,6 +4235,156 @@ async function handleBrainLearn(request, env) {
   await learnFromAction(user.email, action, data || {}, env);
   const brain = await getBrain(user.email, env);
   return json({ ok: true, brain });
+}
+
+// ── Brain Import Memory — extract facts from ChatGPT / Claude export ──
+
+async function handleBrainImportMemory(request, env) {
+  // 1. Auth
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  // 2. Per-day rate limit: 5 imports per user per day
+  const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const rlKey = `rl:import:${user.email}:${today}`;
+  const rlCount = parseInt((await env.BQ_USERS.get(rlKey)) || '0', 10);
+  if (rlCount >= 5) {
+    return json({ error: 'Daily limit reached (5/day). Try again tomorrow.' }, 429);
+  }
+  await env.BQ_USERS.put(rlKey, String(rlCount + 1), { expirationTtl: 86400 });
+
+  // 3. Parse body
+  let body;
+  try { body = await request.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
+  const { content, source } = body;
+
+  // 4. Validate
+  if (typeof content !== 'string' || content.length < 10 || content.length > 50000) {
+    return json({ error: 'content must be a string between 10 and 50000 characters.' }, 400);
+  }
+
+  // 5. TODO: charge 2 credits after promo ends
+
+  // 6. Call Claude for extraction
+  const claudeApiKey = env.CLAUDE_API_KEY;
+  if (!claudeApiKey) return json({ error: 'AI service not configured.' }, 503);
+
+  const truncated = content.slice(0, 50000);
+  const prompt = `You extract business-relevant facts from an AI memory export belonging to a contractor/remodeler.
+
+INPUT MEMORY EXPORT:
+"""
+${truncated}
+"""
+
+Extract and return ONLY valid JSON in this exact shape (no prose, no markdown fence):
+{"extracted":[{"category":"<one of: business_name|location|specialties|communication_style|typical_project_size|customer_profile|workflows_and_tools|pain_points|personal_preferences>","fact":"<single sentence>","confidence":"<high|medium|low>"}]}
+
+Rules:
+- Only include facts relevant to running a contracting business.
+- Skip unrelated personal life details.
+- Each fact must be a single concise sentence.
+- Max 20 facts.
+- Return an empty array if nothing relevant.`;
+
+  let rawText = '';
+  try {
+    const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': claudeApiKey,
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: env.CLAUDE_MODEL || 'claude-haiku-4-5-20251001',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    if (!aiRes.ok) return json({ error: 'AI extraction failed. Please try again.' }, 502);
+    const aiData = await aiRes.json();
+    rawText = aiData.content?.[0]?.text || '';
+  } catch (e) {
+    return json({ error: 'AI extraction failed. Please try again.' }, 502);
+  }
+
+  // 7. Parse Claude response
+  let extracted = [];
+  try {
+    const start = rawText.indexOf('{');
+    const end = rawText.lastIndexOf('}');
+    if (start === -1 || end === -1) throw new Error('no json');
+    const parsed = JSON.parse(rawText.slice(start, end + 1));
+    extracted = Array.isArray(parsed.extracted) ? parsed.extracted.slice(0, 20) : [];
+  } catch (_) {
+    return json({ error: "Couldn't extract facts. Try pasting a different format." }, 422);
+  }
+
+  // 8. Return extracted facts for user review (NOT saved yet)
+  return json({ ok: true, extracted, count: extracted.length });
+}
+
+// ── Brain Save Imported Memory — persist approved facts ──
+
+async function handleBrainSaveImportedMemory(request, env) {
+  // 1. Auth
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  // 2. Parse body
+  let body;
+  try { body = await request.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
+  const { facts, source } = body;
+  if (!Array.isArray(facts) || facts.length === 0) {
+    return json({ error: 'facts array is required and must not be empty.' }, 400);
+  }
+
+  const now = new Date().toISOString();
+
+  // 3. Load brain
+  const brain = await getBrain(user.email, env);
+
+  // 4. Append to imported_facts
+  if (!Array.isArray(brain.imported_facts)) brain.imported_facts = [];
+  for (const f of facts) {
+    brain.imported_facts.push({
+      category: f.category || 'personal_preferences',
+      fact: f.fact || '',
+      confidence: f.confidence || 'medium',
+      source: source || 'other',
+      importedAt: now
+    });
+  }
+  // Cap at 200 entries
+  if (brain.imported_facts.length > 200) {
+    brain.imported_facts = brain.imported_facts.slice(-200);
+  }
+
+  // 5. Save each fact as a memory (memories:{email} KV)
+  const memKey = `memories:${user.email}`;
+  const rawMem = await env.BQ_USERS.get(memKey);
+  const memories = rawMem ? JSON.parse(rawMem) : [];
+  for (const f of facts) {
+    memories.push({
+      id: Date.now().toString(36) + Math.random().toString(36).substring(2, 6),
+      content: f.fact || '',
+      category: f.category || 'personal_preferences',
+      importance: 4,
+      createdAt: now,
+      updatedAt: now,
+      source: 'import'
+    });
+  }
+  if (memories.length > 200) memories.splice(0, memories.length - 200);
+  await env.BQ_USERS.put(memKey, JSON.stringify(memories));
+
+  // 6. Save brain
+  await saveBrain(user.email, brain, env);
+
+  return json({ ok: true, saved: facts.length, brain });
 }
 
 // ── Payment Submission Handlers ──

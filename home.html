@@ -210,6 +210,12 @@
     <h2 data-en="Your Toolbox" data-es="Tu Caja de Herramientas" data-he="ארגז הכלים שלך">Your Toolbox</h2>
   </div>
   <div class="home-tools">
+    <a href="/tools/import-memory.html" class="home-tool ht-g-pink" id="importMemoryPromo">
+      <span class="ht-icon">🧠</span>
+      <span class="ht-name" data-en="NEW: Import AI Memory" data-es="NUEVO: Importar memoria IA" data-he="חדש: ייבוא זיכרון AI">NEW: Import AI Memory</span>
+      <span class="ht-cost free">FREE · LIMITED</span>
+      <span class="ht-tip">Bring your ChatGPT/Claude memories. Instant personalization.</span>
+    </a>
     <a href="/tools/compare.html" class="home-tool ht-g-cyan">
       <video class="tool-demo" src="/img/demos/compare-demo.mp4" autoplay muted loop playsinline preload="none"></video>
       <span class="ht-icon">🔀</span>
@@ -331,6 +337,12 @@
       <span class="ht-tip">8 tools, one power pack</span>
     </a>
   </div>
+  <script>
+  if (localStorage.getItem('bq_memory_imported') === '1') {
+    var el = document.getElementById('importMemoryPromo');
+    if (el) el.style.display = 'none';
+  }
+  </script>
 
   <!-- BQ Brain widget -->
   <div id="brainWidget" style="display:none;background:linear-gradient(135deg,var(--sf),rgba(232,197,71,.05));border:1px solid rgba(232,197,71,.3);border-radius:14px;padding:16px 18px;margin-bottom:24px;">

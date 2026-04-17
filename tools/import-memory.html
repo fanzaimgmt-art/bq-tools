@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Import AI Memory</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  body { display: flex; flex-direction: column; }
+
+  .drop-zone {
+    border: 2px dashed var(--bd);
+    border-radius: 12px;
+    padding: 32px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    position: relative;
+    background: var(--bg);
+    color: var(--txd);
+  }
+  .drop-zone:hover, .drop-zone.drag-over {
+    border-color: var(--ac);
+    background: rgba(232,197,71,.05);
+  }
+  .drop-zone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+  .drop-icon { font-size: 36px; margin-bottom: 8px; }
+  .drop-text { font-size: 14px; color: var(--txd); }
+
+  .or-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 16px 0;
+    color: var(--txd);
+    font-size: 13px;
+  }
+  .or-divider::before, .or-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--bd);
+  }
+
+  .promo-badge {
+    display: inline-block;
+    background: rgba(81,207,102,.15);
+    color: var(--grn);
+    border: 1px solid rgba(81,207,102,.35);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .5px;
+    margin-top: 8px;
+  }
+
+  .hero-block {
+    text-align: center;
+    padding: 8px 0 20px;
+  }
+  .hero-block h2 {
+    font-size: 26px;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+  .hero-subtitle {
+    font-size: 14px;
+    color: var(--txd);
+    max-width: 420px;
+    margin: 0 auto 10px;
+    line-height: 1.6;
+  }
+
+  .fact-list { list-style: none; padding: 0; margin: 0; }
+  .fact-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--bd);
+  }
+  .fact-item:last-child { border-bottom: none; }
+  .fact-item input[type="checkbox"] {
+    margin-top: 3px;
+    accent-color: var(--ac);
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+  }
+  .fact-cat {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    background: rgba(232,197,71,.15);
+    color: var(--ac);
+    border-radius: 4px;
+    padding: 2px 6px;
+    margin-inline-end: 6px;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  .fact-text { font-size: 14px; line-height: 1.5; }
+
+  .confidence-low { opacity: .6; }
+  .confidence-high .fact-cat { background: rgba(81,207,102,.15); color: var(--grn); }
+
+  .result-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+  .result-actions .btn { flex: 1; min-width: 130px; }
+
+  details.instructions {
+    margin-top: 16px;
+  }
+  details.instructions summary {
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--txd);
+    user-select: none;
+    padding: 10px 0;
+    list-style: none;
+  }
+  details.instructions summary::-webkit-details-marker { display: none; }
+  details.instructions summary::before {
+    content: '▶ ';
+    font-size: 10px;
+    margin-inline-end: 4px;
+    transition: transform .2s;
+  }
+  details.instructions[open] summary::before { content: '▼ '; }
+  .instruction-steps {
+    padding: 10px 0 0 16px;
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.8;
+    color: var(--txd);
+  }
+  .instruction-steps li { margin-bottom: 4px; }
+
+  #resultArea { display: none; }
+  #resultArea.on { display: block; }
+</style>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#e8c547">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="BQ Tools">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png">
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/" class="nav-link" data-en="← Back" data-es="← Atrás" data-he="חזור →">← Back</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+      <button class="lang-btn" data-lang="es" onclick="setLang('es')">ES</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <a href="/home.html" class="page-back" data-en="← All Tools" data-es="← Todas las Herramientas" data-he="כל הכלים →">← All Tools</a>
+
+  <!-- Hero -->
+  <div class="hero-block">
+    <h1 class="page-title"
+      data-en="🧠 Import Your AI Memory"
+      data-he="🧠 ייבוא זיכרון AI"
+      data-es="🧠 Importar tu memoria IA">🧠 Import Your AI Memory</h1>
+    <p class="hero-subtitle"
+      data-en="Bring your ChatGPT or Claude memories. We'll turn them into contractor-ready business knowledge."
+      data-he="הבא את זיכרונות ChatGPT או Claude שלך. נהפוך אותם לידע עסקי מוכן לקבלן."
+      data-es="Trae tus memorias de ChatGPT o Claude. Las convertiremos en conocimiento empresarial listo para contratistas.">Bring your ChatGPT or Claude memories. We'll turn them into contractor-ready business knowledge.</p>
+    <span class="promo-badge" data-en="FREE for first 100 users" data-he="חינם ל-100 המשתמשים הראשונים" data-es="GRATIS para los primeros 100 usuarios">FREE for first 100 users</span>
+  </div>
+
+  <!-- Upload Card -->
+  <div class="card" style="margin-bottom:16px;">
+    <!-- Drop Zone -->
+    <label class="input-label" data-en="Upload memory file" data-he="העלה קובץ זיכרון" data-es="Subir archivo de memoria">Upload memory file</label>
+    <div class="drop-zone" id="dropZone">
+      <div class="drop-icon">📂</div>
+      <div class="drop-text" data-en="Drop a .txt, .md, or .json file here (max 50KB)" data-he='גרור קובץ .txt, .md, או .json לכאן (עד 50KB)' data-es="Suelta un archivo .txt, .md, o .json aquí (máx 50KB)">Drop a .txt, .md, or .json file here (max 50KB)</div>
+      <input type="file" id="fileInput" accept=".txt,.md,.json">
+    </div>
+
+    <div class="or-divider">
+      <span data-en="OR" data-he="או" data-es="O">OR</span>
+    </div>
+
+    <!-- Paste area -->
+    <label class="input-label" data-en="Paste your memory export text" data-he="הדבק את טקסט ייצוא הזיכרון" data-es="Pega el texto de exportación de memoria">Paste your memory export text</label>
+    <textarea class="textarea" id="memoryText" rows="10" maxlength="50000"
+      placeholder="Paste your ChatGPT or Claude memory export here..."></textarea>
+
+    <!-- Source selector -->
+    <label class="input-label" style="margin-top:12px;" data-en="Source" data-he="מקור" data-es="Fuente">Source</label>
+    <select class="input" id="sourceSelect" style="margin-bottom:0;">
+      <option value="chatgpt" data-en="ChatGPT" data-es="ChatGPT" data-he="ChatGPT">ChatGPT</option>
+      <option value="claude" data-en="Claude.ai" data-es="Claude.ai" data-he="Claude.ai">Claude.ai</option>
+      <option value="other" data-en="Other AI" data-es="Otra IA" data-he="AI אחר">Other AI</option>
+    </select>
+
+    <!-- Import button -->
+    <button class="btn btn-primary btn-large" style="width:100%;margin-top:16px;font-size:16px;" onclick="runImport()" id="importBtn"
+      data-en="🚀 Import" data-he="🚀 ייבוא" data-es="🚀 Importar">🚀 Import</button>
+  </div>
+
+  <!-- Instructions (collapsible) -->
+  <div class="card" style="margin-bottom:16px;">
+    <details class="instructions">
+      <summary data-en="📋 How to export from ChatGPT" data-he="📋 איך לייצא מ-ChatGPT" data-es="📋 Cómo exportar desde ChatGPT">📋 How to export from ChatGPT</summary>
+      <ol class="instruction-steps">
+        <li data-en="Go to ChatGPT → Settings → Personalization → Memory" data-he="עבור ל-ChatGPT → הגדרות → התאמה אישית → זיכרון" data-es="Ve a ChatGPT → Configuración → Personalización → Memoria">Go to ChatGPT → Settings → Personalization → Memory</li>
+        <li data-en='Click "Manage Memory" and you will see all your saved memories' data-he='לחץ על "נהל זיכרון" ותראה את כל הזיכרונות שנשמרו' data-es='Haz clic en "Administrar Memoria" y verás todos tus recuerdos guardados'>Click "Manage Memory" and you will see all your saved memories</li>
+        <li data-en="Copy all text or use ChatGPT Data Export (Settings → Data Controls → Export)" data-he="העתק את כל הטקסט או השתמש בייצוא נתוני ChatGPT (הגדרות → בקרת נתונים → ייצוא)" data-es="Copia todo el texto o usa Exportar datos de ChatGPT (Configuración → Controles de datos → Exportar)">Copy all text or use ChatGPT Data Export (Settings → Data Controls → Export)</li>
+      </ol>
+    </details>
+    <details class="instructions">
+      <summary data-en="📋 How to export from Claude.ai" data-he="📋 איך לייצא מ-Claude.ai" data-es="📋 Cómo exportar desde Claude.ai">📋 How to export from Claude.ai</summary>
+      <ol class="instruction-steps">
+        <li data-en="Go to Claude.ai → Settings → Profile → Memory" data-he="עבור ל-Claude.ai → הגדרות → פרופיל → זיכרון" data-es="Ve a Claude.ai → Configuración → Perfil → Memoria">Go to Claude.ai → Settings → Profile → Memory</li>
+        <li data-en="You will see your saved memories listed — copy them all" data-he="תראה את הזיכרונות השמורים שלך ברשימה — העתק את כולם" data-es="Verás tus recuerdos guardados en una lista — cópialos todos">You will see your saved memories listed — copy them all</li>
+        <li data-en="Paste the text below in the text area above" data-he="הדבק את הטקסט בשדה הטקסט למעלה" data-es="Pega el texto en el área de texto de arriba">Paste the text below in the text area above</li>
+      </ol>
+    </details>
+  </div>
+
+  <!-- Result Area -->
+  <div class="card" id="resultArea">
+    <h2 style="font-size:18px;font-weight:700;margin-bottom:4px;"
+      data-en="✅ We learned these things about your business:"
+      data-he="✅ למדנו את הדברים האלה על העסק שלך:"
+      data-es="✅ Aprendimos estas cosas sobre tu negocio:">✅ We learned these things about your business:</h2>
+    <p style="font-size:13px;color:var(--txd);margin-bottom:16px;"
+      data-en="Uncheck any facts you don't want saved."
+      data-he="בטל סימון לעובדות שאינך רוצה לשמור."
+      data-es="Desmarca los hechos que no quieras guardar.">Uncheck any facts you don't want saved.</p>
+
+    <ul class="fact-list" id="factList"></ul>
+
+    <div class="result-actions">
+      <button class="btn btn-primary" onclick="saveImport()" id="saveBtn"
+        data-en="💾 Save & Apply to All Chats"
+        data-he="💾 שמור והחל על כל השיחות"
+        data-es="💾 Guardar y Aplicar a Todos los Chats">💾 Save &amp; Apply to All Chats</button>
+      <button class="btn" onclick="cancelImport()"
+        data-en="❌ Cancel"
+        data-he="❌ ביטול"
+        data-es="❌ Cancelar">❌ Cancel</button>
+    </div>
+  </div>
+
+</div>
+
+<footer class="footer">
+  <div class="footer-brand">Powered by BQ Tools — BQ Production LLC</div>
+</footer>
+
+<script src="../js/auth.js"></script>
+<script src="../js/crypto.js"></script>
+<script src="../js/ai.js"></script>
+<script src="../js/common.js"></script>
+<script>
+// Hold extracted facts from API
+let extractedFacts = [];
+let currentSource = 'chatgpt';
+
+// ── File drop / pick ──
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const memoryText = document.getElementById('memoryText');
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) loadFile(file);
+});
+fileInput.addEventListener('change', e => {
+  if (e.target.files[0]) loadFile(e.target.files[0]);
+});
+
+function loadFile(file) {
+  const MAX = 50 * 1024; // 50KB
+  if (file.size > MAX) {
+    showToast("That's too long — try trimming to the most recent memories (~50KB).", 'err');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = ev => { memoryText.value = ev.target.result; };
+  reader.readAsText(file);
+}
+
+// ── Import ──
+async function runImport() {
+  if (!isLoggedIn()) return;
+
+  const content = memoryText.value.trim();
+  const source = document.getElementById('sourceSelect').value;
+  currentSource = source;
+
+  if (!content) {
+    showToast('Please paste your memory export or upload a file first.', 'err');
+    return;
+  }
+  if (content.length > 50000) {
+    showToast("That's too long — try trimming to the most recent memories (~50KB).", 'err');
+    return;
+  }
+
+  const btn = document.getElementById('importBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Extracting…';
+
+  try {
+    const res = await apiCall('/api/brain/import-memory', {
+      method: 'POST',
+      body: { content, source }
+    });
+
+    extractedFacts = res.extracted || [];
+
+    if (extractedFacts.length === 0) {
+      showToast("We couldn't find any business-relevant facts. Try a richer export.", 'info');
+      btn.disabled = false;
+      btn.setAttribute('data-en', '🚀 Import');
+      btn.setAttribute('data-he', '🚀 ייבוא');
+      btn.setAttribute('data-es', '🚀 Importar');
+      if (typeof setLang === 'function') setLang(window.lang || 'en');
+      return;
+    }
+
+    renderFacts(extractedFacts);
+    document.getElementById('resultArea').classList.add('on');
+    document.getElementById('resultArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  } catch (err) {
+    const msg = err?.message || '';
+    if (msg.includes('422') || msg.includes('parse')) {
+      showToast("Couldn't parse your memory export. Try pasting a different format.", 'err');
+    } else if (msg.includes('429')) {
+      showToast('Daily import limit reached (5/day). Try again tomorrow.', 'err');
+    } else {
+      showToast('Something went wrong. Please try again.', 'err');
+    }
+  } finally {
+    btn.disabled = false;
+    btn.setAttribute('data-en', '🚀 Import');
+    btn.setAttribute('data-he', '🚀 ייבוא');
+    btn.setAttribute('data-es', '🚀 Importar');
+    if (typeof setLang === 'function') setLang(window.lang || 'en');
+  }
+}
+
+function renderFacts(facts) {
+  const list = document.getElementById('factList');
+  list.innerHTML = '';
+  facts.forEach((f, i) => {
+    const li = document.createElement('li');
+    li.className = 'fact-item' + (f.confidence === 'low' ? ' confidence-low' : '') + (f.confidence === 'high' ? ' confidence-high' : '');
+    li.innerHTML = `
+      <input type="checkbox" checked id="fact-${i}" data-idx="${i}">
+      <label for="fact-${i}" style="display:flex;align-items:flex-start;gap:6px;cursor:pointer;flex:1;">
+        <span class="fact-cat">${escHtml(f.category)}</span>
+        <span class="fact-text">${escHtml(f.fact)}</span>
+      </label>`;
+    list.appendChild(li);
+  });
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Save approved facts ──
+async function saveImport() {
+  const checkboxes = document.querySelectorAll('#factList input[type="checkbox"]');
+  const approved = [];
+  checkboxes.forEach(cb => {
+    if (cb.checked) {
+      const idx = parseInt(cb.getAttribute('data-idx'), 10);
+      approved.push(extractedFacts[idx]);
+    }
+  });
+
+  if (approved.length === 0) {
+    showToast('No facts selected. Check at least one to save.', 'err');
+    return;
+  }
+
+  const saveBtn = document.getElementById('saveBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = '⏳ Saving…';
+
+  try {
+    await apiCall('/api/brain/save-imported-memory', {
+      method: 'POST',
+      body: { facts: approved, source: currentSource }
+    });
+
+    // Mark import done
+    localStorage.setItem('bq_memory_imported', '1');
+
+    // Write to local memory store so chat picks them up immediately
+    const existing = JSON.parse(localStorage.getItem('bq_memories') || '[]');
+    approved.forEach(f => existing.push({
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      content: f.fact,
+      category: f.category,
+      importance: 4,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }));
+    localStorage.setItem('bq_memories', JSON.stringify(existing.slice(-200)));
+
+    showToast('Saved! These facts will now inform your AI chats.', 'ok');
+    setTimeout(() => { window.location.href = '/chat.html'; }, 1500);
+
+  } catch (err) {
+    const msg = err?.message || '';
+    if (msg.includes('429')) {
+      showToast('Daily import limit reached. Try again tomorrow.', 'err');
+    } else {
+      showToast('Save failed. Please try again.', 'err');
+    }
+    saveBtn.disabled = false;
+    saveBtn.setAttribute('data-en', '💾 Save & Apply to All Chats');
+    if (typeof setLang === 'function') setLang(window.lang || 'en');
+  }
+}
+
+function cancelImport() {
+  document.getElementById('resultArea').classList.remove('on');
+  document.getElementById('factList').innerHTML = '';
+  extractedFacts = [];
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (!isLoggedIn()) return;
+});
+</script>
+</body>
+</html>
