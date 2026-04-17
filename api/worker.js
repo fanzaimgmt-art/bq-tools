@@ -1911,6 +1911,12 @@ async function handleDirectoryClaim(request, env) {
   const listing = JSON.parse(rawListing);
   if (!listing.seeded) return json({ error: 'This listing is not available for claiming' }, 400);
 
+  // TOCTOU guard: re-read the listing fresh right before writing to catch concurrent claims
+  const freshRaw = await env.BQ_USERS.get(`directory:${listingEmail}`);
+  if (!freshRaw) return json({ error: 'Listing not found' }, 404);
+  const freshListing = JSON.parse(freshRaw);
+  if (freshListing.claimed) return json({ error: 'Already claimed' }, 409);
+
   // Domain match check (if listing has a website)
   if (listing.website) {
     try {
@@ -1931,16 +1937,17 @@ async function handleDirectoryClaim(request, env) {
   const proUntil = new Date(now);
   proUntil.setDate(proUntil.getDate() + 30);
 
-  listing.email = user.email;
-  listing.seeded = false;
-  listing.claimed = true;
-  listing.claimedAt = now.toISOString();
-  listing.tier = 'pro';
-  listing.proUntil = proUntil.toISOString();
-  listing.updatedAt = now.toISOString();
+  // Use the freshly-read listing as the base to avoid overwriting concurrent updates
+  freshListing.email = user.email;
+  freshListing.seeded = false;
+  freshListing.claimed = true;
+  freshListing.claimedAt = now.toISOString();
+  freshListing.tier = 'pro';
+  freshListing.proUntil = proUntil.toISOString();
+  freshListing.updatedAt = now.toISOString();
 
   // Save under real email, delete seeded key
-  await env.BQ_USERS.put(`directory:${user.email}`, JSON.stringify(listing));
+  await env.BQ_USERS.put(`directory:${user.email}`, JSON.stringify(freshListing));
   await env.BQ_USERS.delete(`directory:${listingEmail}`);
 
   // Update index: add real email entry, remove seeded entry
@@ -1950,7 +1957,7 @@ async function handleDirectoryClaim(request, env) {
     const index = JSON.parse(rawIndex).filter(e => e.email !== listingEmail);
     await env.BQ_USERS.put(indexKey, JSON.stringify(index));
   }
-  await updateDirectoryIndex(user.email, listing, env);
+  await updateDirectoryIndex(user.email, freshListing, env);
 
   return json({ ok: true, message: 'Listing claimed! You have 30 days of Pro access free.' });
 }
