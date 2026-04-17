@@ -241,6 +241,9 @@ export default {
       if (path === '/api/ad-creator/generate' && request.method === 'POST') {
         return corsResponse(env, await handleAdCreatorGenerate(request, env));
       }
+      if (path === '/api/ad-creator/suggest-description' && request.method === 'POST') {
+        return corsResponse(env, await handleAdCreatorSuggestDescription(request, env));
+      }
 
       // ── ElevenLabs TTS Proxy ──
       if (path === '/api/tts/generate' && request.method === 'POST') {
@@ -253,6 +256,10 @@ export default {
       }
       if (path === '/api/admin/notify-client' && request.method === 'POST') {
         return corsResponse(env, await handleAdminNotifyClient(request, env));
+      }
+
+      if (path === '/api/admin/check-auth' && request.method === 'GET') {
+        return corsResponse(env, handleAdminCheckAuth(request, env));
       }
 
       if (path === '/api/health') {
@@ -336,10 +343,27 @@ async function checkRateLimit(email, env) {
 // Admin auth check — no fallback; returns false if ADMIN_PASSWORD is unset
 function isAdmin(request, env) {
   const secret = env.ADMIN_PASSWORD;
-  if (!secret) return false;
+  if (!secret) {
+    console.error('[isAdmin] ADMIN_PASSWORD not configured in worker env');
+    return false;
+  }
   const auth = request.headers.get('Authorization') || '';
   const password = auth.replace('Bearer ', '');
-  return password === secret;
+  if (password !== secret) {
+    console.error('[isAdmin] password mismatch — received length:', password.length, 'expected length:', secret.length);
+    return false;
+  }
+  return true;
+}
+
+// Debug endpoint — returns whether current request passes admin auth (no secret revealed)
+function handleAdminCheckAuth(request, env) {
+  const secret = env.ADMIN_PASSWORD;
+  if (!secret) return json({ ok: false, reason: 'ADMIN_PASSWORD not set in worker env — add it to [vars] in wrangler.toml and redeploy' });
+  const auth = request.headers.get('Authorization') || '';
+  const password = auth.replace('Bearer ', '');
+  if (password !== secret) return json({ ok: false, reason: 'password mismatch', hint: `received ${password.length} chars, expected ${secret.length} chars` });
+  return json({ ok: true });
 }
 
 // ── Auth Routes ──
@@ -3573,10 +3597,54 @@ async function handleNanoBananaStatus(request, env) {
 // Step 1: Claude writes script + scene breakdown, starts NanoBanana frame tasks
 // Step 2 (browser): polls frames → starts Kinovi jobs → assembles with FFmpeg.wasm
 
+async function handleAdCreatorSuggestDescription(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const claudeApiKey = env.CLAUDE_API_KEY;
+  if (!claudeApiKey) return json({ error: 'CLAUDE_API_KEY not configured' }, 500);
+
+  const { photos } = await request.json();
+  if (!photos || !Array.isArray(photos) || photos.length < 1) return json({ error: 'photos required' }, 400);
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'x-api-key': claudeApiKey, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: env.CLAUDE_MODEL || 'claude-3-5-haiku-20241022',
+      max_tokens: 80,
+      messages: [{
+        role: 'user',
+        content: [
+          ...photos.slice(0, 3).map(b64 => ({
+            type: 'image',
+            source: { type: 'base64', media_type: 'image/jpeg', data: b64 }
+          })),
+          { type: 'text', text: 'Look at these construction/remodeling work photos. Write ONE short sentence (10 words max) describing this business for a video ad. Format: "Type of work, City CA" — e.g. "Kitchen & bathroom remodeling, Los Angeles CA". Respond with ONLY the sentence.' }
+        ]
+      }]
+    })
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    console.error('Claude suggest error:', res.status, errText);
+    return json({ error: 'Suggestion failed' }, 502);
+  }
+
+  const data = await res.json();
+  const suggestion = (data.content?.[0]?.text || '').trim().replace(/^["']|["']$/g, '');
+  return json({ ok: true, suggestion });
+}
+
 async function handleAdCreatorGenerate(request, env) {
   const token = request.headers.get('Authorization')?.replace('Bearer ', '');
   const user = await getUserByToken(token, env);
   if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const claudeApiKey = env.CLAUDE_API_KEY;
+  if (!claudeApiKey) return json({ error: 'CLAUDE_API_KEY not configured — set it as a wrangler secret' }, 500);
 
   const piApiKey = env.PIAPI_KEY;
   if (!piApiKey) return json({ error: 'PIAPI_KEY not configured' }, 500);
@@ -3585,7 +3653,7 @@ async function handleAdCreatorGenerate(request, env) {
     return json({ error: 'Rate limit exceeded' }, 429);
   }
 
-  const { photos, logo, description, style, duration } = await request.json();
+  const { photos, logo, description, style, duration, subStory } = await request.json();
   if (!description) return json({ error: 'Business description required' }, 400);
   if (!photos || !Array.isArray(photos) || photos.length < 1) return json({ error: 'At least 1 photo required' }, 400);
 
@@ -3602,13 +3670,15 @@ async function handleAdCreatorGenerate(request, env) {
   const styleGuide = {
     Professional: 'Clean, authoritative, trust-building. Steady camera moves.',
     Energetic: 'Fast cuts, bold text overlays, high energy music vibes.',
-    Luxury: 'Slow dramatic reveals, cinematic quality, premium feel.'
+    Luxury: 'Slow dramatic reveals, cinematic quality, premium feel.',
+    Timelapse: 'Dramatic transformation reveal. Workers tearing down → building → final reveal. Time-compressed motion, satisfying progress.'
   };
   const numScenes = duration === '30s' ? 6 : 3;
 
   const claudePrompt = `You are an expert video ad scriptwriter for construction/remodeling companies.
 Business: ${description}
 Ad Style: ${style} — ${styleGuide[style] || 'Professional'}
+${subStory ? `Story Direction: ${subStory}` : ''}
 Duration: ${duration} (${numScenes} scenes × 5 seconds each)
 Photos uploaded: ${photos.length} photos of their work
 
@@ -3632,7 +3702,7 @@ Write a complete video ad script. Respond ONLY with valid JSON:
   const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
-      'x-api-key': env.CLAUDE_API_KEY,
+      'x-api-key': claudeApiKey,
       'anthropic-version': '2023-06-01',
       'Content-Type': 'application/json'
     },
@@ -3653,8 +3723,10 @@ Write a complete video ad script. Respond ONLY with valid JSON:
   });
 
   if (!claudeRes.ok) {
-    console.error('Claude API error:', claudeRes.status, await claudeRes.text());
-    return json({ error: 'Script generation failed. Please try again.' }, 502);
+    const errText = await claudeRes.text();
+    console.error('Claude API error:', claudeRes.status, errText);
+    const hint = claudeRes.status === 401 ? ' (invalid CLAUDE_API_KEY)' : claudeRes.status === 529 ? ' (Claude overloaded, retry)' : '';
+    return json({ error: `Script generation failed (Claude HTTP ${claudeRes.status})${hint}` }, 502);
   }
 
   const claudeData = await claudeRes.json();

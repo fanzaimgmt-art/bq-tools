@@ -58,6 +58,45 @@
   }
   .dur-btn.on { border-color: var(--ac); background: var(--acd); color: var(--ac); }
 
+  /* Logo drop zone */
+  .logo-drop {
+    border: 2px dashed var(--bd); border-radius: 14px; padding: 28px 16px;
+    text-align: center; cursor: pointer; transition: all .2s; position: relative;
+    background: var(--bg); margin-bottom: 12px;
+  }
+  .logo-drop:hover, .logo-drop.drag-over { border-color: var(--ac); background: var(--acd); }
+  .logo-drop input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .logo-drop .drop-icon { font-size: 32px; margin-bottom: 8px; }
+  .logo-drop .drop-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .logo-drop .drop-sub { font-size: 12px; color: var(--txd); }
+  .logo-preview { display: none; text-align: center; margin-bottom: 12px; position: relative; }
+  .logo-preview img { max-height: 80px; max-width: 200px; border-radius: 8px; border: 1px solid var(--bd); }
+  .logo-preview .rm-logo {
+    position: absolute; top: -8px; right: calc(50% - 108px);
+    background: rgba(0,0,0,.7); color: #fff; border: none; border-radius: 50%;
+    width: 22px; height: 22px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+
+  /* Sub-story selector */
+  .substory-wrap { display: none; margin: 14px 0 4px; }
+  .substory-wrap.on { display: block; }
+  .substory-label { font-size: 12px; color: var(--txd); margin-bottom: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+  .substory-cards { display: flex; flex-direction: column; gap: 8px; }
+  .substory-card {
+    padding: 12px 14px; border: 1px solid var(--bd); border-radius: 10px;
+    background: var(--bg); cursor: pointer; transition: all .2s; text-align: left;
+  }
+  .substory-card:hover { border-color: var(--ac); }
+  .substory-card.on { border-color: var(--ac); background: var(--acd); }
+  .substory-card .ss-title { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+  .substory-card .ss-desc { font-size: 12px; color: var(--txd); line-height: 1.4; }
+  .substory-card.on .ss-desc { color: var(--ac); }
+
+  /* Suggest button */
+  .suggest-row { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 14px; }
+  .suggest-row .input { flex: 1; margin-bottom: 0; }
+  .btn-suggest { white-space: nowrap; font-size: 13px; padding: 10px 12px; }
+
   .progress-panel {
     background: var(--sf); border: 1px solid var(--bd); border-radius: 12px;
     padding: 20px; margin-top: 16px; display: none;
@@ -146,11 +185,22 @@
 
   <!-- Step 2: Logo -->
   <div class="card" id="step2" style="display:none;">
-    <label class="input-label">Step 2 — Upload Logo (optional)</label>
-    <div class="upload-area" id="logoArea" style="margin-bottom:10px;">
-      <span id="logoText">Click to upload logo (PNG with transparency preferred)</span>
-      <input type="file" accept="image/*" id="logoInput">
+    <label class="input-label">Step 2 — Upload Your Logo <span style="color:var(--txd);font-weight:400;">(optional)</span></label>
+
+    <!-- Preview (shown after upload) -->
+    <div class="logo-preview" id="logoPreview">
+      <img id="logoPreviewImg" src="" alt="Logo preview">
+      <button class="rm-logo" onclick="removeLogo()">✕</button>
     </div>
+
+    <!-- Drop zone (hidden after upload) -->
+    <div class="logo-drop" id="logoDropZone">
+      <div class="drop-icon">🖼️</div>
+      <div class="drop-title">Drag your logo here or click to browse</div>
+      <div class="drop-sub">PNG, JPG, or SVG · Your logo will appear in the corner of every scene</div>
+      <input type="file" accept="image/png,image/jpeg,image/svg+xml,image/*" id="logoInput">
+    </div>
+
     <div style="display:flex;gap:8px;">
       <button class="btn" onclick="goToStep(1)">← Back</button>
       <button class="btn btn-primary" style="flex:1;" onclick="goToStep(3)">Next →</button>
@@ -159,8 +209,13 @@
 
   <!-- Step 3: Description -->
   <div class="card" id="step3" style="display:none;">
-    <label class="input-label">Step 3 — Describe Your Business (1 line)</label>
-    <input class="input" id="bizDesc" placeholder="Kitchen & bathroom remodeling, Los Angeles CA" style="margin-bottom:14px;">
+    <label class="input-label">Step 3 — Describe Your Business</label>
+    <p style="font-size:13px;color:var(--txd);margin-bottom:10px;">AI will analyze your photos and suggest a description. Edit it or write your own.</p>
+    <div class="suggest-row">
+      <input class="input" id="bizDesc" placeholder="Kitchen & bathroom remodeling, Los Angeles CA">
+      <button class="btn btn-suggest" id="suggestBtn" onclick="suggestDescription()">🔄 Suggest</button>
+    </div>
+    <p id="suggestStatus" style="font-size:12px;color:var(--txd);margin-bottom:10px;display:none;"></p>
     <div style="display:flex;gap:8px;">
       <button class="btn" onclick="goToStep(2)">← Back</button>
       <button class="btn btn-primary" style="flex:1;" onclick="goToStep(4)">Next →</button>
@@ -186,8 +241,22 @@
         <div class="label">Luxury</div>
         <div class="sub">Cinematic & premium</div>
       </button>
+      <button class="style-btn" onclick="setStyle(this,'Timelapse')" id="styleTL">
+        <div class="icon">⏱️</div>
+        <div class="label">Timelapse</div>
+        <div class="sub">Transformation reveal</div>
+      </button>
     </div>
-    <div style="display:flex;gap:8px;">
+
+    <!-- Sub-story selector (shown after style pick) -->
+    <div class="substory-wrap on" id="substoryWrap">
+      <div class="substory-label">Choose your story direction</div>
+      <div class="substory-cards" id="substoryCards">
+        <!-- populated by JS when style changes -->
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:14px;">
       <button class="btn" onclick="goToStep(3)">← Back</button>
       <button class="btn btn-primary" style="flex:1;" onclick="goToStep(5)">Next →</button>
     </div>
@@ -273,6 +342,7 @@ let photos = [];  // { b64, src }
 let logoB64 = null;
 let adStyle = 'Professional';
 let adDuration = '15s';
+let adSubStory = '';
 let currentStep = 1;
 
 // ── Photo slots ──
@@ -338,26 +408,83 @@ async function resizeB64(src, maxPx) {
   });
 }
 
-// Logo upload
-document.getElementById('logoInput').addEventListener('change', function(e) {
-  const f = e.target.files[0];
-  if (!f) return;
+// ── Logo upload (drag & drop) ──
+function handleLogoFile(file) {
+  if (!file) return;
   const r = new FileReader();
   r.onload = ev => {
     logoB64 = ev.target.result.split(',')[1];
-    document.getElementById('logoArea').innerHTML = `<img src="${ev.target.result}" style="max-height:80px;border-radius:6px;"><input type="file" accept="image/*" id="logoInput">`;
-    document.getElementById('logoInput').addEventListener('change', function(e2) {
-      const f2 = e2.target.files[0]; if (!f2) return;
-      const r2 = new FileReader(); r2.onload = ev2 => { logoB64 = ev2.target.result.split(',')[1]; }; r2.readAsDataURL(f2);
-    });
+    const previewEl = document.getElementById('logoPreview');
+    document.getElementById('logoPreviewImg').src = ev.target.result;
+    previewEl.style.display = 'block';
+    document.getElementById('logoDropZone').style.display = 'none';
   };
-  r.readAsDataURL(f);
+  r.readAsDataURL(file);
+}
+
+function removeLogo() {
+  logoB64 = null;
+  document.getElementById('logoPreview').style.display = 'none';
+  document.getElementById('logoDropZone').style.display = 'block';
+}
+
+document.getElementById('logoInput').addEventListener('change', e => handleLogoFile(e.target.files[0]));
+
+const dropZone = document.getElementById('logoDropZone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  handleLogoFile(e.dataTransfer.files[0]);
 });
+
+const SUB_STORIES = {
+  Professional: [
+    { title: '🎬 The Reveal', desc: 'Slow zoom on the finished work — stark contrast with before.' },
+    { title: '🔨 The Process', desc: 'Step-by-step transformation ending with a happy client.' },
+    { title: '🏷️ The Brand', desc: 'Logo intro → quality work → clear call to action.' }
+  ],
+  Energetic: [
+    { title: '💥 Power Build', desc: 'Fast cuts of workers, tools, and action shots.' },
+    { title: '⚡ Before vs After', desc: 'Rapid-fire dramatic contrast between old and new.' },
+    { title: '👷 The Team', desc: 'Faces, hands, and crew energy — people trust people.' }
+  ],
+  Luxury: [
+    { title: '✨ The Dream', desc: 'Premium materials and finishes in slow, cinematic motion.' },
+    { title: '🔍 The Craftsmanship', desc: 'Close-up detail shots showcasing quality and precision.' },
+    { title: '🏡 The Lifestyle', desc: 'Aspirational feel — family enjoying the finished space.' }
+  ],
+  Timelapse: [
+    { title: '🏗️ Full Transformation', desc: 'Tear-down → build → final reveal in compressed time.' },
+    { title: '⚡ Speed Build', desc: 'Rapid construction sequence showing efficiency and skill.' },
+    { title: '✨ Magic Reveal', desc: 'Before/after with a satisfying timelapse transition moment.' }
+  ]
+};
 
 function setStyle(el, s) {
   document.querySelectorAll('.style-btn').forEach(b => b.classList.remove('on'));
   el.classList.add('on');
   adStyle = s;
+  renderSubStories(s);
+}
+
+function renderSubStories(style) {
+  const stories = SUB_STORIES[style] || SUB_STORIES.Professional;
+  adSubStory = stories[0].title; // default to first
+  const container = document.getElementById('substoryCards');
+  container.innerHTML = stories.map((s, i) => `
+    <div class="substory-card${i === 0 ? ' on' : ''}" onclick="pickSubStory(this, '${s.title.replace(/'/g, "\\'")}')">
+      <div class="ss-title">${escHtml(s.title)}</div>
+      <div class="ss-desc">${escHtml(s.desc)}</div>
+    </div>
+  `).join('');
+}
+
+function pickSubStory(el, title) {
+  document.querySelectorAll('.substory-card').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+  adSubStory = title;
 }
 
 function setDuration(el, d) {
@@ -380,6 +507,42 @@ function goToStep(n) {
     if (i < n) dot.textContent = '✓ ' + dot.textContent.replace('✓ ', '');
   }
   currentStep = n;
+
+  // Auto-suggest description when entering step 3 (only if field is empty)
+  if (n === 3 && !document.getElementById('bizDesc').value.trim()) {
+    suggestDescription();
+  }
+
+  // Init sub-stories on step 4
+  if (n === 4) {
+    renderSubStories(adStyle);
+  }
+}
+
+async function suggestDescription() {
+  if (photos.length < 1) return;
+  const btn = document.getElementById('suggestBtn');
+  const statusEl = document.getElementById('suggestStatus');
+  btn.disabled = true;
+  btn.textContent = '⏳ Analyzing...';
+  statusEl.style.display = 'block';
+  statusEl.textContent = 'Analyzing your photos with AI...';
+
+  try {
+    const data = await apiCall('/api/ad-creator/suggest-description', {
+      method: 'POST',
+      body: { photos: photos.slice(0, 3).map(p => p.b64) }
+    });
+    if (data.suggestion) {
+      document.getElementById('bizDesc').value = data.suggestion;
+      statusEl.textContent = '✓ AI suggestion ready — edit it or use as is';
+    }
+  } catch (err) {
+    statusEl.textContent = 'Could not suggest — enter your description manually';
+  }
+
+  btn.disabled = false;
+  btn.textContent = '🔄 Suggest';
 }
 
 // ── Status helpers ──
@@ -420,7 +583,8 @@ async function generateAd() {
         logo: logoB64,
         description: desc,
         style: adStyle,
-        duration: adDuration
+        duration: adDuration,
+        subStory: adSubStory
       }
     });
   } catch (err) {
@@ -658,6 +822,7 @@ function loadScript(src) {
 
 // Init
 renderPhotoGrid();
+renderSubStories('Professional'); // default
 </script>
 </body>
 </html>
