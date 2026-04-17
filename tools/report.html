@@ -229,7 +229,7 @@ Respond JSON only:
       <div class="report-date">${today}${client ? ' — ' + client : ''}</div>
       <div class="report-section"><h3>Project Overview</h3><p>${r.overview}</p></div>
       <div class="report-section"><h3>Work Completed</h3><ul>${(r.work_completed || []).map(w => '<li>' + w + '</li>').join('')}</ul></div>
-      ${r.materials_noted?.length ? `<div class="report-section"><h3>Materials</h3><ul>${r.materials_noted.map(m => '<li>' + m + '</li>').join('')}</ul></div>` : ''}
+      ${Array.isArray(r.materials_noted) && r.materials_noted.length ? `<div class="report-section"><h3>Materials</h3><ul>${r.materials_noted.map(m => '<li>' + m + '</li>').join('')}</ul></div>` : ''}
       <div class="report-section"><h3>AI Quality Assessment</h3><div class="report-score">${r.quality_score}/10</div><p>${r.quality_notes}</p></div>
       ${r.recommendations ? `<div class="report-section"><h3>Recommendations</h3><p>${r.recommendations}</p></div>` : ''}
       <div class="report-footer">Powered by BQ Tools — bqtools.dev</div>`;
