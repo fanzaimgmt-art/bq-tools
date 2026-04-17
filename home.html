@@ -23,15 +23,37 @@
   /* Tools Grid */
   .home-tools { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 32px; }
   .home-tool {
+    position: relative; overflow: hidden;
     background: var(--sf); border: 1px solid var(--bd); border-radius: 14px;
-    padding: 20px 16px; text-align: center; text-decoration: none; color: var(--tx);
-    transition: all .2s; display: flex; flex-direction: column; align-items: center; gap: 8px;
+    padding: 20px 16px 14px; text-align: center; text-decoration: none; color: var(--tx);
+    transition: all 0.3s cubic-bezier(.4,0,.2,1);
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    cursor: pointer;
   }
-  .home-tool:hover { border-color: var(--ac); transform: translateY(-2px); opacity: 1; }
-  .home-tool .ht-icon { font-size: 28px; }
+  .home-tool::before {
+    content: ''; position: absolute; inset: 0; opacity: 0;
+    transition: opacity 0.3s ease; border-radius: 14px; pointer-events: none;
+  }
+  .home-tool:hover { border-color: var(--ac); transform: scale(1.05) translateY(-8px); opacity: 1;
+    box-shadow: 0 20px 40px rgba(232,197,71,0.2); }
+  .home-tool:hover::before { opacity: 1; }
+  /* Gradient overlays per type */
+  .ht-g-cyan::before  { background: radial-gradient(circle at 50% 0%, rgba(99,205,218,.18), transparent 70%); }
+  .ht-g-blue::before  { background: radial-gradient(circle at 50% 0%, rgba(100,130,255,.18), transparent 70%); }
+  .ht-g-green::before { background: radial-gradient(circle at 50% 0%, rgba(81,207,102,.18), transparent 70%); }
+  .ht-g-gold::before  { background: radial-gradient(circle at 50% 0%, rgba(232,197,71,.18), transparent 70%); }
+  .ht-g-pink::before  { background: radial-gradient(circle at 50% 0%, rgba(255,107,157,.18), transparent 70%); }
+  .home-tool .ht-icon { font-size: 28px; transition: transform 0.3s ease; }
+  .home-tool:hover .ht-icon { transform: scale(1.15); }
   .home-tool .ht-name { font-size: 14px; font-weight: 700; }
   .home-tool .ht-cost { font-size: 11px; color: var(--txd); }
   .home-tool .ht-cost.free { color: var(--grn); }
+  .home-tool .ht-tip {
+    font-size: 11px; color: var(--txd); line-height: 1.35; margin-top: 2px;
+    max-height: 0; overflow: hidden; opacity: 0;
+    transition: max-height 0.3s ease, opacity 0.25s ease;
+  }
+  .home-tool:hover .ht-tip { max-height: 36px; opacity: 1; }
 
   /* Section headers */
   .home-section {
@@ -132,29 +154,6 @@
     <div class="home-credit-badge" id="creditBadge">⚡ <span id="creditNum">0</span></div>
   </div>
 
-  <!-- Chrome Extension Banner -->
-  <div id="extBanner" style="background:linear-gradient(135deg,var(--sf),var(--acd));border:1px solid var(--ac);border-radius:12px;padding:14px 18px;margin-bottom:18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-    <span style="font-size:28px;">🎬</span>
-    <div style="flex:1;min-width:200px;">
-      <div style="font-size:14px;font-weight:700;color:var(--ac);" data-en="Get the Chrome Extension" data-he="קבל את תוסף Chrome">Get the Chrome Extension</div>
-      <div style="font-size:12px;color:var(--txd);" data-en="Download videos without watermark, save inspiration from any feed" data-he="הורד סרטונים ללא watermark, שמור השראה מכל feed">Download videos without watermark, save inspiration from any feed</div>
-    </div>
-    <button class="btn btn-sm btn-primary" onclick="showExtInfo()" data-en="Install →" data-he="התקן →">Install →</button>
-    <button onclick="document.getElementById('extBanner').style.display='none';localStorage.setItem('bq_ext_dismissed','1')" style="background:none;border:none;color:var(--txd);cursor:pointer;font-size:18px;">✕</button>
-  </div>
-  <script>
-    if (localStorage.getItem('bq_ext_dismissed') === '1') {
-      const b = document.getElementById('extBanner');
-      if (b) b.style.display = 'none';
-    }
-    function showExtInfo() {
-      const h = lang === 'he';
-      alert(h
-        ? 'התוסף בשלבי פרסום ב-Chrome Web Store. בינתיים, אפשר להתקין ידנית: הורד את הקבצים מ-~/Projects/bq-tools-extension, פתח chrome://extensions, הפעל Developer mode, לחץ Load unpacked, ובחר את התיקיה.'
-        : 'The extension is pending Chrome Web Store review. In the meantime, install manually: download files from ~/Projects/bq-tools-extension, open chrome://extensions, enable Developer mode, click Load unpacked, and select the folder.');
-    }
-  </script>
-
   <!-- News Banner -->
   <div id="newsBanner" style="display:none;background:var(--sf);border:1px solid var(--ac);border-radius:12px;padding:14px 18px;margin-bottom:18px;cursor:pointer;transition:all .2s;" onclick="window.location='/news.html'">
     <div style="display:flex;align-items:center;gap:10px;">
@@ -191,105 +190,125 @@
     <h2 data-en="Your Toolbox" data-es="Tu Caja de Herramientas" data-he="ארגז הכלים שלך">Your Toolbox</h2>
   </div>
   <div class="home-tools">
-    <a href="/tools/compare.html" class="home-tool">
+    <a href="/tools/compare.html" class="home-tool ht-g-cyan">
       <span class="ht-icon">🔀</span>
       <span class="ht-name" data-en="Compare" data-es="Comparar" data-he="השוואה">Compare</span>
       <span class="ht-cost free">FREE</span>
+      <span class="ht-tip">Compare any 2 photos in seconds</span>
     </a>
-    <a href="/tools/compare.html" class="home-tool">
+    <a href="/tools/compare.html" class="home-tool ht-g-blue">
       <span class="ht-icon">🧠</span>
       <span class="ht-name" data-en="AI Analysis" data-es="Análisis IA" data-he="ניתוח AI">AI Analysis</span>
       <span class="ht-cost">1 credit</span>
+      <span class="ht-tip">AI finds issues before clients do</span>
     </a>
-    <a href="/tools/report.html" class="home-tool">
+    <a href="/tools/report.html" class="home-tool ht-g-blue">
       <span class="ht-icon">📄</span>
       <span class="ht-name" data-en="Quick Report" data-es="Reporte Rápido" data-he="דוח מהיר">Quick Report</span>
       <span class="ht-cost">1 credit</span>
+      <span class="ht-tip">Generate a PDF report instantly</span>
     </a>
-    <a href="/tools/estimate.html" class="home-tool">
+    <a href="/tools/estimate.html" class="home-tool ht-g-green">
       <span class="ht-icon">💰</span>
       <span class="ht-name" data-en="Smart Estimate" data-es="Estimado Inteligente" data-he="הערכת עלות">Smart Estimate</span>
       <span class="ht-cost">1 credit</span>
+      <span class="ht-tip">Cost breakdown in under 60 seconds</span>
     </a>
-    <a href="/tools/client-page.html" class="home-tool">
+    <a href="/tools/client-page.html" class="home-tool ht-g-gold">
       <span class="ht-icon">🔗</span>
       <span class="ht-name" data-en="Client Page" data-es="Página de Cliente" data-he="עמוד לקוח">Client Page</span>
       <span class="ht-cost free">FREE</span>
+      <span class="ht-tip">Share a link, look professional</span>
     </a>
-    <a href="/tools/social-post.html" class="home-tool">
+    <a href="/tools/social-post.html" class="home-tool ht-g-pink">
       <span class="ht-icon">📱</span>
       <span class="ht-name" data-en="Social Post" data-es="Post Social" data-he="פוסט חברתי">Social Post</span>
       <span class="ht-cost">1 credit</span>
+      <span class="ht-tip">AI-crafted posts that get likes</span>
     </a>
-    <a href="/tools/review.html" class="home-tool">
+    <a href="/tools/review.html" class="home-tool ht-g-gold">
       <span class="ht-icon">⭐</span>
       <span class="ht-name" data-en="Review Request" data-es="Solicitud de Reseña" data-he="בקשת ביקורת">Review Request</span>
       <span class="ht-cost">1 credit</span>
+      <span class="ht-tip">Get more 5-star reviews</span>
     </a>
-    <a href="/tools/sketch.html" class="home-tool">
+    <a href="/tools/sketch.html" class="home-tool ht-g-cyan">
       <span class="ht-icon">✏️</span>
       <span class="ht-name" data-en="Quick Sketch" data-es="Boceto Rápido" data-he="סקיצה מהירה">Quick Sketch</span>
       <span class="ht-cost">1 credit</span>
+      <span class="ht-tip">Rough idea → clean sketch</span>
     </a>
-    <a href="/tools/social-analysis.html" class="home-tool">
+    <a href="/tools/social-analysis.html" class="home-tool ht-g-blue">
       <span class="ht-icon">📊</span>
       <span class="ht-name" data-en="Social Analysis" data-es="Análisis Social" data-he="ניתוח סושיאל">Social Analysis</span>
       <span class="ht-cost">2 credits</span>
+      <span class="ht-tip">Deep dive on any IG profile</span>
     </a>
-    <a href="/chat.html" class="home-tool">
+    <a href="/chat.html" class="home-tool ht-g-cyan">
       <span class="ht-icon">💬</span>
       <span class="ht-name" data-en="AI Chat" data-es="Chat IA" data-he="צ'אט AI">AI Chat</span>
       <span class="ht-cost">1-6 credits</span>
+      <span class="ht-tip">Ask anything, get contractor answers</span>
     </a>
-    <a href="/tools/content-spy.html" class="home-tool">
+    <a href="/tools/content-spy.html" class="home-tool ht-g-pink">
       <span class="ht-icon">🔍</span>
       <span class="ht-name" data-en="Content Spy" data-es="Espía de Contenido" data-he="מרגל תוכן">Content Spy</span>
       <span class="ht-cost">2 credits</span>
+      <span class="ht-tip">See what's working in your niche</span>
     </a>
-    <a href="/tools/downloader.html" class="home-tool">
+    <a href="/tools/downloader.html" class="home-tool ht-g-blue">
       <span class="ht-icon">📥</span>
       <span class="ht-name" data-en="Downloader" data-es="Descargador" data-he="מוריד">Downloader</span>
       <span class="ht-cost">1 credit</span>
+      <span class="ht-tip">Save videos, no watermark</span>
     </a>
-    <a href="/tools/moodboard.html" class="home-tool">
+    <a href="/tools/moodboard.html" class="home-tool ht-g-pink">
       <span class="ht-icon">💖</span>
       <span class="ht-name" data-en="Moodboard" data-es="Tablero de Inspiración" data-he="מוד בורד">Moodboard</span>
       <span class="ht-cost free">FREE</span>
+      <span class="ht-tip">Build visual mood boards fast</span>
     </a>
-    <a href="/tools/quote.html" class="home-tool">
+    <a href="/tools/quote.html" class="home-tool ht-g-gold">
       <span class="ht-icon">📝</span>
       <span class="ht-name" data-en="Quote Generator" data-es="Generador de Cotizaciones" data-he="מחולל הצעות">Quote Generator</span>
       <span class="ht-cost">1 credit</span>
+      <span class="ht-tip">Pro quotes in 30 seconds</span>
     </a>
-    <a href="/tools/invoice.html" class="home-tool">
+    <a href="/tools/invoice.html" class="home-tool ht-g-green">
       <span class="ht-icon">🧾</span>
       <span class="ht-name" data-en="Invoice" data-es="Factura" data-he="חשבונית">Invoice</span>
       <span class="ht-cost free">FREE</span>
+      <span class="ht-tip">Send invoices like a pro</span>
     </a>
-    <a href="/tools/contract.html" class="home-tool">
+    <a href="/tools/contract.html" class="home-tool ht-g-blue">
       <span class="ht-icon">📜</span>
       <span class="ht-name" data-en="Contract" data-es="Contrato" data-he="חוזה">Contract</span>
       <span class="ht-cost">2 credits</span>
+      <span class="ht-tip">Legal-grade contracts, done</span>
     </a>
-    <a href="/tools/ai-video.html" class="home-tool" style="border-color:rgba(99,205,218,.4);">
+    <a href="/tools/ai-video.html" class="home-tool ht-g-cyan" style="border-color:rgba(99,205,218,.4);">
       <span class="ht-icon">🎬</span>
       <span class="ht-name" data-en="AI Video" data-he="וידאו AI">AI Video</span>
       <span class="ht-cost" style="background:rgba(99,205,218,.15);color:#63cdda;">PRO</span>
+      <span class="ht-tip">Turn photos into cinematic clips</span>
     </a>
-    <a href="/tools/ad-creator.html" class="home-tool" style="border-color:rgba(255,159,67,.4);">
+    <a href="/tools/ad-creator.html" class="home-tool ht-g-gold" style="border-color:rgba(255,159,67,.4);">
       <span class="ht-icon">🎨</span>
       <span class="ht-name" data-en="Auto Ad Creator" data-he="יוצר מודעות">Auto Ad Creator</span>
       <span class="ht-cost" style="background:rgba(255,159,67,.15);color:#ff9f43;">20 credits</span>
+      <span class="ht-tip">Full video ad, automated</span>
     </a>
-    <a href="/training.html" class="home-tool" style="border-color:var(--grn);">
+    <a href="/training.html" class="home-tool ht-g-green" style="border-color:var(--grn);">
       <span class="ht-icon">🧠</span>
       <span class="ht-name" data-en="Train AI" data-es="Entrenar IA" data-he="אמן AI">Train AI</span>
       <span class="ht-cost" style="background:rgba(81,207,102,.15);color:var(--grn);">NEW</span>
+      <span class="ht-tip">Teach AI your brand voice</span>
     </a>
-    <a href="/business.html" class="home-tool" style="border-color:var(--ac);background:linear-gradient(135deg,var(--sf),var(--acd));">
+    <a href="/business.html" class="home-tool ht-g-gold" style="border-color:var(--ac);background:linear-gradient(135deg,var(--sf),var(--acd));">
       <span class="ht-icon">💼</span>
       <span class="ht-name" data-en="Business Suite" data-es="Suite de Negocio" data-he="חבילת עסק">Business Suite</span>
       <span class="ht-cost" style="background:var(--ac);color:var(--bg);font-weight:800;">8 TOOLS</span>
+      <span class="ht-tip">8 tools, one power pack</span>
     </a>
   </div>
 
@@ -523,5 +542,28 @@ async function saveBrain() {
   }
 }
 </script>
+
+  <!-- Chrome Extension Banner — bottom of page -->
+  <div id="extBanner" style="background:linear-gradient(135deg,var(--sf),var(--acd));border:1px solid var(--ac);border-radius:12px;padding:14px 18px;margin-top:28px;margin-bottom:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+    <span style="font-size:24px;">🌐</span>
+    <div style="flex:1;min-width:200px;">
+      <div style="font-size:13px;font-weight:700;color:var(--ac);" data-en="Take BQ Tools further → Install Chrome Extension" data-he="קח את BQ Tools רחוק יותר ← התקן את תוסף Chrome">Take BQ Tools further → Install Chrome Extension</div>
+      <div style="font-size:12px;color:var(--txd);" data-en="Download videos without watermark, save inspiration from any feed" data-he="הורד סרטונים ללא watermark, שמור השראה מכל feed">Download videos without watermark, save inspiration from any feed</div>
+    </div>
+    <button class="btn btn-sm btn-primary" onclick="showExtInfo()" data-en="Install →" data-he="התקן →">Install →</button>
+    <button onclick="document.getElementById('extBanner').style.display='none';localStorage.setItem('bq_ext_dismissed','1')" style="background:none;border:none;color:var(--txd);cursor:pointer;font-size:18px;">✕</button>
+  </div>
+  <script>
+    if (localStorage.getItem('bq_ext_dismissed') === '1') {
+      const b = document.getElementById('extBanner');
+      if (b) b.style.display = 'none';
+    }
+    function showExtInfo() {
+      const h = lang === 'he';
+      alert(h
+        ? 'התוסף בשלבי פרסום ב-Chrome Web Store. בינתיים, אפשר להתקין ידנית: הורד את הקבצים מ-~/Projects/bq-tools-extension, פתח chrome://extensions, הפעל Developer mode, לחץ Load unpacked, ובחר את התיקיה.'
+        : 'The extension is pending Chrome Web Store review. In the meantime, install manually: download files from ~/Projects/bq-tools-extension, open chrome://extensions, enable Developer mode, click Load unpacked, and select the folder.');
+    }
+  </script>
 </body>
 </html>

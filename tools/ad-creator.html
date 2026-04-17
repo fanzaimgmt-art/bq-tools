@@ -627,7 +627,7 @@ async function generateAd() {
   const frameUrls = await pollAllFrames();
   setStatus('st-frames', 'done', 'done ✓');
 
-  // Step c: start Kinovi jobs for each frame + logo outro
+  // Step c: start video jobs for each frame + logo outro
   setStatus('st-video', 'run', 'running');
   const videoUrls = await animateFrames(frameUrls);
   setStatus('st-video', 'done', 'done ✓');
@@ -705,7 +705,7 @@ async function pollAllFrames() {
   });
 }
 
-// Start Kinovi video jobs for each frame
+// Start video jobs for each frame
 async function animateFrames(frameUrls) {
   const videoUrls = [];
   for (let i = 0; i < adScenes.length; i++) {
@@ -713,7 +713,7 @@ async function animateFrames(frameUrls) {
     if (!imgUrl) { videoUrls.push(null); continue; }
 
     try {
-      // Start Kinovi job
+      // Start video job
       const scene = adScenes[i];
       const prompt = scene.visual || scene.imagePrompt || 'cinematic motion, professional';
       const res = await apiCall('/api/kinovi/create', {
@@ -730,17 +730,17 @@ async function animateFrames(frameUrls) {
       if (!taskId) { videoUrls.push(null); continue; }
 
       // Poll for completion
-      const videoUrl = await pollKinoviJob(taskId, i);
+      const videoUrl = await pollVideoJob(taskId, i);
       videoUrls.push(videoUrl);
     } catch (err) {
-      console.warn(`Kinovi scene ${i} failed:`, err.message);
+      console.warn(`Video scene ${i} failed:`, err.message);
       videoUrls.push(null);
     }
   }
   return videoUrls;
 }
 
-async function pollKinoviJob(taskId, sceneIdx) {
+async function pollVideoJob(taskId, sceneIdx) {
   return new Promise(resolve => {
     const interval = setInterval(async () => {
       try {

@@ -228,7 +228,7 @@
   <!-- Header -->
   <div class="page-header">
     <h1>🎬 AI Video <span class="badge">Seedance 2</span></h1>
-    <p>Text-to-video &amp; image-to-video powered by Kinovi (Seedance 2.0 by ByteDance)</p>
+    <p>Text-to-video &amp; image-to-video powered by Seedance 2.0</p>
   </div>
 
   <!-- Mode Tabs -->
@@ -420,7 +420,7 @@ e.g. A contractor power-washing a driveway, cinematic, golden hour lighting, slo
     if (upscale === '4k') cps += 28;
 
     const total = cps * dur;
-    const usd = (total * 0.005).toFixed(2); // ~$0.005 per credit based on Kinovi pricing
+    const usd = (total * 0.005).toFixed(2); // ~$0.005 per credit
 
     document.getElementById('estCredits').textContent = total + ' credits';
     document.getElementById('estUsd').textContent = '≈ $' + usd;
