@@ -351,6 +351,19 @@ async function checkRateLimit(email, env) {
   return true;
 }
 
+// Timing-safe string comparison to prevent timing attacks on admin password checks.
+// Encodes both strings as UTF-8 and ORs mismatch bits so execution time is constant
+// regardless of where the first differing byte is.
+function timingSafeEq(a, b) {
+  const enc = new TextEncoder();
+  const ab = enc.encode(a);
+  const bb = enc.encode(b);
+  if (ab.length !== bb.length) return false;
+  let diff = 0;
+  for (let i = 0; i < ab.length; i++) diff |= ab[i] ^ bb[i];
+  return diff === 0;
+}
+
 // Admin auth check — no fallback; returns false if ADMIN_PASSWORD is unset
 function isAdmin(request, env) {
   const secret = env.ADMIN_PASSWORD;
@@ -360,8 +373,8 @@ function isAdmin(request, env) {
   }
   const auth = request.headers.get('Authorization') || '';
   const password = auth.replace('Bearer ', '');
-  if (password !== secret) {
-    console.error('[isAdmin] password mismatch — received length:', password.length, 'expected length:', secret.length);
+  if (!timingSafeEq(password, secret)) {
+    console.error('[isAdmin] password mismatch');
     return false;
   }
   return true;
@@ -373,7 +386,7 @@ function handleAdminCheckAuth(request, env) {
   if (!secret) return json({ ok: false, reason: 'ADMIN_PASSWORD not set in worker env — add it to [vars] in wrangler.toml and redeploy' });
   const auth = request.headers.get('Authorization') || '';
   const password = auth.replace('Bearer ', '');
-  if (password !== secret) return json({ ok: false, reason: 'password mismatch' });
+  if (!timingSafeEq(password, secret)) return json({ ok: false });
   return json({ ok: true });
 }
 
@@ -1193,7 +1206,16 @@ Respond with just the tip text, no quotes or prefix.`;
 // ── Error Reporting ──
 
 async function handleErrorReport(request, env) {
+  // Rate-limit: 5 reports per IP per minute to prevent KV flooding
+  const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
+  const allowed = await checkRateLimit(clientIP, env);
+  if (!allowed) return json({ error: 'Too many error reports. Try again in a minute.' }, 429);
+
   const body = await request.json();
+
+  // Size cap: reject payloads over 10 KB
+  if (JSON.stringify(body).length > 10000) return json({ error: 'Report too large' }, 413);
+
   const key = `error:${Date.now()}`;
   await env.BQ_USERS.put(key, JSON.stringify({
     ...body,
