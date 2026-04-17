@@ -1250,7 +1250,7 @@ async function handleDirectoryUpdate(request, env) {
   };
 
   // Allowed fields
-  const allowed = ['businessName', 'type', 'phone', 'contactEmail', 'logo', 'description', 'photos', 'reviews', 'whatsappGroup', 'website', 'facebook', 'instagram', 'youtube', 'licenseNumber', 'yearsInBusiness'];
+  const allowed = ['businessName', 'type', 'phone', 'contactEmail', 'logo', 'city', 'description', 'photos', 'reviews', 'whatsappGroup', 'website', 'facebook', 'instagram', 'youtube', 'licenseNumber', 'yearsInBusiness'];
   for (const k of allowed) {
     if (updates[k] !== undefined) {
       // Limit photos based on tier
@@ -1295,6 +1295,7 @@ async function updateDirectoryIndex(email, listing, env) {
     businessName: listing.businessName,
     type: listing.type,
     tier: listing.tier,
+    city: listing.city || '',
     logo: listing.logo,
     phone: listing.phone,
     description: (listing.description || '').substring(0, 120),
@@ -1302,10 +1303,64 @@ async function updateDirectoryIndex(email, listing, env) {
     reviewCount: (listing.reviews || []).length,
     locationCount: (listing.locations || []).length,
     seeded: listing.seeded || false,
+    claimed: !!listing.claimed,
     updatedAt: listing.updatedAt || listing.createdAt
   });
 
   await env.BQ_USERS.put(indexKey, JSON.stringify(filtered));
+}
+
+// Redact a directory listing based on viewer tier.
+// - Anonymous/free viewer: name, type, city, tier, seeded, claimed only
+// - Pro viewer or owner: + logo, phone, contactEmail, website, socials, license, years
+// - Featured listing + pro viewer: + description, whatsapp, photos, reviews, locations (marketing perks)
+// - Owner (same email): always gets full listing (for profile edit flow)
+function redactListing(listing, viewer, opts = {}) {
+  const full = !!opts.full;
+  const isOwner = !!(viewer && viewer.email === listing.email);
+  if (isOwner) return { ...listing, _viewerIsOwner: true };
+
+  const viewerIsPro = !!(viewer && viewer.isPro);
+  const listingIsFeatured = listing.tier === 'featured';
+
+  const out = {
+    email: listing.email,
+    businessName: listing.businessName || '',
+    type: listing.type || '',
+    city: listing.city || '',
+    tier: listing.tier || 'free',
+    seeded: !!listing.seeded,
+    claimed: !!listing.claimed,
+    updatedAt: listing.updatedAt || listing.createdAt || null
+  };
+
+  if (viewerIsPro) {
+    out.logo = listing.logo || '';
+    out.phone = listing.phone || '';
+    out.contactEmail = listing.contactEmail || '';
+    out.website = listing.website || '';
+    out.instagram = listing.instagram || '';
+    out.facebook = listing.facebook || '';
+    out.youtube = listing.youtube || '';
+    out.licenseNumber = listing.licenseNumber || '';
+    out.yearsInBusiness = listing.yearsInBusiness || '';
+  }
+
+  if (listingIsFeatured && viewerIsPro) {
+    out.whatsappGroup = listing.whatsappGroup || '';
+    out.description = listing.description || '';
+    if (full) {
+      out.photos = listing.photos || [];
+      out.reviews = listing.reviews || [];
+      out.locations = listing.locations || [];
+    } else {
+      out.photoCount = Array.isArray(listing.photos) ? listing.photos.length : (listing.photoCount || 0);
+      out.reviewCount = Array.isArray(listing.reviews) ? listing.reviews.length : (listing.reviewCount || 0);
+      out.locationCount = Array.isArray(listing.locations) ? listing.locations.length : (listing.locationCount || 0);
+    }
+  }
+
+  return out;
 }
 
 async function handleDirectoryList(request, env) {
@@ -1313,15 +1368,19 @@ async function handleDirectoryList(request, env) {
   const search = (url.searchParams.get('q') || '').toLowerCase();
   const typeFilter = url.searchParams.get('type') || '';
 
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const viewer = token ? await getUserByToken(token, env) : null;
+
   const raw = await env.BQ_USERS.get('directory:index');
   let listings = raw ? JSON.parse(raw) : [];
 
-  // Filter
+  // Filter (use pre-redaction fields so search works regardless of viewer tier)
   if (search) {
     listings = listings.filter(l =>
       (l.businessName || '').toLowerCase().includes(search) ||
       (l.type || '').toLowerCase().includes(search) ||
-      (l.description || '').toLowerCase().includes(search)
+      (l.description || '').toLowerCase().includes(search) ||
+      (l.city || '').toLowerCase().includes(search)
     );
   }
   if (typeFilter) {
@@ -1337,6 +1396,9 @@ async function handleDirectoryList(request, env) {
     return (b.updatedAt || '').localeCompare(a.updatedAt || '');
   });
 
+  // Redact each entry per viewer tier
+  listings = listings.map(l => redactListing(l, viewer, { full: false }));
+
   return json({ ok: true, listings, count: listings.length });
 }
 
@@ -1350,17 +1412,10 @@ async function handleDirectoryProfile(request, env) {
 
   const listing = JSON.parse(raw);
 
-  // Strip sensitive data for free tier
-  const result = { ...listing };
-  if (listing.tier === 'free') {
-    result.phone = '';
-    result.contactEmail = '';
-    result.logo = '';
-    result.photos = [];
-    result.reviews = [];
-  }
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const viewer = token ? await getUserByToken(token, env) : null;
 
-  return json({ ok: true, listing: result });
+  return json({ ok: true, listing: redactListing(listing, viewer, { full: true }) });
 }
 
 async function handleDirectoryLocation(request, env) {

@@ -254,7 +254,9 @@ function initMap() {
 // Load listings
 async function loadListings() {
   try {
-    const res = await fetch(`${API_URL}/api/directory/list`);
+    const token = getToken();
+    const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+    const res = await fetch(`${API_URL}/api/directory/list`, { headers });
     const data = await res.json();
     if (data.ok) {
       allListings = data.listings || [];
@@ -332,9 +334,11 @@ async function loadMapMarkers() {
 
   const bounds = [];
 
+  const token = getToken();
+  const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
   for (const l of withLocations) {
     try {
-      const res = await fetch(`${API_URL}/api/directory/profile?email=${encodeURIComponent(l.email)}`);
+      const res = await fetch(`${API_URL}/api/directory/profile?email=${encodeURIComponent(l.email)}`, { headers });
       const data = await res.json();
       if (!data.ok || !data.listing.locations) continue;
 

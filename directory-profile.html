@@ -182,7 +182,9 @@ if (!email) {
 
 async function loadProfile() {
   try {
-    const res = await fetch(`${API_URL}/api/directory/profile?email=${encodeURIComponent(email)}`);
+    const token = getToken();
+    const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+    const res = await fetch(`${API_URL}/api/directory/profile?email=${encodeURIComponent(email)}`, { headers });
     const data = await res.json();
     if (!data.ok) throw new Error(data.error);
     renderProfile(data.listing);
@@ -194,10 +196,33 @@ async function loadProfile() {
   }
 }
 
+async function claimListing(listingEmail) {
+  try {
+    const data = await apiCall('/api/directory/claim', {
+      method: 'POST',
+      body: { listingEmail }
+    });
+    if (data.ok) {
+      alert(data.message || (lang === 'he' ? 'הרישום נתבעל!' : 'Listing claimed!'));
+      window.location.reload();
+    } else {
+      alert(data.error || (lang === 'he' ? 'לא ניתן לתבעל' : 'Could not claim'));
+    }
+  } catch (e) {
+    alert(e.message || (lang === 'he' ? 'שגיאה' : 'Error'));
+  }
+}
+
 function renderProfile(l) {
+  // Viewer-aware rendering: viewer tier (free/pro) + ownership decide what's shown.
+  // The server already redacts by tier, but we re-check client-side so CTAs reflect the viewer.
+  const viewer = getCachedUser();
+  const viewerIsPro = !!(viewer && viewer.isPro);
+  const isOwner = !!(viewer && l.email && viewer.email === l.email) || l._viewerIsOwner === true;
+  const canSeeContact = viewerIsPro || isOwner;
   const isFeatured = l.tier === 'featured';
-  const isPro = l.tier === 'pro';
-  const isFree = l.tier === 'free';
+  const canSeeMarketing = isOwner || (isFeatured && viewerIsPro);
+  const isUnclaimed = !!l.seeded && !l.claimed;
 
   document.title = `${l.businessName || 'Contractor'} — BQ Directory`;
 
@@ -207,13 +232,44 @@ function renderProfile(l) {
 
   const badge = isFeatured
     ? `<span class="profile-badge badge-featured">⭐ Featured Contractor</span>`
-    : isPro
+    : l.tier === 'pro'
       ? `<span class="profile-badge badge-pro">PRO</span>`
       : '';
 
-  // Contact info (pro+ only)
+  const cityHTML = l.city
+    ? `<div class="profile-type">📍 ${escHtml(l.city)}</div>`
+    : '';
+
+  // Owner bar: edit link
+  let ownerBar = '';
+  if (isOwner) {
+    ownerBar = `
+      <div style="width:92%;max-width:700px;margin:16px auto 0;padding:12px 16px;background:var(--acd);border:1px solid var(--ac);border-radius:12px;display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;">
+        <span style="font-size:14px;font-weight:700;" data-en="This is your listing" data-he="זה הרישום שלך">This is your listing</span>
+        <a href="/profile.html#directory" class="btn btn-primary" style="font-size:13px;padding:8px 16px;min-height:0;" data-en="✏️ Edit listing" data-he="✏️ ערוך רישום">✏️ Edit listing</a>
+      </div>`;
+  }
+
+  // Claim CTA: seeded listing not yet claimed, viewer is not owner
+  let claimCta = '';
+  if (isUnclaimed && !isOwner) {
+    const msg = viewer
+      ? (lang === 'he' ? 'האם העסק הזה שלך? תבעל אותו כדי לערוך ולקבל 30 ימי Pro חינם.' : 'Is this your business? Claim it to edit and get 30 days of Pro free.')
+      : (lang === 'he' ? 'האם העסק הזה שלך? התחבר כדי לתבעל את הרישום.' : 'Is this your business? Sign in to claim this listing.');
+    const btn = viewer
+      ? `<button class="btn btn-primary" onclick="claimListing(${JSON.stringify(l.email)})" data-en="🏷️ Claim this listing" data-he="🏷️ תבעל רישום זה">🏷️ Claim this listing</button>`
+      : `<a href="/auth.html" class="btn btn-primary" data-en="🏷️ Sign in to claim" data-he="🏷️ התחבר כדי לתבעל">🏷️ Sign in to claim</a>`;
+    claimCta = `
+      <div style="width:92%;max-width:700px;margin:16px auto 0;padding:16px;background:var(--sf);border:1px dashed var(--bd);border-radius:12px;text-align:center;">
+        <p style="margin-bottom:10px;font-size:14px;color:var(--txd);">${escHtml(msg)}</p>
+        ${btn}
+      </div>`;
+  }
+
+  // Contact info (pro viewer or owner)
   let contactHTML = '';
-  if (!isFree) {
+  let contactUpgradeCta = '';
+  if (canSeeContact) {
     const items = [];
     if (l.phone) items.push(`<div class="contact-item">📞 <a href="tel:${l.phone}">${escHtml(l.phone)}</a></div>`);
     if (l.contactEmail) items.push(`<div class="contact-item">✉️ <a href="mailto:${l.contactEmail}">${escHtml(l.contactEmail)}</a></div>`);
@@ -224,26 +280,37 @@ function renderProfile(l) {
     if (items.length) {
       contactHTML = `<div class="contact-card">${items.join('')}</div>`;
     }
+  } else {
+    const upgradeMsg = lang === 'he'
+      ? 'שדרג ל-Pro כדי לראות טלפון, אימייל ואתר של הקבלן'
+      : 'Upgrade to Pro to see the contractor\'s phone, email and website';
+    contactUpgradeCta = `
+      <div style="text-align:center;padding:20px;background:var(--sf);border:1px solid var(--bd);border-radius:14px;margin-bottom:20px;">
+        <p style="color:var(--txd);font-size:14px;margin-bottom:12px;">${escHtml(upgradeMsg)}</p>
+        <a href="/auth.html" class="btn btn-primary" data-en="⭐ Upgrade to Pro" data-he="⭐ שדרג ל-Pro">⭐ Upgrade to Pro</a>
+      </div>`;
   }
 
-  // Business details
+  // Business details (pro viewer or owner)
   let detailsHTML = '';
-  const details = [];
-  if (l.yearsInBusiness) details.push(`<div class="contact-item">📅 ${escHtml(l.yearsInBusiness)} ${lang === 'he' ? 'שנות ניסיון' : 'years in business'}</div>`);
-  if (l.licenseNumber) details.push(`<div class="contact-item">📋 ${lang === 'he' ? 'רישיון' : 'License'}: ${escHtml(l.licenseNumber)}</div>`);
-  if (details.length) {
-    detailsHTML = `<div class="contact-card">${details.join('')}</div>`;
+  if (canSeeContact) {
+    const details = [];
+    if (l.yearsInBusiness) details.push(`<div class="contact-item">📅 ${escHtml(l.yearsInBusiness)} ${lang === 'he' ? 'שנות ניסיון' : 'years in business'}</div>`);
+    if (l.licenseNumber) details.push(`<div class="contact-item">📋 ${lang === 'he' ? 'רישיון' : 'License'}: ${escHtml(l.licenseNumber)}</div>`);
+    if (details.length) {
+      detailsHTML = `<div class="contact-card">${details.join('')}</div>`;
+    }
   }
 
-  // WhatsApp (featured only)
+  // WhatsApp: featured listing, pro viewer or owner
   let whatsappHTML = '';
-  if (isFeatured && l.whatsappGroup) {
+  if (canSeeMarketing && l.whatsappGroup) {
     whatsappHTML = `<a href="${escHtml(l.whatsappGroup)}" target="_blank" class="whatsapp-btn">💬 Join WhatsApp Group</a>`;
   }
 
-  // Description
+  // Description (featured marketing)
   let descHTML = '';
-  if (l.description) {
+  if (canSeeMarketing && l.description) {
     descHTML = `
       <div class="profile-desc">
         <h3 data-en="About" data-he="אודות">About</h3>
@@ -251,36 +318,37 @@ function renderProfile(l) {
       </div>`;
   }
 
-  // Photos
+  // Photos (featured marketing)
   let photosHTML = '';
-  if (l.photos && l.photos.length > 0) {
+  if (canSeeMarketing && l.photos && l.photos.length > 0) {
     photosHTML = `
       <div class="photos-section">
         <h3 data-en="Work Photos" data-he="תמונות עבודה">Work Photos</h3>
         <div class="photos-grid">
-          ${l.photos.map(p => `<img src="${p}" alt="Work photo" onclick="openLightbox(this.src)">`).join('')}
+          ${l.photos.map(p => `<img src="${escHtml(p)}" alt="Work photo" onclick="openLightbox(this.src)">`).join('')}
         </div>
       </div>`;
   }
 
-  // Reviews
+  // Reviews (featured marketing)
   let reviewsHTML = '';
-  if (l.reviews && l.reviews.length > 0) {
+  if (canSeeMarketing && l.reviews && l.reviews.length > 0) {
     reviewsHTML = `
       <div class="reviews-section">
         <h3 data-en="Customer Reviews" data-he="ביקורות לקוחות">Customer Reviews</h3>
         ${l.reviews.map(r => `
           <div class="review-card">
-            ${r.image ? `<img src="${r.image}" alt="Review">` : ''}
+            ${r.image ? `<img src="${escHtml(r.image)}" alt="Review">` : ''}
             ${r.text ? `<div class="review-text">${escHtml(r.text)}</div>` : ''}
           </div>
         `).join('')}
       </div>`;
   }
 
-  // Map
+  // Map (featured marketing)
   let mapHTML = '';
-  if (l.locations && l.locations.length > 0) {
+  const hasLocations = canSeeMarketing && l.locations && l.locations.length > 0;
+  if (hasLocations) {
     mapHTML = `
       <div style="margin-bottom:20px;">
         <h3 style="font-size:14px;color:var(--txd);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;" data-en="Work Locations" data-he="מיקומי עבודה">Work Locations</h3>
@@ -290,24 +358,22 @@ function renderProfile(l) {
       </div>`;
   }
 
-  // Contact button
+  // Mailto CTA
   let contactBtnHTML = '';
-  if (!isFree) {
-    const mailto = l.contactEmail ? `mailto:${l.contactEmail}?subject=Inquiry from BQ Directory` : '#';
+  if (canSeeContact && l.contactEmail) {
+    const mailto = `mailto:${l.contactEmail}?subject=Inquiry from BQ Directory`;
     contactBtnHTML = `<a href="${mailto}" class="btn btn-primary btn-large contact-btn" data-en="📩 Contact This Contractor" data-he="📩 צור קשר עם הקבלן">📩 Contact This Contractor</a>`;
-  } else {
-    contactBtnHTML = `
-      <div style="text-align:center;padding:20px;background:var(--sf);border:1px solid var(--bd);border-radius:14px;margin-bottom:20px;">
-        <p style="color:var(--txd);font-size:14px;margin-bottom:12px;" data-en="This contractor has a basic listing. Contact info available for Pro members." data-he="לקבלן זה רישום בסיסי. פרטי קשר זמינים לחברי Pro.">This contractor has a basic listing. Contact info available for Pro members.</p>
-      </div>`;
   }
 
   document.getElementById('profileContent').innerHTML = `
+    ${ownerBar}
+    ${claimCta}
     <div class="profile-header">
       ${logoHTML}
       <div class="profile-info">
         <h1>${escHtml(l.businessName || 'Unnamed Contractor')}</h1>
         <div class="profile-type">${escHtml(l.type || '')}</div>
+        ${cityHTML}
         ${badge}
       </div>
     </div>
@@ -315,6 +381,7 @@ function renderProfile(l) {
       ${whatsappHTML}
       ${contactBtnHTML}
       ${contactHTML}
+      ${contactUpgradeCta}
       ${detailsHTML}
       ${descHTML}
       ${photosHTML}
@@ -324,8 +391,7 @@ function renderProfile(l) {
 
   setLang(lang);
 
-  // Init map if locations exist
-  if (l.locations && l.locations.length > 0) {
+  if (hasLocations) {
     setTimeout(() => initProfileMap(l), 100);
   }
 }

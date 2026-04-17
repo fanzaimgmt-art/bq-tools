@@ -274,7 +274,9 @@ async function loadDirectoryFields() {
   const user = getCachedUser();
   if (!user) return;
   try {
-    const res = await fetch(`${API_URL}/api/directory/profile?email=${encodeURIComponent(user.email)}`);
+    const token = getToken();
+    const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+    const res = await fetch(`${API_URL}/api/directory/profile?email=${encodeURIComponent(user.email)}`, { headers });
     const data = await res.json();
     if (data.ok && data.listing) {
       const l = data.listing;
