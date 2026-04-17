@@ -254,7 +254,7 @@ function renderResult(data) {
     <div class="actions">
       ${d.videoUrl ? `<a href="${escHtml(d.videoUrl)}" download="${data.platform}-${Date.now()}.mp4" target="_blank" rel="noopener" class="btn btn-primary" style="flex:1;">📥 ${h ? 'הורד' : 'Download'}</a>` : ''}
       ${d.videoUrl ? `<a href="${escHtml(d.videoUrl)}" target="_blank" rel="noopener" class="btn" style="flex:1;">👁️ ${h ? 'צפה' : 'Preview'}</a>` : ''}
-      <button class="btn" onclick="copyLink('${escHtml(d.videoUrl)}')">🔗 ${h ? 'העתק' : 'Copy'}</button>
+      <button class="btn" data-url="${escHtml(d.videoUrl)}" onclick="copyLink(this.dataset.url)">🔗 ${h ? 'העתק' : 'Copy'}</button>
     </div>`;
   el.classList.add('show');
 }
