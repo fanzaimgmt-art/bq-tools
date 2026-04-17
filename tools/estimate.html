@@ -74,28 +74,6 @@
   <div id="trainingTip" style="display:none;background:var(--acd);border:1px solid var(--ac);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px;">
     💡 <span id="trainingTipText"></span>
   </div>
-  <script>
-  (async function(){
-    try {
-      const data = await apiCall('/api/training/knowledge');
-      const tip = document.getElementById('trainingTip');
-      const text = document.getElementById('trainingTipText');
-      const h = document.documentElement.lang === 'he';
-      tip.style.display = 'block';
-      if (data.knowledge?.trained) {
-        tip.style.background = 'rgba(81,207,102,.08)';
-        tip.style.borderColor = 'var(--grn)';
-        text.innerHTML = h
-          ? `<strong style="color:var(--grn);">✓ מאומן</strong> על ${data.knowledge.fileCount} מסמכים — ההערכה תשתמש במחירים שלך`
-          : `<strong style="color:var(--grn);">✓ Trained</strong> on ${data.knowledge.fileCount} documents — estimate uses YOUR pricing`;
-      } else {
-        text.innerHTML = h
-          ? `<a href="/training.html" style="color:var(--ac);">העלה חוזים ישנים</a> לקבלת הערכות אישיות המותאמות למחירים שלך`
-          : `<a href="/training.html" style="color:var(--ac);">Upload past contracts</a> for personalized estimates using your pricing`;
-      }
-    } catch {}
-  })();
-  </script>
 
   <div class="card" style="margin-bottom:14px;">
     <label class="input-label" data-en="Photo of the area" data-es="Foto del área" data-he="תמונה של האזור">Photo of the area</label>
@@ -123,6 +101,28 @@
 <script src="../js/ai.js"></script>
 <script src="../js/common.js"></script>
 <script src="../js/assistant.js"></script>
+<script>
+(async function(){
+  try {
+    const data = await apiCall('/api/training/knowledge');
+    const tip = document.getElementById('trainingTip');
+    const text = document.getElementById('trainingTipText');
+    const h = document.documentElement.lang === 'he';
+    tip.style.display = 'block';
+    if (data.knowledge?.trained) {
+      tip.style.background = 'rgba(81,207,102,.08)';
+      tip.style.borderColor = 'var(--grn)';
+      text.innerHTML = h
+        ? `<strong style="color:var(--grn);">✓ מאומן</strong> על ${data.knowledge.fileCount} מסמכים — ההערכה תשתמש במחירים שלך`
+        : `<strong style="color:var(--grn);">✓ Trained</strong> on ${data.knowledge.fileCount} documents — estimate uses YOUR pricing`;
+    } else {
+      text.innerHTML = h
+        ? `<a href="/training.html" style="color:var(--ac);">העלה חוזים ישנים</a> לקבלת הערכות אישיות המותאמות למחירים שלך`
+        : `<a href="/training.html" style="color:var(--ac);">Upload past contracts</a> for personalized estimates using your pricing`;
+    }
+  } catch {}
+})();
+</script>
 <script>
 let photoSrc = null;
 
