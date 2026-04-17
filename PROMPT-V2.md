@@ -67,7 +67,7 @@ BQ Tools is a web app for contractors and remodelers. Built with vanilla HTML/CS
 - Route: `POST /api/credits/add` — admin only, add credits
 - Route: `GET /api/admin/users` — admin only, list all users
 - Route: `POST /api/error-report` — save error to KV
-- Claude model: `claude-3-5-haiku-20241022` (cheapest)
+- Claude model: `claude-haiku-4-5-20251001` (cheapest)
 - Gemini model: `gemini-2.5-flash` (fallback: `gemini-2.0-flash`)
 - Worker API URL: `bq-tools-api.fanzai-mgmt.workers.dev` (separate from Pages at `bq-tools.fanzai-mgmt.workers.dev`)
 - CORS: allow `bq-tools.fanzai-mgmt.workers.dev`

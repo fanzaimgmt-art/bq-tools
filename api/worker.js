@@ -750,8 +750,8 @@ Use THESE rates whenever possible. If this project isn't covered by their histor
 
 const MODEL_MAP = {
   // Claude
-  'claude-haiku': { type: 'claude', model: 'claude-3-5-haiku-20241022', cost: 1 },
-  'claude-sonnet': { type: 'claude', model: 'claude-sonnet-4-20250514', cost: 3 },
+  'claude-haiku': { type: 'claude', model: 'claude-haiku-4-5-20251001', cost: 1 },
+  'claude-sonnet': { type: 'claude', model: 'claude-sonnet-4-6', cost: 3 },
   // Gemini
   'gemini-flash': { type: 'gemini', model: 'gemini-2.5-flash', cost: 1 },
   'gemini-pro': { type: 'gemini', model: 'gemini-2.0-flash', cost: 3 },
@@ -924,7 +924,7 @@ async function callClaudeAPI(env, prompt, images) {
   const apiKey = env.CLAUDE_API_KEY;
   if (!apiKey) throw new Error('Claude API key not configured');
 
-  const model = env.CLAUDE_MODEL || 'claude-3-5-haiku-20241022';
+  const model = env.CLAUDE_MODEL || 'claude-haiku-4-5-20251001';
 
   // Build content array
   const content = [];
@@ -3776,7 +3776,7 @@ async function handleAdCreatorSuggestDescription(request, env) {
     method: 'POST',
     headers: { 'x-api-key': claudeApiKey, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: env.CLAUDE_MODEL || 'claude-3-5-haiku-20241022',
+      model: env.CLAUDE_MODEL || 'claude-haiku-4-5-20251001',
       max_tokens: 80,
       messages: [{
         role: 'user',
@@ -3875,7 +3875,7 @@ Write a complete video ad script. Respond ONLY with valid JSON:
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      model: env.CLAUDE_MODEL || 'claude-3-5-haiku-20241022',
+      model: env.CLAUDE_MODEL || 'claude-haiku-4-5-20251001',
       max_tokens: 1024,
       messages: [{
         role: 'user',
@@ -4145,7 +4145,7 @@ Rules:
       method: 'POST',
       headers: { 'x-api-key': claudeApiKey, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: env.CLAUDE_MODEL || 'claude-3-5-haiku-20241022',
+        model: env.CLAUDE_MODEL || 'claude-haiku-4-5-20251001',
         max_tokens: 300,
         messages: [{ role: 'user', content: prompt }]
       })

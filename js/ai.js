@@ -341,7 +341,7 @@ function requirePro() {
 
 // Legacy — no longer used but kept to prevent errors
 function getAISettings() {
-  return { claudeModel: 'claude-3-5-haiku-20241022', mode: 'worker' };
+  return { claudeModel: 'claude-haiku-4-5-20251001', mode: 'worker' };
 }
 function openAISettings() {
   showToast(lang === 'he' ? 'AI מופעל דרך השרת — אין צורך בהגדרות' : 'AI runs through the server — no settings needed', 'info');
