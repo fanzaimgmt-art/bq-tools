@@ -241,14 +241,14 @@ async function pollPromo() {
       document.getElementById('promoResult').style.display = 'block';
       const btn = document.getElementById('promoBtn');
       btn.disabled = false;
-      btn.textContent = '🎨 Generate Image (5 cr)';
+      btn.textContent = btn.getAttribute('data-' + lang) || btn.getAttribute('data-en') || '🎨 Generate Image (5 cr)';
       showToast('Image ready!', 'ok');
     } else if (data.status === 'failed') {
       clearInterval(spPollInterval);
       showToast('Image generation failed', 'err');
       const btn = document.getElementById('promoBtn');
       btn.disabled = false;
-      btn.textContent = '🎨 Generate Image (5 cr)';
+      btn.textContent = btn.getAttribute('data-' + lang) || btn.getAttribute('data-en') || '🎨 Generate Image (5 cr)';
     }
   } catch (err) {
     clearInterval(spPollInterval);
