@@ -54,6 +54,11 @@ function setLang(l) {
       el.textContent = t;
     }
   });
+  // Apply placeholder translations — elements with data-{lang}-placeholder
+  document.querySelectorAll('[data-en-placeholder],[data-he-placeholder],[data-es-placeholder]').forEach(el => {
+    const p = el.getAttribute('data-' + l + '-placeholder');
+    if (p != null) el.placeholder = p;
+  });
 }
 
 // ── Profile Dropdown (rewritten — appended to body, not nav) ──
