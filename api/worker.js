@@ -3494,8 +3494,12 @@ Guess category based on vendor and items. If unreadable, return {"error":"unread
 // ── Kinovi (Seedance 2) Proxy ──
 
 async function handleKinoviCreate(request, env) {
-  const kinoviKey = request.headers.get('X-Kinovi-Key') || env.KINOVI_API_KEY;
-  if (!kinoviKey) return json({ error: 'No Kinovi API key provided' }, 400);
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const kinoviKey = env.KINOVI_API_KEY;
+  if (!kinoviKey) return json({ error: 'KINOVI_API_KEY not configured' }, 500);
 
   const body = await request.json();
   const res = await fetch('https://kinovi.ai/api/v1/jobs/createTask', {
@@ -3511,8 +3515,12 @@ async function handleKinoviCreate(request, env) {
 }
 
 async function handleKinoviStatus(request, env) {
-  const kinoviKey = request.headers.get('X-Kinovi-Key') || env.KINOVI_API_KEY;
-  if (!kinoviKey) return json({ error: 'No Kinovi API key provided' }, 400);
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const kinoviKey = env.KINOVI_API_KEY;
+  if (!kinoviKey) return json({ error: 'KINOVI_API_KEY not configured' }, 500);
 
   const url = new URL(request.url);
   const taskId = url.searchParams.get('taskId');

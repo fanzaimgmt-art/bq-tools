@@ -23,21 +23,6 @@
   }
   .page-header p { font-size: 14px; color: var(--txd); margin-top: 6px; }
 
-  /* ── API Key Banner ── */
-  .key-banner {
-    display: flex; align-items: center; gap: 10px;
-    padding: 12px 16px; border-radius: 10px;
-    background: var(--sf); border: 1px solid var(--bd);
-    margin-bottom: 20px; font-size: 13px; color: var(--txd);
-  }
-  .key-banner.has-key { border-color: rgba(81,207,102,.3); background: rgba(81,207,102,.05); }
-  .key-banner .key-dot {
-    width: 8px; height: 8px; border-radius: 50%; background: var(--red); flex-shrink: 0;
-  }
-  .key-banner.has-key .key-dot { background: var(--grn); }
-  .key-banner .key-text { flex: 1; }
-  .key-banner button { font-size: 12px; padding: 5px 12px; }
-
   /* ── Mode tabs ── */
   .mode-tabs {
     display: flex; gap: 2px; background: var(--sf); border: 1px solid var(--bd);
@@ -215,33 +200,6 @@
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
 
-  /* ── Key Modal ── */
-  .key-modal-backdrop {
-    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7);
-    backdrop-filter: blur(6px); z-index: 500;
-    align-items: center; justify-content: center; padding: 20px;
-  }
-  .key-modal-backdrop.open { display: flex; }
-  .key-modal {
-    background: var(--sf); border: 1px solid var(--bd); border-radius: 16px;
-    padding: 32px 28px; max-width: 440px; width: 100%; position: relative;
-  }
-  .key-modal h3 { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
-  .key-modal p { font-size: 13px; color: var(--txd); line-height: 1.6; margin-bottom: 20px; }
-  .key-modal input {
-    width: 100%; padding: 12px 14px; border: 1px solid var(--bd); border-radius: 8px;
-    background: var(--bg); color: var(--tx); font-family: monospace; font-size: 13px;
-    box-sizing: border-box; margin-bottom: 14px;
-  }
-  .key-modal input:focus { outline: none; border-color: var(--ac); }
-  .key-modal .modal-close {
-    position: absolute; top: 14px; right: 16px; background: transparent;
-    border: none; color: var(--txd); font-size: 22px; cursor: pointer;
-    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
-    border-radius: 50%; transition: all .2s;
-  }
-  .key-modal .modal-close:hover { background: var(--bd); color: var(--tx); }
-
   @media (max-width: 600px) {
     .settings-grid { grid-template-columns: 1fr; }
     .dur-field { grid-column: 1; }
@@ -271,13 +229,6 @@
   <div class="page-header">
     <h1>🎬 AI Video <span class="badge">Seedance 2</span></h1>
     <p>Text-to-video &amp; image-to-video powered by Kinovi (Seedance 2.0 by ByteDance)</p>
-  </div>
-
-  <!-- API Key Banner -->
-  <div class="key-banner" id="keyBanner">
-    <div class="key-dot"></div>
-    <span class="key-text">No Kinovi API key set</span>
-    <button class="btn btn-sm" onclick="openKeyModal()">Set Key</button>
   </div>
 
   <!-- Mode Tabs -->
@@ -396,28 +347,10 @@ e.g. A contractor power-washing a driveway, cinematic, golden hour lighting, slo
 
 </div>
 
-<!-- Key Modal -->
-<div class="key-modal-backdrop" id="keyModal" onclick="if(event.target===this)closeKeyModal()">
-  <div class="key-modal">
-    <button class="modal-close" onclick="closeKeyModal()">×</button>
-    <h3>🔑 Kinovi API Key</h3>
-    <p>Get your key at <strong>kinovi.ai → Account → API Keys</strong>. It's saved only in your browser — never sent to our servers without your request.</p>
-    <input type="password" id="keyInput" placeholder="Paste your Kinovi API key..." autocomplete="off">
-    <div style="display:flex;gap:8px;">
-      <button class="btn btn-primary" style="flex:1;" onclick="saveKey()">Save Key</button>
-      <button class="btn" onclick="clearKey()" style="color:var(--red);border-color:rgba(255,107,107,.3);">Clear</button>
-    </div>
-    <p style="font-size:11px;margin-top:12px;">
-      New to Kinovi? <a href="https://kinovi.ai/pricing" target="_blank" rel="noopener" style="color:var(--ac);">Start free (300 credits)</a>
-    </p>
-  </div>
-</div>
-
 <script src="../js/ai.js"></script>
 <script src="../js/auth.js"></script>
 <script src="../js/common.js"></script>
 <script>
-  const KINOVI_KEY_LS = 'bq_kinovi_key';
   let currentMode = 't2v';
   let imgDataFirst = null;
   let imgDataLast = null;
@@ -426,54 +359,8 @@ e.g. A contractor power-washing a driveway, cinematic, golden hour lighting, slo
 
   // ── Init ──
   function init() {
-    updateKeyBanner();
     updateEstimate();
     renderHistory();
-  }
-
-  // ── Key management ──
-  function getKey() { return localStorage.getItem(KINOVI_KEY_LS) || ''; }
-
-  function updateKeyBanner() {
-    const key = getKey();
-    const banner = document.getElementById('keyBanner');
-    const dot = banner.querySelector('.key-dot');
-    const text = banner.querySelector('.key-text');
-    if (key) {
-      banner.classList.add('has-key');
-      dot.style.background = 'var(--grn)';
-      text.textContent = 'Kinovi API key set ✓';
-      banner.querySelector('button').textContent = 'Change';
-    } else {
-      banner.classList.remove('has-key');
-      dot.style.background = 'var(--red)';
-      text.textContent = 'No Kinovi API key — set it to generate videos';
-      banner.querySelector('button').textContent = 'Set Key';
-    }
-  }
-
-  function openKeyModal() {
-    const k = getKey();
-    if (k) document.getElementById('keyInput').value = k;
-    document.getElementById('keyModal').classList.add('open');
-  }
-  function closeKeyModal() {
-    document.getElementById('keyModal').classList.remove('open');
-  }
-  function saveKey() {
-    const val = document.getElementById('keyInput').value.trim();
-    if (!val) return showToast('Paste your API key first', 'err');
-    localStorage.setItem(KINOVI_KEY_LS, val);
-    updateKeyBanner();
-    closeKeyModal();
-    showToast('API key saved ✓', 'ok');
-  }
-  function clearKey() {
-    localStorage.removeItem(KINOVI_KEY_LS);
-    document.getElementById('keyInput').value = '';
-    updateKeyBanner();
-    closeKeyModal();
-    showToast('Key removed', 'ok');
   }
 
   // ── Mode ──
@@ -547,8 +434,7 @@ e.g. A contractor power-washing a driveway, cinematic, golden hour lighting, slo
 
   // ── Generate ──
   async function generate() {
-    const key = getKey();
-    if (!key) { openKeyModal(); return; }
+    if (!requirePro()) return;
 
     const prompt = document.getElementById('promptInput').value.trim();
     if (!prompt) { showToast('Add a prompt first', 'err'); return; }
@@ -574,21 +460,14 @@ e.g. A contractor power-washing a driveway, cinematic, golden hour lighting, slo
       if (imgDataLast) inputs.lastFrame = imgDataLast;
     }
 
-    const body = { model, inputs };
-
     try {
-      const res2 = await fetch(API_URL + '/api/kinovi/create', {
+      const data = await apiCall('/api/kinovi/create', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Kinovi-Key': key
-        },
-        body: JSON.stringify(body)
+        body: { model, inputs }
       });
-      const data = await res2.json();
 
-      if (!res2.ok || data.error) {
-        showStatus('error', data.error || 'Failed to create task');
+      if (data.error) {
+        showStatus('error', data.error);
         setGenLoading(false);
         return;
       }
@@ -599,7 +478,7 @@ e.g. A contractor power-washing a driveway, cinematic, golden hour lighting, slo
         return;
       }
 
-      poll(data.taskId, key, prompt, model);
+      poll(data.taskId, prompt, model);
 
     } catch (e) {
       showStatus('error', e.message || 'Network error');
@@ -607,7 +486,7 @@ e.g. A contractor power-washing a driveway, cinematic, golden hour lighting, slo
     }
   }
 
-  function poll(taskId, key, prompt, model) {
+  function poll(taskId, prompt, model) {
     let attempts = 0;
     const maxAttempts = 120; // 10 min max
 
@@ -621,10 +500,7 @@ e.g. A contractor power-washing a driveway, cinematic, golden hour lighting, slo
       }
 
       try {
-        const res = await fetch(API_URL + '/api/kinovi/status?taskId=' + encodeURIComponent(taskId), {
-          headers: { 'X-Kinovi-Key': key }
-        });
-        const data = await res.json();
+        const data = await apiCall('/api/kinovi/status?taskId=' + encodeURIComponent(taskId));
 
         if (data.status === 'success' && data.output && data.output.length > 0) {
           clearInterval(pollTimer);
@@ -736,7 +612,6 @@ e.g. A contractor power-washing a driveway, cinematic, golden hour lighting, slo
   }
 
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeKeyModal();
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') generate();
   });
 

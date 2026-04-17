@@ -629,8 +629,7 @@ async function generateAd() {
 
   // Step c: start Kinovi jobs for each frame + logo outro
   setStatus('st-video', 'run', 'running');
-  const kinoviKey = window.__kinoviKey || '';
-  const videoUrls = await animateFrames(frameUrls, kinoviKey);
+  const videoUrls = await animateFrames(frameUrls);
   setStatus('st-video', 'done', 'done ✓');
 
   // Step d: ElevenLabs voiceover
@@ -707,7 +706,7 @@ async function pollAllFrames() {
 }
 
 // Start Kinovi video jobs for each frame
-async function animateFrames(frameUrls, kinoviKey) {
+async function animateFrames(frameUrls) {
   const videoUrls = [];
   for (let i = 0; i < adScenes.length; i++) {
     const imgUrl = frameUrls[i];
@@ -724,15 +723,14 @@ async function animateFrames(frameUrls, kinoviKey) {
           prompt,
           duration: 5,
           quality: 'standard'
-        },
-        extraHeaders: kinoviKey ? { 'X-Kinovi-Key': kinoviKey } : {}
+        }
       });
 
       const taskId = res.task_id || res.taskId || res.data?.task_id;
       if (!taskId) { videoUrls.push(null); continue; }
 
       // Poll for completion
-      const videoUrl = await pollKinoviJob(taskId, kinoviKey, i);
+      const videoUrl = await pollKinoviJob(taskId, i);
       videoUrls.push(videoUrl);
     } catch (err) {
       console.warn(`Kinovi scene ${i} failed:`, err.message);
@@ -742,12 +740,11 @@ async function animateFrames(frameUrls, kinoviKey) {
   return videoUrls;
 }
 
-async function pollKinoviJob(taskId, kinoviKey, sceneIdx) {
+async function pollKinoviJob(taskId, sceneIdx) {
   return new Promise(resolve => {
     const interval = setInterval(async () => {
       try {
-        const data = await apiCall('/api/kinovi/status?taskId=' + taskId,
-          kinoviKey ? { extraHeaders: { 'X-Kinovi-Key': kinoviKey } } : {});
+        const data = await apiCall('/api/kinovi/status?taskId=' + taskId);
         const status = data.status || data.data?.status;
         const url = data.videoUrl || data.url || data.data?.videoUrl || data.data?.output;
         if (status === 'completed' || status === 'SUCCEEDED' || url) {
