@@ -185,7 +185,7 @@ async function generateReport() {
   const desc = document.getElementById('workDesc').value.trim();
   if (!desc) { showToast(lang === 'he' ? 'תאר את העבודה' : 'Describe the work', 'err'); return; }
 
-  const ok = await confirmCredit(lang === 'he' ? 'דוח מהיר' : 'Quick Report');
+  const ok = await confirmCredit('report', lang === 'he' ? 'דוח מהיר' : 'Quick Report');
   if (!ok) return;
 
   const btn = document.getElementById('genBtn');

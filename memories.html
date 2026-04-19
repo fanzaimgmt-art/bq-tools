@@ -370,7 +370,7 @@ async function generateMemories() {
   const credits = getCredits();
   if (credits < 1) { showNoCreditModal(); return; }
 
-  const ok = await confirmCredit(lang === 'he' ? 'יצירת זיכרונות עם AI' : 'Generate Memories with AI');
+  const ok = await confirmCredit('memories', lang === 'he' ? 'יצירת זיכרונות עם AI' : 'Generate Memories with AI');
   if (!ok) return;
 
   btn.disabled = true;

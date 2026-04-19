@@ -209,7 +209,7 @@ async function download() {
   const credits = getCredits();
   if (credits < 1) { showNoCreditModal(); return; }
 
-  const ok = await confirmCredit(lang === 'he' ? 'הורדת סרטון' : 'Download Video');
+  const ok = await confirmCredit('downloader', lang === 'he' ? 'הורדת סרטון' : 'Download Video');
   if (!ok) return;
 
   const btn = document.getElementById('dlBtn');
@@ -269,7 +269,7 @@ async function bulkDownload() {
   const credits = getCredits();
   if (credits < urls.length) { showNoCreditModal(); return; }
 
-  const ok = await confirmCredit(`${lang === 'he' ? 'הורדה מרובה' : 'Bulk Download'} — ${urls.length} ${lang === 'he' ? 'סרטונים' : 'videos'}`);
+  const ok = await confirmCredit('downloader-bulk', `${lang === 'he' ? 'הורדה מרובה' : 'Bulk Download'} — ${urls.length} ${lang === 'he' ? 'סרטונים' : 'videos'}`);
   if (!ok) return;
 
   const btn = document.getElementById('bulkBtn');

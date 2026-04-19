@@ -235,7 +235,7 @@ async function handleSnap(e) {
   const credits = getCredits();
   if (credits < 1) { showNoCreditModal(); return; }
 
-  const ok = await confirmCredit(lang === 'he' ? 'סריקת קבלה' : 'Scan Receipt');
+  const ok = await confirmCredit('receipts', lang === 'he' ? 'סריקת קבלה' : 'Scan Receipt');
   if (!ok) { document.getElementById('fileInput').value = ''; return; }
 
   const zone = document.getElementById('snapZone');

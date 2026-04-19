@@ -190,34 +190,67 @@ function parseAIJSON(text) {
 }
 
 // ── Credit Confirmation ──
+// confirmCredit(toolId, actionName, creditCount)
+// Shows a one-time dialog per toolId; subsequent calls resolve(true) silently.
+// Expensive tools (cost > 3) always show the dialog.
 
-function confirmCredit(actionName, creditCount = 1) {
+function confirmCredit(toolId, actionName, creditCount = 1) {
+  // Legacy: if called with old 2-arg signature (actionName, cost), adapt
+  if (typeof toolId !== 'string' || typeof actionName === 'number') {
+    creditCount = typeof actionName === 'number' ? actionName : 1;
+    actionName = toolId;
+    toolId = 'unknown';
+  }
+
+  const ALWAYS_CONFIRM_THRESHOLD = 4; // always show for 4+ credits
+  const confirmedTools = JSON.parse(localStorage.getItem('bq_confirmed_tools') || '{}');
+
+  // Already confirmed for this tool AND not expensive → skip dialog
+  if (confirmedTools[toolId] && creditCount < ALWAYS_CONFIRM_THRESHOLD) {
+    return Promise.resolve(true);
+  }
+
   return new Promise(resolve => {
     const credits = getCredits();
     const h = lang === 'he';
-    const titleText = creditCount === 1
-      ? (h ? 'השתמש ב-1 קרדיט' : 'Use 1 Credit')
-      : (h ? `השתמש ב-${creditCount} קרדיטים` : `Use ${creditCount} Credits`);
+    const isFirstTime = !confirmedTools[toolId];
+    const isExpensive = creditCount >= ALWAYS_CONFIRM_THRESHOLD;
 
-    // Use a nice modal instead of confirm()
+    const titleText = isExpensive
+      ? (h ? `השתמש ב-${creditCount} קרדיטים` : `Use ${creditCount} Credits`)
+      : (h ? 'בפעם הראשונה' : 'First time using this');
+
+    const subText = isFirstTime && !isExpensive
+      ? (h ? 'לאחר האישור לא יוצג דיאלוג זה שוב עבור כלי זה.' : "After confirming, you won't see this again for this tool.")
+      : '';
+
     const m = document.createElement('div');
     m.className = 'modal-overlay';
     m.innerHTML = `
       <div class="modal-card" style="max-width:360px;text-align:center;">
-        <div style="font-size:32px;margin-bottom:12px;">⚡</div>
-        <h3 style="margin-bottom:8px;">${titleText}</h3>
-        <p style="color:var(--txd);font-size:14px;margin-bottom:6px;">${actionName}</p>
-        <p style="color:var(--ac);font-size:18px;font-weight:700;margin-bottom:20px;">⚡ ${credits} ${h ? 'נשאר' : 'remaining'}</p>
+        <div style="font-size:28px;margin-bottom:10px;">⚡</div>
+        <h3 style="margin-bottom:6px;">${titleText}</h3>
+        <p style="color:var(--txd);font-size:14px;margin-bottom:4px;">${actionName}</p>
+        <p style="color:var(--ac);font-size:16px;font-weight:700;margin-bottom:${subText ? 8 : 18}px;">⚡ ${creditCount} credit${creditCount !== 1 ? 's' : ''} · ${credits} ${h ? 'נשאר' : 'remaining'}</p>
+        ${subText ? `<p style="color:var(--txd);font-size:12px;margin-bottom:18px;">${subText}</p>` : ''}
         <div style="display:flex;gap:8px;">
           <button class="btn" style="flex:1;" id="creditCancel">${h ? 'ביטול' : 'Cancel'}</button>
-          <button class="btn btn-primary" style="flex:1;" id="creditConfirm">${h ? 'המשך' : 'Continue'}</button>
+          <button class="btn btn-primary" style="flex:1;" id="creditConfirm">${h ? 'המשך' : 'Got it, continue'}</button>
         </div>
       </div>`;
     document.body.appendChild(m);
     requestAnimationFrame(() => m.classList.add('open'));
 
     m.querySelector('#creditCancel').onclick = () => { m.remove(); resolve(false); };
-    m.querySelector('#creditConfirm').onclick = () => { m.remove(); resolve(true); };
+    m.querySelector('#creditConfirm').onclick = () => {
+      // Remember consent for this tool (never for expensive actions)
+      if (!isExpensive) {
+        confirmedTools[toolId] = { at: Date.now(), cost: creditCount };
+        localStorage.setItem('bq_confirmed_tools', JSON.stringify(confirmedTools));
+      }
+      m.remove();
+      resolve(true);
+    };
     m.onclick = (e) => { if (e.target === m) { m.remove(); resolve(false); } };
   });
 }

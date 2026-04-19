@@ -146,7 +146,7 @@ async function generateEstimate() {
   const desc = document.getElementById('jobDesc').value.trim();
   if (!desc) { showToast(lang === 'he' ? 'תאר את העבודה' : 'Describe the job', 'err'); return; }
 
-  const ok = await confirmCredit(lang === 'he' ? 'הערכת עלות' : 'Smart Estimate');
+  const ok = await confirmCredit('estimate', lang === 'he' ? 'הערכת עלות' : 'Smart Estimate');
   if (!ok) return;
 
   const loc = document.getElementById('location').value.trim();

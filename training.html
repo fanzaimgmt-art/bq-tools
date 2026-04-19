@@ -297,7 +297,7 @@ async function handleUpload(e) {
   const credits = getCredits();
   if (credits < 1) { showNoCreditModal(); return; }
 
-  const ok = await confirmCredit(lang === 'he' ? 'העלאת קובץ לאימון' : 'Upload Training File');
+  const ok = await confirmCredit('training', lang === 'he' ? 'העלאת קובץ לאימון' : 'Upload Training File');
   if (!ok) return;
 
   // Guess type from filename

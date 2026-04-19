@@ -116,7 +116,7 @@ async function generateReview() {
 
   if (!name || !work) { showToast(lang === 'he' ? 'מלא שם לקוח וסוג עבודה' : 'Fill in client name and work type', 'err'); return; }
 
-  const ok = await confirmCredit(lang === 'he' ? 'בקשת ביקורת' : 'Review Request');
+  const ok = await confirmCredit('review', lang === 'he' ? 'בקשת ביקורת' : 'Review Request');
   if (!ok) return;
 
   const btn = document.getElementById('genBtn');

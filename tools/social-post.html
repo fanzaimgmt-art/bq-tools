@@ -143,7 +143,7 @@ async function generatePost() {
   const desc = document.getElementById('workDesc').value.trim();
   if (!desc) { showToast(lang === 'he' ? 'תאר את העבודה' : 'Describe the work', 'err'); return; }
 
-  const ok = await confirmCredit(lang === 'he' ? 'פוסט חברתי' : 'Social Post');
+  const ok = await confirmCredit('social-post', lang === 'he' ? 'פוסט חברתי' : 'Social Post');
   if (!ok) return;
 
   const btn = document.getElementById('genBtn');
@@ -199,7 +199,7 @@ let spPollInterval = null;
 async function generatePromoImage() {
   if (!requirePro()) return;
 
-  const ok = await confirmCredit(lang === 'he' ? 'תמונת פרומו' : 'Generate Visual', 5);
+  const ok = await confirmCredit('visual', lang === 'he' ? 'תמונת פרומו' : 'Generate Visual', 5);
   if (!ok) return;
 
   const btn = document.getElementById('promoBtn');

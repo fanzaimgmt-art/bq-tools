@@ -293,7 +293,7 @@ When performing an action, include the ACTION: tag at the END of your response o
     }
 
     // Confirm credit
-    const ok = await confirmCredit(lang === 'he' ? 'הודעה ל-Assistant' : 'AI Assistant message');
+    const ok = await confirmCredit('assistant', lang === 'he' ? 'הודעה ל-Assistant' : 'AI Assistant message');
     if (!ok) return;
 
     // Show typing

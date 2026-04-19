@@ -241,7 +241,7 @@ document.getElementById('sketchInput').addEventListener('change', handleSketchUp
 async function cleanUpSketch() {
   if (!requirePro()) return;
 
-  const ok = await confirmCredit(lang === 'he' ? 'סקיצה מהירה' : 'Quick Sketch');
+  const ok = await confirmCredit('sketch', lang === 'he' ? 'סקיצה מהירה' : 'Quick Sketch');
   if (!ok) return;
 
   const btn = document.getElementById('cleanBtn');
@@ -307,7 +307,7 @@ let nbPollInterval = null;
 async function generateVisual() {
   if (!requirePro()) return;
 
-  const ok = await confirmCredit(lang === 'he' ? 'צור ויזואל' : 'Generate Visual', 5);
+  const ok = await confirmCredit('visual', lang === 'he' ? 'צור ויזואל' : 'Generate Visual', 5);
   if (!ok) return;
 
   const btn = document.getElementById('visualBtn');

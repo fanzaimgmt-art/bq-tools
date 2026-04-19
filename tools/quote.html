@@ -221,7 +221,7 @@ async function generateQuote() {
   const credits = getCredits();
   if (credits < 1) { showNoCreditModal(); return; }
 
-  const ok = await confirmCredit(lang === 'he' ? 'יצירת הצעת מחיר' : 'Generate Quote');
+  const ok = await confirmCredit('quote', lang === 'he' ? 'יצירת הצעת מחיר' : 'Generate Quote');
   if (!ok) return;
 
   const btn = document.getElementById('genBtn');

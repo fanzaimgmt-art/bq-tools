@@ -328,6 +328,8 @@ body { display:flex; flex-direction:column; height:100vh; overflow:hidden; -webk
   }
   [data-theme="light"] .chat-msgs { background:var(--bg); }
   [data-theme="light"] .msg.user { color:#fff; }
+  @keyframes creditFlash { 0%,100%{opacity:1;transform:scale(1)} 40%{opacity:.45;transform:scale(1.18)} }
+  .credit-flash { animation:creditFlash .45s ease; }
 </style>
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#e8c547">
@@ -990,7 +992,7 @@ async function sendMessage() {
     showNoCreditModal();
     return;
   }
-  const ok = await confirmCredit(`${multi ? 'Multi-Model' : MODELS[selModel]?.label} — ${cost} credit${cost > 1 ? 's' : ''}`);
+  const ok = await confirmCredit('chat', multi ? 'Multi-Model' : (MODELS[selModel]?.label || 'AI Chat'), cost);
   if (!ok) return;
 
   input.value = '';
@@ -1083,6 +1085,8 @@ async function sendMessage() {
         user.credits = data.credits;
         setCachedUser(user);
         if (typeof updateCreditDisplay === 'function') updateCreditDisplay();
+        const badge = document.getElementById('creditsBadge');
+        if (badge) { badge.classList.remove('credit-flash'); void badge.offsetWidth; badge.classList.add('credit-flash'); }
       }
 
       // Auto-memory: extract facts if enabled

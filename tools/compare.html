@@ -551,7 +551,7 @@ async function analyze() {
   }
 
   // Confirm credit usage
-  const ok = await confirmCredit(lang === 'he' ? 'ניתוח AI' : 'AI Analysis');
+  const ok = await confirmCredit('compare', lang === 'he' ? 'ניתוח AI' : 'AI Analysis');
   if (!ok) return;
 
   const btn = document.getElementById('analyzeBtn');
