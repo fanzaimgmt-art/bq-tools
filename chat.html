@@ -434,9 +434,7 @@ body { display:flex; flex-direction:column; height:100vh; overflow:hidden; -webk
           <option value="llama-3.3-70b">Llama 3.3 70B</option>
           <option value="mixtral-8x7b">Mixtral 8x7B</option>
         </optgroup>
-        <optgroup label="MANUS">
-          <option value="manus">Manus Agent</option>
-        </optgroup>
+        <!-- MANUS optgroup removed — model disabled. Re-enable in MODELS object above. -->
       </select>
 
       <label class="multi-toggle" id="multiToggleLabel" onclick="toggleMulti()">
@@ -501,6 +499,7 @@ body { display:flex; flex-direction:column; height:100vh; overflow:hidden; -webk
 if (!isLoggedIn()) window.location.replace('/auth.html');
 
 // ── Model Config ──
+// To re-enable Manus: set enabled:true below AND verify MANUS_API_KEY is set in wrangler secrets
 const MODELS = {
   'gpt-4o-mini':   { label:'GPT-4o Mini',  cost:1,  dotColor:'var(--model-gpt)',    vendor:'openai',     desc:'Fast and cheap' },
   'gpt-4o':        { label:'GPT-4o',        cost:3,  dotColor:'var(--model-gpt)',    vendor:'openai',     desc:'Good for images & vision' },
@@ -511,7 +510,7 @@ const MODELS = {
   'gemini-pro':    { label:'Gemini Pro',    cost:3,  dotColor:'var(--model-gemini)', vendor:'google',     desc:'Long docs, plans, permits' },
   'llama-3.3-70b': { label:'Llama 3.3 70B',cost:1,  dotColor:'var(--model-llama)',  vendor:'groq',       desc:'Open-source, private' },
   'mixtral-8x7b':  { label:'Mixtral 8x7B', cost:1,  dotColor:'var(--model-llama)',  vendor:'groq',       desc:'Open-source, fast' },
-  'manus':         { label:'Manus Agent',   cost:5,  dotColor:'var(--model-manus)',  vendor:'manus',      desc:'Autonomous agent' },
+  'manus':         { label:'Manus Agent',   cost:5,  dotColor:'var(--model-manus)',  vendor:'manus',      desc:'Autonomous agent', enabled:false },
 };
 const MODEL_GROUPS = [
   { label:'Anthropic', keys:['claude-haiku','claude-sonnet','claude-opus'] },
@@ -1210,7 +1209,7 @@ function buildModelDropdown() {
   MODEL_GROUPS.forEach(g => {
     html += `<div class="mdm-group">${g.label}</div>`;
     g.keys.forEach(k => {
-      const m = MODELS[k]; if (!m) return;
+      const m = MODELS[k]; if (!m || m.enabled === false) return;
       const active = k === current ? ' active' : '';
       const color = getComputedModelColor(k);
       html += `<div class="mdm-option${active}" onclick="selectModel('${k}',event)">
@@ -1242,7 +1241,12 @@ function selectModel(key, e) {
   document.getElementById('modelPickerBtn').classList.remove('open');
 }
 function syncModelPicker() {
-  const key = document.getElementById('modelSelect').value;
+  let key = document.getElementById('modelSelect').value;
+  // Auto-fallback to claude-haiku if selected model is disabled
+  if (MODELS[key]?.enabled === false) {
+    key = 'claude-haiku';
+    document.getElementById('modelSelect').value = key;
+  }
   const m = MODELS[key]; if (!m) return;
   document.getElementById('modelDot').style.background = m.dotColor;
   document.getElementById('modelPickerName').textContent = m.label;
