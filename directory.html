@@ -156,7 +156,7 @@
 
 <!-- Search + Filter -->
 <div class="dir-search">
-  <input class="input" type="text" id="searchInput" placeholder="Search by name, type, or area..." data-en-placeholder="Search by name, type, or area..." data-he-placeholder="חפש לפי שם, סוג עבודה או אזור...">
+  <input class="input" type="text" id="searchInput" placeholder="Search by name, type, or area..." data-en-placeholder="Search by name, type, or area..." data-es-placeholder="Busca por nombre, tipo o área..." data-he-placeholder="חפש לפי שם, סוג עבודה או אזור...">
   <select id="typeFilter">
     <option value="" data-en="All Types" data-es="Todos los Tipos" data-he="כל הסוגים">All Types</option>
     <option value="General Contractor">General Contractor</option>
@@ -178,7 +178,7 @@
 <div class="dir-grid" id="listingsGrid">
   <div class="dir-empty">
     <div class="icon">🔍</div>
-    <p data-en="Loading contractors..." data-he="טוען קבלנים...">Loading contractors...</p>
+    <p data-en="Loading contractors..." data-es="Cargando contratistas..." data-he="טוען קבלנים...">Loading contractors...</p>
   </div>
 </div>
 
@@ -199,11 +199,11 @@
     <div style="margin-bottom:14px;">
       <label class="input-label" data-en="Photo (optional)" data-es="Foto (opcional)" data-he="תמונה (אופציונלי)">Photo (optional)</label>
       <div style="border:2px dashed var(--bd);border-radius:10px;padding:16px;text-align:center;cursor:pointer;position:relative;background:var(--bg);">
-        <span id="locThumbPreview" style="font-size:14px;color:var(--txd);" data-en="Click to upload thumbnail" data-he="לחץ להעלאת תמונה">Click to upload thumbnail</span>
+        <span id="locThumbPreview" style="font-size:14px;color:var(--txd);" data-en="Click to upload thumbnail" data-es="Haz clic para subir imagen" data-he="לחץ להעלאת תמונה">Click to upload thumbnail</span>
         <input type="file" accept="image/*" id="locThumbInput" style="position:absolute;inset:0;opacity:0;cursor:pointer;">
       </div>
     </div>
-    <button class="btn btn-primary" style="width:100%;font-size:15px;" onclick="submitLocation()" id="locSubmitBtn" data-en="Save Location" data-he="שמור מיקום">Save Location</button>
+    <button class="btn btn-primary" style="width:100%;font-size:15px;" onclick="submitLocation()" id="locSubmitBtn" data-en="Save Location" data-es="Guardar Ubicación" data-he="שמור מיקום">Save Location</button>
     <div id="locResult" style="margin-top:8px;font-size:13px;"></div>
   </div>
 </div>
@@ -268,7 +268,7 @@ async function loadListings() {
     document.getElementById('listingsGrid').innerHTML = `
       <div class="dir-empty">
         <div class="icon">⚠️</div>
-        <p data-en="Could not load directory" data-he="לא ניתן לטעון את ה-Directory">Could not load directory</p>
+        <p data-en="Could not load directory" data-es="No se pudo cargar el directorio" data-he="לא ניתן לטעון את ה-Directory">Could not load directory</p>
       </div>`;
   }
 }
@@ -279,8 +279,8 @@ function renderListings(listings) {
     grid.innerHTML = `
       <div class="dir-empty">
         <div class="icon">🏗️</div>
-        <p data-en="No contractors found. Be the first to list your business!" data-he="לא נמצאו קבלנים. היה הראשון לרשום את העסק שלך!">No contractors found. Be the first to list your business!</p>
-        <a href="/auth.html" class="btn btn-primary" style="margin-top:16px;" data-en="Get Listed Free" data-he="הירשם חינם">Get Listed Free</a>
+        <p data-en="No contractors found. Be the first to list your business!" data-es="No se encontraron contratistas. ¡Sé el primero en registrar tu negocio!" data-he="לא נמצאו קבלנים. היה הראשון לרשום את העסק שלך!">No contractors found. Be the first to list your business!</p>
+        <a href="/auth.html" class="btn btn-primary" style="margin-top:16px;" data-en="Get Listed Free" data-es="Regístrate Gratis" data-he="הירשם חינם">Get Listed Free</a>
       </div>`;
     setLang(lang);
     return;
