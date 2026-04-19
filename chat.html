@@ -330,6 +330,9 @@ body { display:flex; flex-direction:column; height:100vh; overflow:hidden; -webk
   [data-theme="light"] .msg.user { color:#fff; }
   @keyframes creditFlash { 0%,100%{opacity:1;transform:scale(1)} 40%{opacity:.45;transform:scale(1.18)} }
   .credit-flash { animation:creditFlash .45s ease; }
+  /* Mobile sidebar overlay */
+  .sidebar-overlay { display:none; position:fixed; inset:0; z-index:199; background:rgba(0,0,0,.45); }
+  @media (max-width:700px) { .sidebar-overlay.active { display:block; } }
 </style>
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#e8c547">
@@ -383,6 +386,9 @@ body { display:flex; flex-direction:column; height:100vh; overflow:hidden; -webk
       </div>
     </div>
   </div>
+
+  <!-- Mobile sidebar overlay — tap to close -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
   <!-- ── Main ── -->
   <div class="chat-main">
@@ -731,10 +737,12 @@ function escHtml(s) {
 
 // ── Sidebar Toggle ──
 function toggleSidebar() {
-  document.getElementById('chatSidebar').classList.toggle('open');
+  const open = document.getElementById('chatSidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('active', open);
 }
 function closeSidebar() {
   document.getElementById('chatSidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('active');
 }
 
 // ── Multi-Model Toggle ──
