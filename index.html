@@ -1393,10 +1393,16 @@
     const btn = document.getElementById('navProBtn');
     if (btn) {
       if (isPro()) {
+        btn.dataset.en = 'PRO ✓';
+        btn.dataset.he = 'PRO ✓';
+        btn.dataset.es = 'PRO ✓';
         btn.textContent = 'PRO ✓';
         btn.classList.add('btn-pro-active');
       } else {
-        btn.textContent = 'Account';
+        btn.dataset.en = 'Account';
+        btn.dataset.he = 'חשבון';
+        btn.dataset.es = 'Cuenta';
+        btn.textContent = btn.dataset[lang] || 'Account';
         btn.href = '/auth.html';
       }
     }
