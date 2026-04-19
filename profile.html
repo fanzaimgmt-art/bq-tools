@@ -105,8 +105,8 @@
 </nav>
 
 <div class="page">
-  <h1 class="page-title" data-en="My Profile" data-he="הפרופיל שלי">My Profile</h1>
-  <p class="page-sub" data-en="Edit your business info. This auto-fills into reports, exports, and your directory listing." data-he="ערוך את פרטי העסק שלך. הם ימלאו אוטומטית בדוחות, ייצוא וברישום ה-Directory.">Edit your business info. This auto-fills into reports, exports, and your directory listing.</p>
+  <h1 class="page-title" data-en="My Profile" data-es="Mi Perfil" data-he="הפרופיל שלי">My Profile</h1>
+  <p class="page-sub" data-en="Edit your business info. This auto-fills into reports, exports, and your directory listing." data-es="Edita la info de tu negocio. Se llena automáticamente en reportes, exportaciones y tu perfil del directorio." data-he="ערוך את פרטי העסק שלך. הם ימלאו אוטומטית בדוחות, ייצוא וברישום ה-Directory.">Edit your business info. This auto-fills into reports, exports, and your directory listing.</p>
 
   <!-- Avatar -->
   <div class="profile-avatar" id="profileAvatar"></div>
@@ -198,7 +198,7 @@
   </div>
 
   <!-- Save -->
-  <button class="btn btn-primary" style="width:100%;font-size:16px;margin-bottom:14px;" onclick="saveProfile()" id="saveBtn" data-en="Save Changes" data-he="שמור שינויים">Save Changes</button>
+  <button class="btn btn-primary" style="width:100%;font-size:16px;margin-bottom:14px;" onclick="saveProfile()" id="saveBtn" data-en="Save Changes" data-es="Guardar Cambios" data-he="שמור שינויים">Save Changes</button>
 
   <!-- Data -->
   <div class="profile-section">
@@ -378,7 +378,7 @@ async function saveProfile() {
   }
 
   btn.disabled = false;
-  btn.textContent = lang === 'he' ? 'שמור שינויים' : 'Save Changes';
+  btn.textContent = lang === 'he' ? 'שמור שינויים' : lang === 'es' ? 'Guardar Cambios' : 'Save Changes';
 }
 
 // Export/Import
