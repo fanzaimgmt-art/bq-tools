@@ -526,7 +526,12 @@ async function saveToGallery() {
   };
   gallery.unshift(project);
   if (gallery.length > 50) gallery.length = 50;
-  localStorage.setItem('bq_gallery', JSON.stringify(gallery));
+  try {
+    localStorage.setItem('bq_gallery', JSON.stringify(gallery));
+  } catch (e) {
+    showToast(lang === 'he' ? 'הגלריה מלאה — נקה מקום באחסון' : 'Storage full — clear gallery to save', 'err');
+    return;
+  }
 
   // Save to server
   saveProjectToServer({
