@@ -3,162 +3,440 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BQ Pusher — Buyer-Intent Lead Engine</title>
+<title>BQ Pusher — Hebrew & English Facebook Lead Engine</title>
+<meta name="description" content="Daily AI-drafted comment-replies in your voice. Buyer-intent posts surfaced from Facebook groups → Telegram. $20/mo beta — 10 seats." />
 <link rel="stylesheet" href="../style.css">
 <link rel="manifest" href="/manifest.json">
+
 <style>
-  body { display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-  .page { width: 92%; max-width: 760px; margin: 0 auto; padding: 24px 0 60px; }
+  /* ═══════════════════════════════════════════════════════════════════════
+     BQ Pusher — premium cinematic theme
+     Built on top of style.css vars. No external CSS frameworks.
+  ═══════════════════════════════════════════════════════════════════════ */
 
-  .hero { text-align: center; padding: 28px 0 12px; }
-  .hero h1 { font-size: 36px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 10px; }
-  .hero .badge { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px;
-    background: rgba(232,197,71,.15); color: var(--ac); letter-spacing: 1px; text-transform: uppercase; }
-  .hero p.tag { font-size: 16px; color: var(--txd); margin-top: 12px; }
-
-  .card {
-    background: var(--sf); border: 1px solid var(--bd); border-radius: 14px;
-    padding: 22px; margin-bottom: 14px;
+  html, body { background: #050508; }
+  body {
+    display: flex; flex-direction: column; align-items: center; min-height: 100vh;
+    overflow-x: hidden; position: relative;
   }
-  .card h2 { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
-  .card p { color: var(--txd); font-size: 14px; line-height: 1.55; margin-bottom: 8px; }
 
-  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+  /* ── Animated gradient mesh (background) ── */
+  .mesh-bg {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+  }
+  .mesh-bg::before, .mesh-bg::after {
+    content: ''; position: absolute; border-radius: 50%; filter: blur(120px);
+    opacity: 0.55; mix-blend-mode: screen;
+  }
+  .mesh-bg::before {
+    width: 60vw; height: 60vw; left: -10vw; top: -10vw;
+    background: radial-gradient(circle, #e8c547 0%, transparent 70%);
+    animation: mesh-drift-a 18s ease-in-out infinite alternate;
+  }
+  .mesh-bg::after {
+    width: 50vw; height: 50vw; right: -10vw; top: 30%;
+    background: radial-gradient(circle, #6b46c1 0%, transparent 70%);
+    animation: mesh-drift-b 22s ease-in-out infinite alternate;
+  }
+  @keyframes mesh-drift-a {
+    0% { transform: translate(0, 0) scale(1); opacity: 0.45; }
+    100% { transform: translate(20vw, 30vh) scale(1.2); opacity: 0.65; }
+  }
+  @keyframes mesh-drift-b {
+    0% { transform: translate(0, 0) scale(1); opacity: 0.35; }
+    100% { transform: translate(-20vw, -10vh) scale(1.3); opacity: 0.55; }
+  }
 
-  .step { display: flex; gap: 14px; align-items: flex-start; padding: 12px 0; border-top: 1px solid var(--bd); }
-  .step:first-child { border-top: 0; }
+  /* ── Noise grain overlay ── */
+  .grain {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0.05;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* ── Page wrapper ── */
+  .page { position: relative; z-index: 2; width: 92%; max-width: 800px;
+    margin: 0 auto; padding: 56px 0 100px; }
+
+  /* ── Hero ── */
+  .hero { text-align: center; padding: 28px 0 12px; opacity: 0; transform: translateY(20px);
+    animation: rise .9s cubic-bezier(.2,.7,.2,1) .1s forwards; }
+  @keyframes rise { to { opacity: 1; transform: translateY(0); } }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 700; padding: 6px 14px; border-radius: 100px;
+    background: rgba(232,197,71,0.08);
+    color: #e8c547; letter-spacing: 1.2px; text-transform: uppercase;
+    border: 1px solid rgba(232,197,71,0.2);
+    backdrop-filter: blur(8px);
+  }
+  .badge::before {
+    content: ''; width: 6px; height: 6px; border-radius: 50%; background: #e8c547;
+    box-shadow: 0 0 8px #e8c547; animation: pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  h1.hero-title {
+    font-size: clamp(36px, 7vw, 64px); font-weight: 900;
+    letter-spacing: -0.03em; line-height: 1.05; margin: 18px 0 14px;
+    background: linear-gradient(180deg, #fff 0%, #fff 35%, #888 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; color: transparent;
+  }
+  h1 .accent-word {
+    background: linear-gradient(135deg, #e8c547 0%, #ffd966 50%, #e8c547 100%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; color: transparent;
+    animation: shimmer 3s ease-in-out infinite;
+  }
+  @keyframes shimmer { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+
+  .hero p.tag {
+    font-size: clamp(14px, 2.2vw, 17px); color: #aaa; margin: 0 auto 26px; max-width: 540px;
+    line-height: 1.55;
+  }
+
+  .hero-stats {
+    display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; margin-bottom: 12px;
+  }
+  .hero-stats .s {
+    text-align: center;
+  }
+  .hero-stats .s .num {
+    font-size: 22px; font-weight: 800; color: #e8c547;
+  }
+  .hero-stats .s .lbl {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #666;
+  }
+
+  /* ── Section reveal ── */
+  .reveal { opacity: 0; transform: translateY(30px); transition: opacity .9s cubic-bezier(.2,.7,.2,1), transform .9s cubic-bezier(.2,.7,.2,1); }
+  .reveal.in { opacity: 1; transform: translateY(0); }
+
+  /* ── Glassmorphism card ── */
+  .glass {
+    background: rgba(20, 20, 28, 0.55);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    padding: 28px;
+    margin-bottom: 18px;
+    position: relative; overflow: hidden;
+  }
+  .glass::before {
+    content: ''; position: absolute; inset: 0; border-radius: 20px; padding: 1px;
+    background: linear-gradient(135deg, rgba(232,197,71,0.3), transparent 30%, transparent 70%, rgba(232,197,71,0.15));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    pointer-events: none;
+  }
+  .glass h2 {
+    font-size: 20px; font-weight: 800; margin-bottom: 12px;
+    background: linear-gradient(180deg, #fff 0%, #d0d0d0 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; color: transparent;
+  }
+  .glass p { color: #b0b0b8; font-size: 14.5px; line-height: 1.65; margin-bottom: 12px; }
+  .glass p strong { color: #f0f0f0; font-weight: 600; }
+
+  /* ── Steps ── */
+  .step {
+    display: flex; gap: 14px; align-items: flex-start; padding: 14px 0;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  .step:first-child { border-top: 0; padding-top: 0; }
   .step .num {
-    flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%;
-    background: rgba(232,197,71,.15); color: var(--ac);
-    display: flex; align-items: center; justify-content: center; font-weight: 700;
+    flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%;
+    background: linear-gradient(135deg, rgba(232,197,71,0.25), rgba(232,197,71,0.05));
+    border: 1px solid rgba(232,197,71,0.4);
+    color: #e8c547; font-weight: 800; font-size: 15px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 16px rgba(232,197,71,0.15);
   }
-  .step h3 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
-  .step p { font-size: 13px; color: var(--txd); margin: 0; }
+  .step h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; color: #fff; }
+  .step p { font-size: 13px; color: #999; margin: 0; }
+
+  /* ── Feature grid ── */
+  .feat-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px; margin-top: 16px;
+  }
+  .feat {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 14px; border-radius: 10px;
+    background: rgba(232,197,71,0.05);
+    border: 1px solid rgba(232,197,71,0.15);
+    font-size: 13px; color: #ddd;
+  }
+  .feat::before { content: '✓'; color: #e8c547; font-weight: 700; }
+
+  /* ── Pricing card (premium) ── */
+  .price-card {
+    text-align: center;
+    background: linear-gradient(180deg, rgba(232,197,71,0.08) 0%, rgba(20,20,28,0.7) 100%);
+    border: 1px solid rgba(232,197,71,0.25);
+    box-shadow: 0 20px 80px rgba(232,197,71,0.08), inset 0 1px 0 rgba(255,255,255,0.06);
+    position: relative;
+  }
+  .price-card::after {
+    content: ''; position: absolute; top: -1px; left: 20%; right: 20%; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(232,197,71,0.6), transparent);
+  }
+  .seats-pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 14px; font-size: 12px; font-weight: 700;
+    background: rgba(34,197,94,0.1); color: rgb(74,222,128);
+    border: 1px solid rgba(34,197,94,0.3);
+    border-radius: 100px;
+  }
+  .seats-pill.full { background: rgba(239,68,68,0.1); color: rgb(248,113,113); border-color: rgba(239,68,68,0.3); }
+  .seats-pill::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: currentColor;
+    box-shadow: 0 0 8px currentColor; animation: pulse 1.6s infinite; }
+  .seats-pill.full::before { animation: none; }
 
   .price-row {
-    display: flex; align-items: baseline; justify-content: center; gap: 14px; margin: 14px 0;
+    display: flex; align-items: baseline; justify-content: center; gap: 12px;
+    margin: 22px 0 16px;
   }
-  .price-row .amount { font-size: 40px; font-weight: 800; }
-  .price-row .per { font-size: 14px; color: var(--txd); }
-  .price-row .strike { font-size: 18px; color: var(--txd); text-decoration: line-through; }
-
-  .seats {
-    display: inline-block; font-size: 12px; padding: 4px 10px; border-radius: 6px;
-    background: rgba(34,197,94,.12); color: rgb(74,222,128); font-weight: 700;
+  .price-row .strike { font-size: 20px; color: #666; text-decoration: line-through; }
+  .price-row .amount {
+    font-size: 64px; font-weight: 900; letter-spacing: -0.04em;
+    background: linear-gradient(135deg, #e8c547 0%, #ffd966 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; color: transparent;
+    line-height: 1;
   }
-  .seats.full { background: rgba(239,68,68,.12); color: rgb(248,113,113); }
+  .price-row .per { font-size: 14px; color: #888; font-weight: 500; }
 
+  /* ── CTA button (glowing magnetic) ── */
   .cta-btn {
-    display: block; width: 100%; padding: 16px 24px; border: 0; border-radius: 12px;
-    background: var(--ac); color: #000; font-weight: 800; font-size: 16px; cursor: pointer;
-    transition: opacity .2s;
+    position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 18px 28px; border: 0; border-radius: 14px;
+    background: linear-gradient(135deg, #e8c547 0%, #d4af3f 100%);
+    color: #000; font-weight: 800; font-size: 16px; cursor: pointer;
+    transition: transform .25s cubic-bezier(.34,1.56,.64,1), box-shadow .25s;
+    box-shadow: 0 4px 20px rgba(232,197,71,0.35), inset 0 1px 0 rgba(255,255,255,0.2);
+    overflow: hidden;
   }
-  .cta-btn:hover { opacity: .9; }
-  .cta-btn:disabled { opacity: .4; cursor: not-allowed; }
+  .cta-btn:hover {
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 0 12px 36px rgba(232,197,71,0.5), inset 0 1px 0 rgba(255,255,255,0.3);
+  }
+  .cta-btn:active { transform: translateY(0) scale(0.99); }
+  .cta-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+  .cta-btn::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.4) 50%, transparent 70%);
+    transform: translateX(-100%); transition: transform .6s;
+  }
+  .cta-btn:hover::before { transform: translateX(100%); }
 
-  .ftnote { font-size: 12px; color: var(--txd); text-align: center; margin-top: 10px; }
+  .ftnote { font-size: 12px; color: #666; text-align: center; margin-top: 14px; }
 
+  /* ── Sticky CTA on scroll ── */
+  .sticky-cta {
+    position: fixed; bottom: 22px; left: 22px; right: 22px; z-index: 90;
+    max-width: 480px; margin: 0 auto;
+    transform: translateY(120%); transition: transform .35s cubic-bezier(.2,.7,.2,1);
+    pointer-events: none;
+  }
+  .sticky-cta.show { transform: translateY(0); pointer-events: auto; }
+  .sticky-cta button {
+    width: 100%; padding: 14px; border-radius: 14px; border: 0;
+    background: linear-gradient(135deg, rgba(232,197,71,0.95), rgba(212,175,63,0.95));
+    backdrop-filter: blur(20px);
+    color: #000; font-weight: 800; font-size: 14px; cursor: pointer;
+    box-shadow: 0 12px 40px rgba(232,197,71,0.4), 0 0 0 1px rgba(232,197,71,0.4);
+  }
+
+  /* ── Marquee social proof ── */
+  .marquee {
+    overflow: hidden; padding: 12px 0; mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+  }
+  .marquee-track {
+    display: flex; gap: 32px; white-space: nowrap; animation: marquee-roll 30s linear infinite;
+  }
+  .marquee:hover .marquee-track { animation-play-state: paused; }
+  @keyframes marquee-roll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  .marquee .item {
+    color: #888; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .marquee .item::before { content: '✦'; color: #e8c547; }
+
+  /* ── Alert boxes ── */
   .alert-bad {
-    background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.3); padding: 14px;
-    border-radius: 8px; margin: 12px 0; color: rgb(248,113,113); font-size: 13px;
+    background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3); padding: 14px;
+    border-radius: 10px; margin: 12px 0; color: rgb(248,113,113); font-size: 13px;
   }
   .alert-ok {
-    background: rgba(34,197,94,.08); border: 1px solid rgba(34,197,94,.3); padding: 14px;
-    border-radius: 8px; margin: 12px 0; color: rgb(74,222,128); font-size: 13px;
+    background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.3); padding: 14px;
+    border-radius: 10px; margin: 12px 0; color: rgb(74,222,128); font-size: 13px;
+  }
+
+  /* ── Reduce motion ── */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important; animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 </style>
 </head>
 <body>
-<div id="nav-placeholder"></div>
+<div class="mesh-bg"></div>
+<div class="grain"></div>
 
 <main class="page">
   <header class="hero">
-    <span class="badge">Beta · Limited to 10 seats</span>
-    <h1>BQ Pusher</h1>
-    <p class="tag">Hebrew & English Facebook lead alerts. Drafted for you. Delivered to Telegram.</p>
+    <span class="badge">Beta · 10 seats only</span>
+    <h1 class="hero-title">Hebrew & English Facebook leads, <span class="accent-word">drafted for you</span>.</h1>
+    <p class="tag">Every day, BQ Pusher scans the Facebook groups your buyers actually post in. We classify buyer-intent. We draft a 4-part reply in your voice. Telegram alert. You paste. They book.</p>
+
+    <div class="hero-stats">
+      <div class="s"><div class="num">10×</div><div class="lbl">cheaper than Pusher</div></div>
+      <div class="s"><div class="num">~$10</div><div class="lbl">cost / month</div></div>
+      <div class="s"><div class="num">24h</div><div class="lbl">setup</div></div>
+    </div>
   </header>
 
-  <section class="card">
-    <h2>What it does</h2>
-    <p>Every day, our system scans the Facebook groups <em>your buyers actually post in</em>. When someone shows buyer intent — looking for a videographer, complaining about marketing, asking for recommendations — we draft a smart 4-part comment-reply in your voice and send it to your Telegram. You paste it. They book you.</p>
-    <p style="opacity:.85; margin-top:12px"><strong>You don't write content.</strong> You don't run ads. You comment on the posts that already exist, in front of the silent readers who become your customers.</p>
+  <section class="glass reveal" aria-label="What it does">
+    <h2>What it actually does</h2>
+    <p>The reader of a comment is the customer — not the poster. Every smart, on-topic comment is a free ad to thousands of silent group readers. Pusher gives you the stack to run that play at scale, in your voice, without writing posts.</p>
+    <p style="opacity:.85"><strong>You don't write content.</strong> You don't run ads. You comment on the posts that already exist, in front of the silent readers who become your customers.</p>
   </section>
 
-  <section class="card">
+  <section class="glass reveal" aria-label="How it works">
     <h2>How it works</h2>
-    <div class="step"><div class="num">1</div><div><h3>You sign up + tell us your niche</h3><p>Business, target audience, sample voice, FB groups you want scanned.</p></div></div>
-    <div class="step"><div class="num">2</div><div><h3>We configure your pipeline within 24h</h3><p>Pre-launch, manual onboarding. We tune the AI for your business.</p></div></div>
-    <div class="step"><div class="num">3</div><div><h3>Daily alerts on your Telegram</h3><p>Each alert = post link + drafted reply + reasoning. You paste → done.</p></div></div>
-    <div class="step"><div class="num">4</div><div><h3>Get clients from comments, not DMs</h3><p>Silent group readers see you helping people → they book you.</p></div></div>
+    <div class="step"><div class="num">1</div><div><h3>Tell us your niche</h3><p>5-min form: business, target audience, FB groups, sample of your voice.</p></div></div>
+    <div class="step"><div class="num">2</div><div><h3>We tune the AI within 24h</h3><p>Manual onboarding by Moshe. Voice match, FAQ injection, group verification.</p></div></div>
+    <div class="step"><div class="num">3</div><div><h3>Daily Telegram alerts</h3><p>Each alert: post link + drafted 4-part reply + reasoning. You paste.</p></div></div>
+    <div class="step"><div class="num">4</div><div><h3>Get clients from comments</h3><p>Silent readers see you helping people in public → they reach out.</p></div></div>
   </section>
 
-  <section class="card">
-    <h2>Why $20/mo (beta launch)</h2>
-    <p>This is round 1. 10 seats only. Manual onboarding by Moshe. After beta closes — price goes to $99/mo and onboarding becomes self-serve. Lock in the launch rate now.</p>
-    <div class="grid" style="margin-top:14px">
-      <div>✓ Daily Apify scans</div>
-      <div>✓ Hebrew + English support</div>
-      <div>✓ AI 4-part reply drafts</div>
-      <div>✓ Telegram delivery</div>
-      <div>✓ 24h manual setup</div>
-      <div>✓ Lifetime grandfathered price</div>
+  <section class="glass reveal" aria-label="What's included">
+    <h2>What's included</h2>
+    <p>Round 1 launch. 10 seats. Manual onboarding. After beta closes — price moves to $99/mo. Lock launch rate now.</p>
+    <div class="feat-grid">
+      <div class="feat">Daily Apify scans</div>
+      <div class="feat">Hebrew + English</div>
+      <div class="feat">AI 4-part replies</div>
+      <div class="feat">Telegram delivery</div>
+      <div class="feat">24h manual setup</div>
+      <div class="feat">Lifetime $20 rate</div>
+      <div class="feat">Cancel anytime</div>
+      <div class="feat">Refund if we miss 24h</div>
     </div>
   </section>
 
-  <section class="card" style="text-align:center">
-    <span id="seats-pill" class="seats">Loading seats...</span>
+  <div class="marquee reveal" aria-hidden="true">
+    <div class="marquee-track">
+      <span class="item">100% manual posting (no FB ban risk)</span>
+      <span class="item">Runs entirely on your own data</span>
+      <span class="item">No ads · No spam · No DMs</span>
+      <span class="item">Built on Apify + Groq + Cloudflare</span>
+      <span class="item">Same engine BQ uses for AI Video clients</span>
+      <span class="item">100% manual posting (no FB ban risk)</span>
+      <span class="item">Runs entirely on your own data</span>
+      <span class="item">No ads · No spam · No DMs</span>
+      <span class="item">Built on Apify + Groq + Cloudflare</span>
+      <span class="item">Same engine BQ uses for AI Video clients</span>
+    </div>
+  </div>
+
+  <section class="glass price-card reveal" aria-label="Pricing & CTA">
+    <span id="seats-pill" class="seats-pill">Loading seats…</span>
     <div class="price-row">
-      <span class="strike">$99/mo</span>
+      <span class="strike">$99</span>
       <span class="amount">$20</span>
       <span class="per">/month</span>
     </div>
+    <p style="color:#999; font-size:13px; margin: 0 auto 18px; max-width:380px">Lifetime grandfathered. After beta closes (10 seats), the next round is $99/mo.</p>
     <button id="cta" class="cta-btn" disabled>💳 Reserve my seat — $20/mo</button>
     <p class="ftnote">Cancel anytime. Refund if we can't onboard you within 24h.</p>
     <div id="msg-box"></div>
   </section>
 
-  <section class="card">
+  <section class="glass reveal" aria-label="Talk to Moshe">
     <h2>Need a pitch first? Talk to Moshe.</h2>
-    <p>WhatsApp +1 (747) 267-9912 · Email music.iambq@gmail.com</p>
+    <p>WhatsApp <a href="https://wa.me/17472679912" style="color:#e8c547">+1 (747) 267-9912</a> · Email <a href="mailto:music.iambq@gmail.com" style="color:#e8c547">music.iambq@gmail.com</a></p>
   </section>
 </main>
+
+<!-- Sticky CTA on scroll past hero -->
+<div class="sticky-cta" id="sticky-cta">
+  <button onclick="document.getElementById('cta').scrollIntoView({behavior:'smooth', block:'center'})">💳 Reserve my seat — $20/mo</button>
+</div>
 
 <script src="../js/auth.js"></script>
 <script src="../js/common.js"></script>
 <script>
 const API = 'https://bq-tools-api.fanzai-mgmt.workers.dev';
 
-(async function init() {
-  // Seats indicator
-  try {
-    const r = await fetch(`${API}/api/pusher-stats`);
-    // Stats only shows alerts not seats — call dedicated endpoint
-  } catch {}
+// ── Reveal on scroll ──
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); });
+}, { rootMargin: '-50px 0px -50px 0px' });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 
+// ── Sticky CTA after hero ──
+const sticky = document.getElementById('sticky-cta');
+const heroEl = document.querySelector('.hero');
+const stickyIo = new IntersectionObserver(entries => {
+  entries.forEach(e => sticky.classList.toggle('show', !e.isIntersecting));
+}, { threshold: 0 });
+stickyIo.observe(heroEl);
+// Hide sticky if pricing card is in view (avoid stacking)
+const priceCard = document.querySelector('.price-card');
+const priceIo = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) sticky.classList.remove('show'); });
+});
+priceIo.observe(priceCard);
+
+// ── Seats fetch + count animation ──
+(async function init() {
+  const pill = document.getElementById('seats-pill');
+  const cta = document.getElementById('cta');
   try {
     const sr = await fetch(`${API}/api/pusher-beta-seats`);
     if (sr.ok) {
       const sd = await sr.json();
       const remaining = (sd.cap || 10) - (sd.used || 0);
-      const pill = document.getElementById('seats-pill');
-      const cta = document.getElementById('cta');
       if (remaining <= 0) {
         pill.textContent = 'Beta full — round 2 opens later';
         pill.classList.add('full');
         cta.textContent = 'Beta full — join waitlist';
         cta.disabled = true;
-      } else {
-        pill.textContent = `${remaining} of ${sd.cap || 10} seats left`;
-        cta.disabled = false;
+        return;
       }
+      countTo(pill, remaining, sd.cap || 10);
+      cta.disabled = false;
+    } else {
+      pill.textContent = 'Beta — limited seats';
+      cta.disabled = false;
     }
   } catch {
-    document.getElementById('cta').disabled = false;
-    document.getElementById('seats-pill').textContent = 'Beta — limited seats';
+    pill.textContent = 'Beta — limited seats';
+    cta.disabled = false;
   }
 })();
 
+function countTo(el, remaining, cap) {
+  let cur = cap; const dur = 900; const start = performance.now();
+  function tick(t) {
+    const p = Math.min(1, (t - start) / dur);
+    const eased = 1 - Math.pow(1 - p, 3);
+    const val = Math.round(cap - (cap - remaining) * eased);
+    el.textContent = `${val} of ${cap} seats left`;
+    if (p < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+// ── Stripe checkout ──
 document.getElementById('cta').addEventListener('click', async () => {
   const token = localStorage.getItem('bq_token');
   if (!token) {
@@ -167,7 +445,7 @@ document.getElementById('cta').addEventListener('click', async () => {
   }
   const cta = document.getElementById('cta');
   cta.disabled = true;
-  cta.textContent = 'Opening Stripe...';
+  cta.innerHTML = '<span style="display:inline-block; animation:pulse 1s infinite">Opening Stripe…</span>';
   try {
     const r = await fetch(`${API}/api/payments/stripe/create-session`, {
       method: 'POST',
@@ -181,23 +459,26 @@ document.getElementById('cta').addEventListener('click', async () => {
       const box = document.getElementById('msg-box');
       box.innerHTML = `<div class="alert-bad">${d.error || 'Could not start checkout. Try again.'}</div>`;
       cta.disabled = false;
-      cta.textContent = '💳 Reserve my seat — $20/mo';
+      cta.innerHTML = '💳 Reserve my seat — $20/mo';
     }
   } catch (e) {
     document.getElementById('msg-box').innerHTML = `<div class="alert-bad">Network error. Try again.</div>`;
     cta.disabled = false;
-    cta.textContent = '💳 Reserve my seat — $20/mo';
+    cta.innerHTML = '💳 Reserve my seat — $20/mo';
   }
 });
 
-// Show success/cancel banner from URL params
+// ── URL param success/cancel banners ──
 const params = new URLSearchParams(location.search);
 if (params.get('payment') === 'success') {
-  document.getElementById('msg-box').innerHTML = `<div class="alert-ok">✅ Payment received. Moshe will email you within 24h to onboard. Check your inbox + spam.</div>`;
+  document.getElementById('msg-box').innerHTML = `<div class="alert-ok">✅ Payment received. Continue to <a href="/tools/pusher-setup.html" style="color:rgb(74,222,128); text-decoration:underline">setup →</a></div>`;
 }
 if (params.get('payment') === 'cancel') {
   document.getElementById('msg-box').innerHTML = `<div class="alert-bad">Payment cancelled. No charge made.</div>`;
 }
 </script>
+
+<!-- Brain Assistant — floating bottom-right -->
+<script src="/js/brain-assistant.js" defer></script>
 </body>
 </html>

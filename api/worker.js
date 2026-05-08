@@ -2,6 +2,7 @@
 // Cloudflare Worker that proxies AI calls, manages credits, auth, and admin.
 
 import { handlePusherWebhook, handlePusherStats, handlePusherHealth, handlePusherBetaSeats, handlePusherAdminList, handlePusherAdminRunNow, handlePusherMe, handlePusherOnboard, handlePusherAdminUserGet, handlePusherAdminUserUpdate, handlePusherAdminLinkTelegram, handlePusherProvisionSchedule } from './pusher.js';
+import { handleBrainChat } from './brain.js';
 
 export default {
   // ── Cron Trigger: nightly tasks (8am PT) ──
@@ -28,6 +29,9 @@ export default {
       }
       if (path === '/api/pusher-health' && request.method === 'GET') {
         return corsResponse(env, await handlePusherHealth(request, env));
+      }
+      if (path === '/api/brain/chat' && request.method === 'POST') {
+        return corsResponse(env, await handleBrainChat(request, env));
       }
       if (path === '/api/pusher-beta-seats' && request.method === 'GET') {
         return corsResponse(env, await handlePusherBetaSeats(request, env));
