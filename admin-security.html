@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Security</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  body { padding: 0; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 24px 18px 60px; }
+  h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+  .sub { color: var(--txd); font-size: 13px; margin-bottom: 24px; }
+  .login {
+    max-width: 380px; margin: 50px auto; background: var(--sf); border: 1px solid var(--bd);
+    padding: 26px; border-radius: 14px;
+  }
+  .login h2 { font-size: 18px; margin-bottom: 14px; }
+  .login input {
+    width: 100%; padding: 12px 14px; border: 1px solid var(--bd); border-radius: 8px;
+    background: var(--bg); color: var(--tx); font-size: 14px; margin-bottom: 12px;
+  }
+  .login button {
+    width: 100%; padding: 12px; border: 0; border-radius: 8px;
+    background: var(--ac); color: #000; font-weight: 800; cursor: pointer;
+  }
+  .panel { display: none; }
+  .panel.show { display: block; }
+  .stats {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 22px;
+  }
+  @media (max-width: 700px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+  .stat {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 10px; padding: 14px;
+  }
+  .stat .lab { font-size: 11px; color: var(--txd); text-transform: uppercase; letter-spacing: 0.08em; }
+  .stat .val { font-size: 24px; font-weight: 800; margin-top: 4px; }
+  .stat.warn .val { color: rgb(251,146,60); }
+  .stat.bad .val { color: rgb(248,113,113); }
+  .stat.ok .val { color: rgb(74,222,128); }
+
+  .section {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 14px;
+    padding: 20px; margin-bottom: 18px;
+  }
+  .section h2 { font-size: 16px; margin-bottom: 12px; display:flex; justify-content:space-between; align-items:center }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .btn {
+    padding: 9px 14px; border: 1px solid var(--bd); border-radius: 8px;
+    background: var(--bg); color: var(--tx); font-size: 13px; cursor: pointer;
+  }
+  .btn:hover { border-color: var(--ac); }
+  .btn-primary { background: var(--ac); color: #000; border-color: var(--ac); font-weight: 700; }
+  .btn-danger { background: rgba(239,68,68,0.1); color: rgb(248,113,113); border-color: rgba(239,68,68,0.3); }
+
+  table { width:100%; border-collapse: collapse; font-size: 12px; }
+  th { text-align:left; font-weight:700; color: var(--txd); padding: 8px 6px; border-bottom: 1px solid var(--bd); font-size:11px; text-transform:uppercase; letter-spacing:0.08em; }
+  td { padding: 8px 6px; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: top; }
+  td.mono { font-family: ui-monospace, monospace; }
+
+  .reason-pill {
+    display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700;
+    background: rgba(232,197,71,.15); color: var(--ac);
+  }
+  .reason-probe_path { background: rgba(239,68,68,.18); color: rgb(248,113,113); }
+  .reason-bad_ua { background: rgba(239,68,68,.15); color: rgb(248,113,113); }
+  .reason-rate_limit { background: rgba(232,197,71,.18); color: var(--ac); }
+  .reason-ip_banned { background: rgba(120,120,120,.2); color: var(--txd); }
+  .reason-admin_auth_fail { background: rgba(249,115,22,.2); color: rgb(251,146,60); }
+
+  .empty { color: var(--txd); font-size: 13px; padding: 20px; text-align: center; }
+  .ip-cell { font-family: ui-monospace, monospace; }
+  .ua-cell {
+    max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    color: #888; font-size: 11px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🛡️ Security Center</h1>
+  <p class="sub">Live threat log, IP bans, and Cloudflare-edge protection status. Refreshes on demand.</p>
+
+  <div id="login" class="login">
+    <h2>Admin login</h2>
+    <input id="adminPass" type="password" placeholder="Admin password" autofocus />
+    <button onclick="adminLogin()">Sign in</button>
+    <div id="loginErr" style="color:#f88; font-size:12px; margin-top:8px"></div>
+  </div>
+
+  <div id="panel" class="panel">
+    <div class="stats">
+      <div class="stat ok"><div class="lab">Total today</div><div class="val" id="s-total">—</div></div>
+      <div class="stat bad"><div class="lab">Active bans</div><div class="val" id="s-bans">—</div></div>
+      <div class="stat warn"><div class="lab">Recent incidents</div><div class="val" id="s-events">—</div></div>
+      <div class="stat ok"><div class="lab">Status</div><div class="val" id="s-status">…</div></div>
+    </div>
+
+    <div class="section">
+      <h2>Banned IPs <button class="btn" onclick="loadAll()">↻ Refresh</button></h2>
+      <table id="bans-table"><thead><tr><th>IP</th><th>Banned until</th><th></th></tr></thead><tbody id="bans-tbody"></tbody></table>
+      <div id="bans-empty" class="empty" style="display:none">No active bans. The kingdom is quiet.</div>
+    </div>
+
+    <div class="section">
+      <h2>Recent incidents (last 100)</h2>
+      <table>
+        <thead><tr><th>Time</th><th>IP</th><th>Reason</th><th>Path</th><th>UA</th></tr></thead>
+        <tbody id="events-tbody"></tbody>
+      </table>
+      <div id="events-empty" class="empty" style="display:none">No incidents recorded. ✨</div>
+    </div>
+
+    <div class="section">
+      <h2>Edge defences (Cloudflare layer)</h2>
+      <p style="font-size:13px; color: var(--txd); line-height:1.7">
+        Worker-level protection is <strong style="color:rgb(74,222,128)">active</strong> (rate limit, probe scan, bad-UA block, brute-force ban).
+        <br><br>
+        For maximum coverage, also enable in your <a href="https://dash.cloudflare.com" target="_blank" style="color:var(--ac)">Cloudflare dashboard</a>:
+      </p>
+      <ul style="font-size:13px; line-height:2; color: #ccc; margin-left: 20px">
+        <li><strong>Bot Fight Mode</strong> → Security → Bots → Enable</li>
+        <li><strong>Security Level</strong> → Security → Settings → "Medium"</li>
+        <li><strong>WAF custom rules</strong> → Security → WAF → "Block known bots" template</li>
+        <li><strong>Always Use HTTPS</strong> → SSL/TLS → Edge Certificates → On</li>
+        <li><strong>Automatic HTTPS Rewrites</strong> → On</li>
+        <li><strong>Email obfuscation</strong> → Scrape Shield → On</li>
+      </ul>
+      <p style="font-size:12px; color: var(--txd); margin-top: 14px">
+        These settings live <em>outside</em> the worker code in your CF dashboard. They add free WAF + bot detection on top of what you see here.
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'https://bq-tools-api.fanzai-mgmt.workers.dev';
+let ADMIN_PASS = '';
+
+function adminHeaders() { return { 'Authorization': `Bearer ${ADMIN_PASS}` }; }
+
+function adminLogin() {
+  const pw = document.getElementById('adminPass').value.trim();
+  if (!pw) return;
+  ADMIN_PASS = pw;
+  fetch(`${API}/api/admin/users`, { headers: adminHeaders() })
+    .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+    .then(() => {
+      sessionStorage.setItem('bq_admin_pass', pw);
+      document.getElementById('login').style.display = 'none';
+      document.getElementById('panel').classList.add('show');
+      loadAll();
+    })
+    .catch(() => { document.getElementById('loginErr').textContent = 'Wrong password.'; });
+}
+
+async function loadAll() {
+  await Promise.all([loadHealth(), loadEvents(), loadBans()]);
+}
+
+async function loadHealth() {
+  try {
+    const r = await fetch(`${API}/api/security-health`);
+    const d = await r.json();
+    document.getElementById('s-status').textContent = d.has_alerting ? '🛡️ guarded' : '⚠️ no alerts';
+  } catch { document.getElementById('s-status').textContent = '⚠️ unreachable'; }
+}
+
+async function loadEvents() {
+  try {
+    const r = await fetch(`${API}/api/admin/security/log`, { headers: adminHeaders() });
+    if (!r.ok) throw new Error();
+    const d = await r.json();
+    document.getElementById('s-total').textContent = (d.total_today || 0).toLocaleString();
+    document.getElementById('s-events').textContent = (d.events || []).length;
+    const tbody = document.getElementById('events-tbody');
+    const empty = document.getElementById('events-empty');
+    if (!d.events || !d.events.length) {
+      tbody.innerHTML = '';
+      empty.style.display = '';
+      return;
+    }
+    empty.style.display = 'none';
+    tbody.innerHTML = d.events.slice(0, 100).map(e => `
+      <tr>
+        <td>${new Date(e.ts).toLocaleString()}</td>
+        <td class="ip-cell">${escapeHtml(e.ip)}</td>
+        <td><span class="reason-pill reason-${escapeHtml(e.reason || e.type || 'unknown')}">${escapeHtml(e.reason || e.type || 'unknown')}</span></td>
+        <td class="mono">${escapeHtml((e.path || '').slice(0, 60))}</td>
+        <td class="ua-cell" title="${escapeHtml(e.ua || '')}">${escapeHtml((e.ua || '').slice(0, 60))}</td>
+      </tr>
+    `).join('');
+  } catch { document.getElementById('events-empty').textContent = 'Error loading.'; }
+}
+
+async function loadBans() {
+  try {
+    const r = await fetch(`${API}/api/admin/security/bans`, { headers: adminHeaders() });
+    if (!r.ok) throw new Error();
+    const d = await r.json();
+    document.getElementById('s-bans').textContent = d.count || 0;
+    const tbody = document.getElementById('bans-tbody');
+    const empty = document.getElementById('bans-empty');
+    if (!d.bans || !d.bans.length) {
+      tbody.innerHTML = '';
+      empty.style.display = '';
+      return;
+    }
+    empty.style.display = 'none';
+    tbody.innerHTML = d.bans.map(b => `
+      <tr>
+        <td class="ip-cell">${escapeHtml(b.ip)}</td>
+        <td>${b.until ? new Date(b.until).toLocaleString() : '—'}</td>
+        <td><button class="btn btn-danger" onclick="unban('${escapeJs(b.ip)}')">unban</button></td>
+      </tr>
+    `).join('');
+  } catch { document.getElementById('bans-empty').textContent = 'Error loading.'; }
+}
+
+async function unban(ip) {
+  if (!confirm(`Unban ${ip}?`)) return;
+  const r = await fetch(`${API}/api/admin/security/unban`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...adminHeaders() },
+    body: JSON.stringify({ ip }),
+  });
+  const d = await r.json();
+  if (r.ok) { loadAll(); } else { alert(d.error || 'failed'); }
+}
+
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function escapeJs(s) {
+  return String(s || '').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n').replace(/\r/g,'').replace(/"/g,'\\"');
+}
+
+const savedPass = sessionStorage.getItem('bq_admin_pass');
+if (savedPass) {
+  document.getElementById('adminPass').value = savedPass;
+  adminLogin();
+}
+</script>
+<script src="/js/brain-assistant.js" defer></script>
+</body>
+</html>

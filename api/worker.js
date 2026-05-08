@@ -3,6 +3,7 @@
 
 import { handlePusherWebhook, handlePusherStats, handlePusherHealth, handlePusherBetaSeats, handlePusherAdminList, handlePusherAdminRunNow, handlePusherMe, handlePusherOnboard, handlePusherAdminUserGet, handlePusherAdminUserUpdate, handlePusherAdminLinkTelegram, handlePusherProvisionSchedule } from './pusher.js';
 import { handleBrainChat } from './brain.js';
+import { securityGate, addSecurityHeaders, trackFailedAdminAuth, handleSecurityLog, handleSecurityBans, handleSecurityUnban, handleSecurityHealth } from './security.js';
 
 export default {
   // ── Cron Trigger: nightly tasks (8am PT) ──
@@ -11,15 +12,33 @@ export default {
   },
 
   async fetch(request, env, ctx) {
-    // CORS preflight
+    // CORS preflight (do not gate)
     if (request.method === 'OPTIONS') {
       return corsResponse(env, new Response(null, { status: 204 }));
     }
+
+    // ── Security gate ── (rate limit, probes, banned IPs, bad UAs)
+    const gated = await securityGate(request, env, ctx);
+    if (gated) return addSecurityHeaders(gated, request);
 
     const url = new URL(request.url);
     const path = url.pathname;
 
     try {
+      // ── Security admin routes ──
+      if (path === '/api/admin/security/log' && request.method === 'GET') {
+        return addSecurityHeaders(await handleSecurityLog(request, env), request);
+      }
+      if (path === '/api/admin/security/bans' && request.method === 'GET') {
+        return addSecurityHeaders(await handleSecurityBans(request, env), request);
+      }
+      if (path === '/api/admin/security/unban' && request.method === 'POST') {
+        return addSecurityHeaders(await handleSecurityUnban(request, env), request);
+      }
+      if (path === '/api/security-health' && request.method === 'GET') {
+        return corsResponse(env, await handleSecurityHealth(request, env));
+      }
+
       // ── Routes ──
       if (path === '/api/pusher-webhook' && request.method === 'POST') {
         return await handlePusherWebhook(request, env, ctx);
@@ -446,7 +465,7 @@ function timingSafeEq(a, b) {
 }
 
 // Admin auth check — no fallback; returns false if ADMIN_PASSWORD is unset
-function isAdmin(request, env) {
+function isAdmin(request, env, ctx) {
   const secret = env.ADMIN_PASSWORD;
   if (!secret) {
     console.error('[isAdmin] ADMIN_PASSWORD not configured in worker env');
@@ -456,6 +475,8 @@ function isAdmin(request, env) {
   const password = auth.replace('Bearer ', '');
   if (!timingSafeEq(password, secret)) {
     console.error('[isAdmin] password mismatch');
+    // Track brute-force attempts (auto-ban after 5 fails/min)
+    if (ctx) ctx.waitUntil(trackFailedAdminAuth(request, env, ctx));
     return false;
   }
   return true;
