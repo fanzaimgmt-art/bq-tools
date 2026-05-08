@@ -1,630 +1,537 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="en" dir="ltr" class="editorial">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BQ Tools — Home</title>
-<link rel="stylesheet" href="style.css">
+<title>BQ Tools — Your AI toolbox</title>
+<meta name="description" content="18 AI-powered tools for service businesses. Lead gen, content, sales, business ops — all in one place.">
+<link rel="manifest" href="/manifest.json">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/css/editorial.css">
+
 <style>
-  body {
-    display: flex; flex-direction: column;
-    background:
-      radial-gradient(at 15% 0%, rgba(232,197,71,0.07) 0%, transparent 45%),
-      radial-gradient(at 85% 100%, rgba(99,84,205,0.08) 0%, transparent 50%),
-      var(--bg);
-    background-attachment: fixed;
-  }
-  [data-theme="light"] body {
-    background:
-      radial-gradient(at 15% 0%, rgba(184,134,11,0.06) 0%, transparent 45%),
-      radial-gradient(at 85% 100%, rgba(99,84,205,0.05) 0%, transparent 50%),
-      var(--bg);
-  }
+  /* ── Page-specific overrides ── */
+  .ed-topnav { background: rgba(11,11,13,0.7); backdrop-filter: saturate(1.4) blur(16px); }
+  .ed-topnav.scrolled { padding: 12px 36px; background: rgba(11,11,13,0.92); }
 
-  .home-greeting {
+  .home-hero {
+    padding: 160px 0 60px;
+    text-align: center;
+    border-bottom: 1px solid var(--ed-line);
+  }
+  .home-greeting-row {
     display: flex; align-items: center; justify-content: space-between;
-    flex-wrap: wrap; gap: 12px; margin-bottom: 28px;
+    flex-wrap: wrap; gap: 24px;
+    margin-bottom: 60px;
   }
-  .home-greeting h1 { font-size: 26px; font-weight: 900; }
-  .home-greeting h1 .accent { color: var(--ac); }
-  .home-credit-badge {
-    display: flex; align-items: center; gap: 6px;
-    padding: 8px 16px; border-radius: 10px;
-    background: var(--acd); font-size: 16px; font-weight: 800; color: var(--ac);
+  .home-greeting-row h1 {
+    font-size: clamp(40px, 6vw, 88px) !important;
+    text-align: left;
+    max-width: 24ch;
+    margin: 0;
+  }
+  .home-greeting-row h1 .name {
+    font-style: italic; color: var(--ed-gold);
+  }
+  .credit-block {
+    display: flex; flex-direction: column; align-items: flex-end;
+    gap: 4px; font-family: 'Geist Mono', monospace;
+  }
+  .credit-block .label {
+    font-size: 10px; letter-spacing: 0.18em; color: var(--ed-paper-faint);
+    text-transform: uppercase;
+  }
+  .credit-block .num {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic; font-size: 64px; line-height: 1;
+    color: var(--ed-gold);
+  }
+  .credit-block .pro-pill {
+    font-size: 10px; padding: 3px 10px; border-radius: 100px;
+    background: rgba(212,166,75,0.15); color: var(--ed-gold);
+    border: 1px solid rgba(212,166,75,0.3);
+    letter-spacing: 0.1em; margin-top: 4px;
   }
 
-  /* Tools Grid */
-  .home-tools { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 32px; }
-  .home-tool {
-    position: relative; overflow: hidden;
-    background: var(--sf); border: 1px solid var(--bd); border-radius: 14px;
-    padding: 20px 16px 14px; text-align: center; text-decoration: none; color: var(--tx);
-    transition: all 0.3s cubic-bezier(.4,0,.2,1);
-    display: flex; flex-direction: column; align-items: center; gap: 8px;
+  .filter-row {
+    display: flex; gap: 8px; margin: 24px 0 36px;
+    overflow-x: auto; padding-bottom: 4px;
+  }
+  .filter-row::-webkit-scrollbar { height: 0; }
+  .filter-chip {
+    font-family: 'Geist Mono', monospace;
+    font-size: 11px; letter-spacing: 0.06em;
+    padding: 8px 16px; border-radius: 100px;
+    background: rgba(245,241,232,0.04);
+    border: 1px solid var(--ed-line);
+    color: var(--ed-paper-dim);
+    cursor: pointer; white-space: nowrap;
+    transition: border-color .2s, color .2s, background .2s;
+  }
+  .filter-chip:hover { color: var(--ed-paper); }
+  .filter-chip.active {
+    border-color: var(--ed-gold); color: var(--ed-gold);
+    background: rgba(212,166,75,0.1);
+  }
+  .filter-chip .count {
+    font-size: 9px; opacity: 0.6; margin-left: 4px;
+  }
+
+  /* Tool cells — editorial bento */
+  .tool-cell {
     cursor: pointer;
   }
-  .home-tool::before {
-    content: ''; position: absolute; inset: 0; opacity: 0;
-    transition: opacity 0.3s ease; border-radius: 14px; pointer-events: none;
+  .tool-cell .ed-icon-em {
+    font-size: 36px; margin-bottom: 16px; display: block;
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4));
   }
-  .home-tool:hover { border-color: var(--ac); transform: scale(1.05) translateY(-8px); opacity: 1;
-    box-shadow: 0 20px 40px rgba(232,197,71,0.2); }
-  .home-tool:hover::before { opacity: 1; }
-  /* Gradient overlays per type */
-  .ht-g-cyan::before  { background: radial-gradient(circle at 50% 0%, rgba(99,205,218,.18), transparent 70%); }
-  .ht-g-blue::before  { background: radial-gradient(circle at 50% 0%, rgba(100,130,255,.18), transparent 70%); }
-  .ht-g-green::before { background: radial-gradient(circle at 50% 0%, rgba(81,207,102,.18), transparent 70%); }
-  .ht-g-gold::before  { background: radial-gradient(circle at 50% 0%, rgba(232,197,71,.18), transparent 70%); }
-  .ht-g-pink::before  { background: radial-gradient(circle at 50% 0%, rgba(255,107,157,.18), transparent 70%); }
-  .home-tool .ht-icon { font-size: 28px; transition: transform 0.3s ease; }
-  .home-tool:hover .ht-icon { transform: scale(1.15); }
-  .home-tool .ht-name { font-size: 14px; font-weight: 700; }
-  .home-tool .ht-cost { font-size: 11px; color: var(--txd); }
-  .home-tool .ht-cost.free { color: var(--grn); }
-  .home-tool .ht-tip {
-    font-size: 11px; color: var(--txd); line-height: 1.35; margin-top: 2px;
-    max-height: 0; overflow: hidden; opacity: 0;
-    transition: max-height 0.3s ease, opacity 0.25s ease;
+  .tool-cell h3 {
+    font-size: 26px !important;
+    margin-bottom: 8px;
   }
-  .home-tool:hover .ht-tip { max-height: 36px; opacity: 1; }
+  .tool-cell p {
+    font-size: 13.5px;
+    flex-grow: 1;
+  }
+  .tool-cell .meta-row {
+    display: flex; gap: 8px; margin-top: 16px; align-items: center;
+  }
+  .tool-cell .price {
+    font-family: 'Geist Mono', monospace;
+    font-size: 11px; letter-spacing: 0.06em;
+    color: var(--ed-paper-faint);
+  }
+  .tool-cell .price.free { color: #4ade80; }
+  .tool-cell .price.pro { color: var(--ed-gold); }
 
-  /* Section headers */
-  .home-section {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 14px;
+  /* Stats footer */
+  .stats-row {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;
+    border-top: 1px solid var(--ed-line);
+    border-bottom: 1px solid var(--ed-line);
+    margin-top: 80px;
   }
-  .home-section h2 { font-size: 18px; font-weight: 800; }
-  .home-section a { font-size: 13px; color: var(--ac); text-decoration: none; }
+  @media (max-width: 700px) { .stats-row { grid-template-columns: 1fr; } }
+  .stat-cell {
+    padding: 40px 32px;
+    border-right: 1px solid var(--ed-line);
+    transition: background .3s;
+  }
+  .stat-cell:last-child { border-right: 0; }
+  .stat-cell:hover { background: rgba(212,166,75,0.04); }
+  .stat-cell .lab {
+    font-family: 'Geist Mono', monospace;
+    font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--ed-paper-faint); margin-bottom: 12px;
+  }
+  .stat-cell .num {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic; font-size: 64px; line-height: 1;
+    color: var(--ed-paper);
+  }
+  .stat-cell .num.gold { color: var(--ed-gold); }
 
-  /* Stats row */
-  .home-stats { display: flex; gap: 12px; margin-bottom: 32px; }
-  .home-stat {
-    flex: 1; background: var(--sf); border: 1px solid var(--bd); border-radius: 12px;
-    padding: 16px; text-align: center;
+  /* Recent activity */
+  .recent {
+    margin-top: 80px;
   }
-  .home-stat .hs-num { font-size: 28px; font-weight: 900; color: var(--ac); }
-  .home-stat .hs-label { font-size: 12px; color: var(--txd); margin-top: 2px; }
-
-  /* Recent projects */
-  .home-recent { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 32px; }
-  .home-recent-card {
-    background: var(--sf); border: 1px solid var(--bd); border-radius: 12px;
-    overflow: hidden; text-decoration: none; color: var(--tx); transition: all .2s;
+  .recent-list {
+    margin-top: 36px;
+    border-top: 1px solid var(--ed-line);
   }
-  .home-recent-card:hover { border-color: var(--ac); opacity: 1; }
-  .home-recent-thumb {
-    width: 100%; aspect-ratio: 16/10; object-fit: cover; display: block;
+  .recent-item {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 24px;
+    padding: 24px 0;
+    border-bottom: 1px solid var(--ed-line);
+    align-items: center;
+    transition: padding .25s var(--ed-ease);
   }
-  .home-recent-placeholder {
-    width: 100%; aspect-ratio: 16/10; background: var(--bg);
-    display: flex; align-items: center; justify-content: center; font-size: 24px;
+  .recent-item:hover { padding-left: 8px; }
+  .recent-item .title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 22px; line-height: 1.3;
   }
-  .home-recent-info { padding: 10px 12px; }
-  .home-recent-title { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
-  .home-recent-date { font-size: 12px; color: var(--txd); }
-
-  .home-empty {
-    background: var(--sf); border: 1px solid var(--bd); border-radius: 12px;
-    padding: 32px; text-align: center; color: var(--txd); margin-bottom: 32px;
+  .recent-item .meta {
+    font-family: 'Geist Mono', monospace;
+    font-size: 11px; letter-spacing: 0.04em; color: var(--ed-paper-faint);
   }
-  .home-empty .icon { font-size: 36px; margin-bottom: 8px; opacity: .4; }
-
-  /* Quick actions */
-  .home-quick { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 32px; }
-  .home-quick a {
-    padding: 10px 18px; border: 1px solid var(--bd); border-radius: 10px;
-    background: var(--sf); color: var(--txd); font-size: 14px; text-decoration: none;
-    transition: all .2s; display: flex; align-items: center; gap: 6px; min-height: 48px;
-  }
-  .home-quick a:hover { border-color: var(--ac); color: var(--ac); opacity: 1; }
-
-  /* RTL fixes */
-  [dir="rtl"] .home-greeting { flex-direction: row-reverse; }
-  [dir="rtl"] .home-section { flex-direction: row-reverse; }
-  [dir="rtl"] .home-credit-badge,
-  [dir="rtl"] .hs-num { direction: ltr; unicode-bidi: isolate; }
-  [dir="rtl"] .home-recent-info { text-align: right; }
-  [dir="rtl"] .home-quick a { flex-direction: row-reverse; }
-
-  @media (max-width: 600px) {
-    .home-tools { grid-template-columns: repeat(2, 1fr); }
-    .home-recent { grid-template-columns: 1fr; }
-    .home-stats { flex-direction: column; }
-    .home-greeting h1 { font-size: 22px; }
-    .home-greeting { flex-direction: column; align-items: flex-start; }
-    [dir="rtl"] .home-greeting { align-items: flex-end; }
+  .recent-empty {
+    text-align: center; padding: 60px 0;
+    font-family: 'Instrument Serif', serif;
+    font-style: italic; font-size: 22px; color: var(--ed-paper-dim);
   }
 
-  /* ── Demo videos: fade in on hover, icon fades out ── */
-  .home-tool .tool-demo {
-    position: absolute; inset: 0; width: 100%; height: 100%;
-    object-fit: cover; border-radius: 14px;
-    opacity: 0; transition: opacity 0.25s ease;
-    pointer-events: none;
+  /* Cmdk hint */
+  .cmdk-hint {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: 'Geist Mono', monospace; font-size: 11px;
+    color: var(--ed-paper-faint); letter-spacing: 0.06em;
+    padding: 6px 12px; border-radius: 100px;
+    border: 1px solid var(--ed-line);
+    background: rgba(245,241,232,0.02);
+    cursor: pointer; transition: border-color .2s, color .2s;
   }
-  .home-tool:hover .tool-demo { opacity: 1; }
-  .home-tool:hover .ht-icon { opacity: 0; transition: opacity 0.2s ease; }
-  .home-tool .ht-icon { transition: opacity 0.25s ease, transform 0.3s ease; }
-  /* Keep text readable over video with a dark overlay */
-  .home-tool:has(.tool-demo):hover::after {
-    content: ''; position: absolute; inset: 0; border-radius: 14px;
-    background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.1) 60%);
-    pointer-events: none; z-index: 1;
+  .cmdk-hint:hover { border-color: var(--ed-gold); color: var(--ed-gold); }
+  .cmdk-hint kbd {
+    font-family: inherit; font-size: 10px;
+    padding: 2px 6px; border-radius: 4px;
+    background: rgba(245,241,232,0.08);
+    border: 1px solid var(--ed-line);
   }
-  .home-tool:has(.tool-demo) .ht-name,
-  .home-tool:has(.tool-demo) .ht-cost,
-  .home-tool:has(.tool-demo) .ht-tip { position: relative; z-index: 2; }
+
+  footer {
+    padding: 80px 0 60px;
+    border-top: 1px solid var(--ed-line);
+    margin-top: 80px;
+    position: relative;
+  }
+  footer::before {
+    content: 'BQ'; position: absolute; left: 50%; bottom: -20px; transform: translateX(-50%);
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(180px, 22vw, 320px); font-style: italic;
+    color: rgba(245,241,232,0.025); pointer-events: none; line-height: 1; z-index: -1;
+  }
+  .foot-grid {
+    display: grid; grid-template-columns: 1fr auto;
+    gap: 32px; align-items: center;
+  }
+  .foot-brand {
+    font-family: 'Instrument Serif', serif;
+    font-size: 32px; font-style: italic; letter-spacing: -0.02em;
+  }
+  .foot-brand span { color: var(--ed-gold); }
+  .foot-meta {
+    font-family: 'Geist Mono', monospace;
+    font-size: 12px; color: var(--ed-paper-faint);
+    text-align: right; line-height: 1.8;
+  }
+  .foot-meta a { color: var(--ed-paper-dim); transition: color .2s; }
+  .foot-meta a:hover { color: var(--ed-gold); }
 </style>
-  <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#e8c547">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="BQ Tools">
-  <meta name="mobile-web-app-capable" content="yes">
-  <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png">
 </head>
 <body>
 
-<nav class="nav">
-  <a href="/home.html" class="nav-logo">BQ <span>Tools</span></a>
-  <div class="nav-right">
-    <a href="/home.html" class="nav-link" data-en="Tools" data-es="Herramientas" data-he="כלים">Tools</a>
-    <a href="/directory.html" class="nav-link" data-en="Directory" data-es="Directorio" data-he="ספר עסקים">Directory</a>
-    <a href="/dashboard.html" class="nav-link" data-en="Dashboard" data-es="Panel" data-he="דשבורד">Dashboard</a>
-    <a href="/gallery.html" class="nav-link" data-en="Projects" data-es="Proyectos" data-he="פרויקטים">Projects</a>
-    <div class="lang-toggle">
-      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
-      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
-    </div>
+<nav class="ed-topnav">
+  <a href="/" class="ed-logo">BQ <span class="gold">tools</span></a>
+  <div class="ed-topnav-links">
+    <a href="/home.html">Tools</a>
+    <a href="/dashboard.html">Dashboard</a>
+    <a href="/directory.html">Directory</a>
+    <a href="/tools/pusher.html">Pusher</a>
   </div>
+  <a class="ed-topnav-cta cmdk-trigger">Search · <kbd>⌘K</kbd></a>
 </nav>
 
-<div class="page">
-  <!-- Greeting -->
-  <div class="home-greeting">
-    <h1 id="greeting"></h1>
-    <div class="home-credit-badge" id="creditBadge">⚡ <span id="creditNum">0</span></div>
-  </div>
-
-  <!-- News Banner -->
-  <div id="newsBanner" style="display:none;background:var(--sf);border:1px solid var(--ac);border-radius:12px;padding:14px 18px;margin-bottom:18px;cursor:pointer;transition:all .2s;" onclick="window.location='/news.html'">
-    <div style="display:flex;align-items:center;gap:10px;">
-      <span style="font-size:22px;">📰</span>
-      <div style="flex:1;">
-        <div style="font-size:14px;font-weight:700;color:var(--ac);" id="newsBannerTitle"></div>
-        <div style="font-size:12px;color:var(--txd);" id="newsBannerSub"></div>
+<section class="home-hero">
+  <div class="ed-container">
+    <div class="home-greeting-row">
+      <div>
+        <span class="ed-eyebrow" style="margin-bottom: 16px;">Welcome back</span>
+        <h1>Good <em>afternoon</em>,<br><span class="name" id="userName">there</span>.</h1>
       </div>
-      <span style="font-size:13px;color:var(--ac);font-weight:700;">→</span>
-    </div>
-  </div>
-  <script>
-  (async function(){
-    try {
-      const d = await apiCall('/api/news/today');
-      if (!d.news) return;
-      const cats = Object.values(d.news.categories || {});
-      const total = cats.reduce((s,c) => s + (c.items?.length||0), 0);
-      if (total === 0) return;
-      const lastVisit = localStorage.getItem('bq_news_last_visit') || '';
-      const isNew = lastVisit !== d.news.date;
-      document.getElementById('newsBannerTitle').textContent = (lang==='he'?`${total} עדכונים חדשים היום`:`${total} new updates today`);
-      document.getElementById('newsBannerSub').textContent = (lang==='he'?'חדשות, טיפים, ומוצרים לקבלנים':'News, tips, and products for contractors');
-      const banner = document.getElementById('newsBanner');
-      banner.style.display = 'block';
-      if (isNew) banner.style.borderColor = 'var(--ac)';
-      else banner.style.borderColor = 'var(--bd)';
-    } catch {}
-  })();
-  </script>
-
-  <!-- Tools Grid -->
-  <div class="home-section">
-    <h2 data-en="Your Toolbox" data-es="Tu Caja de Herramientas" data-he="ארגז הכלים שלך">Your Toolbox</h2>
-  </div>
-  <div class="home-tools">
-    <a href="/tools/import-memory.html" class="home-tool ht-g-pink" id="importMemoryPromo">
-      <span class="ht-icon">🧠</span>
-      <span class="ht-name" data-en="NEW: Import AI Memory" data-es="NUEVO: Importar memoria IA" data-he="חדש: ייבוא זיכרון AI">NEW: Import AI Memory</span>
-      <span class="ht-cost free">FREE · LIMITED</span>
-      <span class="ht-tip">Bring your ChatGPT/Claude memories. Instant personalization.</span>
-    </a>
-    <a href="/tools/compare.html" class="home-tool ht-g-cyan">
-      <video class="tool-demo" src="/img/demos/compare-demo.mp4" autoplay muted loop playsinline preload="none"></video>
-      <span class="ht-icon">🔀</span>
-      <span class="ht-name" data-en="Compare" data-es="Comparar" data-he="השוואה">Compare</span>
-      <span class="ht-cost free">FREE</span>
-      <span class="ht-tip">Compare any 2 photos in seconds</span>
-    </a>
-    <a href="/tools/report.html" class="home-tool ht-g-blue">
-      <span class="ht-icon">📄</span>
-      <span class="ht-name" data-en="Quick Report" data-es="Reporte Rápido" data-he="דוח מהיר">Quick Report</span>
-      <span class="ht-cost">1 credit</span>
-      <span class="ht-tip">Generate a PDF report instantly</span>
-    </a>
-    <a href="/tools/estimate.html" class="home-tool ht-g-green">
-      <video class="tool-demo" src="/img/demos/estimate-demo.mp4" autoplay muted loop playsinline preload="none"></video>
-      <span class="ht-icon">💰</span>
-      <span class="ht-name" data-en="Smart Estimate" data-es="Estimado Inteligente" data-he="הערכת עלות">Smart Estimate</span>
-      <span class="ht-cost">1 credit</span>
-      <span class="ht-tip">Cost breakdown in under 60 seconds</span>
-    </a>
-    <a href="/tools/client-page.html" class="home-tool ht-g-gold">
-      <span class="ht-icon">🔗</span>
-      <span class="ht-name" data-en="Client Page" data-es="Página de Cliente" data-he="עמוד לקוח">Client Page</span>
-      <span class="ht-cost free">FREE</span>
-      <span class="ht-tip">Share a link, look professional</span>
-    </a>
-    <a href="/tools/social-post.html" class="home-tool ht-g-pink">
-      <span class="ht-icon">📱</span>
-      <span class="ht-name" data-en="Social Post" data-es="Post Social" data-he="פוסט חברתי">Social Post</span>
-      <span class="ht-cost">1 credit</span>
-      <span class="ht-tip">AI-crafted posts that get likes</span>
-    </a>
-    <a href="/tools/review.html" class="home-tool ht-g-gold">
-      <span class="ht-icon">⭐</span>
-      <span class="ht-name" data-en="Review Request" data-es="Solicitud de Reseña" data-he="בקשת ביקורת">Review Request</span>
-      <span class="ht-cost">1 credit</span>
-      <span class="ht-tip">Get more 5-star reviews</span>
-    </a>
-    <a href="/tools/sketch.html" class="home-tool ht-g-cyan">
-      <span class="ht-icon">✏️</span>
-      <span class="ht-name" data-en="Quick Sketch" data-es="Boceto Rápido" data-he="סקיצה מהירה">Quick Sketch</span>
-      <span class="ht-cost">1 credit</span>
-      <span class="ht-tip">Rough idea → clean sketch</span>
-    </a>
-    <a href="/tools/social-analysis.html" class="home-tool ht-g-blue">
-      <span class="ht-icon">📊</span>
-      <span class="ht-name" data-en="Social Analysis" data-es="Análisis Social" data-he="ניתוח סושיאל">Social Analysis</span>
-      <span class="ht-cost">2 credits</span>
-      <span class="ht-tip">Deep dive on any IG profile</span>
-    </a>
-    <a href="/chat.html" class="home-tool ht-g-cyan">
-      <video class="tool-demo" src="/img/demos/chat-demo.mp4" autoplay muted loop playsinline preload="none"></video>
-      <span class="ht-icon">💬</span>
-      <span class="ht-name" data-en="AI Chat" data-es="Chat IA" data-he="צ'אט AI">AI Chat</span>
-      <span class="ht-cost">1-6 credits</span>
-      <span class="ht-tip">Ask anything, get contractor answers</span>
-    </a>
-    <a href="/tools/content-spy.html" class="home-tool ht-g-pink">
-      <span class="ht-icon">🔍</span>
-      <span class="ht-name" data-en="Content Spy" data-es="Espía de Contenido" data-he="מרגל תוכן">Content Spy</span>
-      <span class="ht-cost">2 credits</span>
-      <span class="ht-tip">See what's working in your niche</span>
-    </a>
-    <a href="/tools/downloader.html" class="home-tool ht-g-blue">
-      <span class="ht-icon">📥</span>
-      <span class="ht-name" data-en="Downloader" data-es="Descargador" data-he="מוריד">Downloader</span>
-      <span class="ht-cost">1 credit</span>
-      <span class="ht-tip">Save videos, no watermark</span>
-    </a>
-    <a href="/tools/moodboard.html" class="home-tool ht-g-pink">
-      <span class="ht-icon">💖</span>
-      <span class="ht-name" data-en="Moodboard" data-es="Tablero de Inspiración" data-he="מוד בורד">Moodboard</span>
-      <span class="ht-cost free">FREE</span>
-      <span class="ht-tip">Build visual mood boards fast</span>
-    </a>
-    <a href="/tools/quote.html" class="home-tool ht-g-gold">
-      <video class="tool-demo" src="/img/demos/quote-demo.mp4" autoplay muted loop playsinline preload="none"></video>
-      <span class="ht-icon">📝</span>
-      <span class="ht-name" data-en="Quote Generator" data-es="Generador de Cotizaciones" data-he="מחולל הצעות">Quote Generator</span>
-      <span class="ht-cost">1 credit</span>
-      <span class="ht-tip">Pro quotes in 30 seconds</span>
-    </a>
-    <a href="/tools/invoice.html" class="home-tool ht-g-green">
-      <span class="ht-icon">🧾</span>
-      <span class="ht-name" data-en="Invoice" data-es="Factura" data-he="חשבונית">Invoice</span>
-      <span class="ht-cost free">FREE</span>
-      <span class="ht-tip">Send invoices like a pro</span>
-    </a>
-    <a href="/tools/contract.html" class="home-tool ht-g-blue">
-      <span class="ht-icon">📜</span>
-      <span class="ht-name" data-en="Contract" data-es="Contrato" data-he="חוזה">Contract</span>
-      <span class="ht-cost">2 credits</span>
-      <span class="ht-tip">Legal-grade contracts, done</span>
-    </a>
-    <a href="/tools/ai-video.html" class="home-tool ht-g-cyan" style="border-color:rgba(99,205,218,.4);">
-      <span class="ht-icon">🎬</span>
-      <span class="ht-name" data-en="AI Video" data-he="וידאו AI">AI Video</span>
-      <span class="ht-cost" style="background:rgba(99,205,218,.15);color:#63cdda;">PRO</span>
-      <span class="ht-tip">Turn photos into cinematic clips</span>
-    </a>
-    <a href="/tools/ad-creator.html" class="home-tool ht-g-gold" style="border-color:rgba(255,159,67,.4);">
-      <video class="tool-demo" src="/img/demos/ad-creator-demo.mp4" autoplay muted loop playsinline preload="none"></video>
-      <span class="ht-icon">🎨</span>
-      <span class="ht-name" data-en="Auto Ad Creator" data-he="יוצר מודעות">Auto Ad Creator</span>
-      <span class="ht-cost" style="background:rgba(255,159,67,.15);color:#ff9f43;">20 credits</span>
-      <span class="ht-tip">Full video ad, automated</span>
-    </a>
-    <a href="/training.html" class="home-tool ht-g-green" style="border-color:var(--grn);">
-      <span class="ht-icon">🧠</span>
-      <span class="ht-name" data-en="Train AI" data-es="Entrenar IA" data-he="אמן AI">Train AI</span>
-      <span class="ht-cost" style="background:rgba(81,207,102,.15);color:var(--grn);">NEW</span>
-      <span class="ht-tip">Teach AI your brand voice</span>
-    </a>
-    <a href="/business.html" class="home-tool ht-g-gold" style="border-color:var(--ac);background:linear-gradient(135deg,var(--sf),var(--acd));">
-      <video class="tool-demo" src="/img/demos/directory-demo.mp4" autoplay muted loop playsinline preload="none"></video>
-      <span class="ht-icon">💼</span>
-      <span class="ht-name" data-en="Business Suite" data-es="Suite de Negocio" data-he="חבילת עסק">Business Suite</span>
-      <span class="ht-cost" style="background:var(--ac);color:var(--bg);font-weight:800;">8 TOOLS</span>
-      <span class="ht-tip">8 tools, one power pack</span>
-    </a>
-  </div>
-  <script>
-  if (localStorage.getItem('bq_memory_imported') === '1') {
-    var el = document.getElementById('importMemoryPromo');
-    if (el) el.style.display = 'none';
-  }
-  </script>
-
-  <!-- BQ Brain widget -->
-  <div id="brainWidget" style="display:none;background:linear-gradient(135deg,var(--sf),rgba(232,197,71,.05));border:1px solid rgba(232,197,71,.3);border-radius:14px;padding:16px 18px;margin-bottom:24px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <div style="display:flex;align-items:center;gap:8px;">
-        <span style="font-size:22px;">🧠</span>
-        <div>
-          <div style="font-size:14px;font-weight:800;color:var(--ac);" data-en="BQ Brain knows you" data-he="מוח BQ מכיר אותך">BQ Brain knows you</div>
-          <div style="font-size:11px;color:var(--txd);" data-en="Your AI gets smarter after every action" data-he="ה-AI שלך מתחכם עם כל פעולה">Your AI gets smarter after every action</div>
-        </div>
+      <div class="credit-block">
+        <span class="label">Credits available</span>
+        <span class="num" id="userCredits">—</span>
+        <span class="pro-pill" id="userTier">FREE</span>
       </div>
-      <button onclick="toggleBrainEdit()" style="background:none;border:1px solid var(--bd);border-radius:8px;color:var(--txd);font-size:12px;padding:5px 10px;cursor:pointer;" data-en="Edit" data-he="ערוך">Edit</button>
     </div>
-    <div id="brainSummary" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
-    <!-- Edit panel (hidden by default) -->
-    <div id="brainEditPanel" style="display:none;margin-top:14px;border-top:1px solid var(--bd);padding-top:14px;">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
-        <div>
-          <label style="font-size:11px;color:var(--txd);display:block;margin-bottom:4px;" data-en="Business Type" data-he="סוג עסק">Business Type</label>
-          <input class="input" id="brainBusinessType" placeholder="e.g. Kitchen remodeling" style="font-size:13px;">
-        </div>
-        <div>
-          <label style="font-size:11px;color:var(--txd);display:block;margin-bottom:4px;" data-en="Service Area" data-he="אזור שירות">Service Area</label>
-          <input class="input" id="brainServiceArea" placeholder="e.g. Los Angeles, CA" style="font-size:13px;">
-        </div>
-        <div>
-          <label style="font-size:11px;color:var(--txd);display:block;margin-bottom:4px;" data-en="Typical Clients" data-he="לקוחות אופייניים">Typical Clients</label>
-          <select class="input" id="brainClients" style="font-size:13px;">
-            <option value="">Select...</option>
-            <option value="luxury">Luxury</option>
-            <option value="mid-range">Mid-range</option>
-            <option value="budget">Budget</option>
-          </select>
-        </div>
-        <div>
-          <label style="font-size:11px;color:var(--txd);display:block;margin-bottom:4px;" data-en="Tone of Voice" data-he="טון דיבור">Tone of Voice</label>
-          <select class="input" id="brainTone" style="font-size:13px;">
-            <option value="professional">Professional</option>
-            <option value="casual">Casual</option>
-            <option value="luxurious">Luxurious</option>
-          </select>
-        </div>
+
+    <div style="display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+      <span class="ed-eyebrow">Your toolbox · <span id="toolCount">18</span> tools</span>
+      <button class="cmdk-hint cmdk-trigger">⌘ Quick search · <kbd>⌘K</kbd></button>
+    </div>
+
+    <div class="filter-row" id="filterRow">
+      <button class="filter-chip active" data-filter="all">All <span class="count">18</span></button>
+      <button class="filter-chip" data-filter="sales">Sales</button>
+      <button class="filter-chip" data-filter="content">Content</button>
+      <button class="filter-chip" data-filter="business">Business</button>
+      <button class="filter-chip" data-filter="research">Research</button>
+      <button class="filter-chip" data-filter="new">NEW</button>
+      <button class="filter-chip" data-filter="free">FREE</button>
+    </div>
+  </div>
+</section>
+
+<section class="ed-section" style="padding-top: 0;">
+  <div class="ed-container">
+    <div class="ed-bento" id="toolsBento">
+      <!-- PUSHER — featured big -->
+      <a href="/tools/pusher.html" class="ed-cell tool-cell col-4" data-cat="sales" data-tag="new">
+        <span class="ed-icon">FEATURED · SALES</span>
+        <span class="ed-icon-em">🎯</span>
+        <h3>Pusher <em>Beta</em></h3>
+        <p>Buyer-intent Facebook lead engine. Daily AI-drafted comment-replies sent to your Telegram. $20/mo · 10 seats only.</p>
+        <span class="ed-tag new">NEW · BETA</span>
+      </a>
+
+      <a href="/tools/ai-video.html" class="ed-cell tool-cell col-2" data-cat="content">
+        <span class="ed-icon">VIDEO</span>
+        <span class="ed-icon-em">🎬</span>
+        <h3>AI Video</h3>
+        <p>Cinematic prompt builder powered by Seedance 2.</p>
+        <span class="ed-tag">PRO</span>
+      </a>
+
+      <a href="/tools/ad-creator.html" class="ed-cell tool-cell col-2" data-cat="content">
+        <span class="ed-icon">AD</span>
+        <span class="ed-icon-em">🎨</span>
+        <h3>Ad <em>Creator</em></h3>
+        <p>Generate ad creative for Meta, TikTok, Google.</p>
+        <span class="ed-tag">20 CR</span>
+      </a>
+
+      <a href="/tools/compare.html" class="ed-cell tool-cell col-2" data-cat="sales" data-tag="free">
+        <span class="ed-icon">COMPARE</span>
+        <span class="ed-icon-em">🔀</span>
+        <h3>Compare</h3>
+        <p>Side-by-side comparison.</p>
+        <span class="ed-tag free">FREE</span>
+      </a>
+
+      <a href="/tools/social-post.html" class="ed-cell tool-cell col-2" data-cat="content">
+        <span class="ed-icon">SOCIAL</span>
+        <span class="ed-icon-em">📱</span>
+        <h3>Social Post</h3>
+        <p>Generate posts for IG, FB, X, LinkedIn.</p>
+        <span class="ed-tag">1 CR</span>
+      </a>
+
+      <a href="/tools/social-analysis.html" class="ed-cell tool-cell col-2" data-cat="research">
+        <span class="ed-icon">ANALYTICS</span>
+        <span class="ed-icon-em">📊</span>
+        <h3>Social <em>Analysis</em></h3>
+        <p>Audit any IG profile.</p>
+        <span class="ed-tag">2 CR</span>
+      </a>
+
+      <a href="/chat.html" class="ed-cell tool-cell col-2" data-cat="content">
+        <span class="ed-icon">CHAT</span>
+        <span class="ed-icon-em">💬</span>
+        <h3>AI Chat</h3>
+        <p>Multi-model chat — Claude, Gemini, Groq.</p>
+        <span class="ed-tag">1-6 CR</span>
+      </a>
+
+      <a href="/tools/quote.html" class="ed-cell tool-cell col-2" data-cat="business">
+        <span class="ed-icon">QUOTE</span>
+        <span class="ed-icon-em">📝</span>
+        <h3>Quote <em>Generator</em></h3>
+        <p>Professional quotes in seconds.</p>
+        <span class="ed-tag">1 CR</span>
+      </a>
+
+      <a href="/tools/estimate.html" class="ed-cell tool-cell col-2" data-cat="sales">
+        <span class="ed-icon">ESTIMATE</span>
+        <span class="ed-icon-em">💰</span>
+        <h3>Smart <em>Estimate</em></h3>
+        <p>Cost estimate generator.</p>
+        <span class="ed-tag">1 CR</span>
+      </a>
+
+      <a href="/tools/client-page.html" class="ed-cell tool-cell col-2" data-cat="sales" data-tag="free">
+        <span class="ed-icon">CLIENT</span>
+        <span class="ed-icon-em">🔗</span>
+        <h3>Client Page</h3>
+        <p>Personalized client landing page.</p>
+        <span class="ed-tag free">FREE</span>
+      </a>
+
+      <a href="/tools/report.html" class="ed-cell tool-cell col-2" data-cat="sales">
+        <span class="ed-icon">REPORT</span>
+        <span class="ed-icon-em">📄</span>
+        <h3>Quick Report</h3>
+        <p>Reports in seconds.</p>
+        <span class="ed-tag">1 CR</span>
+      </a>
+
+      <a href="/tools/content-spy.html" class="ed-cell tool-cell col-2" data-cat="research">
+        <span class="ed-icon">SPY</span>
+        <span class="ed-icon-em">🔍</span>
+        <h3>Content <em>Spy</em></h3>
+        <p>Reverse-engineer competitor content.</p>
+        <span class="ed-tag">2 CR</span>
+      </a>
+
+      <a href="/tools/review.html" class="ed-cell tool-cell col-2" data-cat="sales">
+        <span class="ed-icon">REVIEW</span>
+        <span class="ed-icon-em">⭐</span>
+        <h3>Review Request</h3>
+        <p>Personalized review asks.</p>
+        <span class="ed-tag">1 CR</span>
+      </a>
+
+      <a href="/tools/sketch.html" class="ed-cell tool-cell col-2" data-cat="content">
+        <span class="ed-icon">SKETCH</span>
+        <span class="ed-icon-em">✏️</span>
+        <h3>Quick Sketch</h3>
+        <p>Visual concept in seconds.</p>
+        <span class="ed-tag">1 CR</span>
+      </a>
+
+      <a href="/tools/moodboard.html" class="ed-cell tool-cell col-2" data-cat="content" data-tag="free">
+        <span class="ed-icon">MOOD</span>
+        <span class="ed-icon-em">💖</span>
+        <h3>Moodboard</h3>
+        <p>Visual moodboards.</p>
+        <span class="ed-tag free">FREE</span>
+      </a>
+
+      <a href="/tools/downloader.html" class="ed-cell tool-cell col-2" data-cat="research">
+        <span class="ed-icon">DOWNLOAD</span>
+        <span class="ed-icon-em">📥</span>
+        <h3>Downloader</h3>
+        <p>Extract content from any URL.</p>
+        <span class="ed-tag">1 CR</span>
+      </a>
+
+      <a href="/tools/import-memory.html" class="ed-cell tool-cell col-2" data-cat="content" data-tag="new free">
+        <span class="ed-icon">MEMORY</span>
+        <span class="ed-icon-em">🧠</span>
+        <h3>Import <em>AI Memory</em></h3>
+        <p>Bring your ChatGPT/Claude memory in.</p>
+        <span class="ed-tag new">NEW · FREE</span>
+      </a>
+
+      <a href="/tools/invoice.html" class="ed-cell tool-cell col-2" data-cat="business" data-tag="free">
+        <span class="ed-icon">INVOICE</span>
+        <span class="ed-icon-em">🧾</span>
+        <h3>Invoice</h3>
+        <p>Send invoices fast.</p>
+        <span class="ed-tag free">FREE</span>
+      </a>
+
+      <a href="/tools/contract.html" class="ed-cell tool-cell col-2" data-cat="business">
+        <span class="ed-icon">CONTRACT</span>
+        <span class="ed-icon-em">📜</span>
+        <h3>Contract</h3>
+        <p>Contracts that hold up.</p>
+        <span class="ed-tag">2 CR</span>
+      </a>
+
+      <a href="/business.html" class="ed-cell tool-cell col-4" data-cat="business" data-tag="suite">
+        <span class="ed-icon">BUSINESS · SUITE</span>
+        <span class="ed-icon-em">💼</span>
+        <h3>Business <em>Suite</em></h3>
+        <p>Quote, Invoice, Contract, Client Pages — your entire client workflow in one tab. 8 tools wired together.</p>
+        <span class="ed-tag">8 TOOLS</span>
+      </a>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-cell">
+        <div class="lab">Projects</div>
+        <div class="num" id="statProjects">0</div>
       </div>
-      <div style="margin-bottom:10px;">
-        <label style="font-size:11px;color:var(--txd);display:block;margin-bottom:4px;" data-en="Common Materials (comma separated)" data-he="חומרים נפוצים (מופרדים בפסיק)">Common Materials</label>
-        <input class="input" id="brainMaterials" placeholder="quartz, hardwood, tile..." style="font-size:13px;">
+      <div class="stat-cell">
+        <div class="lab">Credits used (this cycle)</div>
+        <div class="num gold" id="statCreditsUsed">0</div>
       </div>
-      <button class="btn btn-primary" onclick="saveBrain()" style="font-size:13px;padding:8px 16px;" data-en="Save Brain" data-he="שמור">Save Brain</button>
+      <div class="stat-cell">
+        <div class="lab">Plan</div>
+        <div class="num" id="statPlan">Free</div>
+      </div>
+    </div>
+
+    <div class="recent">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 16px;">
+        <div>
+          <span class="ed-eyebrow">Recent activity</span>
+          <h2 style="margin-top: 16px;">Your latest <em>work</em>.</h2>
+        </div>
+        <a href="/dashboard.html" class="ed-btn-ghost">View all</a>
+      </div>
+      <div class="recent-list" id="recentList">
+        <div class="recent-empty">No recent projects yet. Pick a tool above to start.</div>
+      </div>
     </div>
   </div>
+</section>
 
-  <!-- Quick Stats -->
-  <div class="home-section">
-    <h2 data-en="Quick Stats" data-es="Estadísticas Rápidas" data-he="סטטיסטיקה">Quick Stats</h2>
-    <a href="/dashboard.html" data-en="View all" data-es="Ver todo" data-he="צפה בהכל">View all</a>
-  </div>
-  <div class="home-stats">
-    <div class="home-stat">
-      <div class="hs-num" id="statProjects">—</div>
-      <div class="hs-label" data-en="Projects" data-es="Proyectos" data-he="פרויקטים">Projects</div>
+<footer>
+  <div class="ed-container foot-grid">
+    <div>
+      <div class="foot-brand">BQ <span>tools</span></div>
+      <div style="font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--ed-paper-faint); margin-top: 6px; letter-spacing: 0.04em;">AI TOOLBOX FOR SERVICE BUSINESSES · BUILT BY MOSHE SHOHET · LA</div>
     </div>
-    <div class="home-stat">
-      <div class="hs-num" id="statUsed">—</div>
-      <div class="hs-label" data-en="Credits Used" data-es="Créditos Usados" data-he="קרדיטים בשימוש">Credits Used</div>
-    </div>
-    <div class="home-stat">
-      <div class="hs-num" id="statPlan">—</div>
-      <div class="hs-label" data-en="Plan" data-es="Plan" data-he="תוכנית">Plan</div>
+    <div class="foot-meta">
+      <a href="mailto:music.iambq@gmail.com">music.iambq@gmail.com</a><br>
+      <a href="/tools/pusher.html">PUSHER BETA — $20/MO</a>
     </div>
   </div>
+</footer>
 
-  <!-- Recent Projects -->
-  <div class="home-section">
-    <h2 data-en="Recent Projects" data-es="Proyectos Recientes" data-he="פרויקטים אחרונים">Recent Projects</h2>
-    <a href="/gallery.html" data-en="View all" data-es="Ver todo" data-he="צפה בהכל">View all</a>
-  </div>
-  <div id="recentProjects"></div>
-
-  <!-- Quick Actions -->
-  <div class="home-quick">
-    <a href="/directory.html" data-en="Browse Directory" data-es="Ver Directorio" data-he="דפדף ב-Directory">📍 <span data-en="Browse Directory" data-es="Ver Directorio" data-he="דפדף ב-Directory">Browse Directory</span></a>
-    <a href="/profile.html" data-en="Edit Profile" data-es="Editar Perfil" data-he="ערוך פרופיל">🏢 <span data-en="Edit Profile" data-es="Editar Perfil" data-he="ערוך פרופיל">Edit Profile</span></a>
-  </div>
-</div>
-
-<footer class="footer"><div class="footer-brand">Powered by BQ Tools — BQ Production LLC</div></footer>
-
-<script src="js/ai.js"></script>
-<script src="js/auth.js"></script>
-<script src="js/crypto.js"></script>
-<script src="js/common.js"></script>
-<script src="js/assistant.js"></script>
 <script>
-// Redirect if not logged in
-if (!isLoggedIn()) {
-  window.location.replace('/');
-}
+// ── User data ──
+const user = JSON.parse(localStorage.getItem('bq_user') || '{}');
+const greeting = (() => {
+  const h = new Date().getHours();
+  if (h < 12) return 'morning';
+  if (h < 18) return 'afternoon';
+  return 'evening';
+})();
+document.querySelector('h1 em').textContent = greeting;
 
-const TOOL_ICONS = { compare: '🔀', report: '📄', estimate: '💰', 'social-post': '📱', review: '⭐', sketch: '✏️', 'AI Analysis': '🧠', 'AI Assistant': '💬' };
+const name = (user.email || '').split('@')[0] || 'there';
+document.getElementById('userName').textContent = name;
+document.getElementById('userCredits').textContent = user.credits ?? '—';
+document.getElementById('userTier').textContent = user.isPro ? 'PRO' : 'FREE';
+if (user.isPro) document.getElementById('userTier').style.color = '#4ade80';
 
-async function loadHome() {
-  const user = getCachedUser();
-  if (!user) return;
+document.getElementById('statCreditsUsed').textContent = user.creditsUsedThisMonth ?? 0;
+document.getElementById('statPlan').textContent = user.isPro ? 'Pro' : 'Free';
 
-  // Greeting
-  const name = user.businessName || user.email.split('@')[0];
-  const hour = new Date().getHours();
-  let greet = 'Hey';
-  if (lang === 'he') {
-    greet = hour < 12 ? 'בוקר טוב' : hour < 17 ? 'צהריים טובים' : 'ערב טוב';
-  } else {
-    greet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-  }
-  document.getElementById('greeting').innerHTML = `${greet}, <span class="accent">${name}</span>!`;
-  document.getElementById('creditNum').textContent = user.credits || 0;
-
-  // Stats
-  document.getElementById('statUsed').textContent = user.creditsUsedThisMonth || 0;
-  document.getElementById('statPlan').textContent = user.isPro ? 'PRO' : 'Free';
-  document.getElementById('statPlan').style.color = user.isPro ? 'var(--ac)' : 'var(--txd)';
-
-  // Projects
-  let projects = [];
-  try {
-    projects = await getProjectsFromServer();
-  } catch {}
-
+// Projects
+try {
+  const projects = JSON.parse(localStorage.getItem('bq_projects') || '[]');
   document.getElementById('statProjects').textContent = projects.length;
-
-  // Recent 3
-  const container = document.getElementById('recentProjects');
-  const recent = projects.slice(0, 3);
-
-  if (recent.length === 0) {
-    container.innerHTML = `
-      <div class="home-empty">
-        <div class="icon">📁</div>
-        <p data-en="No projects yet. Use a tool to get started!" data-he="אין פרויקטים עדיין. השתמש בכלי כדי להתחיל!">${lang === 'he' ? 'אין פרויקטים עדיין. השתמש בכלי כדי להתחיל!' : 'No projects yet. Use a tool to get started!'}</p>
-      </div>`;
-  } else {
-    container.innerHTML = `<div class="home-recent">${recent.map(p => {
-      const icon = TOOL_ICONS[p.tool] || '📁';
-      const date = p.date ? new Date(p.date).toLocaleDateString() : '';
-      return `<div class="home-recent-card">
-        ${p.thumbnail
-          ? `<img class="home-recent-thumb" src="data:image/jpeg;base64,${p.thumbnail}" loading="lazy">`
-          : `<div class="home-recent-placeholder">${icon}</div>`}
-        <div class="home-recent-info">
-          <div class="home-recent-title">${p.title || p.tool || 'Project'}</div>
-          <div class="home-recent-date">${date}</div>
-        </div>
-      </div>`;
-    }).join('')}</div>`;
+  if (projects.length > 0) {
+    const list = document.getElementById('recentList');
+    list.innerHTML = projects.slice(-5).reverse().map(p => `
+      <div class="recent-item">
+        <div class="title">${(p.title || p.tool || 'Untitled')}</div>
+        <div class="meta">${(p.tool || '').toUpperCase()}</div>
+        <div class="meta">${p.date ? new Date(p.date).toLocaleDateString() : '—'}</div>
+      </div>
+    `).join('');
   }
-}
+} catch {}
 
-loadHome();
-loadBrain();
+// ── Filter chips ──
+document.querySelectorAll('.filter-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    const f = chip.dataset.filter;
+    document.querySelectorAll('.tool-cell').forEach(cell => {
+      const cat = cell.dataset.cat || '';
+      const tag = cell.dataset.tag || '';
+      const show = f === 'all' || cat === f || tag.includes(f);
+      cell.style.display = show ? '' : 'none';
+    });
+  });
+});
 
-// ── Brain widget ──
-let _brainData = null;
+// Compute counts for filter chips
+const all = document.querySelectorAll('.tool-cell');
+const counts = { all: all.length };
+all.forEach(c => {
+  if (c.dataset.cat) counts[c.dataset.cat] = (counts[c.dataset.cat] || 0) + 1;
+  (c.dataset.tag || '').split(/\s+/).forEach(t => { if (t) counts[t] = (counts[t] || 0) + 1; });
+});
+document.querySelectorAll('.filter-chip').forEach(chip => {
+  const f = chip.dataset.filter;
+  const count = counts[f] || 0;
+  if (chip.querySelector('.count')) chip.querySelector('.count').textContent = count;
+  else if (count) chip.innerHTML += ` <span class="count">${count}</span>`;
+});
 
-async function loadBrain() {
-  try {
-    const data = await apiCall('/api/brain');
-    if (!data.brain) return;
-    _brainData = data.brain;
-    renderBrainWidget(data.brain);
-  } catch (_) {}
-}
-
-function renderBrainWidget(brain) {
-  const counts = brain.action_counts || {};
-  const total = Object.values(counts).reduce((a, b) => a + b, 0);
-  if (total === 0 && !brain.business_type) return; // nothing learned yet
-
-  const widget = document.getElementById('brainWidget');
-  widget.style.display = 'block';
-
-  const tags = [];
-  if (brain.business_type) tags.push({ icon: '🏗️', text: brain.business_type });
-  if (brain.service_area) tags.push({ icon: '📍', text: brain.service_area });
-  if (brain.typical_clients) tags.push({ icon: '👥', text: brain.typical_clients });
-  if (brain.tone_of_voice) tags.push({ icon: '🎯', text: brain.tone_of_voice });
-  if (brain.price_range?.avg > 0) tags.push({ icon: '💰', text: `avg $${(brain.price_range.avg / 1000).toFixed(0)}K` });
-  if ((brain.common_materials || []).length > 0) tags.push({ icon: '🪵', text: brain.common_materials.slice(0, 3).join(', ') });
-
-  document.getElementById('brainSummary').innerHTML = tags.map(t =>
-    `<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;background:rgba(232,197,71,.1);border:1px solid rgba(232,197,71,.2);font-size:12px;color:var(--tx);">${t.icon} ${t.text}</span>`
-  ).join('');
-
-  // Populate edit fields
-  if (_brainData) {
-    document.getElementById('brainBusinessType').value = brain.business_type || '';
-    document.getElementById('brainServiceArea').value = brain.service_area || '';
-    document.getElementById('brainClients').value = brain.typical_clients || '';
-    document.getElementById('brainTone').value = brain.tone_of_voice || 'professional';
-    document.getElementById('brainMaterials').value = (brain.common_materials || []).join(', ');
-  }
-}
-
-function toggleBrainEdit() {
-  const panel = document.getElementById('brainEditPanel');
-  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-}
-
-async function saveBrain() {
-  const materials = document.getElementById('brainMaterials').value
-    .split(',').map(s => s.trim()).filter(Boolean);
-
-  const updates = {
-    business_type: document.getElementById('brainBusinessType').value.trim(),
-    service_area: document.getElementById('brainServiceArea').value.trim(),
-    typical_clients: document.getElementById('brainClients').value,
-    tone_of_voice: document.getElementById('brainTone').value,
-    common_materials: materials
-  };
-
-  try {
-    const data = await apiCall('/api/brain', { method: 'PUT', body: updates });
-    if (data.brain) {
-      _brainData = data.brain;
-      renderBrainWidget(data.brain);
-      document.getElementById('brainEditPanel').style.display = 'none';
-      showToast('Brain updated!', 'ok');
-    }
-  } catch (err) {
-    showToast('Save failed: ' + err.message, 'err');
-  }
-}
+document.getElementById('toolCount').textContent = all.length;
 </script>
 
-  <!-- Chrome Extension Banner — bottom of page -->
-  <div id="extBanner" style="background:linear-gradient(135deg,var(--sf),var(--acd));border:1px solid var(--ac);border-radius:12px;padding:14px 18px;margin-top:28px;margin-bottom:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-    <span style="font-size:24px;">🌐</span>
-    <div style="flex:1;min-width:200px;">
-      <div style="font-size:13px;font-weight:700;color:var(--ac);" data-en="Take BQ Tools further → Install Chrome Extension" data-he="קח את BQ Tools רחוק יותר ← התקן את תוסף Chrome">Take BQ Tools further → Install Chrome Extension</div>
-      <div style="font-size:12px;color:var(--txd);" data-en="Download videos without watermark, save inspiration from any feed" data-he="הורד סרטונים ללא watermark, שמור השראה מכל feed">Download videos without watermark, save inspiration from any feed</div>
-    </div>
-    <button class="btn btn-sm btn-primary" onclick="showExtInfo()" data-en="Install →" data-he="התקן →">Install →</button>
-    <button onclick="document.getElementById('extBanner').style.display='none';localStorage.setItem('bq_ext_dismissed','1')" style="background:none;border:none;color:var(--txd);cursor:pointer;font-size:18px;">✕</button>
-  </div>
-  <script>
-    if (localStorage.getItem('bq_ext_dismissed') === '1') {
-      const b = document.getElementById('extBanner');
-      if (b) b.style.display = 'none';
-    }
-    function showExtInfo() {
-      const h = lang === 'he';
-      const m = document.createElement('div');
-      m.className = 'modal-overlay';
-      m.innerHTML = `
-        <div class="modal-card" style="max-width:380px;text-align:center;">
-          <div style="font-size:32px;margin-bottom:12px;">🌐</div>
-          <h3 style="margin-bottom:8px;">${h ? 'תוסף Chrome — בקרוב' : 'Chrome Extension — Coming Soon'}</h3>
-          <p style="color:var(--txd);font-size:14px;margin-bottom:20px;">${h
-            ? 'התוסף נמצא בתהליך אישור ב-Chrome Web Store ויהיה זמין בקרוב.'
-            : 'The extension is currently under review on the Chrome Web Store and will be available soon.'
-          }</p>
-          <button class="btn btn-primary" style="width:100%;" onclick="this.closest('.modal-overlay').remove()">${h ? 'סגור' : 'Close'}</button>
-        </div>`;
-      document.body.appendChild(m);
-      requestAnimationFrame(() => m.classList.add('open'));
-      m.addEventListener('click', e => { if (e.target === m) m.remove(); });
-    }
-  </script>
-
-  <!-- Brain Assistant — floating bottom-right (rotating brain icon, click → AI chat) -->
-  <script src="/js/motion-engine.js" defer></script>
+<script src="/js/editorial.js" defer></script>
 <script src="/js/cmdk-palette.js" defer></script>
 <script src="/js/brain-assistant.js" defer></script>
 </body>
