@@ -303,10 +303,12 @@ function exportAnalysis() {
     <div class="score">${lastResult.overall_score}/100</div>
     <h2>Recommendations</h2>
     ${(lastResult.recommendations||[]).map(r=>`<p><b>${r.title}</b> (${r.priority}): ${r.description}</p>`).join('')}
-    <div class="footer">Powered by BQ Tools — bqtools.dev</div></body></html>`);
+    <div class="footer">Powered by BQ Tools — bqtools.dev</div><script src="/js/brain-assistant.js" defer></script>
+</body></html>`);
   w.document.close();
   setTimeout(() => w.print(), 500);
 }
 </script>
+<script src="/js/brain-assistant.js" defer></script>
 </body>
 </html>
