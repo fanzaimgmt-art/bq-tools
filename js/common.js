@@ -1444,3 +1444,17 @@ async function _stripeCheckout(tier, modalEl) {
     showToast('Network error. Please try PayPal for now.', 'err');
   }
 }
+
+// ── Sticky nav shrink on scroll ──
+(function () {
+  if (window.__bqNavScrollMounted) return;
+  window.__bqNavScrollMounted = true;
+  function syncNav() {
+    document.querySelectorAll('.nav').forEach(nav => {
+      nav.classList.toggle('scrolled', window.scrollY > 8);
+    });
+  }
+  window.addEventListener('scroll', syncNav, { passive: true });
+  document.addEventListener('DOMContentLoaded', syncNav);
+  syncNav();
+})();

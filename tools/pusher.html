@@ -3,8 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BQ Pusher — Hebrew & English Facebook Lead Engine</title>
-<meta name="description" content="Daily AI-drafted comment-replies in your voice. Buyer-intent posts surfaced from Facebook groups → Telegram. $20/mo beta — 10 seats." />
+<title>BQ Pusher — Facebook leads, drafted for you</title>
+<meta name="description" content="AI scans Facebook groups for buyer-intent posts daily. Drafts a 4-part reply in your voice. Sent to your Telegram. You paste. They book. $20/mo beta — 10 seats." />
+<meta name="keywords" content="facebook lead generation, AI comment reply, hebrew facebook, israeli pusher, social selling, organic facebook" />
+<meta name="author" content="BQ Production · Moshe Shohet" />
+<meta name="robots" content="index, follow" />
+
+<!-- Open Graph -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://bq-tools.fanzai-mgmt.workers.dev/tools/pusher" />
+<meta property="og:title" content="BQ Pusher — Facebook leads, drafted for you" />
+<meta property="og:description" content="AI drafts comment-replies for buyer-intent FB posts. Sent to your Telegram daily. $20/mo beta — 10 seats." />
+<meta property="og:image" content="https://bq-tools.fanzai-mgmt.workers.dev/img/pusher-og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:site_name" content="BQ Tools" />
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="BQ Pusher — Facebook leads, drafted for you" />
+<meta name="twitter:description" content="AI drafts comment-replies for buyer-intent FB posts. Sent to Telegram daily. $20/mo." />
+<meta name="twitter:image" content="https://bq-tools.fanzai-mgmt.workers.dev/img/pusher-og.png" />
+
 <link rel="stylesheet" href="../style.css">
 <link rel="manifest" href="/manifest.json">
 
@@ -60,6 +80,43 @@
   /* ── Hero ── */
   .hero { text-align: center; padding: 28px 0 12px; opacity: 0; transform: translateY(20px);
     animation: rise .9s cubic-bezier(.2,.7,.2,1) .1s forwards; }
+
+  /* ── Telegram mockup ── */
+  .tg-preview {
+    max-width: 420px; margin: 28px auto 0; padding: 14px 16px;
+    background: linear-gradient(180deg, #1a1a22 0%, #14141a 100%);
+    border: 1px solid rgba(255,255,255,0.08); border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(232,197,71,0.05);
+    text-align: left;
+    transform: rotate(-1.5deg);
+    opacity: 0; animation: tg-rise 1.4s cubic-bezier(.16,1,.3,1) .35s forwards;
+  }
+  @keyframes tg-rise { to { opacity: 1; transform: rotate(-1.5deg) translateY(0); } }
+  .tg-preview:hover { transform: rotate(0deg) scale(1.02); transition: transform .4s var(--ease-spring); }
+  .tg-head {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+    padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .tg-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, #e8c547, #d4af3f);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .tg-name { font-size: 13px; font-weight: 700; color: #f0f0f0; }
+  .tg-name small { display: block; font-weight: 400; color: #888; font-size: 10px; margin-top: 1px; }
+  .tg-msg {
+    font-size: 12.5px; line-height: 1.55; color: #d8d8d8;
+    white-space: pre-wrap; font-family: 'SF Pro', -apple-system, system-ui, sans-serif;
+  }
+  .tg-msg .label { color: #e8c547; font-weight: 600; }
+  .tg-msg .url { color: #4dabf7; }
+  .tg-draft {
+    margin-top: 10px; padding: 10px; border-radius: 8px;
+    background: rgba(232,197,71,0.06); border: 1px solid rgba(232,197,71,0.15);
+    font-size: 11.5px; line-height: 1.5; color: #f0f0f0;
+  }
+  .tg-fire { color: #ff6b6b; letter-spacing: -1px; }
   @keyframes rise { to { opacity: 1; transform: translateY(0); } }
 
   .badge {
@@ -277,6 +334,48 @@
     border-radius: 10px; margin: 12px 0; color: rgb(74,222,128); font-size: 13px;
   }
 
+  /* ── Founder card ── */
+  .founder {
+    display: flex; gap: 16px; align-items: center; padding: 18px;
+    background: linear-gradient(135deg, rgba(232,197,71,0.05), rgba(20,20,28,0.5));
+    border: 1px solid rgba(232,197,71,0.18); border-radius: 14px;
+    margin-top: 14px;
+  }
+  .founder-avatar {
+    width: 56px; height: 56px; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(135deg, #e8c547, #d4af3f);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; font-weight: 700; color: #000;
+    box-shadow: 0 4px 16px rgba(232,197,71,0.3);
+  }
+  .founder-text { flex: 1; }
+  .founder-name { font-size: 14px; font-weight: 700; color: #f0f0f0; }
+  .founder-title { font-size: 12px; color: #888; margin-top: 2px; }
+  .founder-cta { font-size: 12px; color: #e8c547; margin-top: 6px; }
+
+  /* ── FAQ accordion ── */
+  .faq details {
+    border-top: 1px solid rgba(255,255,255,0.06);
+    padding: 16px 0;
+  }
+  .faq details:first-child { border-top: 0; padding-top: 0; }
+  .faq summary {
+    cursor: pointer; font-weight: 600; font-size: 15px; color: #f0f0f0;
+    list-style: none; display: flex; align-items: center; justify-content: space-between;
+    transition: color .2s;
+  }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary:hover { color: #e8c547; }
+  .faq summary::after {
+    content: '+'; color: #e8c547; font-size: 22px; font-weight: 300;
+    transition: transform .25s var(--ease-spring);
+  }
+  .faq details[open] summary::after { transform: rotate(45deg); }
+  .faq details > p, .faq details > div {
+    margin-top: 10px; font-size: 13.5px; color: #aaa; line-height: 1.65;
+  }
+  .faq details > p strong { color: #f0f0f0; }
+
   /* ── Reduce motion ── */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
@@ -293,20 +392,35 @@
 <main class="page">
   <header class="hero">
     <span class="badge">Beta · 10 seats only</span>
-    <h1 class="hero-title">Hebrew & English Facebook leads, <span class="accent-word">drafted for you</span>.</h1>
-    <p class="tag">Every day, BQ Pusher scans the Facebook groups your buyers actually post in. We classify buyer-intent. We draft a 4-part reply in your voice. Telegram alert. You paste. They book.</p>
+    <h1 class="hero-title">Facebook leads, <span class="accent-word">drafted for you</span>.</h1>
+    <p class="tag">We scan Facebook groups daily, draft replies in your voice, send them to your Telegram. You paste. They book.</p>
 
     <div class="hero-stats">
-      <div class="s"><div class="num">10×</div><div class="lbl">cheaper than Pusher</div></div>
+      <div class="s"><div class="num">8×</div><div class="lbl">cheaper than ads</div></div>
       <div class="s"><div class="num">~$10</div><div class="lbl">cost / month</div></div>
       <div class="s"><div class="num">24h</div><div class="lbl">setup</div></div>
+    </div>
+
+    <!-- Telegram alert preview — what users actually receive -->
+    <div class="tg-preview" aria-label="Sample Telegram alert">
+      <div class="tg-head">
+        <div class="tg-avatar">🎯</div>
+        <div class="tg-name">BQ Pusher <small>just now via Telegram</small></div>
+      </div>
+      <div class="tg-msg"><span class="tg-fire">🎯 Pusher alert 🔥🔥🔥🔥🔥</span>
+<span class="label">Carlos M</span> @ Kitchen &amp; Bath LA
+EN · asking-for-recommendation · urgency 5
+
+<em>"Big project starting next month — full gut remodel in Beverly Hills. Owner wants documentary-style video of the build for his social. Anyone shoot construction process?"</em>
+
+🔗 <span class="url">facebook.com/groups/...</span></div>
+      <div class="tg-draft">"Documentary-style on a Beverly Hills gut remodel — great fit. The trick most contractors miss: pre-production scouting before walls come down. We do this for a Sherman Oaks remodeler — 4 vertical reels/week, all planned in advance. <span class="url">bqprod.pages.dev</span> if you want the system."</div>
     </div>
   </header>
 
   <section class="glass reveal" aria-label="What it does">
-    <h2>What it actually does</h2>
-    <p>The reader of a comment is the customer — not the poster. Every smart, on-topic comment is a free ad to thousands of silent group readers. Pusher gives you the stack to run that play at scale, in your voice, without writing posts.</p>
-    <p style="opacity:.85"><strong>You don't write content.</strong> You don't run ads. You comment on the posts that already exist, in front of the silent readers who become your customers.</p>
+    <h2>You comment. Silent readers buy.</h2>
+    <p>The customer isn't the poster — it's the <strong>thousand silent readers</strong> watching the comment thread. Every smart reply is a free ad. We surface the right posts daily and draft what to say. <strong>You don't write content. You don't run ads. You paste.</strong></p>
   </section>
 
   <section class="glass reveal" aria-label="How it works">
@@ -334,16 +448,16 @@
 
   <div class="marquee reveal" aria-hidden="true">
     <div class="marquee-track">
-      <span class="item">100% manual posting (no FB ban risk)</span>
+      <span class="item">"Same engine BQ runs for our AI video clients" — internal</span>
+      <span class="item">100% manual posting · no FB ban risk</span>
       <span class="item">Runs entirely on your own data</span>
-      <span class="item">No ads · No spam · No DMs</span>
-      <span class="item">Built on Apify + Groq + Cloudflare</span>
-      <span class="item">Same engine BQ uses for AI Video clients</span>
-      <span class="item">100% manual posting (no FB ban risk)</span>
+      <span class="item">No ads · No DMs · No cold outreach</span>
+      <span class="item">Apify + Groq + Cloudflare under the hood</span>
+      <span class="item">"Same engine BQ runs for our AI video clients" — internal</span>
+      <span class="item">100% manual posting · no FB ban risk</span>
       <span class="item">Runs entirely on your own data</span>
-      <span class="item">No ads · No spam · No DMs</span>
-      <span class="item">Built on Apify + Groq + Cloudflare</span>
-      <span class="item">Same engine BQ uses for AI Video clients</span>
+      <span class="item">No ads · No DMs · No cold outreach</span>
+      <span class="item">Apify + Groq + Cloudflare under the hood</span>
     </div>
   </div>
 
@@ -360,9 +474,29 @@
     <div id="msg-box"></div>
   </section>
 
+  <section class="glass reveal faq" aria-label="FAQ">
+    <h2>Common questions</h2>
+    <details><summary>Does this risk my Facebook account?</summary><p>No. We never auto-comment. The system surfaces posts and drafts replies — <strong>you copy-paste manually</strong>. Same risk as commenting yourself.</p></details>
+    <details><summary>What if my niche isn't AI Video?</summary><p>The pipeline is generic. We tune classifier + voice for your business in onboarding (5-min form). Works for coaches, contractors, designers, agencies, real estate, anything service.</p></details>
+    <details><summary>How long until first alert?</summary><p>Same day or next day. After payment → 5-min form → manual onboarding within 24h → daily alerts start automatically on your scheduled UTC slot.</p></details>
+    <details><summary>What if drafts sound off?</summary><p>You can ignore any alert. Voice tunes itself: better samples in onboarding = better drafts. Edit before pasting whenever needed.</p></details>
+    <details><summary>What's included for $20?</summary><p>Daily Apify scans · 3-10 FB groups · AI 4-part replies · Hebrew + English · Telegram delivery · Manual onboarding · Cancel anytime · Lifetime grandfathered rate.</p></details>
+    <details><summary>Why $20 and not $99?</summary><p>This is round 1 beta. 10 seats only. Manual onboarding by Moshe. After 10 seats fill, price moves to $99/mo. Beta users keep $20 forever.</p></details>
+  </section>
+
   <section class="glass reveal" aria-label="Talk to Moshe">
-    <h2>Need a pitch first? Talk to Moshe.</h2>
-    <p>WhatsApp <a href="https://wa.me/17472679912" style="color:#e8c547">+1 (747) 267-9912</a> · Email <a href="mailto:music.iambq@gmail.com" style="color:#e8c547">music.iambq@gmail.com</a></p>
+    <h2>Direct line to founder</h2>
+    <div class="founder">
+      <div class="founder-avatar">M</div>
+      <div class="founder-text">
+        <div class="founder-name">Moshe Shohet</div>
+        <div class="founder-title">BQ Production · 14 yrs music production · LA</div>
+        <div class="founder-cta">
+          <a href="https://wa.me/17472679912" style="color:#e8c547">WhatsApp +1 (747) 267-9912</a>
+          · <a href="mailto:music.iambq@gmail.com" style="color:#e8c547">music.iambq@gmail.com</a>
+        </div>
+      </div>
+    </div>
   </section>
 </main>
 
@@ -479,6 +613,7 @@ if (params.get('payment') === 'cancel') {
 </script>
 
 <!-- Brain Assistant — floating bottom-right -->
+<script src="/js/cmdk-palette.js" defer></script>
 <script src="/js/brain-assistant.js" defer></script>
 </body>
 </html>
