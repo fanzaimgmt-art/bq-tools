@@ -1,6 +1,8 @@
 // ── BQ Tools API Worker ──
 // Cloudflare Worker that proxies AI calls, manages credits, auth, and admin.
 
+import { handlePusherWebhook, handlePusherStats, handlePusherHealth, handlePusherBetaSeats, handlePusherAdminList, handlePusherAdminRunNow } from './pusher.js';
+
 export default {
   // ── Cron Trigger: nightly tasks (8am PT) ──
   async scheduled(event, env, ctx) {
@@ -18,6 +20,24 @@ export default {
 
     try {
       // ── Routes ──
+      if (path === '/api/pusher-webhook' && request.method === 'POST') {
+        return await handlePusherWebhook(request, env, ctx);
+      }
+      if (path === '/api/pusher-stats' && request.method === 'GET') {
+        return corsResponse(env, await handlePusherStats(request, env));
+      }
+      if (path === '/api/pusher-health' && request.method === 'GET') {
+        return corsResponse(env, await handlePusherHealth(request, env));
+      }
+      if (path === '/api/pusher-beta-seats' && request.method === 'GET') {
+        return corsResponse(env, await handlePusherBetaSeats(request, env));
+      }
+      if (path === '/api/admin/pusher/list' && request.method === 'GET') {
+        return corsResponse(env, await handlePusherAdminList(request, env));
+      }
+      if (path === '/api/admin/pusher/run-now' && request.method === 'POST') {
+        return corsResponse(env, await handlePusherAdminRunNow(request, env));
+      }
       if (path === '/api/auth/register' && request.method === 'POST') {
         return corsResponse(env, await handleRegister(request, env));
       }
@@ -4574,6 +4594,7 @@ const STRIPE_TIER_CONFIG = {
   credit_60:   { priceIdEnvKey: 'STRIPE_PRICE_CREDITS_60',  mode: 'payment',      credits: 60,  isPro: false },
   credit_150:  { priceIdEnvKey: 'STRIPE_PRICE_CREDITS_150', mode: 'payment',      credits: 150, isPro: false },
   pro_monthly: { priceIdEnvKey: 'STRIPE_PRICE_PRO_MONTHLY', mode: 'subscription', credits: 0,   isPro: true  },
+  pusher_beta: { priceIdEnvKey: 'STRIPE_PRICE_PUSHER_BETA', mode: 'subscription', credits: 0,   isPro: false, pusherBeta: true, betaCap: 10 },
 };
 
 async function handleStripeCreateSession(request, env) {
@@ -4590,6 +4611,14 @@ async function handleStripeCreateSession(request, env) {
 
   const priceId = env[tierConf.priceIdEnvKey];
   if (!priceId) return json({ error: `Price ID not configured for ${tier}` }, 500);
+
+  if (tierConf.pusherBeta && tierConf.betaCap) {
+    const seatRaw = await env.BQ_USERS.get('pusher:beta_seats');
+    const seats = seatRaw ? parseInt(seatRaw, 10) : 0;
+    if (seats >= tierConf.betaCap) {
+      return json({ error: 'Beta is full. Next round opens later.', code: 'beta_full' }, 409);
+    }
+  }
 
   const origin = env.ALLOWED_ORIGIN || new URL(request.url).origin;
   const params = new URLSearchParams({
@@ -4713,7 +4742,6 @@ async function handleStripeWebhook(request, env) {
   }
   if (tierConf.isPro) {
     userData.isPro = true;
-    // Set/extend Pro expiry by 30 days from now
     const expiry = Date.now() + 30 * 24 * 60 * 60 * 1000;
     userData.proExpires = Math.max(userData.proExpires || 0, expiry);
     if (!userData.resetDate) {
@@ -4721,6 +4749,22 @@ async function handleStripeWebhook(request, env) {
       next.setMonth(next.getMonth() + 1);
       userData.resetDate = next.toISOString();
     }
+  }
+  if (tierConf.pusherBeta) {
+    const expiry = Date.now() + 31 * 24 * 60 * 60 * 1000;
+    userData.pusherBetaUntil = Math.max(userData.pusherBetaUntil || 0, expiry);
+    userData.pusherStatus = 'pending_config';
+    // Increment beta seat counter
+    const seatRaw = await env.BQ_USERS.get('pusher:beta_seats');
+    const seats = seatRaw ? parseInt(seatRaw, 10) : 0;
+    await env.BQ_USERS.put('pusher:beta_seats', String(seats + 1));
+    // Index for admin
+    await env.BQ_USERS.put(`pusher:beta:${userEmail.toLowerCase()}`, JSON.stringify({
+      email: userEmail,
+      ts: new Date().toISOString(),
+      until: new Date(expiry).toISOString(),
+      status: 'pending_config',
+    }));
   }
 
   await env.BQ_USERS.put(`user:${userEmail.toLowerCase()}`, JSON.stringify(userData));

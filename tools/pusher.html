@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Pusher — Buyer-Intent Lead Engine</title>
+<link rel="stylesheet" href="../style.css">
+<link rel="manifest" href="/manifest.json">
+<style>
+  body { display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+  .page { width: 92%; max-width: 760px; margin: 0 auto; padding: 24px 0 60px; }
+
+  .hero { text-align: center; padding: 28px 0 12px; }
+  .hero h1 { font-size: 36px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 10px; }
+  .hero .badge { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px;
+    background: rgba(232,197,71,.15); color: var(--ac); letter-spacing: 1px; text-transform: uppercase; }
+  .hero p.tag { font-size: 16px; color: var(--txd); margin-top: 12px; }
+
+  .card {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 14px;
+    padding: 22px; margin-bottom: 14px;
+  }
+  .card h2 { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+  .card p { color: var(--txd); font-size: 14px; line-height: 1.55; margin-bottom: 8px; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+
+  .step { display: flex; gap: 14px; align-items: flex-start; padding: 12px 0; border-top: 1px solid var(--bd); }
+  .step:first-child { border-top: 0; }
+  .step .num {
+    flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%;
+    background: rgba(232,197,71,.15); color: var(--ac);
+    display: flex; align-items: center; justify-content: center; font-weight: 700;
+  }
+  .step h3 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .step p { font-size: 13px; color: var(--txd); margin: 0; }
+
+  .price-row {
+    display: flex; align-items: baseline; justify-content: center; gap: 14px; margin: 14px 0;
+  }
+  .price-row .amount { font-size: 40px; font-weight: 800; }
+  .price-row .per { font-size: 14px; color: var(--txd); }
+  .price-row .strike { font-size: 18px; color: var(--txd); text-decoration: line-through; }
+
+  .seats {
+    display: inline-block; font-size: 12px; padding: 4px 10px; border-radius: 6px;
+    background: rgba(34,197,94,.12); color: rgb(74,222,128); font-weight: 700;
+  }
+  .seats.full { background: rgba(239,68,68,.12); color: rgb(248,113,113); }
+
+  .cta-btn {
+    display: block; width: 100%; padding: 16px 24px; border: 0; border-radius: 12px;
+    background: var(--ac); color: #000; font-weight: 800; font-size: 16px; cursor: pointer;
+    transition: opacity .2s;
+  }
+  .cta-btn:hover { opacity: .9; }
+  .cta-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+  .ftnote { font-size: 12px; color: var(--txd); text-align: center; margin-top: 10px; }
+
+  .alert-bad {
+    background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.3); padding: 14px;
+    border-radius: 8px; margin: 12px 0; color: rgb(248,113,113); font-size: 13px;
+  }
+  .alert-ok {
+    background: rgba(34,197,94,.08); border: 1px solid rgba(34,197,94,.3); padding: 14px;
+    border-radius: 8px; margin: 12px 0; color: rgb(74,222,128); font-size: 13px;
+  }
+</style>
+</head>
+<body>
+<div id="nav-placeholder"></div>
+
+<main class="page">
+  <header class="hero">
+    <span class="badge">Beta · Limited to 10 seats</span>
+    <h1>BQ Pusher</h1>
+    <p class="tag">Hebrew & English Facebook lead alerts. Drafted for you. Delivered to Telegram.</p>
+  </header>
+
+  <section class="card">
+    <h2>What it does</h2>
+    <p>Every day, our system scans the Facebook groups <em>your buyers actually post in</em>. When someone shows buyer intent — looking for a videographer, complaining about marketing, asking for recommendations — we draft a smart 4-part comment-reply in your voice and send it to your Telegram. You paste it. They book you.</p>
+    <p style="opacity:.85; margin-top:12px"><strong>You don't write content.</strong> You don't run ads. You comment on the posts that already exist, in front of the silent readers who become your customers.</p>
+  </section>
+
+  <section class="card">
+    <h2>How it works</h2>
+    <div class="step"><div class="num">1</div><div><h3>You sign up + tell us your niche</h3><p>Business, target audience, sample voice, FB groups you want scanned.</p></div></div>
+    <div class="step"><div class="num">2</div><div><h3>We configure your pipeline within 24h</h3><p>Pre-launch, manual onboarding. We tune the AI for your business.</p></div></div>
+    <div class="step"><div class="num">3</div><div><h3>Daily alerts on your Telegram</h3><p>Each alert = post link + drafted reply + reasoning. You paste → done.</p></div></div>
+    <div class="step"><div class="num">4</div><div><h3>Get clients from comments, not DMs</h3><p>Silent group readers see you helping people → they book you.</p></div></div>
+  </section>
+
+  <section class="card">
+    <h2>Why $20/mo (beta launch)</h2>
+    <p>This is round 1. 10 seats only. Manual onboarding by Moshe. After beta closes — price goes to $99/mo and onboarding becomes self-serve. Lock in the launch rate now.</p>
+    <div class="grid" style="margin-top:14px">
+      <div>✓ Daily Apify scans</div>
+      <div>✓ Hebrew + English support</div>
+      <div>✓ AI 4-part reply drafts</div>
+      <div>✓ Telegram delivery</div>
+      <div>✓ 24h manual setup</div>
+      <div>✓ Lifetime grandfathered price</div>
+    </div>
+  </section>
+
+  <section class="card" style="text-align:center">
+    <span id="seats-pill" class="seats">Loading seats...</span>
+    <div class="price-row">
+      <span class="strike">$99/mo</span>
+      <span class="amount">$20</span>
+      <span class="per">/month</span>
+    </div>
+    <button id="cta" class="cta-btn" disabled>💳 Reserve my seat — $20/mo</button>
+    <p class="ftnote">Cancel anytime. Refund if we can't onboard you within 24h.</p>
+    <div id="msg-box"></div>
+  </section>
+
+  <section class="card">
+    <h2>Need a pitch first? Talk to Moshe.</h2>
+    <p>WhatsApp +1 (747) 267-9912 · Email music.iambq@gmail.com</p>
+  </section>
+</main>
+
+<script src="../js/auth.js"></script>
+<script src="../js/common.js"></script>
+<script>
+const API = 'https://bq-tools-api.fanzai-mgmt.workers.dev';
+
+(async function init() {
+  // Seats indicator
+  try {
+    const r = await fetch(`${API}/api/pusher-stats`);
+    // Stats only shows alerts not seats — call dedicated endpoint
+  } catch {}
+
+  try {
+    const sr = await fetch(`${API}/api/pusher-beta-seats`);
+    if (sr.ok) {
+      const sd = await sr.json();
+      const remaining = (sd.cap || 10) - (sd.used || 0);
+      const pill = document.getElementById('seats-pill');
+      const cta = document.getElementById('cta');
+      if (remaining <= 0) {
+        pill.textContent = 'Beta full — round 2 opens later';
+        pill.classList.add('full');
+        cta.textContent = 'Beta full — join waitlist';
+        cta.disabled = true;
+      } else {
+        pill.textContent = `${remaining} of ${sd.cap || 10} seats left`;
+        cta.disabled = false;
+      }
+    }
+  } catch {
+    document.getElementById('cta').disabled = false;
+    document.getElementById('seats-pill').textContent = 'Beta — limited seats';
+  }
+})();
+
+document.getElementById('cta').addEventListener('click', async () => {
+  const token = localStorage.getItem('bq_token');
+  if (!token) {
+    location.href = '/auth.html?next=' + encodeURIComponent('/tools/pusher.html');
+    return;
+  }
+  const cta = document.getElementById('cta');
+  cta.disabled = true;
+  cta.textContent = 'Opening Stripe...';
+  try {
+    const r = await fetch(`${API}/api/payments/stripe/create-session`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ tier: 'pusher_beta' }),
+    });
+    const d = await r.json();
+    if (r.ok && d.url) {
+      location.href = d.url;
+    } else {
+      const box = document.getElementById('msg-box');
+      box.innerHTML = `<div class="alert-bad">${d.error || 'Could not start checkout. Try again.'}</div>`;
+      cta.disabled = false;
+      cta.textContent = '💳 Reserve my seat — $20/mo';
+    }
+  } catch (e) {
+    document.getElementById('msg-box').innerHTML = `<div class="alert-bad">Network error. Try again.</div>`;
+    cta.disabled = false;
+    cta.textContent = '💳 Reserve my seat — $20/mo';
+  }
+});
+
+// Show success/cancel banner from URL params
+const params = new URLSearchParams(location.search);
+if (params.get('payment') === 'success') {
+  document.getElementById('msg-box').innerHTML = `<div class="alert-ok">✅ Payment received. Moshe will email you within 24h to onboard. Check your inbox + spam.</div>`;
+}
+if (params.get('payment') === 'cancel') {
+  document.getElementById('msg-box').innerHTML = `<div class="alert-bad">Payment cancelled. No charge made.</div>`;
+}
+</script>
+</body>
+</html>

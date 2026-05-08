@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Pusher — Admin</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  body { padding: 0; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 24px 18px 60px; }
+  h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+  .sub { color: var(--txd); font-size: 13px; margin-bottom: 24px; }
+
+  .login {
+    max-width: 380px; margin: 50px auto; background: var(--sf); border: 1px solid var(--bd);
+    padding: 26px; border-radius: 14px;
+  }
+  .login h2 { font-size: 18px; margin-bottom: 14px; }
+  .login input {
+    width: 100%; padding: 12px 14px; border: 1px solid var(--bd); border-radius: 8px;
+    background: var(--bg); color: var(--tx); font-size: 14px; margin-bottom: 12px;
+  }
+  .login button {
+    width: 100%; padding: 12px; border: 0; border-radius: 8px;
+    background: var(--ac); color: #000; font-weight: 800; cursor: pointer;
+  }
+  .panel { display: none; }
+  .panel.show { display: block; }
+
+  .stats {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 22px;
+  }
+  @media (max-width: 700px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+  .stat {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 10px;
+    padding: 14px;
+  }
+  .stat .lab { font-size: 11px; color: var(--txd); text-transform: uppercase; letter-spacing: 0.08em; }
+  .stat .val { font-size: 24px; font-weight: 800; margin-top: 4px; }
+
+  .section {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 14px;
+    padding: 20px; margin-bottom: 18px;
+  }
+  .section h2 { font-size: 16px; margin-bottom: 12px; }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .row > * { flex-shrink: 0; }
+  .btn {
+    padding: 9px 14px; border: 1px solid var(--bd); border-radius: 8px;
+    background: var(--bg); color: var(--tx); font-size: 13px; cursor: pointer;
+  }
+  .btn:hover { border-color: var(--ac); }
+  .btn-primary { background: var(--ac); color: #000; border-color: var(--ac); font-weight: 700; }
+
+  .alert-list, .user-list { margin-top: 12px; }
+  .alert-item, .user-item {
+    border-top: 1px solid var(--bd); padding: 12px 0;
+  }
+  .alert-item:first-child, .user-item:first-child { border-top: 0; }
+  .alert-meta { font-size: 11px; color: var(--txd); margin-bottom: 4px; }
+  .alert-body { font-size: 13px; color: var(--tx); margin-bottom: 6px; }
+  .alert-draft {
+    background: var(--bg); border: 1px solid var(--bd); border-radius: 8px;
+    padding: 10px 12px; font-size: 12px; color: var(--tx); white-space: pre-wrap;
+    margin-top: 6px; font-family: var(--font-en);
+  }
+  .copy-btn {
+    font-size: 11px; padding: 3px 8px; background: rgba(232,197,71,.15); color: var(--ac);
+    border: 0; border-radius: 5px; cursor: pointer; margin-left: 6px;
+  }
+  .urgency-pill {
+    display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700;
+    background: rgba(232,197,71,.18); color: var(--ac);
+  }
+  .urgency-5 { background: rgba(239,68,68,.2); color: rgb(248,113,113); }
+  .urgency-4 { background: rgba(249,115,22,.2); color: rgb(251,146,60); }
+  .urgency-3 { background: rgba(232,197,71,.18); color: var(--ac); }
+
+  a.post-link { color: var(--ac); font-size: 11px; text-decoration: none; }
+  a.post-link:hover { text-decoration: underline; }
+
+  .empty { color: var(--txd); font-size: 13px; padding: 14px 0; text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🎯 BQ Pusher — Admin</h1>
+  <p class="sub">Manage Pusher beta users + monitor lead alerts.</p>
+
+  <div id="login" class="login">
+    <h2>Admin login</h2>
+    <input id="adminPass" type="password" placeholder="Admin password" autofocus />
+    <button onclick="adminLogin()">Sign in</button>
+    <div id="loginErr" style="color:#f88; font-size:12px; margin-top:8px"></div>
+  </div>
+
+  <div id="panel" class="panel">
+    <div class="stats">
+      <div class="stat"><div class="lab">Beta seats used</div><div class="val" id="seats-used">—</div></div>
+      <div class="stat"><div class="lab">Seats remaining</div><div class="val" id="seats-rem">—</div></div>
+      <div class="stat"><div class="lab">Total alerts</div><div class="val" id="alert-count">—</div></div>
+      <div class="stat"><div class="lab">MRR (beta)</div><div class="val" id="mrr">$0</div></div>
+    </div>
+
+    <div class="section">
+      <h2>Beta users</h2>
+      <div id="user-list" class="user-list"><div class="empty">Loading...</div></div>
+    </div>
+
+    <div class="section">
+      <h2>Recent alerts <span style="font-weight:400; font-size:12px; color:var(--txd)" id="alert-summary"></span></h2>
+      <div class="row" style="margin-bottom:10px">
+        <button class="btn" onclick="loadAlerts()">↻ Refresh</button>
+        <button class="btn btn-primary" onclick="triggerRun()">▶ Run scan now</button>
+        <a class="btn" href="https://console.apify.com/schedules" target="_blank">Apify console ↗</a>
+      </div>
+      <div id="alert-list" class="alert-list"><div class="empty">Loading...</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'https://bq-tools-api.fanzai-mgmt.workers.dev';
+let ADMIN_PASS = '';
+
+function adminLogin() {
+  const pw = document.getElementById('adminPass').value.trim();
+  if (!pw) return;
+  ADMIN_PASS = pw;
+  fetch(`${API}/api/admin/users?password=${encodeURIComponent(pw)}`)
+    .then(r => {
+      if (!r.ok) throw new Error('bad pass');
+      return r.json();
+    })
+    .then(() => {
+      sessionStorage.setItem('bq_admin_pass', pw);
+      document.getElementById('login').style.display = 'none';
+      document.getElementById('panel').classList.add('show');
+      loadAll();
+    })
+    .catch(() => { document.getElementById('loginErr').textContent = 'Wrong password.'; });
+}
+
+async function loadAll() {
+  await Promise.all([loadSeats(), loadAlerts(), loadUsers()]);
+}
+
+async function loadSeats() {
+  const r = await fetch(`${API}/api/pusher-beta-seats`);
+  const d = await r.json();
+  document.getElementById('seats-used').textContent = d.used || 0;
+  document.getElementById('seats-rem').textContent = d.remaining || 0;
+  document.getElementById('mrr').textContent = '$' + (d.used * 20);
+}
+
+async function loadAlerts() {
+  const r = await fetch(`${API}/api/pusher-stats`);
+  const d = await r.json();
+  document.getElementById('alert-count').textContent = d.count || 0;
+  const list = d.last_20 || [];
+  document.getElementById('alert-summary').textContent = list.length ? `(${list.length} loaded)` : '';
+  const target = document.getElementById('alert-list');
+  if (!list.length) {
+    target.innerHTML = '<div class="empty">No alerts yet. First scan runs daily 16:00 UTC.</div>';
+    return;
+  }
+  target.innerHTML = list.map(a => {
+    const u = a.urgency || 0;
+    const reply = (a.draft || '').replace(/`/g, '\\`').replace(/"/g, '&quot;');
+    return `<div class="alert-item">
+      <div class="alert-meta">
+        <span class="urgency-pill urgency-${u}">urgency ${u}</span>
+        <span style="margin: 0 6px">·</span>
+        ${escapeHtml(a.lang || '?')}
+        <span style="margin: 0 6px">·</span>
+        ${escapeHtml(a.author || 'unknown')} @ ${escapeHtml(a.group || 'unknown')}
+        <span style="margin: 0 6px">·</span>
+        ${a.ts ? new Date(a.ts).toLocaleString() : ''}
+        ${a.url ? `<a class="post-link" href="${escapeHtml(a.url)}" target="_blank">→ open post</a>` : ''}
+      </div>
+      <div class="alert-body">${escapeHtml(a.body_preview || '')}</div>
+      ${reply ? `<div class="alert-draft">${escapeHtml(a.draft)}<button class="copy-btn" onclick="copyTxt(this, '${escapeJs(a.draft)}')">copy</button></div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+async function loadUsers() {
+  const target = document.getElementById('user-list');
+  try {
+    const r = await fetch(`${API}/api/admin/pusher/list?password=${encodeURIComponent(ADMIN_PASS)}`);
+    if (!r.ok) throw new Error();
+    const d = await r.json();
+    if (!d.users || !d.users.length) {
+      target.innerHTML = '<div class="empty">No paid beta users yet.</div>';
+      return;
+    }
+    target.innerHTML = d.users.map(u => `
+      <div class="user-item">
+        <div style="display:flex; justify-content:space-between; align-items:center">
+          <div>
+            <strong>${escapeHtml(u.email)}</strong>
+            <span style="font-size:11px; color: var(--txd); margin-left:8px">${escapeHtml(u.status || 'pending_config')}</span>
+          </div>
+          <div style="font-size:11px; color: var(--txd)">paid ${u.ts ? new Date(u.ts).toLocaleDateString() : '—'}</div>
+        </div>
+      </div>
+    `).join('');
+  } catch {
+    target.innerHTML = '<div class="empty">Beta-users endpoint not yet built. Coming soon.</div>';
+  }
+}
+
+function copyTxt(btn, text) {
+  navigator.clipboard.writeText(text);
+  const orig = btn.textContent;
+  btn.textContent = '✓ copied';
+  setTimeout(() => { btn.textContent = orig; }, 1500);
+}
+
+async function triggerRun() {
+  if (!confirm('Trigger Apify scan now? Costs ~$0.30 if no dedup hits.')) return;
+  try {
+    const r = await fetch(`${API}/api/admin/pusher/run-now?password=${encodeURIComponent(ADMIN_PASS)}`, { method: 'POST' });
+    const d = await r.json();
+    if (r.ok) {
+      alert(`Scan started. Run ID: ${d.runId || '?'}. Alerts will arrive in 5–10 min on Telegram.`);
+    } else {
+      alert(`Failed: ${d.error || 'unknown'}`);
+    }
+  } catch (e) { alert('Network error: ' + e.message); }
+}
+
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function escapeJs(s) {
+  return String(s || '').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n').replace(/\r/g,'').replace(/"/g,'\\"');
+}
+
+// Auto-login if already authenticated this session
+const savedPass = sessionStorage.getItem('bq_admin_pass');
+if (savedPass) {
+  document.getElementById('adminPass').value = savedPass;
+  adminLogin();
+}
+</script>
+</body>
+</html>
