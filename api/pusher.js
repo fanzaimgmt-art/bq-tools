@@ -375,9 +375,20 @@ export async function handlePusherBetaSeats(request, env) {
   return json({ used, cap, remaining: Math.max(0, cap - used) });
 }
 
-function _checkAdminPass(url, env) {
-  const pw = url.searchParams.get("password") || "";
-  return env.ADMIN_PASSWORD && pw === env.ADMIN_PASSWORD;
+function _checkAdminPass(urlOrRequest, env) {
+  if (!env.ADMIN_PASSWORD) return false;
+  // Accept Bearer header (preferred, matches site convention) OR ?password= query
+  let pw = "";
+  if (urlOrRequest && typeof urlOrRequest.headers?.get === "function") {
+    const auth = urlOrRequest.headers.get("Authorization") || "";
+    pw = auth.replace(/^Bearer\s+/i, "").trim();
+    if (!pw) {
+      pw = new URL(urlOrRequest.url).searchParams.get("password") || "";
+    }
+  } else if (urlOrRequest?.searchParams) {
+    pw = urlOrRequest.searchParams.get("password") || "";
+  }
+  return pw === env.ADMIN_PASSWORD;
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -485,7 +496,7 @@ async function provisionUserWebhook(cfg, env) {
 
 export async function handlePusherProvisionSchedule(request, env) {
   const url = new URL(request.url);
-  if (!_checkAdminPass(url, env)) return json({ error: "unauthorized" }, 401);
+  if (!_checkAdminPass(request, env)) return json({ error: "unauthorized" }, 401);
   const email = (url.searchParams.get("email") || "").toLowerCase().trim();
   if (!email) return json({ error: "email required" }, 400);
 
@@ -509,7 +520,7 @@ export async function handlePusherProvisionSchedule(request, env) {
 
 export async function handlePusherAdminList(request, env) {
   const url = new URL(request.url);
-  if (!_checkAdminPass(url, env)) return json({ error: "unauthorized" }, 401);
+  if (!_checkAdminPass(request, env)) return json({ error: "unauthorized" }, 401);
   const list = await env.BQ_USERS.list({ prefix: "pusher:beta:", limit: 200 });
   const users = [];
   for (const k of list.keys) {
@@ -522,7 +533,7 @@ export async function handlePusherAdminList(request, env) {
 
 export async function handlePusherAdminUserGet(request, env) {
   const url = new URL(request.url);
-  if (!_checkAdminPass(url, env)) return json({ error: "unauthorized" }, 401);
+  if (!_checkAdminPass(request, env)) return json({ error: "unauthorized" }, 401);
   const email = (url.searchParams.get("email") || "").toLowerCase().trim();
   if (!email) return json({ error: "email required" }, 400);
   const cfgRaw = await env.BQ_USERS.get(`pusher:user:${email}`);
@@ -536,7 +547,7 @@ export async function handlePusherAdminUserGet(request, env) {
 
 export async function handlePusherAdminUserUpdate(request, env) {
   const url = new URL(request.url);
-  if (!_checkAdminPass(url, env)) return json({ error: "unauthorized" }, 401);
+  if (!_checkAdminPass(request, env)) return json({ error: "unauthorized" }, 401);
   let body;
   try { body = await request.json(); } catch { return json({ error: "invalid json" }, 400); }
   const email = String(body.email || "").toLowerCase().trim();
@@ -594,7 +605,7 @@ export async function handlePusherAdminLinkTelegram(request, env) {
   // Resolves @username → chat_id by scanning the bot's recent updates.
   // User must have messaged @bqpusher_bot at least once.
   const url = new URL(request.url);
-  if (!_checkAdminPass(url, env)) return json({ error: "unauthorized" }, 401);
+  if (!_checkAdminPass(request, env)) return json({ error: "unauthorized" }, 401);
   let body;
   try { body = await request.json(); } catch { return json({ error: "invalid json" }, 400); }
   const email = String(body.email || "").toLowerCase().trim();
@@ -671,7 +682,7 @@ export async function handlePusherAdminLinkTelegram(request, env) {
 
 export async function handlePusherAdminRunNow(request, env) {
   const url = new URL(request.url);
-  if (!_checkAdminPass(url, env)) return json({ error: "unauthorized" }, 401);
+  if (!_checkAdminPass(request, env)) return json({ error: "unauthorized" }, 401);
   const ACTOR_ID = "TbRkI5wBA2Hs4yiEI";
   const niche = url.searchParams.get("niche") || "ai-video-la";
   const startResp = await fetch(`https://api.apify.com/v2/acts/${ACTOR_ID}/runs?build=latest`, {

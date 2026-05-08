@@ -134,11 +134,15 @@
 const API = 'https://bq-tools-api.fanzai-mgmt.workers.dev';
 let ADMIN_PASS = '';
 
+function adminHeaders() {
+  return { 'Authorization': `Bearer ${ADMIN_PASS}` };
+}
+
 function adminLogin() {
   const pw = document.getElementById('adminPass').value.trim();
   if (!pw) return;
   ADMIN_PASS = pw;
-  fetch(`${API}/api/admin/users?password=${encodeURIComponent(pw)}`)
+  fetch(`${API}/api/admin/users`, { headers: adminHeaders() })
     .then(r => {
       if (!r.ok) throw new Error('bad pass');
       return r.json();
@@ -198,7 +202,7 @@ async function loadAlerts() {
 async function loadUsers() {
   const target = document.getElementById('user-list');
   try {
-    const r = await fetch(`${API}/api/admin/pusher/list?password=${encodeURIComponent(ADMIN_PASS)}`);
+    const r = await fetch(`${API}/api/admin/pusher/list`, { headers: adminHeaders() });
     if (!r.ok) throw new Error();
     const d = await r.json();
     document.getElementById('user-summary').textContent = `(${d.count || 0})`;
@@ -243,7 +247,7 @@ function statusToBadge(status) {
 let currentUserEmail = null;
 async function openUser(email) {
   currentUserEmail = email;
-  const r = await fetch(`${API}/api/admin/pusher/user?password=${encodeURIComponent(ADMIN_PASS)}&email=${encodeURIComponent(email)}`);
+  const r = await fetch(`${API}/api/admin/pusher/user?email=${encodeURIComponent(email)}`, { headers: adminHeaders() });
   const d = await r.json();
   if (!r.ok) { alert(d.error || 'load failed'); return; }
   const cfg = d.config || {};
@@ -343,8 +347,8 @@ async function saveUser(email) {
     voice: document.getElementById('ed-voice').value,
   };
 
-  const r = await fetch(`${API}/api/admin/pusher/user-update?password=${encodeURIComponent(ADMIN_PASS)}`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+  const r = await fetch(`${API}/api/admin/pusher/user-update`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', ...adminHeaders() }, body: JSON.stringify(body),
   });
   const d = await r.json();
   if (r.ok) {
@@ -357,8 +361,8 @@ async function saveUser(email) {
 }
 
 async function setStatus(email, status) {
-  const r = await fetch(`${API}/api/admin/pusher/user-update?password=${encodeURIComponent(ADMIN_PASS)}`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, status }),
+  const r = await fetch(`${API}/api/admin/pusher/user-update`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', ...adminHeaders() }, body: JSON.stringify({ email, status }),
   });
   const d = await r.json();
   if (r.ok) { alert('Status: ' + d.status); openUser(email); loadUsers(); }
@@ -368,8 +372,8 @@ async function setStatus(email, status) {
 async function setChatId(email) {
   const chatId = document.getElementById('ed-chatid').value.trim();
   if (!/^-?\d+$/.test(chatId)) { alert('Enter a numeric chat_id'); return; }
-  const r = await fetch(`${API}/api/admin/pusher/user-update?password=${encodeURIComponent(ADMIN_PASS)}`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, chat_id: chatId }),
+  const r = await fetch(`${API}/api/admin/pusher/user-update`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', ...adminHeaders() }, body: JSON.stringify({ email, chat_id: chatId }),
   });
   const d = await r.json();
   if (r.ok) { alert('Chat ID set. Status: ' + d.status); openUser(email); loadUsers(); }
@@ -380,8 +384,8 @@ async function linkTelegram(email, username) {
   const btn = event.target;
   btn.disabled = true; btn.textContent = 'Resolving...';
   try {
-    const r = await fetch(`${API}/api/admin/pusher/link-telegram?password=${encodeURIComponent(ADMIN_PASS)}`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+    const r = await fetch(`${API}/api/admin/pusher/link-telegram`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json', ...adminHeaders() },
       body: JSON.stringify({ email, telegram_username: username }),
     });
     const d = await r.json();
@@ -407,7 +411,7 @@ function copyTxt(btn, text) {
 async function triggerRun() {
   if (!confirm('Trigger Apify scan now? Costs ~$0.30 if no dedup hits.')) return;
   try {
-    const r = await fetch(`${API}/api/admin/pusher/run-now?password=${encodeURIComponent(ADMIN_PASS)}`, { method: 'POST' });
+    const r = await fetch(`${API}/api/admin/pusher/run-now`, { method: 'POST', headers: adminHeaders() });
     const d = await r.json();
     if (r.ok) {
       alert(`Scan started. Run ID: ${d.runId || '?'}. Alerts will arrive in 5–10 min on Telegram.`);
