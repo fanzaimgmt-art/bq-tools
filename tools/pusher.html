@@ -18,7 +18,7 @@
 <!-- Editorial Luxury type system: Instrument Serif (display) + Geist Mono (mono) + body Geist -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
 <style>
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -47,7 +47,7 @@ html, body { height: 100%; }
 html { scroll-behavior: smooth; }
 
 body {
-  font-family: 'Plus Jakarta Sans', -apple-system, system-ui, sans-serif;
+  font-family: 'Hanken Grotesk', -apple-system, system-ui, sans-serif;
   background: var(--ink);
   color: var(--paper);
   font-size: 17px;
@@ -123,16 +123,16 @@ button { font-family: inherit; cursor: pointer; border: 0; background: none; col
   font-size: 26px; font-weight: 400; letter-spacing: -0.02em;
   font-style: italic;
 }
-.topnav .logo .gold { color: var(--gold); font-style: normal; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 500; font-size: 18px; letter-spacing: 0.02em; margin-left: 4px; }
+.topnav .logo .gold { color: var(--gold); font-style: normal; font-family: 'Hanken Grotesk', sans-serif; font-weight: 500; font-size: 18px; letter-spacing: 0.02em; margin-left: 4px; }
 .topnav-links {
   display: flex; gap: 32px; align-items: center;
-  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
 }
 .topnav-links a { font-size: 12px; color: var(--paper-dim); transition: color .2s; letter-spacing: 0.02em; }
 .topnav-links a:hover { color: var(--paper); }
 .topnav-cta {
   justify-self: end;
-  font-family: 'Geist Mono', monospace; font-size: 12px;
+  font-family: 'JetBrains Mono', monospace; font-size: 12px;
   padding: 10px 20px; border: 1px solid var(--line-strong); border-radius: 100px;
   color: var(--paper); transition: border-color .2s, background .2s, color .2s;
 }
@@ -149,7 +149,7 @@ button { font-family: inherit; cursor: pointer; border: 0; background: none; col
   background: var(--gold);
   color: var(--ink);
   display: flex; align-items: center; overflow: hidden;
-  font-family: 'Geist Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 11px; letter-spacing: 0.02em; font-weight: 500;
 }
 .ticker-track {
@@ -172,7 +172,7 @@ button { font-family: inherit; cursor: pointer; border: 0; background: none; col
   display: flex; flex-direction: column; align-items: center; justify-content: center;
 }
 .hero-eyebrow {
-  font-family: 'Geist Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
   color: var(--gold);
   margin-bottom: 32px;
@@ -222,7 +222,7 @@ button { font-family: inherit; cursor: pointer; border: 0; background: none; col
   line-height: 1.45;
   opacity: 0; animation: fadeUp 1s var(--ease) .9s forwards;
 }
-.hero-sub strong { font-style: normal; color: var(--paper); font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 500; }
+.hero-sub strong { font-style: normal; color: var(--paper); font-family: 'Hanken Grotesk', sans-serif; font-weight: 500; }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
 .hero-actions {
@@ -234,7 +234,7 @@ button { font-family: inherit; cursor: pointer; border: 0; background: none; col
   padding: 16px 28px; font-size: 14px; font-weight: 500;
   border-radius: 100px;
   transition: transform .35s var(--ease-spring), box-shadow .25s, background .25s, color .25s;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Hanken Grotesk', sans-serif;
   letter-spacing: -0.005em;
 }
 .btn-prim {
@@ -275,7 +275,7 @@ button { font-family: inherit; cursor: pointer; border: 0; background: none; col
   line-height: 1;
 }
 .hero-stats .lbl {
-  font-family: 'Geist Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
   color: var(--paper-faint);
   margin-top: 14px;
@@ -300,7 +300,7 @@ button { font-family: inherit; cursor: pointer; border: 0; background: none; col
 .tg-card::before {
   content: 'LIVE PREVIEW'; position: absolute; top: -10px; left: 24px;
   background: var(--gold); color: var(--ink);
-  font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600;
+  font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 600;
   padding: 3px 10px; border-radius: 100px; letter-spacing: 0.1em;
 }
 .tg-head {
@@ -316,14 +316,14 @@ button { font-family: inherit; cursor: pointer; border: 0; background: none; col
   box-shadow: 0 0 24px rgba(212,166,75,0.4);
 }
 .tg-name {
-  font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; font-weight: 500; color: var(--paper);
+  font-family: 'Hanken Grotesk', sans-serif; font-size: 14px; font-weight: 500; color: var(--paper);
 }
 .tg-name small {
   display: block; color: var(--paper-faint); font-weight: 400; font-size: 11px; margin-top: 2px;
-  font-family: 'Geist Mono', monospace; letter-spacing: 0.02em;
+  font-family: 'JetBrains Mono', monospace; letter-spacing: 0.02em;
 }
 .tg-msg {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Hanken Grotesk', sans-serif;
   font-size: 13.5px; line-height: 1.6; color: var(--paper-dim); white-space: pre-wrap;
 }
 .tg-msg .b { color: var(--gold); font-weight: 500; }
@@ -332,7 +332,7 @@ button { font-family: inherit; cursor: pointer; border: 0; background: none; col
 .tg-draft {
   margin-top: 14px; padding: 14px; border-radius: 12px;
   background: rgba(212,166,75,0.06); border: 1px solid rgba(212,166,75,0.18);
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Hanken Grotesk', sans-serif;
   font-size: 12.5px; line-height: 1.6; color: var(--paper);
 }
 
@@ -341,7 +341,7 @@ section { padding: 120px 0; position: relative; }
 @media (max-width: 900px) { section { padding: 80px 0; } }
 
 .eyebrow {
-  font-family: 'Geist Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 11px; color: var(--gold);
   text-transform: uppercase; letter-spacing: 0.18em;
   margin-bottom: 24px;
@@ -364,7 +364,7 @@ h2 em { font-style: italic; color: var(--gold); }
   max-width: 36ch;
   margin-top: 28px;
 }
-.lede strong { color: var(--paper); font-style: normal; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 500; }
+.lede strong { color: var(--paper); font-style: normal; font-family: 'Hanken Grotesk', sans-serif; font-weight: 500; }
 
 /* ═══ Thesis section — magazine pull-quote style ══════════════════════════ */
 .thesis {
@@ -379,9 +379,9 @@ h2 em { font-style: italic; color: var(--gold); }
   font-style: italic; color: var(--gold); line-height: 0.85;
   letter-spacing: -0.05em;
 }
-.thesis-num small { font-size: 0.3em; color: var(--paper-faint); display: block; margin-top: 0.2em; font-style: normal; font-family: 'Geist Mono', monospace; letter-spacing: 0.1em; }
+.thesis-num small { font-size: 0.3em; color: var(--paper-faint); display: block; margin-top: 0.2em; font-style: normal; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em; }
 .thesis-body p {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Hanken Grotesk', sans-serif;
   font-size: clamp(15px, 1.6vw, 18px); line-height: 1.65;
   color: var(--paper-dim); margin-bottom: 20px;
 }
@@ -417,7 +417,7 @@ h2 em { font-style: italic; color: var(--gold); }
 }
 .cell:hover::before { opacity: 1; }
 .cell .icon {
-  font-family: 'Geist Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 13px; font-weight: 500; color: var(--paper-faint);
   letter-spacing: 0.08em; margin-bottom: 18px;
   display: flex; align-items: center; gap: 8px;
@@ -476,7 +476,7 @@ h2 em { font-style: italic; color: var(--gold); }
   display: grid; grid-template-columns: 1fr 380px; gap: 60px; align-items: start;
 }
 @media (max-width: 900px) { .pricing-wrap { grid-template-columns: 1fr; } }
-.pricing-meta { font-family: 'Plus Jakarta Sans', sans-serif; }
+.pricing-meta { font-family: 'Hanken Grotesk', sans-serif; }
 .pricing-meta h2 { margin-bottom: 24px; }
 .pricing-meta p { font-size: 16px; color: var(--paper-dim); line-height: 1.65; margin-bottom: 16px; max-width: 44ch; }
 .pricing-card {
@@ -499,7 +499,7 @@ h2 em { font-style: italic; color: var(--gold); }
   background: rgba(212,166,75,0.1); color: var(--gold);
   border: 1px solid rgba(212,166,75,0.3);
   border-radius: 100px;
-  font-family: 'Geist Mono', monospace; letter-spacing: 0.04em;
+  font-family: 'JetBrains Mono', monospace; letter-spacing: 0.04em;
 }
 .seats-pill.full { background: rgba(200,70,48,0.1); color: var(--crimson); border-color: rgba(200,70,48,0.3); }
 .seats-pill::before { content:''; width: 6px; height: 6px; border-radius: 50%; background: currentColor;
@@ -515,10 +515,10 @@ h2 em { font-style: italic; color: var(--gold); }
   color: var(--gold);
   line-height: 1;
 }
-.price-per { font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--paper-faint); letter-spacing: 0.08em; }
+.price-per { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--paper-faint); letter-spacing: 0.08em; }
 .pricing-card .btn-prim { width: 100%; justify-content: center; padding: 18px; margin-top: 24px; }
 .pricing-fine {
-  font-family: 'Geist Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 11px; color: var(--paper-faint);
   margin-top: 16px; text-align: center; letter-spacing: 0.04em;
 }
@@ -541,7 +541,7 @@ h2 em { font-style: italic; color: var(--gold); }
 }
 .faq-q:hover { opacity: 0.75; }
 .faq-q::after {
-  content: '+'; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 300;
+  content: '+'; font-family: 'Hanken Grotesk', sans-serif; font-weight: 300;
   font-size: 32px; color: var(--gold);
   transition: transform .4s var(--ease-spring);
   flex-shrink: 0;
@@ -549,7 +549,7 @@ h2 em { font-style: italic; color: var(--gold); }
 .faq-item.open .faq-q::after { transform: rotate(45deg); }
 .faq-a {
   max-height: 0; overflow: hidden; transition: max-height .5s var(--ease), padding-top .3s;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Hanken Grotesk', sans-serif;
   font-size: 16px; line-height: 1.7; color: var(--paper-dim);
 }
 .faq-item.open .faq-a { max-height: 240px; padding-top: 16px; }
@@ -571,7 +571,7 @@ footer {
 }
 .foot-brand span { color: var(--gold); }
 .foot-meta {
-  font-family: 'Geist Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 12px; color: var(--paper-faint);
   text-align: right; line-height: 1.8;
 }
@@ -598,7 +598,7 @@ footer::before {
   width: 100%; padding: 14px 22px;
   background: var(--paper); color: var(--ink);
   border-radius: 100px; font-weight: 500; font-size: 13px;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Hanken Grotesk', sans-serif;
   box-shadow: 0 20px 56px -12px rgba(245,241,232,0.4), 0 0 0 1px rgba(245,241,232,0.5);
   display: inline-flex; align-items: center; gap: 10px; justify-content: center;
 }
@@ -839,7 +839,7 @@ EN · asking-for-recommendation
   <div class="container foot-grid">
     <div>
       <div class="foot-brand">BQ <span>— pusher</span></div>
-      <div style="font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--paper-faint); margin-top: 6px; letter-spacing: 0.04em;">A BQ TOOLS PRODUCT · BUILT BY MOSHE SHOHET · LA</div>
+      <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--paper-faint); margin-top: 6px; letter-spacing: 0.04em;">A BQ TOOLS PRODUCT · BUILT BY MOSHE SHOHET · LA</div>
     </div>
     <div class="foot-meta">
       <a href="mailto:music.iambq@gmail.com">music.iambq@gmail.com</a><br>
@@ -1001,7 +1001,7 @@ document.getElementById('ctaBtn').addEventListener('click', async () => {
     const d = await r.json();
     if (r.ok && d.url) location.href = d.url;
     else {
-      document.getElementById('msg-box').innerHTML = `<div style="color:var(--crimson); font-family:'Geist Mono',monospace; font-size:12px; margin-top:14px; letter-spacing:0.04em">${(d.error || 'Could not start checkout').toUpperCase()}</div>`;
+      document.getElementById('msg-box').innerHTML = `<div style="color:var(--crimson); font-family:'JetBrains Mono',monospace; font-size:12px; margin-top:14px; letter-spacing:0.04em">${(d.error || 'Could not start checkout').toUpperCase()}</div>`;
       cta.disabled = false; cta.textContent = 'Reserve my seat';
     }
   } catch {
