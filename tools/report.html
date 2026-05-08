@@ -260,13 +260,15 @@ function exportReportPDF() {
       ul { padding-left: 20px; }
       .score { font-size: 36px; font-weight: 900; color: #e8c547; }
       .footer { font-size: 10px; color: #aaa; text-align: center; margin-top: 20px; border-top: 1px solid #eee; padding-top: 10px; }
-    </style></head><body>${preview.innerHTML}<script src="/js/cmdk-palette.js" defer></script>
+    </style></head><body>${preview.innerHTML}<script src="/js/motion-engine.js" defer></script>
+<script src="/js/cmdk-palette.js" defer></script>
 <script src="/js/brain-assistant.js" defer></script>
 </body></html>`);
   w.document.close();
   setTimeout(() => { w.print(); }, 500);
 }
 </script>
+<script src="/js/motion-engine.js" defer></script>
 <script src="/js/cmdk-palette.js" defer></script>
 <script src="/js/brain-assistant.js" defer></script>
 </body>

@@ -8,8 +8,27 @@
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
-  /* ── Higgsfield-inspired deep black theme ── */
-  body { background: #000; }
+  /* ── Higgsfield-inspired deep black theme + animated mesh ── */
+  body {
+    background:
+      radial-gradient(at 12% 0%, rgba(232,197,71,0.08) 0%, transparent 45%),
+      radial-gradient(at 88% 100%, rgba(107,70,193,0.10) 0%, transparent 50%),
+      #000;
+    background-attachment: fixed;
+  }
+  /* Hero parallax glow — moves slowly with scroll */
+  .hero::after {
+    content: ''; position: absolute; inset: -50% -20% auto -20%; height: 200%;
+    background:
+      radial-gradient(circle at 30% 30%, rgba(232,197,71,0.18) 0%, transparent 40%),
+      radial-gradient(circle at 70% 70%, rgba(107,70,193,0.15) 0%, transparent 40%);
+    filter: blur(80px); pointer-events: none; z-index: -1;
+    animation: hero-drift 28s ease-in-out infinite alternate;
+  }
+  @keyframes hero-drift {
+    0%   { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(8%, -3%) scale(1.1); }
+  }
 
   /* ── Hero ── */
   .hero {
@@ -932,15 +951,15 @@
 <!-- Hero -->
 <section class="hero">
   <h1>
-    <span data-en="BUILT FOR" data-es="HECHO PARA" data-he="בנוי ל">BUILT FOR</span><br>
-    <span class="accent" data-en="CONSTRUCTION PROS" data-es="PROFESIONALES" data-he="אנשי הבנייה">CONSTRUCTION PROS</span>
-    <span class="sub-hero" data-en="AI tools · Business ops · Lead gen — all in one" data-es="Herramientas IA · Operaciones · Leads — todo en uno" data-he="כלי AI · ניהול עסק · לידים — הכל במקום אחד">AI tools · Business ops · Lead gen — all in one</span>
+    <span data-en="BUILT FOR" data-es="HECHO PARA" data-he="בנוי ל" data-split>BUILT FOR</span><br>
+    <span class="accent" data-en="CONSTRUCTION PROS" data-es="PROFESIONALES" data-he="אנשי הבנייה" data-split>CONSTRUCTION PROS</span>
+    <span class="sub-hero" data-en="AI tools · Business ops · Lead gen — all in one" data-es="Herramientas IA · Operaciones · Leads — todo en uno" data-he="כלי AI · ניהול עסק · לידים — הכל במקום אחד" data-reveal="up" data-reveal-delay="0.4">AI tools · Business ops · Lead gen — all in one</span>
   </h1>
-  <p class="tagline" data-en="Your work speaks for itself. Now let AI help it speak louder." data-es="Tu trabajo habla por sí solo. Ahora deja que la IA lo amplifique." data-he="העבודה שלך מדברת בעד עצמה. עכשיו תן ל-AI לדבר חזק יותר.">Your work speaks for itself. Now let AI help it speak louder.</p>
-  <p class="tagline-bold" data-en="One thing done right: make your work sell your next job." data-es="Una cosa hecha bien: que tu trabajo te traiga el próximo trabajo." data-he="דבר אחד נכון: לגרום לעבודה שלך למכור את הפרויקט הבא.">One thing done right: make your work sell your next job.</p>
-  <div class="hero-buttons">
-    <a href="/auth.html" class="btn btn-primary btn-large" data-en="Start Free →" data-es="Empieza Gratis →" data-he="← התחל בחינם">Start Free →</a>
-    <a href="#pricing" class="btn btn-large" data-en="See Pricing ↓" data-es="Ver Precios ↓" data-he="מחירים ↓">See Pricing ↓</a>
+  <p class="tagline" data-reveal="up" data-reveal-delay="0.6" data-en="Your work speaks for itself. Now let AI help it speak louder." data-es="Tu trabajo habla por sí solo. Ahora deja que la IA lo amplifique." data-he="העבודה שלך מדברת בעד עצמה. עכשיו תן ל-AI לדבר חזק יותר.">Your work speaks for itself. Now let AI help it speak louder.</p>
+  <p class="tagline-bold" data-reveal="up" data-reveal-delay="0.7" data-en="One thing done right: make your work sell your next job." data-es="Una cosa hecha bien: que tu trabajo te traiga el próximo trabajo." data-he="דבר אחד נכון: לגרום לעבודה שלך למכור את הפרויקט הבא.">One thing done right: make your work sell your next job.</p>
+  <div class="hero-buttons" data-stagger>
+    <a href="/auth.html" class="btn btn-primary btn-large" data-magnetic="0.3" data-en="Start Free →" data-es="Empieza Gratis →" data-he="← התחל בחינם">Start Free →</a>
+    <a href="#pricing" class="btn btn-large" data-magnetic="0.25" data-en="See Pricing ↓" data-es="Ver Precios ↓" data-he="מחירים ↓">See Pricing ↓</a>
   </div>
 
   <div class="hero-image">
@@ -1538,6 +1557,7 @@
   }
   calcROI();
 </script>
+<script src="/js/motion-engine.js" defer></script>
 <script src="/js/cmdk-palette.js" defer></script>
 <script src="/js/brain-assistant.js" defer></script>
 </body>
