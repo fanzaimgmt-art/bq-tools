@@ -5,7 +5,7 @@
    Add <html class="editorial"> to opt in.
 ═══════════════════════════════════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Rubik:wght@400;500;600;700&display=swap');
 
 html.editorial {
   --ed-ink: #0b0b0d;
@@ -23,17 +23,21 @@ html.editorial {
 }
 
 html.editorial body {
-  font-family: 'Geist', -apple-system, system-ui, sans-serif !important;
+  font-family: 'Plus Jakarta Sans', -apple-system, system-ui, sans-serif !important;
   background: var(--ed-ink) !important;
   color: var(--ed-paper) !important;
-  font-size: 16px;
-  line-height: 1.55;
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1.65;
+  letter-spacing: -0.005em;
   -webkit-font-smoothing: antialiased;
-  font-feature-settings: 'ss01', 'ss03', 'cv11';
   cursor: none;
 }
+html.editorial body[lang="he"], html.editorial [lang="he"], html.editorial body[dir="rtl"] {
+  font-family: 'Rubik', 'Plus Jakarta Sans', system-ui, sans-serif !important;
+}
 @media (max-width: 900px), (pointer: coarse) {
-  html.editorial body { cursor: auto; font-size: 15px; }
+  html.editorial body { cursor: auto; font-size: 16px; }
 }
 
 html.editorial ::selection { background: var(--ed-gold); color: var(--ed-ink); }
@@ -110,14 +114,14 @@ html.editorial .ed-eyebrow::before {
 }
 
 html.editorial .ed-lede {
-  font-family: 'Instrument Serif', serif;
-  font-size: clamp(18px, 2.2vw, 24px);
-  font-style: italic; line-height: 1.45; color: var(--ed-paper-dim);
-  max-width: 36ch;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: clamp(17px, 1.8vw, 21px);
+  font-weight: 400; line-height: 1.6; color: var(--ed-paper-dim);
+  max-width: 56ch;
+  letter-spacing: -0.005em;
 }
 html.editorial .ed-lede strong {
-  color: var(--ed-paper); font-style: normal;
-  font-family: 'Geist', sans-serif; font-weight: 500;
+  color: var(--ed-paper); font-weight: 600;
 }
 
 /* ── Buttons ── */
@@ -234,7 +238,7 @@ html.editorial .ed-cell .ed-icon::before {
 }
 html.editorial .ed-cell h3 { margin-bottom: 10px; }
 html.editorial .ed-cell p {
-  font-size: 14px; color: var(--ed-paper-dim); line-height: 1.6;
+  font-size: 15px; color: var(--ed-paper-dim); line-height: 1.6; font-weight: 400;
 }
 html.editorial .ed-cell .ed-tag {
   font-family: 'Geist Mono', monospace;
