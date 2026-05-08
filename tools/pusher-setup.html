@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Pusher — Setup</title>
+<link rel="stylesheet" href="../style.css">
+<link rel="manifest" href="/manifest.json">
+<style>
+  body { display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+  .page { width: 92%; max-width: 720px; margin: 0 auto; padding: 24px 0 80px; }
+
+  .header h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 6px; }
+  .header p { font-size: 14px; color: var(--txd); margin-bottom: 24px; }
+
+  .progress-bar {
+    display: flex; gap: 6px; margin-bottom: 20px;
+  }
+  .progress-bar .seg {
+    flex: 1; height: 4px; border-radius: 4px; background: var(--bd);
+  }
+  .progress-bar .seg.active { background: var(--ac); }
+
+  .card {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: 14px;
+    padding: 22px; margin-bottom: 14px;
+  }
+
+  .step-title { font-size: 14px; font-weight: 700; color: var(--ac); text-transform: uppercase;
+    letter-spacing: 0.08em; margin-bottom: 4px; }
+  .step-h { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+  .step-desc { font-size: 13px; color: var(--txd); margin-bottom: 18px; line-height: 1.55; }
+
+  label { display: block; font-size: 13px; font-weight: 600; color: var(--tx); margin-bottom: 6px; }
+  .hint { font-size: 12px; color: var(--txd); margin-top: 4px; line-height: 1.5; }
+
+  input[type="text"], textarea, select {
+    width: 100%; padding: 11px 14px; background: var(--bg); color: var(--tx);
+    border: 1px solid var(--bd); border-radius: 8px; font-size: 14px;
+    font-family: var(--font-en); margin-bottom: 14px;
+  }
+  textarea { resize: vertical; min-height: 88px; line-height: 1.5; }
+
+  .group-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+  .group-row { display: flex; gap: 6px; }
+  .group-row input { margin: 0; flex: 1; }
+  .group-row button {
+    padding: 9px 12px; border: 1px solid var(--bd); border-radius: 8px;
+    background: var(--bg); color: var(--txd); cursor: pointer; font-size: 13px;
+  }
+  .group-row button:hover { border-color: rgba(239,68,68,.5); color: rgb(248,113,113); }
+
+  .btn-row { display: flex; gap: 10px; justify-content: space-between; align-items: center; margin-top: 18px; }
+  .btn {
+    padding: 11px 20px; border: 1px solid var(--bd); border-radius: 8px;
+    background: var(--bg); color: var(--tx); font-size: 14px; cursor: pointer;
+  }
+  .btn:hover { border-color: var(--ac); color: var(--ac); }
+  .btn.primary { background: var(--ac); color: #000; border-color: var(--ac); font-weight: 700; }
+  .btn.primary:hover { color: #000; opacity: 0.9; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn.add-more {
+    width: 100%; padding: 9px; border-style: dashed; color: var(--txd); font-size: 13px;
+  }
+
+  .alert-bad {
+    background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.3); padding: 12px;
+    border-radius: 8px; color: rgb(248,113,113); font-size: 13px; margin-top: 12px;
+  }
+  .alert-ok {
+    background: rgba(34,197,94,.08); border: 1px solid rgba(34,197,94,.3); padding: 12px;
+    border-radius: 8px; color: rgb(74,222,128); font-size: 13px; margin-top: 12px;
+  }
+
+  .summary {
+    background: var(--bg); border: 1px solid var(--bd); border-radius: 8px;
+    padding: 14px; margin: 14px 0;
+  }
+  .summary div { font-size: 13px; line-height: 1.6; color: var(--txd); }
+  .summary div strong { color: var(--tx); margin-right: 6px; }
+
+  .gate-card { text-align: center; padding: 36px 22px; }
+  .gate-card h2 { font-size: 20px; margin-bottom: 10px; }
+  .gate-card p { color: var(--txd); margin-bottom: 18px; }
+  .gate-card a { display: inline-block; padding: 11px 20px; background: var(--ac); color: #000;
+    border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 14px; }
+</style>
+</head>
+<body>
+<main class="page">
+  <header class="header">
+    <h1>🎯 Pusher Setup</h1>
+    <p>4 quick steps. Takes 5 minutes. Save and continue anytime.</p>
+  </header>
+
+  <div id="state-loading" class="card">Loading your status...</div>
+
+  <div id="state-no-beta" class="card gate-card" style="display:none">
+    <h2>Pusher beta not active on this account</h2>
+    <p>You need to purchase the $20/mo beta subscription before you can configure your pipeline.</p>
+    <a href="/tools/pusher.html">Go to signup →</a>
+  </div>
+
+  <div id="state-active" class="card gate-card" style="display:none">
+    <h2>✅ Setup complete</h2>
+    <p id="active-msg">Your pipeline is live. Alerts arrive in your Telegram from <strong>@bqpusher_bot</strong>.</p>
+    <a href="/tools/pusher-setup.html?edit=1" id="edit-link">Edit setup</a>
+  </div>
+
+  <div id="state-form" style="display:none">
+    <div class="progress-bar">
+      <div class="seg" data-seg="1"></div>
+      <div class="seg" data-seg="2"></div>
+      <div class="seg" data-seg="3"></div>
+      <div class="seg" data-seg="4"></div>
+    </div>
+
+    <!-- STEP 1: business + niche -->
+    <section class="card step" data-step="1">
+      <div class="step-title">Step 1 of 4</div>
+      <div class="step-h">Tell us about your business</div>
+      <div class="step-desc">Name + what you sell. We use this to detect buyer-intent posts that fit you specifically.</div>
+
+      <label>Business name</label>
+      <input id="business_name" type="text" maxlength="80" placeholder="e.g. Gold Remodeling, Sarah Coaching" />
+
+      <label>Niche label (short)</label>
+      <input id="niche_label" type="text" maxlength="40" placeholder="e.g. la-contractors, coaching-millennials" />
+      <div class="hint">Lowercase + dashes. Internal only — no spaces.</div>
+
+      <label>What you sell (1–2 sentences)</label>
+      <textarea id="niche_description" maxlength="500" placeholder="e.g. I sell AI-generated cinematic vertical videos to LA contractors and remodelers. $750/video, no live shoots."></textarea>
+
+      <div class="btn-row">
+        <span></span>
+        <button class="btn primary" onclick="goStep(2)">Next →</button>
+      </div>
+    </section>
+
+    <!-- STEP 2: groups -->
+    <section class="card step" data-step="2" style="display:none">
+      <div class="step-title">Step 2 of 4</div>
+      <div class="step-h">Facebook groups to scan</div>
+      <div class="step-desc">3–10 public Facebook groups where your buyers post. Paste the group URL (must be public). We scan daily for new posts.</div>
+
+      <div id="group-list" class="group-list"></div>
+      <button class="btn add-more" onclick="addGroup()">+ Add another group</button>
+
+      <div class="hint" style="margin-top:14px">
+        💡 How to find groups: Facebook search → "Groups" tab → look for active groups (recent posts, &gt;500 members) where your customers hang out. Examples: "LA Israeli Business", "Real Estate Agents NYC", "Coaches & Consultants".
+      </div>
+
+      <div class="btn-row">
+        <button class="btn" onclick="goStep(1)">← Back</button>
+        <button class="btn primary" onclick="goStep(3)">Next →</button>
+      </div>
+    </section>
+
+    <!-- STEP 3: FAQ + voice -->
+    <section class="card step" data-step="3" style="display:none">
+      <div class="step-title">Step 3 of 4</div>
+      <div class="step-h">FAQ + voice samples</div>
+      <div class="step-desc">The AI uses these to draft replies that sound exactly like you wrote them.</div>
+
+      <label>FAQ — what you do, prices, key wins, what you don't do</label>
+      <textarea id="faq" maxlength="4000" rows="8" placeholder="Example:
+We do AI-generated cinematic videos for LA contractors. ARRI/anamorphic look, 9:16 vertical, golden-hour grade.
+Active client: Gold Remodeling Sherman Oaks — $2,700/mo, 16 videos/month.
+New clients: $750/video. 8-pack starter from $5,000.
+We DON'T do live shoots, photography, edit-only, freebies, samples.
+Phone +1 (747) 267-9912. Email music.iambq@gmail.com."></textarea>
+      <div class="hint">Be specific. Numbers, names of clients, prices. The AI uses this as context.</div>
+
+      <label style="margin-top:14px">Voice — 2–3 sample replies you'd actually post</label>
+      <textarea id="voice" maxlength="4000" rows="8" placeholder="Example:
+Sample 1 (Hebrew): 'אחי אתה לא צריך צלם — אתה צריך מערכת. אצלי קבלן שיפוצים מקבל 4 רילסים בשבוע, רק מאשר. אם רלוונטי: bqprod.pages.dev'
+Sample 2 (English): 'You don't need a system — you need to outsource the part you hate. Most contractors burn out at month 2. We give a Sherman Oaks remodeler 4 vertical reels a week. 10 min/week from him.'
+Tone rules: direct, no hype. Never 'great question' or 'happy to help'. Hebrew 200-400 chars, English 250-500."></textarea>
+      <div class="hint">Real samples > generic instructions. The AI matches your style.</div>
+
+      <div class="btn-row">
+        <button class="btn" onclick="goStep(2)">← Back</button>
+        <button class="btn primary" onclick="goStep(4)">Next →</button>
+      </div>
+    </section>
+
+    <!-- STEP 4: Telegram -->
+    <section class="card step" data-step="4" style="display:none">
+      <div class="step-title">Step 4 of 4</div>
+      <div class="step-h">Connect Telegram</div>
+      <div class="step-desc">Alerts arrive as DMs to your Telegram. Two steps:</div>
+
+      <ol style="font-size:13px; color:var(--tx); line-height:1.8; margin: 8px 0 16px 18px">
+        <li>Open Telegram → search <strong>@bqpusher_bot</strong> → press <strong>Start</strong> → send any message (e.g. "hi")</li>
+        <li>Tell us your Telegram <strong>username</strong> below (the @ handle)</li>
+      </ol>
+
+      <label>Your Telegram username</label>
+      <input id="telegram_username" type="text" maxlength="32" placeholder="e.g. @yourusername (we'll DM you to confirm)" />
+      <div class="hint">3–32 chars, letters/numbers/underscore. We use this to find your chat ID after you DM the bot.</div>
+
+      <div class="summary" id="summary"></div>
+
+      <div id="msg-box"></div>
+
+      <div class="btn-row">
+        <button class="btn" onclick="goStep(3)">← Back</button>
+        <button class="btn primary" id="submit-btn" onclick="submitForm()">✅ Submit setup</button>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script>
+const API = 'https://bq-tools-api.fanzai-mgmt.workers.dev';
+const TOKEN = localStorage.getItem('bq_token');
+
+// Local draft state — saved as user types
+const STORAGE_KEY = 'pusher_setup_draft';
+let state = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+state.groups = state.groups || [''];
+
+function saveDraft() {
+  // Pull live values from inputs into state
+  const inputs = ['business_name','niche_label','niche_description','faq','voice','telegram_username'];
+  inputs.forEach(k => {
+    const el = document.getElementById(k);
+    if (el) state[k] = el.value;
+  });
+  state.groups = Array.from(document.querySelectorAll('.group-input')).map(i => i.value).filter(v => v.trim());
+  if (state.groups.length === 0) state.groups = [''];
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function restoreDraft() {
+  ['business_name','niche_label','niche_description','faq','voice','telegram_username'].forEach(k => {
+    const el = document.getElementById(k);
+    if (el && state[k]) el.value = state[k];
+  });
+  renderGroups();
+}
+
+function renderGroups() {
+  const list = document.getElementById('group-list');
+  if (!list) return;
+  if (!state.groups || state.groups.length === 0) state.groups = [''];
+  list.innerHTML = '';
+  state.groups.forEach((g, i) => {
+    const row = document.createElement('div');
+    row.className = 'group-row';
+    row.innerHTML = `
+      <input class="group-input" type="text" placeholder="https://www.facebook.com/groups/..." value="${escapeAttr(g)}" />
+      <button onclick="removeGroup(${i})" title="Remove">✕</button>`;
+    list.appendChild(row);
+  });
+  list.querySelectorAll('.group-input').forEach(inp => inp.addEventListener('input', saveDraft));
+}
+
+function addGroup() {
+  saveDraft();
+  state.groups.push('');
+  renderGroups();
+}
+
+function removeGroup(i) {
+  saveDraft();
+  state.groups.splice(i, 1);
+  if (state.groups.length === 0) state.groups = [''];
+  renderGroups();
+}
+
+function goStep(n) {
+  saveDraft();
+  // Validate before going forward
+  if (n > getCurrentStep()) {
+    const valid = validateStep(getCurrentStep());
+    if (!valid) return;
+  }
+  document.querySelectorAll('.step').forEach(s => s.style.display = 'none');
+  document.querySelector(`.step[data-step="${n}"]`).style.display = '';
+  document.querySelectorAll('.progress-bar .seg').forEach((seg, i) => {
+    seg.classList.toggle('active', (i + 1) <= n);
+  });
+  if (n === 4) renderSummary();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function getCurrentStep() {
+  const visible = document.querySelector('.step:not([style*="display: none"])');
+  return visible ? parseInt(visible.dataset.step, 10) : 1;
+}
+
+function validateStep(step) {
+  saveDraft();
+  if (step === 1) {
+    if (!state.business_name?.trim()) return alertErr('Business name required');
+    if (!/^[a-z0-9-]{2,40}$/.test(state.niche_label || '')) return alertErr('Niche label: lowercase, dashes only, 2–40 chars');
+    if (!state.niche_description?.trim() || state.niche_description.length < 20) return alertErr('Niche description: at least 20 chars');
+  }
+  if (step === 2) {
+    const valid = (state.groups || []).filter(g => /facebook\.com\/groups\//i.test(g));
+    if (valid.length < 1) return alertErr('Add at least 1 valid Facebook group URL');
+    if (valid.length > 15) return alertErr('Max 15 groups');
+  }
+  if (step === 3) {
+    if (!state.faq?.trim() || state.faq.length < 50) return alertErr('FAQ: at least 50 chars');
+    if (!state.voice?.trim() || state.voice.length < 50) return alertErr('Voice samples: at least 50 chars');
+  }
+  return true;
+}
+
+function alertErr(msg) {
+  document.getElementById('msg-box').innerHTML = `<div class="alert-bad">${msg}</div>`;
+  setTimeout(() => { const b = document.getElementById('msg-box'); if (b) b.innerHTML = ''; }, 3500);
+  return false;
+}
+
+function renderSummary() {
+  const groups = (state.groups || []).filter(g => g.trim()).length;
+  document.getElementById('summary').innerHTML = `
+    <div><strong>Business:</strong> ${escapeHtml(state.business_name || '—')}</div>
+    <div><strong>Niche:</strong> ${escapeHtml(state.niche_label || '—')} (${escapeHtml((state.niche_description || '').slice(0, 80))}...)</div>
+    <div><strong>Groups:</strong> ${groups}</div>
+    <div><strong>FAQ:</strong> ${(state.faq || '').length} chars</div>
+    <div><strong>Voice samples:</strong> ${(state.voice || '').length} chars</div>
+  `;
+}
+
+async function submitForm() {
+  saveDraft();
+  if (!validateStep(1) || !validateStep(2) || !validateStep(3)) return;
+  const tg = (state.telegram_username || '').trim().replace(/^@/, '');
+  if (!/^[A-Za-z0-9_]{3,32}$/.test(tg)) return alertErr('Telegram username: 3–32 chars, letters/numbers/_ only');
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+
+  const groups = (state.groups || []).filter(g => /facebook\.com\/groups\//i.test(g)).map(g => ({ url: g.trim() }));
+  const payload = {
+    business_name: state.business_name.trim(),
+    niche_label: state.niche_label.trim(),
+    niche_description: state.niche_description.trim(),
+    groups,
+    faq: state.faq.trim(),
+    voice: state.voice.trim(),
+    telegram_username: tg,
+  };
+
+  try {
+    const r = await fetch(`${API}/api/pusher/onboard`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` },
+      body: JSON.stringify(payload),
+    });
+    const d = await r.json();
+    if (r.ok) {
+      localStorage.removeItem(STORAGE_KEY);
+      document.getElementById('msg-box').innerHTML = `<div class="alert-ok">
+        ✅ Submitted! Now message <strong>@bqpusher_bot</strong> on Telegram (any text). Moshe links your account within 24h.
+        After that — daily alerts start automatically.
+      </div>`;
+      btn.textContent = '✅ Submitted';
+      // Refresh state in 2 seconds
+      setTimeout(() => location.reload(), 4000);
+    } else {
+      let m = d.error || 'Submission failed';
+      if (d.missing) m += ' — missing: ' + d.missing.join(', ');
+      alertErr(m);
+      btn.disabled = false;
+      btn.textContent = '✅ Submit setup';
+    }
+  } catch (e) {
+    alertErr('Network error: ' + e.message);
+    btn.disabled = false;
+    btn.textContent = '✅ Submit setup';
+  }
+}
+
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function escapeAttr(s) { return escapeHtml(s); }
+
+// ── Init ──
+(async function init() {
+  if (!TOKEN) {
+    location.href = '/auth.html?next=' + encodeURIComponent('/tools/pusher-setup.html');
+    return;
+  }
+  try {
+    const r = await fetch(`${API}/api/pusher/me`, {
+      headers: { 'Authorization': `Bearer ${TOKEN}` },
+    });
+    const d = await r.json();
+    document.getElementById('state-loading').style.display = 'none';
+
+    if (!d.has_beta) {
+      document.getElementById('state-no-beta').style.display = '';
+      return;
+    }
+
+    const params = new URLSearchParams(location.search);
+    const editMode = params.get('edit') === '1';
+
+    if (d.next_step === 'live' && !editMode) {
+      const card = document.getElementById('state-active');
+      card.style.display = '';
+      document.getElementById('active-msg').innerHTML =
+        `Your pipeline is live for <strong>${escapeHtml(d.config.business_name)}</strong>. Alerts arrive in Telegram from <strong>@bqpusher_bot</strong>. Last updated ${new Date(d.config.updated_at).toLocaleDateString()}.`;
+      return;
+    }
+
+    // Show form (either fresh onboarding or edit mode or awaiting telegram)
+    document.getElementById('state-form').style.display = '';
+    // Pre-populate from existing config if any
+    if (d.config) {
+      ['business_name', 'niche_label', 'niche_description', 'telegram_username'].forEach(k => {
+        if (d.config[k]) state[k] = d.config[k];
+      });
+      // For sensitive long fields we don't echo back. Hint at status instead.
+      if (d.config.has_faq) document.getElementById('faq').placeholder = '(faq saved — leave blank to keep, or paste new to overwrite)';
+      if (d.config.has_voice) document.getElementById('voice').placeholder = '(voice saved — leave blank to keep, or paste new to overwrite)';
+    }
+    restoreDraft();
+    goStep(1);
+  } catch (e) {
+    document.getElementById('state-loading').innerHTML = '<div class="alert-bad">Could not load setup status. Refresh.</div>';
+  }
+})();
+</script>
+</body>
+</html>

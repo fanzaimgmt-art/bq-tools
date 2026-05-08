@@ -1,7 +1,7 @@
 // ── BQ Tools API Worker ──
 // Cloudflare Worker that proxies AI calls, manages credits, auth, and admin.
 
-import { handlePusherWebhook, handlePusherStats, handlePusherHealth, handlePusherBetaSeats, handlePusherAdminList, handlePusherAdminRunNow } from './pusher.js';
+import { handlePusherWebhook, handlePusherStats, handlePusherHealth, handlePusherBetaSeats, handlePusherAdminList, handlePusherAdminRunNow, handlePusherMe, handlePusherOnboard, handlePusherAdminUserGet, handlePusherAdminUserUpdate, handlePusherAdminLinkTelegram, handlePusherProvisionSchedule } from './pusher.js';
 
 export default {
   // ── Cron Trigger: nightly tasks (8am PT) ──
@@ -32,8 +32,26 @@ export default {
       if (path === '/api/pusher-beta-seats' && request.method === 'GET') {
         return corsResponse(env, await handlePusherBetaSeats(request, env));
       }
+      if (path === '/api/pusher/me' && request.method === 'GET') {
+        return corsResponse(env, await handlePusherMe(request, env));
+      }
+      if (path === '/api/pusher/onboard' && request.method === 'POST') {
+        return corsResponse(env, await handlePusherOnboard(request, env));
+      }
       if (path === '/api/admin/pusher/list' && request.method === 'GET') {
         return corsResponse(env, await handlePusherAdminList(request, env));
+      }
+      if (path === '/api/admin/pusher/user' && request.method === 'GET') {
+        return corsResponse(env, await handlePusherAdminUserGet(request, env));
+      }
+      if (path === '/api/admin/pusher/user-update' && request.method === 'POST') {
+        return corsResponse(env, await handlePusherAdminUserUpdate(request, env));
+      }
+      if (path === '/api/admin/pusher/link-telegram' && request.method === 'POST') {
+        return corsResponse(env, await handlePusherAdminLinkTelegram(request, env));
+      }
+      if (path === '/api/admin/pusher/provision' && request.method === 'POST') {
+        return corsResponse(env, await handlePusherProvisionSchedule(request, env));
       }
       if (path === '/api/admin/pusher/run-now' && request.method === 'POST') {
         return corsResponse(env, await handlePusherAdminRunNow(request, env));
@@ -4626,8 +4644,12 @@ async function handleStripeCreateSession(request, env) {
     mode: tierConf.mode,
     'line_items[0][price]': priceId,
     'line_items[0][quantity]': '1',
-    'success_url': `${origin}/home.html?payment=success`,
-    'cancel_url': `${origin}/home.html?payment=cancel`,
+    'success_url': tierConf.pusherBeta
+      ? `${origin}/tools/pusher-setup.html?payment=success`
+      : `${origin}/home.html?payment=success`,
+    'cancel_url': tierConf.pusherBeta
+      ? `${origin}/tools/pusher.html?payment=cancel`
+      : `${origin}/home.html?payment=cancel`,
     'metadata[tier]': tier,
     'metadata[userEmail]': user.email,
   });

@@ -103,8 +103,19 @@
     </div>
 
     <div class="section">
-      <h2>Beta users</h2>
+      <h2>Beta users <span style="font-weight:400; font-size:12px; color:var(--txd)" id="user-summary"></span></h2>
       <div id="user-list" class="user-list"><div class="empty">Loading...</div></div>
+    </div>
+
+    <!-- User detail modal -->
+    <div id="user-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:100; padding:20px; overflow:auto">
+      <div style="max-width:760px; margin:30px auto; background:var(--sf); border:1px solid var(--bd); border-radius:14px; padding:22px">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px">
+          <h2 id="modal-title" style="font-size:18px">User detail</h2>
+          <button class="btn" onclick="closeUserModal()">✕ Close</button>
+        </div>
+        <div id="modal-body"></div>
+      </div>
     </div>
 
     <div class="section">
@@ -190,23 +201,199 @@ async function loadUsers() {
     const r = await fetch(`${API}/api/admin/pusher/list?password=${encodeURIComponent(ADMIN_PASS)}`);
     if (!r.ok) throw new Error();
     const d = await r.json();
+    document.getElementById('user-summary').textContent = `(${d.count || 0})`;
     if (!d.users || !d.users.length) {
-      target.innerHTML = '<div class="empty">No paid beta users yet.</div>';
+      target.innerHTML = '<div class="empty">No paid beta users yet. Share /tools/pusher to get the first signup.</div>';
       return;
     }
-    target.innerHTML = d.users.map(u => `
-      <div class="user-item">
-        <div style="display:flex; justify-content:space-between; align-items:center">
-          <div>
-            <strong>${escapeHtml(u.email)}</strong>
-            <span style="font-size:11px; color: var(--txd); margin-left:8px">${escapeHtml(u.status || 'pending_config')}</span>
+    target.innerHTML = d.users.map(u => {
+      const statusBadge = statusToBadge(u.status);
+      const action = u.status === 'pending_config' ? '⏳ awaiting form'
+        : u.status === 'awaiting_telegram_link' ? '📱 link Telegram'
+        : u.status === 'active' ? '✅ live'
+        : u.status;
+      return `<div class="user-item" onclick="openUser('${escapeJs(u.email)}')" style="cursor:pointer">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px">
+          <div style="flex:1; min-width:0">
+            <strong>${escapeHtml(u.business_name || u.email)}</strong>
+            <span style="font-size:11px; color:var(--txd); margin-left:8px">${escapeHtml(u.email)}</span>
+            ${u.telegram_username ? `<span style="font-size:11px; color:var(--txd); margin-left:8px">@${escapeHtml(u.telegram_username)}</span>` : ''}
           </div>
-          <div style="font-size:11px; color: var(--txd)">paid ${u.ts ? new Date(u.ts).toLocaleDateString() : '—'}</div>
+          <div>${statusBadge}</div>
+          <div style="font-size:11px; color:var(--txd); white-space:nowrap">${action}</div>
         </div>
-      </div>
-    `).join('');
+      </div>`;
+    }).join('');
   } catch {
-    target.innerHTML = '<div class="empty">Beta-users endpoint not yet built. Coming soon.</div>';
+    target.innerHTML = '<div class="empty">Failed to load. Check admin pass.</div>';
+  }
+}
+
+function statusToBadge(status) {
+  const map = {
+    pending_config: { color: 'rgba(232,197,71,.18)', text: 'rgb(232,197,71)', label: 'pending' },
+    awaiting_telegram_link: { color: 'rgba(249,115,22,.2)', text: 'rgb(251,146,60)', label: 'awaiting tg' },
+    active: { color: 'rgba(34,197,94,.18)', text: 'rgb(74,222,128)', label: 'active' },
+    paused: { color: 'rgba(120,120,120,.2)', text: 'var(--txd)', label: 'paused' },
+  };
+  const m = map[status] || { color: 'rgba(120,120,120,.2)', text: 'var(--txd)', label: status || 'unknown' };
+  return `<span style="display:inline-block; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:700; background:${m.color}; color:${m.text}">${m.label}</span>`;
+}
+
+let currentUserEmail = null;
+async function openUser(email) {
+  currentUserEmail = email;
+  const r = await fetch(`${API}/api/admin/pusher/user?password=${encodeURIComponent(ADMIN_PASS)}&email=${encodeURIComponent(email)}`);
+  const d = await r.json();
+  if (!r.ok) { alert(d.error || 'load failed'); return; }
+  const cfg = d.config || {};
+  const idx = d.index || {};
+  const groups = (cfg.groups || []).map(g => g.url || g).join('\n');
+  const html = `
+    <div style="margin-bottom:14px">
+      <strong>${escapeHtml(email)}</strong>
+      <span style="margin-left:10px">${statusToBadge(cfg.status || idx.status)}</span>
+      <div style="font-size:11px; color:var(--txd); margin-top:4px">
+        Beta until: ${idx.until ? new Date(idx.until).toLocaleDateString() : '—'}
+        · Telegram: ${cfg.telegram_username ? '@' + escapeHtml(cfg.telegram_username) : '—'}
+        · Chat ID: ${cfg.chat_id || '—'}
+      </div>
+    </div>
+
+    ${cfg.status === 'awaiting_telegram_link' ? `
+      <div style="background:rgba(249,115,22,.08); border:1px solid rgba(249,115,22,.3); padding:12px; border-radius:8px; margin-bottom:14px">
+        <strong style="color:rgb(251,146,60)">⚠️ Telegram not linked</strong>
+        <p style="font-size:12px; margin-top:6px">User submitted form with @${escapeHtml(cfg.telegram_username || '')}. They must DM <strong>@bqpusher_bot</strong> first. Then click below to auto-resolve their chat ID.</p>
+        <button class="btn btn-primary" style="margin-top:8px" onclick="linkTelegram('${escapeJs(email)}', '${escapeJs(cfg.telegram_username || '')}')">🔗 Auto-link from @${escapeHtml(cfg.telegram_username || '')}</button>
+      </div>
+    ` : ''}
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px">
+      <label style="font-size:11px; color:var(--txd); display:block">
+        Business name
+        <input type="text" id="ed-business" value="${escapeAttr(cfg.business_name || '')}" style="width:100%; margin-top:4px; padding:8px 10px; background:var(--bg); color:var(--tx); border:1px solid var(--bd); border-radius:6px; font-size:13px" />
+      </label>
+      <label style="font-size:11px; color:var(--txd); display:block">
+        Niche label
+        <input type="text" id="ed-niche-label" value="${escapeAttr(cfg.niche_label || '')}" style="width:100%; margin-top:4px; padding:8px 10px; background:var(--bg); color:var(--tx); border:1px solid var(--bd); border-radius:6px; font-size:13px" />
+      </label>
+    </div>
+
+    <label style="font-size:11px; color:var(--txd); display:block">
+      Niche description
+      <textarea id="ed-niche-desc" rows="2" style="width:100%; margin-top:4px; padding:8px 10px; background:var(--bg); color:var(--tx); border:1px solid var(--bd); border-radius:6px; font-size:13px; font-family:var(--font-en)">${escapeHtml(cfg.niche_description || '')}</textarea>
+    </label>
+
+    <label style="font-size:11px; color:var(--txd); display:block; margin-top:10px">
+      Groups (one URL per line)
+      <textarea id="ed-groups" rows="6" style="width:100%; margin-top:4px; padding:8px 10px; background:var(--bg); color:var(--tx); border:1px solid var(--bd); border-radius:6px; font-size:12px; font-family:var(--font-en)">${escapeHtml(groups)}</textarea>
+    </label>
+
+    <label style="font-size:11px; color:var(--txd); display:block; margin-top:10px">
+      FAQ
+      <textarea id="ed-faq" rows="6" style="width:100%; margin-top:4px; padding:8px 10px; background:var(--bg); color:var(--tx); border:1px solid var(--bd); border-radius:6px; font-size:12px; font-family:var(--font-en)">${escapeHtml(cfg.faq || '')}</textarea>
+    </label>
+
+    <label style="font-size:11px; color:var(--txd); display:block; margin-top:10px">
+      Voice samples
+      <textarea id="ed-voice" rows="6" style="width:100%; margin-top:4px; padding:8px 10px; background:var(--bg); color:var(--tx); border:1px solid var(--bd); border-radius:6px; font-size:12px; font-family:var(--font-en)">${escapeHtml(cfg.voice || '')}</textarea>
+    </label>
+
+    <div style="display:flex; gap:10px; margin-top:18px; flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="saveUser('${escapeJs(email)}')">💾 Save changes</button>
+      <button class="btn" onclick="setStatus('${escapeJs(email)}','paused')">⏸ Pause</button>
+      <button class="btn" onclick="setStatus('${escapeJs(email)}','active')" ${cfg.chat_id ? '' : 'disabled title="Need chat_id first"'}>▶ Resume / Activate</button>
+      <button class="btn" onclick="closeUserModal()">Cancel</button>
+    </div>
+
+    <div style="margin-top:22px; padding-top:18px; border-top:1px solid var(--bd)">
+      <h3 style="font-size:13px; font-weight:700; margin-bottom:8px">Manual chat ID override</h3>
+      <div style="display:flex; gap:8px">
+        <input id="ed-chatid" type="text" placeholder="numeric chat_id" value="${escapeAttr(cfg.chat_id || '')}" style="flex:1; padding:8px 10px; background:var(--bg); color:var(--tx); border:1px solid var(--bd); border-radius:6px; font-size:13px" />
+        <button class="btn btn-primary" onclick="setChatId('${escapeJs(email)}')">Set</button>
+      </div>
+      <div style="font-size:11px; color:var(--txd); margin-top:6px">Use only if auto-link via @username doesn't work.</div>
+    </div>
+  `;
+  document.getElementById('modal-title').textContent = cfg.business_name || email;
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('user-modal').style.display = 'block';
+}
+
+function closeUserModal() {
+  document.getElementById('user-modal').style.display = 'none';
+  currentUserEmail = null;
+}
+
+async function saveUser(email) {
+  const groupsRaw = document.getElementById('ed-groups').value.trim();
+  const groups = groupsRaw.split('\n')
+    .map(l => l.trim())
+    .filter(l => /facebook\.com\/groups\//i.test(l))
+    .map(url => ({ url }));
+  if (groups.length === 0) { alert('At least 1 valid group URL required'); return; }
+
+  const body = {
+    email,
+    business_name: document.getElementById('ed-business').value.trim(),
+    niche_label: document.getElementById('ed-niche-label').value.trim(),
+    niche_description: document.getElementById('ed-niche-desc').value.trim(),
+    groups,
+    faq: document.getElementById('ed-faq').value,
+    voice: document.getElementById('ed-voice').value,
+  };
+
+  const r = await fetch(`${API}/api/admin/pusher/user-update?password=${encodeURIComponent(ADMIN_PASS)}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+  });
+  const d = await r.json();
+  if (r.ok) {
+    alert('Saved. Status: ' + d.status);
+    closeUserModal();
+    loadUsers();
+  } else {
+    alert('Failed: ' + (d.error || 'unknown'));
+  }
+}
+
+async function setStatus(email, status) {
+  const r = await fetch(`${API}/api/admin/pusher/user-update?password=${encodeURIComponent(ADMIN_PASS)}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, status }),
+  });
+  const d = await r.json();
+  if (r.ok) { alert('Status: ' + d.status); openUser(email); loadUsers(); }
+  else { alert(d.error); }
+}
+
+async function setChatId(email) {
+  const chatId = document.getElementById('ed-chatid').value.trim();
+  if (!/^-?\d+$/.test(chatId)) { alert('Enter a numeric chat_id'); return; }
+  const r = await fetch(`${API}/api/admin/pusher/user-update?password=${encodeURIComponent(ADMIN_PASS)}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, chat_id: chatId }),
+  });
+  const d = await r.json();
+  if (r.ok) { alert('Chat ID set. Status: ' + d.status); openUser(email); loadUsers(); }
+  else { alert(d.error); }
+}
+
+async function linkTelegram(email, username) {
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = 'Resolving...';
+  try {
+    const r = await fetch(`${API}/api/admin/pusher/link-telegram?password=${encodeURIComponent(ADMIN_PASS)}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, telegram_username: username }),
+    });
+    const d = await r.json();
+    if (r.ok) {
+      alert(`✅ Linked! chat_id=${d.chat_id}, status=${d.status}`);
+      openUser(email);
+      loadUsers();
+    } else {
+      alert(`❌ ${d.error}\n${d.hint || ''}`);
+    }
+  } finally {
+    btn.disabled = false; btn.textContent = `🔗 Auto-link from @${username}`;
   }
 }
 
@@ -233,6 +420,7 @@ async function triggerRun() {
 function escapeHtml(s) {
   return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
+function escapeAttr(s) { return escapeHtml(s); }
 function escapeJs(s) {
   return String(s || '').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n').replace(/\r/g,'').replace(/"/g,'\\"');
 }
