@@ -902,9 +902,8 @@ function _paypalTierCard(tier, meta, isPopular, isBest, cryptoPrice) {
       <button onclick="_bcmPayStep('${tier}', this.closest('.modal-overlay'))"
         class="btn ${isPopular ? 'btn-primary' : ''} btn-sm"
         style="width:100%;font-size:12px;margin-bottom:6px;">PayPal</button>
-      <button disabled class="btn btn-sm stripe-card-btn" data-tier="${tier}"
-        title="Coming soon — card payments being set up"
-        style="width:100%;font-size:11px;margin-bottom:6px;opacity:0.5;cursor:not-allowed;">&#x1F4B3; Pay with Card (Coming Soon)</button>
+      <a href="mailto:fanzai.mgmt@gmail.com?subject=Card%20Payment%20Request" class="btn btn-sm stripe-card-btn" data-tier="${tier}"
+        style="width:100%;font-size:11px;margin-bottom:6px;text-decoration:none;display:block;text-align:center;">&#x1F4B3; Pay by Card — contact us</a>
       <button onclick="openCryptoModal();this.closest('.modal-overlay').remove();"
         class="btn btn-sm"
         style="width:100%;font-size:11px;border-color:rgba(81,207,102,.3);color:var(--grn);">Crypto ${cryptoPrice}<br><span style="font-size:10px;">35% OFF</span></button>
@@ -1069,11 +1068,10 @@ function showProModal() {
 
       <div style="background:var(--acd);border-radius:12px;padding:16px;margin-bottom:16px;">
         <div style="font-size:32px;font-weight:900;color:var(--ac);">$14.99<span style="font-size:16px;font-weight:400;color:var(--txd);">/mo</span></div>
-        <div style="font-size:12px;color:var(--txd);margin-bottom:14px;">${t({ en: 'Monthly — pay again each month. Automated renewal coming soon.', he: 'חודשי — תשלום מחדש מדי חודש. חידוש אוטומטי בקרוב.', es: 'Mensual — paga de nuevo cada mes. Renovación automática próximamente.' })}</div>
-        <button onclick="this.closest('.modal-overlay').remove();openBuyCreditsModal('pro_monthly')" class="btn btn-primary" style="width:100%;font-size:15px;margin-bottom:8px;">${t({ en: '💳 Upgrade to Pro — $14.99/month (manual renewal)', he: '💳 שדרג ל-Pro — $14.99/חודש (חידוש ידני)', es: '💳 Hazte Pro — $14.99/mes (renovación manual)' })}</button>
-        <button disabled class="btn stripe-card-btn" data-tier="pro_monthly"
-          title="Coming soon — card payments being set up"
-          style="width:100%;font-size:13px;margin-bottom:8px;opacity:0.5;cursor:not-allowed;">&#x1F4B3; Pay with Card (Coming Soon)</button>
+        <div style="font-size:12px;color:var(--txd);margin-bottom:14px;">${t({ en: 'Monthly — pay via PayPal each month. We activate Pro within 12 hours.', he: 'חודשי — תשלום דרך PayPal כל חודש. מפעילים Pro תוך 12 שעות.', es: 'Mensual — paga por PayPal cada mes. Activamos Pro en 12 horas.' })}</div>
+        <button onclick="this.closest('.modal-overlay').remove();openBuyCreditsModal('pro_monthly')" class="btn btn-primary" style="width:100%;font-size:15px;margin-bottom:8px;">${t({ en: '💳 Upgrade to Pro — $14.99/month', he: '💳 שדרג ל-Pro — $14.99/חודש', es: '💳 Hazte Pro — $14.99/mes' })}</button>
+        <a href="mailto:fanzai.mgmt@gmail.com?subject=Card%20Payment%20Request" class="btn stripe-card-btn" data-tier="pro_monthly"
+          style="width:100%;font-size:13px;margin-bottom:8px;text-decoration:none;display:block;text-align:center;">&#x1F4B3; Pay by Card — contact us</a>
         <button onclick="openCryptoModal();this.closest('.modal-overlay').remove();" class="btn" style="width:100%;font-size:13px;border-color:rgba(81,207,102,.3);color:var(--grn);">${t({ en: 'Crypto — 35% OFF ($9.74/mo)', he: 'קריפטו — 35% הנחה ($9.74 לחודש)', es: 'Cripto — 35% OFF ($9.74/mes)' })}</button>
       </div>
 
