@@ -4852,8 +4852,8 @@ function randomId(len = 16) {
 }
 
 function randomShortId() {
-  // 8 hex chars ~ 4 billion combinations, enough for public_id
-  return randomId(4);
+  // 16 bytes (128-bit) CSPRNG — unguessable, collision-safe public_id
+  return randomId(16);
 }
 
 function computeInvoiceStatus(inv) {
@@ -4883,7 +4883,13 @@ async function handleInvoiceCreate(request, env) {
   }
 
   const id = randomId();
-  const public_id = randomShortId();
+  // collision-safe public_id allocation
+  let public_id = null;
+  for (let i = 0; i < 5; i++) {
+    const candidate = randomShortId();
+    if (!(await env.BQ_USERS.get(`pub:${candidate}`))) { public_id = candidate; break; }
+  }
+  if (!public_id) return json({ error: 'Could not allocate public id, please retry' }, 500);
   const now = Date.now();
 
   const invoice = {
@@ -4901,6 +4907,7 @@ async function handleInvoiceCreate(request, env) {
     milestones: (milestones || []).map(m => ({ ...m, done: false })),
     docs: docs || [],
     note: note || '',
+    client_note: '',
     status: 'sent',
     reminders_sent: 0,
     paid_amount: 0,
@@ -4941,6 +4948,7 @@ async function handleInvoiceList(request, env) {
           id: inv.id,
           public_id: inv.public_id,
           client_name: inv.client_name,
+          client_email: inv.client_email || '',
           job_name: inv.job_name,
           total: inv.total,
           amount_due: Math.max(0, inv.total - (inv.paid_amount || 0)),
@@ -4965,7 +4973,7 @@ async function handleInvoiceUpdate(request, env) {
   const user = await getUserByToken(token, env);
   if (!user) return json({ error: 'Unauthorized' }, 401);
 
-  const { id, status, paid_amount, note, milestones } = await request.json();
+  const { id, status, paid_amount, note, client_note, milestones } = await request.json();
   if (!id) return json({ error: 'Missing id' }, 400);
 
   const raw = await env.BQ_USERS.get(`inv:${id}`);
@@ -4976,7 +4984,8 @@ async function handleInvoiceUpdate(request, env) {
 
   if (status !== undefined) inv.status = status;
   if (paid_amount !== undefined) inv.paid_amount = Number(paid_amount);
-  if (note !== undefined) inv.note = note;
+  if (note !== undefined) inv.note = note;                  // internal, never exposed publicly
+  if (client_note !== undefined) inv.client_note = client_note; // client-facing, shown on public status page
   if (milestones !== undefined) inv.milestones = milestones;
 
   await env.BQ_USERS.put(`inv:${id}`, JSON.stringify(inv));
@@ -5001,7 +5010,8 @@ async function handleInvoiceRemind(request, env) {
   inv.reminders_sent = (inv.reminders_sent || 0) + 1;
   const level = inv.reminders_sent;
   const amount_due = Math.max(0, inv.total - (inv.paid_amount || 0));
-  const status_url = `https://bqprod.pages.dev/job-status.html?id=${inv.public_id}`;
+  const origin = new URL(request.url).origin;
+  const status_url = `${origin}/job-status.html?id=${inv.public_id}`;
 
   let subject, body;
   if (level <= 1) {
@@ -5029,6 +5039,13 @@ async function handleJobStatus(request, env) {
   const url = new URL(request.url);
   const public_id = url.searchParams.get('id');
   if (!public_id) return json({ ok: false, error: 'Missing id' }, 400);
+
+  // Light per-IP rate limit so the unauthenticated endpoint can't be enumerated (constant 404 on miss/limit)
+  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+  const rlKey = `jobrl:${ip}`;
+  const rlCount = parseInt(await env.BQ_USERS.get(rlKey) || '0', 10);
+  if (rlCount > 120) return json({ ok: false }, 404);
+  await env.BQ_USERS.put(rlKey, String(rlCount + 1), { expirationTtl: 60 });
 
   const invId = await env.BQ_USERS.get(`pub:${public_id}`);
   if (!invId) return json({ ok: false }, 404);
@@ -5059,7 +5076,7 @@ async function handleJobStatus(request, env) {
       amount_due,
       due_date: inv.due_date,
       status,
-      last_note: inv.note || '',
+      last_note: inv.client_note || '',
     },
   });
 }
