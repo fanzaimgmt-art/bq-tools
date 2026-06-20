@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Tools — Payment Tracker</title>
+<link rel="stylesheet" href="../style.css">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#e8c547">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BQ Tools">
+<link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png">
+<style>
+  body { display: flex; flex-direction: column; }
+
+  /* Status badges */
+  .st-badge {
+    display: inline-block; padding: 3px 10px; border-radius: 6px;
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+  }
+  .st-paid    { background: rgba(81,207,102,.15); color: #51cf66; }
+  .st-sent    { background: rgba(116,185,255,.12); color: #74b9ff; }
+  .st-due_soon { background: rgba(253,203,110,.18); color: #fdcb6e; }
+  .st-overdue { background: rgba(255,107,107,.15); color: #ff6b6b; animation: pulse 1.5s ease infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.55} }
+
+  /* Table */
+  .pt-table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+  .pt-table th {
+    background: var(--sf); color: var(--txd); font-size: 11px; text-transform: uppercase;
+    letter-spacing: .5px; padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--bd);
+  }
+  .pt-table td { padding: 12px 12px; border-bottom: 1px solid rgba(255,255,255,.04); font-size: 14px; vertical-align: middle; }
+  .pt-table tr:last-child td { border-bottom: none; }
+  .pt-table tbody tr { transition: background .12s; }
+  .pt-table tbody tr:hover { background: rgba(255,255,255,.03); }
+
+  /* Actions inside table */
+  .tbl-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tbl-actions .btn { font-size: 12px; padding: 5px 10px; min-height: 32px; }
+
+  /* Form */
+  .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .line-item-row { display: flex; gap: 6px; margin-bottom: 6px; align-items: center; }
+  .line-item-row .input { margin-bottom: 0; }
+
+  /* Milestone row */
+  .ms-row { display: flex; gap: 8px; margin-bottom: 6px; align-items: center; }
+  .ms-row .input { margin-bottom: 0; }
+
+  /* Modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 600; display: flex; align-items: center; justify-content: center; padding: 16px; opacity: 0; pointer-events: none; transition: opacity .2s; }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal-card { background: var(--sf); border: 1px solid var(--bd); border-radius: 16px; padding: 24px; width: 100%; max-width: 640px; max-height: 90vh; overflow-y: auto; box-shadow: 0 16px 48px rgba(0,0,0,.5); }
+  .modal-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 16px; }
+  .modal-close { position: absolute; top: 14px; right: 16px; background: none; border: none; color: var(--txd); font-size: 20px; cursor: pointer; line-height: 1; }
+  [dir="rtl"] .modal-close { right: auto; left: 16px; }
+
+  /* Reminder preview */
+  .reminder-preview { background: var(--bg); border: 1px solid var(--bd); border-radius: 10px; padding: 14px; font-size: 13px; line-height: 1.7; white-space: pre-wrap; word-break: break-word; max-height: 280px; overflow-y: auto; color: var(--tx); }
+
+  /* Summary bar */
+  .summary-bar { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+  .sum-card { flex: 1; min-width: 130px; background: var(--sf); border: 1px solid var(--bd); border-radius: 12px; padding: 14px 16px; }
+  .sum-card .sum-label { font-size: 11px; color: var(--txd); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+  .sum-card .sum-val { font-size: 22px; font-weight: 900; }
+  .sum-card.danger .sum-val { color: #ff6b6b; }
+  .sum-card.warn .sum-val { color: #fdcb6e; }
+  .sum-card.ok .sum-val { color: #51cf66; }
+  .sum-card.accent .sum-val { color: var(--ac); }
+
+  /* Empty state */
+  .empty-state { text-align: center; padding: 48px 20px; color: var(--txd); }
+  .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-state h3 { font-size: 18px; font-weight: 700; color: var(--tx); margin-bottom: 6px; }
+  .empty-state p { font-size: 14px; line-height: 1.6; margin-bottom: 20px; }
+
+  /* Mobile */
+  @media (max-width: 640px) {
+    .form-grid-2 { grid-template-columns: 1fr; }
+    .pt-table th:nth-child(3), .pt-table td:nth-child(3) { display: none; }
+    .tbl-actions .btn span { display: none; }
+    .tbl-actions .btn { min-width: 36px; }
+    .sum-card { min-width: 100px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/home.html" class="nav-logo">BQ <span>Tools</span></a>
+  <div class="nav-right">
+    <a href="/home.html" class="nav-link" data-en="Tools" data-he="כלים" data-es="Herramientas">Tools</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <a href="/home.html" class="page-back" data-en="← All Tools" data-he="כל הכלים →">← All Tools</a>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:8px;">
+    <div>
+      <h1 class="page-title" style="margin-bottom:4px;" data-en="💳 Payment Tracker" data-he="💳 מעקב תשלומים">💳 Payment Tracker</h1>
+      <p class="page-sub" data-en="Track job payments and get paid faster." data-he="עקוב אחר תשלומי פרויקטים וגבה מהר יותר.">Track job payments and get paid faster.</p>
+    </div>
+    <button class="btn btn-primary" onclick="openNewInvoiceModal()" style="flex-shrink:0;">
+      + <span data-en="New Invoice" data-he="חשבונית חדשה">New Invoice</span>
+    </button>
+  </div>
+
+  <!-- Summary bar -->
+  <div class="summary-bar" id="summaryBar" style="display:none;">
+    <div class="sum-card danger">
+      <div class="sum-label" data-en="Overdue" data-he="באיחור">Overdue</div>
+      <div class="sum-val" id="sumOverdue">$0</div>
+    </div>
+    <div class="sum-card warn">
+      <div class="sum-label" data-en="Due Soon" data-he="יגיע בקרוב">Due Soon</div>
+      <div class="sum-val" id="sumDueSoon">$0</div>
+    </div>
+    <div class="sum-card accent">
+      <div class="sum-label" data-en="Outstanding" data-he="ממתין">Outstanding</div>
+      <div class="sum-val" id="sumOutstanding">$0</div>
+    </div>
+    <div class="sum-card ok">
+      <div class="sum-label" data-en="Collected" data-he="נגבה">Collected</div>
+      <div class="sum-val" id="sumCollected">$0</div>
+    </div>
+  </div>
+
+  <!-- Invoice list -->
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div id="invoiceTable">
+      <div style="padding:20px;text-align:center;color:var(--txd);font-size:14px;" data-en="Loading..." data-he="טוען...">Loading...</div>
+    </div>
+  </div>
+</div>
+
+<!-- New Invoice Modal -->
+<div class="modal-overlay" id="invoiceModal">
+  <div class="modal-card" style="position:relative;">
+    <button class="modal-close" onclick="closeModal('invoiceModal')">✕</button>
+    <h3 data-en="New Invoice" data-he="חשבונית חדשה">New Invoice</h3>
+
+    <div class="form-grid-2" style="margin-bottom:10px;">
+      <div>
+        <label class="input-label" data-en="Client Name" data-he="שם לקוח">Client Name</label>
+        <input class="input" id="f_clientName" placeholder="Sarah Johnson">
+      </div>
+      <div>
+        <label class="input-label" data-en="Client Email" data-he="אימייל לקוח">Client Email</label>
+        <input class="input" id="f_clientEmail" type="email" placeholder="sarah@example.com">
+      </div>
+    </div>
+    <div class="form-grid-2" style="margin-bottom:10px;">
+      <div>
+        <label class="input-label" data-en="Client Phone" data-he="טלפון לקוח">Client Phone</label>
+        <input class="input" id="f_clientPhone" type="tel" placeholder="(310) 555-0100">
+      </div>
+      <div>
+        <label class="input-label" data-en="Job Name" data-he="שם פרויקט">Job Name</label>
+        <input class="input" id="f_jobName" placeholder="Kitchen Remodel">
+      </div>
+    </div>
+    <div class="form-grid-2" style="margin-bottom:10px;">
+      <div>
+        <label class="input-label" data-en="Due Date" data-he="תאריך יעד">Due Date</label>
+        <input class="input" id="f_dueDate" type="date">
+      </div>
+      <div>
+        <label class="input-label" data-en="Deposit Required ($)" data-he="מקדמה ($)">Deposit Required ($)</label>
+        <input class="input" id="f_deposit" type="number" step="0.01" placeholder="0.00">
+      </div>
+    </div>
+
+    <!-- Line Items -->
+    <div style="margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <label class="input-label" style="margin:0;" data-en="Line Items" data-he="פריטים">Line Items</label>
+        <button class="btn btn-sm" onclick="addLineItem()">+ <span data-en="Add" data-he="הוסף">Add</span></button>
+      </div>
+      <div id="lineItemsContainer"></div>
+      <div style="display:flex;justify-content:space-between;padding:10px 4px 4px;border-top:2px solid var(--ac);margin-top:8px;font-size:16px;">
+        <strong data-en="Total" data-he="סה״כ">Total</strong>
+        <strong id="f_totalDisplay" style="color:var(--ac);">$0.00</strong>
+      </div>
+    </div>
+
+    <!-- Milestones (optional) -->
+    <div style="margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <label class="input-label" style="margin:0;" data-en="Milestones (optional)" data-he="אבני דרך (אופציונלי)">Milestones (optional)</label>
+        <button class="btn btn-sm" onclick="addMilestone()">+ <span data-en="Add" data-he="הוסף">Add</span></button>
+      </div>
+      <div id="milestonesContainer"></div>
+    </div>
+
+    <!-- Note -->
+    <div style="margin-bottom:16px;">
+      <label class="input-label" data-en="Note (optional)" data-he="הערה (אופציונלי)">Note (optional)</label>
+      <textarea class="textarea" id="f_note" rows="2" placeholder="Payment via Zelle, check, or PayPal..."></textarea>
+    </div>
+
+    <div style="display:flex;gap:8px;">
+      <button class="btn" style="flex:1;" onclick="closeModal('invoiceModal')" data-en="Cancel" data-he="ביטול">Cancel</button>
+      <button class="btn btn-primary" style="flex:2;" onclick="submitInvoice()" id="submitInvoiceBtn">
+        <span data-en="Create Invoice" data-he="צור חשבונית">Create Invoice</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Reminder Modal -->
+<div class="modal-overlay" id="reminderModal">
+  <div class="modal-card" style="position:relative;">
+    <button class="modal-close" onclick="closeModal('reminderModal')">✕</button>
+    <h3 data-en="Payment Reminder" data-he="תזכורת תשלום">Payment Reminder</h3>
+    <p style="font-size:13px;color:var(--txd);margin-bottom:12px;" data-en="Review the draft below, then send via email." data-he="סקור את הטיוטה ושלח במייל.">Review the draft below, then send via email.</p>
+    <div style="margin-bottom:10px;">
+      <label class="input-label">Subject</label>
+      <div id="reminderSubject" style="background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:10px;font-size:13px;color:var(--ac);font-weight:600;"></div>
+    </div>
+    <div style="margin-bottom:14px;">
+      <label class="input-label" data-en="Message Body" data-he="גוף הודעה">Message Body</label>
+      <div class="reminder-preview" id="reminderBody"></div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn" onclick="copyReminder()" style="flex:1;" data-en="Copy Message" data-he="העתק">Copy Message</button>
+      <a id="reminderMailto" href="#" class="btn btn-primary" style="flex:2;text-align:center;" data-en="Open in Email App" data-he="פתח במייל">Open in Email App</a>
+    </div>
+  </div>
+</div>
+
+<!-- Success / Link Modal -->
+<div class="modal-overlay" id="linkModal">
+  <div class="modal-card" style="position:relative;text-align:center;">
+    <button class="modal-close" onclick="closeModal('linkModal')">✕</button>
+    <div style="font-size:48px;margin-bottom:12px;">✅</div>
+    <h3 style="margin-bottom:6px;" data-en="Invoice Created!" data-he="חשבונית נוצרה!">Invoice Created!</h3>
+    <p style="font-size:14px;color:var(--txd);margin-bottom:16px;" data-en="Share this link with your client so they can track their job status." data-he="שתף קישור זה עם הלקוח למעקב אחר הפרויקט.">Share this link with your client so they can track their job status.</p>
+    <div style="display:flex;gap:8px;margin-bottom:14px;">
+      <input type="text" id="clientLinkInput" readonly class="input" style="flex:1;font-family:monospace;font-size:12px;color:var(--ac);">
+      <button class="btn btn-primary" onclick="copyClientLink()" data-en="Copy" data-he="העתק">Copy</button>
+    </div>
+    <button class="btn" style="width:100%;" onclick="closeModal('linkModal')" data-en="Done" data-he="סגור">Done</button>
+  </div>
+</div>
+
+<script src="../js/ai.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/common.js"></script>
+<script>
+// ── Auth gate ──
+if (!isLoggedIn()) window.location.replace('/auth.html?next=' + encodeURIComponent(window.location.pathname));
+
+const API = 'https://bq-tools-api.fanzai-mgmt.workers.dev';
+
+let invoices = [];
+let lineItems = [];
+let milestones = [];
+
+// ── Init ──
+async function init() {
+  setDefaultDueDate();
+  addLineItem();
+  await loadInvoices();
+}
+
+function setDefaultDueDate() {
+  const d = new Date();
+  d.setDate(d.getDate() + 15);
+  document.getElementById('f_dueDate').value = d.toISOString().split('T')[0];
+}
+
+// ── API calls ──
+async function loadInvoices() {
+  try {
+    const data = await apiCall('/api/invoices/list');
+    invoices = data.invoices || [];
+    renderSummary();
+    renderTable();
+  } catch (err) {
+    document.getElementById('invoiceTable').innerHTML =
+      `<div style="padding:20px;text-align:center;color:var(--red);">${escHtml(err.message)}</div>`;
+  }
+}
+
+async function submitInvoice() {
+  const clientName = document.getElementById('f_clientName').value.trim();
+  const clientEmail = document.getElementById('f_clientEmail').value.trim();
+  const jobName = document.getElementById('f_jobName').value.trim();
+  if (!clientName) { showToast('Client name required', 'err'); return; }
+  if (!jobName) { showToast('Job name required', 'err'); return; }
+  if (!lineItems.some(i => i.desc && i.amount > 0)) {
+    showToast('Add at least one line item', 'err'); return;
+  }
+
+  const btn = document.getElementById('submitInvoiceBtn');
+  btn.disabled = true;
+
+  const validItems = lineItems.filter(i => i.desc);
+  const total = validItems.reduce((s, i) => s + i.qty * i.amount, 0);
+  const deposit = parseFloat(document.getElementById('f_deposit').value) || 0;
+  const note = document.getElementById('f_note').value.trim();
+  const dueDate = document.getElementById('f_dueDate').value;
+
+  const payload = {
+    client_name: clientName,
+    client_email: clientEmail,
+    client_phone: document.getElementById('f_clientPhone').value.trim(),
+    job_name: jobName,
+    line_items: validItems.map(i => ({ desc: i.desc, qty: i.qty, amount: i.amount })),
+    total,
+    due_date: dueDate,
+    deposit,
+    milestones: milestones.filter(m => m.name).map(m => ({ name: m.name, amount: m.amount, done: m.done })),
+    note
+  };
+
+  try {
+    const data = await apiCall('/api/invoices/create', { method: 'POST', body: payload });
+    closeModal('invoiceModal');
+    resetForm();
+    // Show client link
+    const link = data.status_url || `${window.location.origin}/job-status.html?id=${data.public_id}`;
+    document.getElementById('clientLinkInput').value = link;
+    openModal('linkModal');
+    await loadInvoices();
+  } catch (err) {
+    showToast(err.message, 'err');
+  }
+  btn.disabled = false;
+}
+
+async function markPaid(id) {
+  try {
+    await apiCall('/api/invoices/update', { method: 'POST', body: { id, status: 'paid' } });
+    showToast('Marked as paid ✓', 'ok');
+    await loadInvoices();
+  } catch (err) {
+    showToast(err.message, 'err');
+  }
+}
+
+async function sendReminder(id) {
+  try {
+    const inv = invoices.find(x => x.id === id);
+    const data = await apiCall('/api/invoices/remind', { method: 'POST', body: { id } });
+    const r = data.reminder || {};
+    document.getElementById('reminderSubject').textContent = r.subject || '';
+    document.getElementById('reminderBody').textContent = r.body || '';
+    const mailto = `mailto:${encodeURIComponent(inv ? inv.client_email || '' : '')}?subject=${encodeURIComponent(r.subject || '')}&body=${encodeURIComponent(r.body || '')}`;
+    document.getElementById('reminderMailto').href = mailto;
+    openModal('reminderModal');
+  } catch (err) {
+    showToast(err.message, 'err');
+  }
+}
+
+function copyClientLink() {
+  const val = document.getElementById('clientLinkInput').value;
+  navigator.clipboard.writeText(val).then(() => showToast('Copied!', 'ok'));
+}
+
+function showClientLink(publicId) {
+  const link = `${window.location.origin}/job-status.html?id=${publicId}`;
+  document.getElementById('clientLinkInput').value = link;
+  openModal('linkModal');
+}
+
+function copyReminder() {
+  const subj = document.getElementById('reminderSubject').textContent;
+  const body = document.getElementById('reminderBody').textContent;
+  navigator.clipboard.writeText(`Subject: ${subj}\n\n${body}`).then(() => showToast('Copied!', 'ok'));
+}
+
+// ── Line Items ──
+function addLineItem() {
+  lineItems.push({ desc: '', qty: 1, amount: 0 });
+  renderLineItems();
+}
+
+function removeLineItem(i) {
+  lineItems.splice(i, 1);
+  renderLineItems();
+  calcTotal();
+}
+
+function renderLineItems() {
+  const c = document.getElementById('lineItemsContainer');
+  c.innerHTML = lineItems.map((it, i) => `
+    <div class="line-item-row">
+      <input class="input" style="flex:2;" placeholder="Description" value="${escHtml(it.desc)}"
+        onchange="lineItems[${i}].desc=this.value">
+      <input class="input" type="number" style="width:64px;" placeholder="Qty" value="${it.qty}"
+        onchange="lineItems[${i}].qty=parseFloat(this.value)||1;calcTotal()">
+      <input class="input" type="number" step="0.01" style="width:100px;" placeholder="$ Amount" value="${it.amount||''}"
+        onchange="lineItems[${i}].amount=parseFloat(this.value)||0;calcTotal()">
+      <button class="btn btn-sm" style="color:var(--red);flex-shrink:0;" onclick="removeLineItem(${i})">✕</button>
+    </div>`).join('');
+}
+
+function calcTotal() {
+  const total = lineItems.reduce((s, i) => s + (i.qty||1) * (i.amount||0), 0);
+  document.getElementById('f_totalDisplay').textContent = '$' + total.toFixed(2);
+}
+
+// ── Milestones ──
+function addMilestone() {
+  milestones.push({ name: '', amount: 0, done: false });
+  renderMilestones();
+}
+
+function removeMilestone(i) {
+  milestones.splice(i, 1);
+  renderMilestones();
+}
+
+function renderMilestones() {
+  const c = document.getElementById('milestonesContainer');
+  c.innerHTML = milestones.map((m, i) => `
+    <div class="ms-row">
+      <input class="input" style="flex:2;" placeholder="Milestone name (e.g. Deposit)" value="${escHtml(m.name)}"
+        onchange="milestones[${i}].name=this.value">
+      <input class="input" type="number" step="0.01" style="width:100px;" placeholder="$ Amount" value="${m.amount||''}"
+        onchange="milestones[${i}].amount=parseFloat(this.value)||0">
+      <label style="display:flex;align-items:center;gap:4px;font-size:13px;white-space:nowrap;color:var(--txd);">
+        <input type="checkbox" ${m.done?'checked':''} onchange="milestones[${i}].done=this.checked"> Done
+      </label>
+      <button class="btn btn-sm" style="color:var(--red);flex-shrink:0;" onclick="removeMilestone(${i})">✕</button>
+    </div>`).join('');
+}
+
+// ── Render ──
+function renderSummary() {
+  const overdue = invoices.filter(i => i.status === 'overdue');
+  const dueSoon = invoices.filter(i => i.status === 'due_soon');
+  const outstanding = invoices.filter(i => i.status !== 'paid');
+  const paid = invoices.filter(i => i.status === 'paid');
+
+  const sum = (arr, field) => arr.reduce((s, i) => s + (parseFloat(i[field]) || 0), 0);
+
+  if (invoices.length > 0) {
+    document.getElementById('summaryBar').style.display = 'flex';
+    document.getElementById('sumOverdue').textContent = '$' + sum(overdue, 'amount_due').toFixed(0);
+    document.getElementById('sumDueSoon').textContent = '$' + sum(dueSoon, 'amount_due').toFixed(0);
+    document.getElementById('sumOutstanding').textContent = '$' + sum(outstanding, 'amount_due').toFixed(0);
+    document.getElementById('sumCollected').textContent = '$' + sum(paid, 'total').toFixed(0);
+  } else {
+    document.getElementById('summaryBar').style.display = 'none';
+  }
+}
+
+function statusBadge(inv) {
+  const s = inv.status || 'sent';
+  let label = s.replace('_', ' ');
+  if (s === 'overdue' && inv.days_overdue) label = `${inv.days_overdue}d late`;
+  return `<span class="st-badge st-${s}">${label}</span>`;
+}
+
+function fmtDate(d) {
+  if (!d) return '—';
+  const dt = new Date(d);
+  if (isNaN(dt)) return d;
+  return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function renderTable() {
+  const el = document.getElementById('invoiceTable');
+
+  if (invoices.length === 0) {
+    el.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">💳</div>
+        <h3 data-en="No invoices yet" data-he="אין חשבוניות עדיין">No invoices yet</h3>
+        <p data-en="Create your first invoice — get paid faster." data-he="צור את החשבונית הראשונה שלך — גבה מהר יותר.">Create your first invoice — get paid faster.</p>
+        <button class="btn btn-primary" onclick="openNewInvoiceModal()">+ New Invoice</button>
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = `
+    <div style="overflow-x:auto;">
+      <table class="pt-table">
+        <thead>
+          <tr>
+            <th data-en="Job" data-he="פרויקט">Job</th>
+            <th data-en="Client" data-he="לקוח">Client</th>
+            <th data-en="Due Date" data-he="תאריך יעד">Due Date</th>
+            <th data-en="Amount Due" data-he="לתשלום">Amount Due</th>
+            <th data-en="Status" data-he="סטטוס">Status</th>
+            <th data-en="Actions" data-he="פעולות">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${invoices.map(inv => `
+            <tr>
+              <td style="font-weight:600;">${escHtml(inv.job_name || '—')}</td>
+              <td style="color:var(--txd);">${escHtml(inv.client_name || '—')}</td>
+              <td style="color:var(--txd);">${fmtDate(inv.due_date)}</td>
+              <td style="font-weight:700;color:var(--ac);">$${parseFloat(inv.amount_due||0).toFixed(2)}</td>
+              <td>${statusBadge(inv)}</td>
+              <td>
+                <div class="tbl-actions">
+                  ${inv.status !== 'paid' ? `<button class="btn btn-sm" onclick="markPaid('${inv.id}')">✅ <span>Paid</span></button>` : ''}
+                  ${inv.status !== 'paid' ? `<button class="btn btn-sm" onclick="sendReminder('${inv.id}')">📧 <span>Remind</span></button>` : ''}
+                  ${inv.public_id ? `<button class="btn btn-sm" onclick="showClientLink('${inv.public_id}')">🔗 <span>Link</span></button>` : ''}
+                </div>
+              </td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+
+  // Re-apply translations if language isn't English
+  if (lang !== 'en') setLang(lang);
+}
+
+// ── Form helpers ──
+function resetForm() {
+  ['f_clientName','f_clientEmail','f_clientPhone','f_jobName','f_note'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('f_deposit').value = '';
+  lineItems = [];
+  milestones = [];
+  renderLineItems();
+  renderMilestones();
+  addLineItem();
+  setDefaultDueDate();
+  document.getElementById('f_totalDisplay').textContent = '$0.00';
+}
+
+function openNewInvoiceModal() {
+  resetForm();
+  openModal('invoiceModal');
+}
+
+function openModal(id) {
+  const m = document.getElementById(id);
+  if (m) { m.classList.add('open'); document.body.style.overflow = 'hidden'; }
+}
+
+function closeModal(id) {
+  const m = document.getElementById(id);
+  if (m) { m.classList.remove('open'); document.body.style.overflow = ''; }
+}
+
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Close modal on backdrop click
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) closeModal(m.id); });
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof injectProfileAvatar === 'function') injectProfileAvatar();
+  if (typeof buildFooter === 'function') buildFooter();
+  setLang(lang);
+  init();
+});
+</script>
+<script src="/js/motion-engine.js" defer></script>
+<script src="/js/cmdk-palette.js" defer></script>
+<script src="/js/brain-assistant.js" defer></script>
+</body>
+</html>
