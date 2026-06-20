@@ -377,6 +377,29 @@ export default {
         return corsResponse(env, await handleAdminAlerts(request, env));
       }
 
+      // ── Invoice / Payment-Flow Routes ──
+      if (path === '/api/invoices/create' && request.method === 'POST') {
+        return corsResponse(env, await handleInvoiceCreate(request, env));
+      }
+      if (path === '/api/invoices/list' && request.method === 'GET') {
+        return corsResponse(env, await handleInvoiceList(request, env));
+      }
+      if (path === '/api/invoices/update' && request.method === 'POST') {
+        return corsResponse(env, await handleInvoiceUpdate(request, env));
+      }
+      if (path === '/api/invoices/remind' && request.method === 'POST') {
+        return corsResponse(env, await handleInvoiceRemind(request, env));
+      }
+      if (path === '/api/job/status' && request.method === 'GET') {
+        return corsResponse(env, await handleJobStatus(request, env));
+      }
+      if (path === '/api/profile/docs' && request.method === 'GET') {
+        return corsResponse(env, await handleDocsGet(request, env));
+      }
+      if (path === '/api/profile/docs' && request.method === 'POST') {
+        return corsResponse(env, await handleDocsPost(request, env));
+      }
+
       return corsResponse(env, json({ error: 'Not found' }, 404));
     } catch (err) {
       console.error('Worker error:', err);
@@ -4818,4 +4841,259 @@ async function handleStripeWebhook(request, env) {
   console.log(`[stripe] granted tier=${tier} to ${userEmail} (event ${event.id})`);
 
   return new Response('ok', { status: 200 });
+}
+
+// ── Payment-Flow: Invoice Handlers ──
+
+function randomId(len = 16) {
+  const arr = new Uint8Array(len);
+  crypto.getRandomValues(arr);
+  return Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function randomShortId() {
+  // 8 hex chars ~ 4 billion combinations, enough for public_id
+  return randomId(4);
+}
+
+function computeInvoiceStatus(inv) {
+  const now = Date.now();
+  const due = new Date(inv.due_date).getTime();
+  if (inv.paid_amount >= inv.total) return { status: 'paid', days_overdue: 0 };
+  if (now > due) {
+    const days_overdue = Math.floor((now - due) / 86400000);
+    return { status: 'overdue', days_overdue };
+  }
+  if (due - now <= 3 * 86400000) return { status: 'due_soon', days_overdue: 0 };
+  return { status: 'sent', days_overdue: 0 };
+}
+
+// POST /api/invoices/create
+async function handleInvoiceCreate(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const body = await request.json();
+  const { client_name, client_email, client_phone, job_name, line_items, total,
+          due_date, deposit, milestones, docs, note } = body;
+
+  if (!client_name || !job_name || !total || !due_date) {
+    return json({ error: 'Missing required fields: client_name, job_name, total, due_date' }, 400);
+  }
+
+  const id = randomId();
+  const public_id = randomShortId();
+  const now = Date.now();
+
+  const invoice = {
+    id,
+    public_id,
+    owner_email: user.email,
+    client_name,
+    client_email: client_email || '',
+    client_phone: client_phone || '',
+    job_name,
+    line_items: line_items || [],
+    total: Number(total),
+    due_date,
+    deposit: deposit || 0,
+    milestones: (milestones || []).map(m => ({ ...m, done: false })),
+    docs: docs || [],
+    note: note || '',
+    status: 'sent',
+    reminders_sent: 0,
+    paid_amount: 0,
+    created: now,
+  };
+
+  // Append to owner's invoice list
+  const listRaw = await env.BQ_USERS.get(`invlist:${user.email}`);
+  const list = listRaw ? JSON.parse(listRaw) : [];
+  list.push(id);
+  await env.BQ_USERS.put(`invlist:${user.email}`, JSON.stringify(list));
+
+  // Store invoice by internal id and map public_id → id
+  await env.BQ_USERS.put(`inv:${id}`, JSON.stringify(invoice));
+  await env.BQ_USERS.put(`pub:${public_id}`, id);
+
+  const status_url = `/job-status.html?id=${public_id}`;
+  return json({ ok: true, id, public_id, status_url });
+}
+
+// GET /api/invoices/list
+async function handleInvoiceList(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const listRaw = await env.BQ_USERS.get(`invlist:${user.email}`);
+  const ids = listRaw ? JSON.parse(listRaw) : [];
+
+  const invoices = (
+    await Promise.all(
+      ids.map(async id => {
+        const raw = await env.BQ_USERS.get(`inv:${id}`);
+        if (!raw) return null;
+        const inv = JSON.parse(raw);
+        const { status, days_overdue } = computeInvoiceStatus(inv);
+        return {
+          id: inv.id,
+          public_id: inv.public_id,
+          client_name: inv.client_name,
+          job_name: inv.job_name,
+          total: inv.total,
+          amount_due: Math.max(0, inv.total - (inv.paid_amount || 0)),
+          due_date: inv.due_date,
+          status,
+          days_overdue,
+          created: inv.created,
+          reminders_sent: inv.reminders_sent,
+        };
+      })
+    )
+  )
+    .filter(Boolean)
+    .sort((a, b) => b.created - a.created);
+
+  return json({ ok: true, invoices });
+}
+
+// POST /api/invoices/update
+async function handleInvoiceUpdate(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const { id, status, paid_amount, note, milestones } = await request.json();
+  if (!id) return json({ error: 'Missing id' }, 400);
+
+  const raw = await env.BQ_USERS.get(`inv:${id}`);
+  if (!raw) return json({ error: 'Not found' }, 404);
+  const inv = JSON.parse(raw);
+
+  if (inv.owner_email !== user.email) return json({ error: 'Forbidden' }, 403);
+
+  if (status !== undefined) inv.status = status;
+  if (paid_amount !== undefined) inv.paid_amount = Number(paid_amount);
+  if (note !== undefined) inv.note = note;
+  if (milestones !== undefined) inv.milestones = milestones;
+
+  await env.BQ_USERS.put(`inv:${id}`, JSON.stringify(inv));
+  return json({ ok: true, invoice: inv });
+}
+
+// POST /api/invoices/remind
+async function handleInvoiceRemind(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const { id } = await request.json();
+  if (!id) return json({ error: 'Missing id' }, 400);
+
+  const raw = await env.BQ_USERS.get(`inv:${id}`);
+  if (!raw) return json({ error: 'Not found' }, 404);
+  const inv = JSON.parse(raw);
+
+  if (inv.owner_email !== user.email) return json({ error: 'Forbidden' }, 403);
+
+  inv.reminders_sent = (inv.reminders_sent || 0) + 1;
+  const level = inv.reminders_sent;
+  const amount_due = Math.max(0, inv.total - (inv.paid_amount || 0));
+  const status_url = `https://bqprod.pages.dev/job-status.html?id=${inv.public_id}`;
+
+  let subject, body;
+  if (level <= 1) {
+    subject = `Friendly reminder: ${inv.job_name} invoice`;
+    body = `Hi ${inv.client_name},\n\nJust a friendly reminder that your invoice for "${inv.job_name}" is due on ${inv.due_date}.\n\nAmount due: $${amount_due.toLocaleString()}\n\nYou can view your project status and track milestones here:\n${status_url}\n\nThanks for your business — reach out if you have any questions!`;
+  } else if (level <= 2) {
+    subject = `Follow-up: ${inv.job_name} payment`;
+    body = `Hi ${inv.client_name},\n\nThis is a follow-up on the invoice for "${inv.job_name}."\n\nAmount still due: $${amount_due.toLocaleString()} (due ${inv.due_date}).\n\nWe'd appreciate prompt payment to keep the project moving forward.\n\nPay or track your project here:\n${status_url}\n\nIf you have questions or concerns, please reply and we'll sort it out quickly.`;
+  } else {
+    const now = Date.now();
+    const due = new Date(inv.due_date).getTime();
+    const days_overdue = now > due ? Math.floor((now - due) / 86400000) : 0;
+    subject = `Urgent: ${inv.job_name} payment ${days_overdue} days past due`;
+    body = `Hi ${inv.client_name},\n\nThis is an urgent notice. Your invoice for "${inv.job_name}" is ${days_overdue} days past due.\n\nOutstanding balance: $${amount_due.toLocaleString()}\n\nPlease arrange payment as soon as possible to avoid further action. You can view your invoice and project status here:\n${status_url}\n\nIf you've already sent payment, please disregard this notice and confirm with us.`;
+  }
+
+  await env.BQ_USERS.put(`inv:${id}`, JSON.stringify(inv));
+
+  const reminder = { level, subject, body };
+  return json({ ok: true, reminders_sent: inv.reminders_sent, reminder });
+}
+
+// GET /api/job/status?id=<public_id>  (no auth — public)
+async function handleJobStatus(request, env) {
+  const url = new URL(request.url);
+  const public_id = url.searchParams.get('id');
+  if (!public_id) return json({ ok: false, error: 'Missing id' }, 400);
+
+  const invId = await env.BQ_USERS.get(`pub:${public_id}`);
+  if (!invId) return json({ ok: false }, 404);
+
+  const raw = await env.BQ_USERS.get(`inv:${invId}`);
+  if (!raw) return json({ ok: false }, 404);
+  const inv = JSON.parse(raw);
+
+  // Load owner user record for contractor info
+  const ownerRaw = await env.BQ_USERS.get(`user:${inv.owner_email}`);
+  const owner = ownerRaw ? JSON.parse(ownerRaw) : {};
+
+  const { status } = computeInvoiceStatus(inv);
+  const amount_due = Math.max(0, inv.total - (inv.paid_amount || 0));
+
+  return json({
+    ok: true,
+    job: {
+      job_name: inv.job_name,
+      contractor: {
+        name: owner.businessName || owner.name || '',
+        phone: owner.phone || '',
+        email: inv.owner_email,
+      },
+      milestones: inv.milestones || [],
+      total: inv.total,
+      paid: inv.paid_amount || 0,
+      amount_due,
+      due_date: inv.due_date,
+      status,
+      last_note: inv.note || '',
+    },
+  });
+}
+
+// GET /api/profile/docs
+async function handleDocsGet(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const raw = await env.BQ_USERS.get(`docs:${user.email}`);
+  const docs = raw ? JSON.parse(raw) : [];
+  return json({ ok: true, docs });
+}
+
+// POST /api/profile/docs
+async function handleDocsPost(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const { type, name, expires } = await request.json();
+  const validTypes = ['W9', 'COI', 'ID', 'LIEN'];
+  if (!type || !validTypes.includes(type)) {
+    return json({ error: `type must be one of: ${validTypes.join(', ')}` }, 400);
+  }
+  if (!name) return json({ error: 'Missing name' }, 400);
+
+  const raw = await env.BQ_USERS.get(`docs:${user.email}`);
+  const docs = raw ? JSON.parse(raw) : [];
+
+  const doc = { id: randomId(8), type, name, expires: expires || null };
+  docs.push(doc);
+
+  await env.BQ_USERS.put(`docs:${user.email}`, JSON.stringify(docs));
+  return json({ ok: true, docs });
 }
