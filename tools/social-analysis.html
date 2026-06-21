@@ -7,39 +7,108 @@
 <link rel="stylesheet" href="../style.css">
 <style>
   body { display: flex; flex-direction: column; }
-  .platform-btns { display: flex; gap: 8px; margin-bottom: 14px; }
+
+  /* ── Platform toggle ── */
+  .platform-btns { display: flex; gap: var(--space-1); margin-bottom: var(--space-2); }
   .plat-btn {
-    flex: 1; padding: 12px; border: 1px solid var(--bd); border-radius: 10px;
+    flex: 1; padding: var(--space-1) var(--space-2);
+    border: 1px solid var(--bd); border-radius: var(--r);
     background: var(--sf); color: var(--txd); font-family: var(--font-en);
-    font-size: 15px; cursor: pointer; transition: all .2s; min-height: 52px;
+    font-size: 16px; cursor: pointer; transition: all .2s; min-height: 52px;
     display: flex; align-items: center; justify-content: center; gap: 6px;
   }
   .plat-btn.on { border-color: var(--ac); color: var(--ac); background: var(--acd); }
 
-  .result-section { margin-top: 20px; display: none; }
+  /* ── Results ── */
+  .result-section { margin-top: var(--space-3); display: none; }
   .result-section.on { display: block; animation: fadeIn .3s; }
 
-  .score-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
-  .score-card {
-    background: var(--sf); border: 1px solid var(--bd); border-radius: 10px;
-    padding: 14px; text-align: center;
+  /* ── Score grid ── */
+  .score-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-1); margin-bottom: var(--space-2);
   }
-  .score-num { font-size: 28px; font-weight: 900; color: var(--ac); }
-  .score-label { font-size: 11px; color: var(--txd); margin-top: 2px; }
+  .score-card {
+    background: var(--sf); border: 1px solid var(--bd);
+    border-radius: var(--r-lg); padding: var(--space-2); text-align: center;
+  }
+  .score-num { font-size: 32px; font-weight: 900; color: var(--ac); line-height: 1.1; }
+  .score-label { font-size: 13px; color: var(--txd); margin-top: 4px; }
 
+  /* ── Profile stat numbers ── */
+  .profile-stat-num {
+    font-family: var(--font-display); font-size: 20px;
+    font-weight: 900; color: var(--ac); line-height: 1.1;
+  }
+  .profile-stat-num.neutral { color: var(--tx); }
+  .profile-stat-label { font-size: 13px; color: var(--txd); margin-top: 2px; }
+
+  /* ── Metric mini-cards ── */
+  .metric-card {
+    background: var(--sf); border: 1px solid var(--bd);
+    border-radius: var(--r-lg); padding: var(--space-2); text-align: center; flex: 1;
+  }
+  .metric-card-num {
+    font-family: var(--font-display); font-size: 24px; font-weight: 800; color: var(--ac);
+  }
+  .metric-card-num.neutral { color: var(--tx); }
+  .metric-card-label { font-size: 13px; color: var(--txd); margin-top: 4px; }
+
+  /* ── Recommendations ── */
   .rec-card {
-    background: var(--sf); border: 1px solid var(--bd); border-radius: 10px;
-    padding: 14px; margin-bottom: 8px;
+    background: var(--sf); border: 1px solid var(--bd);
+    border-radius: var(--r-lg); padding: var(--space-2); margin-bottom: var(--space-1);
   }
   .rec-card h4 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
-  .rec-card p { font-size: 13px; color: var(--txd); line-height: 1.5; }
+  .rec-card p { font-size: 14px; color: var(--txd); line-height: 1.6; }
 
+  /* ── Content breakdown ── */
   .breakdown-row {
     display: flex; justify-content: space-between; align-items: center;
-    padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.04); font-size: 14px;
+    padding: var(--space-1) 0; border-bottom: 1px solid rgba(255,255,255,.04);
+    font-size: 14px;
   }
   .breakdown-bar { width: 80px; height: 6px; background: var(--bd); border-radius: 3px; overflow: hidden; }
   .breakdown-fill { height: 100%; background: var(--ac); border-radius: 3px; }
+
+  /* ── Section headings inside results ── */
+  .results-section-title {
+    font-family: var(--font-display); font-size: 16px; font-weight: 700;
+    margin-bottom: var(--space-1);
+  }
+  .results-section-title.gold { color: var(--ac); }
+  .results-section-title.green { color: var(--grn); }
+
+  /* ── Priority badge ── */
+  .priority-badge { font-size: 13px; font-weight: 700; text-transform: uppercase; }
+
+  /* ── Quick win item ── */
+  .quick-win-item {
+    padding: 6px 0; font-size: 14px;
+    border-bottom: 1px solid rgba(255,255,255,.04);
+  }
+
+  /* ── Profile bio snippet ── */
+  .profile-bio { font-size: 13px; color: var(--txd); margin-top: 4px; line-height: 1.5; }
+  .profile-name { font-size: 16px; font-weight: 700; }
+  .profile-sub { font-size: 14px; color: var(--txd); }
+
+  /* ── Credit notice ── */
+  .credit-notice {
+    background: var(--acd); border: 1px solid rgba(232,197,71,.2);
+    border-radius: var(--r); padding: var(--space-1) var(--space-2);
+    margin-bottom: var(--space-2); font-size: 14px; color: var(--ac);
+    text-align: center;
+  }
+
+  /* ── Loading text ── */
+  .loading-text { margin-top: var(--space-1); color: var(--txd); font-size: 14px; }
+
+  /* ── Competitor tip ── */
+  .competitor-tip { font-size: 14px; color: var(--ac); }
+
+  /* ── Fallback notice ── */
+  .fallback-notice { text-align: center; padding: var(--space-1) var(--space-2); color: var(--txd); font-size: 14px; }
 
   @media (max-width: 600px) {
     .score-grid { grid-template-columns: 1fr 1fr; }
@@ -89,7 +158,7 @@
     <input class="input" type="text" id="bizContext" placeholder="Kitchen and bathroom remodeling in LA">
   </div>
 
-  <div style="background:var(--acd);border:1px solid rgba(232,197,71,.2);border-radius:10px;padding:12px;margin-bottom:14px;font-size:14px;color:var(--ac);text-align:center;">
+  <div class="credit-notice">
     ⚡ <span data-en="This tool uses 2 credits" data-he="כלי זה משתמש ב-2 קרדיטים">This tool uses 2 credits</span>
   </div>
 
@@ -98,7 +167,7 @@
   <!-- Loading -->
   <div id="loadingSection" style="display:none;text-align:center;padding:40px 0;">
     <div class="dots"><span></span><span></span><span></span></div>
-    <p style="margin-top:12px;color:var(--txd);font-size:14px;" id="loadingText">Fetching real data from Instagram...</p>
+    <p class="loading-text" id="loadingText">Fetching real data from Instagram...</p>
   </div>
 
   <div class="result-section" id="resultSection">
@@ -216,31 +285,31 @@ function renderResults(r, pd) {
     const engRate = r.engagement_rate || '—';
     const freq = r.post_frequency || '—';
     hdr.innerHTML = `
-      <div class="card" style="margin-bottom:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+      <div class="card" style="margin-bottom:var(--space-2);display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
         ${pd.profilePicUrl ? `<img src="${pd.profilePicUrl}" style="width:56px;height:56px;border-radius:50%;border:2px solid var(--ac);object-fit:cover;">` : ''}
         <div style="flex:1;min-width:140px;">
-          <div style="font-size:16px;font-weight:700;">@${pd.username || ''} ${pd.verified ? '✓' : ''}</div>
-          <div style="font-size:13px;color:var(--txd);">${pd.fullName || ''} ${pd.isBusinessAccount ? '• Business' : ''}</div>
-          ${pd.biography ? `<div style="font-size:12px;color:var(--txd);margin-top:4px;line-height:1.4;">${pd.biography.substring(0, 120)}</div>` : ''}
+          <div class="profile-name">@${pd.username || ''} ${pd.verified ? '✓' : ''}</div>
+          <div class="profile-sub">${pd.fullName || ''} ${pd.isBusinessAccount ? '• Business' : ''}</div>
+          ${pd.biography ? `<div class="profile-bio">${pd.biography.substring(0, 120)}</div>` : ''}
         </div>
         <div style="display:flex;gap:16px;text-align:center;">
-          <div><div style="font-size:20px;font-weight:900;color:var(--ac);">${formatNum(pd.followersCount)}</div><div style="font-size:11px;color:var(--txd);">Followers</div></div>
-          <div><div style="font-size:20px;font-weight:900;">${formatNum(pd.followsCount)}</div><div style="font-size:11px;color:var(--txd);">Following</div></div>
-          <div><div style="font-size:20px;font-weight:900;">${formatNum(pd.postsCount)}</div><div style="font-size:11px;color:var(--txd);">Posts</div></div>
+          <div><div class="profile-stat-num">${formatNum(pd.followersCount)}</div><div class="profile-stat-label">Followers</div></div>
+          <div><div class="profile-stat-num neutral">${formatNum(pd.followsCount)}</div><div class="profile-stat-label">Following</div></div>
+          <div><div class="profile-stat-num neutral">${formatNum(pd.postsCount)}</div><div class="profile-stat-label">Posts</div></div>
         </div>
       </div>
-      <div style="display:flex;gap:8px;margin-bottom:14px;">
-        <div class="card" style="flex:1;text-align:center;padding:12px;"><div style="font-size:18px;font-weight:800;color:var(--ac);">${engRate}</div><div style="font-size:11px;color:var(--txd);">Engagement Rate</div></div>
-        <div class="card" style="flex:1;text-align:center;padding:12px;"><div style="font-size:18px;font-weight:800;">${freq}</div><div style="font-size:11px;color:var(--txd);">Post Frequency</div></div>
+      <div style="display:flex;gap:var(--space-1);margin-bottom:var(--space-2);">
+        <div class="metric-card"><div class="metric-card-num">${engRate}</div><div class="metric-card-label">Engagement Rate</div></div>
+        <div class="metric-card"><div class="metric-card-num neutral">${freq}</div><div class="metric-card-label">Post Frequency</div></div>
       </div>`;
   } else {
-    hdr.innerHTML = '<div class="card" style="margin-bottom:14px;text-align:center;padding:12px;color:var(--txd);font-size:13px;">Analysis based on best practices (live data unavailable)</div>';
+    hdr.innerHTML = '<div class="card" style="margin-bottom:var(--space-2);"><p class="fallback-notice">Analysis based on best practices (live data unavailable)</p></div>';
   }
 
   // Scores
   const scoreColor = s => s >= 7 ? 'var(--grn)' : s >= 4 ? 'var(--ac)' : 'var(--red)';
   document.getElementById('scoreGrid').innerHTML = `
-    <div class="score-card"><div class="score-num" style="font-size:36px;color:${r.overall_score >= 70 ? 'var(--grn)' : r.overall_score >= 40 ? 'var(--ac)' : 'var(--red)'}">${r.overall_score}</div><div class="score-label">Overall Score</div></div>
+    <div class="score-card"><div class="score-num" style="color:${r.overall_score >= 70 ? 'var(--grn)' : r.overall_score >= 40 ? 'var(--ac)' : 'var(--red)'}">${r.overall_score}</div><div class="score-label">Overall Score</div></div>
     <div class="score-card"><div class="score-num" style="color:${scoreColor(r.bio_score)}">${r.bio_score}</div><div class="score-label">Bio</div></div>
     <div class="score-card"><div class="score-num" style="color:${scoreColor(r.content_score)}">${r.content_score}</div><div class="score-label">Content</div></div>
     <div class="score-card"><div class="score-num" style="color:${scoreColor(r.engagement_score)}">${r.engagement_score}</div><div class="score-label">Engagement</div></div>
@@ -251,8 +320,8 @@ function renderResults(r, pd) {
   const bd = r.content_breakdown || {};
   const entries = Object.entries(bd).sort((a, b) => b[1] - a[1]);
   document.getElementById('breakdownSection').innerHTML = `
-    <div class="card" style="margin-bottom:14px;">
-      <h3 style="font-size:14px;font-weight:700;margin-bottom:10px;" data-en="Content Breakdown" data-he="פילוח תוכן">Content Breakdown</h3>
+    <div class="card" style="margin-bottom:var(--space-2);">
+      <h3 class="results-section-title" data-en="Content Breakdown" data-he="פילוח תוכן">Content Breakdown</h3>
       ${entries.map(([k, v]) => `
         <div class="breakdown-row">
           <span>${k.replace(/_/g, ' ')}</span>
@@ -267,20 +336,20 @@ function renderResults(r, pd) {
   const priColor = { high: 'var(--red)', medium: 'var(--ac)', low: 'var(--grn)' };
   document.getElementById('recsSection').innerHTML = `
     ${r.quick_wins?.length ? `
-    <div class="card" style="margin-bottom:14px;">
-      <h3 style="font-size:14px;font-weight:700;margin-bottom:10px;color:var(--grn);" data-en="Quick Wins" data-he="ניצחונות מהירים">Quick Wins</h3>
-      ${r.quick_wins.map(w => `<div style="padding:6px 0;font-size:14px;border-bottom:1px solid rgba(255,255,255,.04);">✅ ${w}</div>`).join('')}
+    <div class="card" style="margin-bottom:var(--space-2);">
+      <h3 class="results-section-title green" data-en="Quick Wins" data-he="ניצחונות מהירים">Quick Wins</h3>
+      ${r.quick_wins.map(w => `<div class="quick-win-item">✅ ${w}</div>`).join('')}
     </div>` : ''}
-    <h3 style="font-size:14px;font-weight:700;margin-bottom:10px;" data-en="Recommendations" data-he="המלצות">Recommendations</h3>
+    <h3 class="results-section-title" style="margin-bottom:var(--space-1);" data-en="Recommendations" data-he="המלצות">Recommendations</h3>
     ${(r.recommendations || []).map(rec => `
       <div class="rec-card">
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <h4>${rec.title}</h4>
-          <span style="font-size:11px;font-weight:700;color:${priColor[rec.priority] || 'var(--txd)'};text-transform:uppercase;">${rec.priority}</span>
+          <span class="priority-badge" style="color:${priColor[rec.priority] || 'var(--txd)'};">${rec.priority}</span>
         </div>
         <p>${rec.description}</p>
       </div>`).join('')}
-    ${r.competitor_tip ? `<div class="card" style="background:var(--acd);border-color:rgba(232,197,71,.2);"><p style="font-size:14px;color:var(--ac);">💡 ${r.competitor_tip}</p></div>` : ''}`;
+    ${r.competitor_tip ? `<div class="card" style="background:var(--acd);border-color:rgba(232,197,71,.2);"><p class="competitor-tip">💡 ${r.competitor_tip}</p></div>` : ''}`;
 
   setLang(lang);
 }
