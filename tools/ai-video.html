@@ -222,10 +222,11 @@
 <nav class="nav">
   <a href="/" class="nav-logo">Obra</a>
   <div class="nav-right">
-    <a href="/" class="nav-link" data-en="← Home" data-he="בית ←">← Home</a>
+    <a href="/" class="nav-link" data-en="← Home" data-he="← בית" data-es="← Inicio">← Home</a>
     <div class="lang-toggle">
       <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
       <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+      <button class="lang-btn" data-lang="es" onclick="setLang('es')">ES</button>
     </div>
   </div>
 </nav>
@@ -234,92 +235,96 @@
 
   <!-- Header -->
   <div class="page-header">
-    <h1>🎬 AI Video <span class="badge">Seedance 2</span></h1>
-    <p>Text-to-video &amp; image-to-video powered by Seedance 2.0</p>
+    <h1>🎬 <span data-en="AI Video" data-he="וידאו AI" data-es="Video IA">AI Video</span> <span class="badge">Seedance 2</span></h1>
+    <p data-en="Text-to-video &amp; image-to-video powered by Seedance 2.0" data-he="טקסט לוידאו ותמונה לוידאו בכוח Seedance 2.0" data-es="Texto a video e imagen a video impulsado por Seedance 2.0">Text-to-video &amp; image-to-video powered by Seedance 2.0</p>
   </div>
 
   <!-- Mode Tabs -->
   <div class="mode-tabs">
-    <button class="mode-tab on" id="tabT2V" onclick="setMode('t2v')">✍️ Text to Video</button>
-    <button class="mode-tab" id="tabI2V" onclick="setMode('i2v')">🖼️ Image to Video</button>
+    <button class="mode-tab on" id="tabT2V" onclick="setMode('t2v')" data-en="✍️ Text to Video" data-he="✍️ טקסט לוידאו" data-es="✍️ Texto a Video">✍️ Text to Video</button>
+    <button class="mode-tab" id="tabI2V" onclick="setMode('i2v')" data-en="🖼️ Image to Video" data-he="🖼️ תמונה לוידאו" data-es="🖼️ Imagen a Video">🖼️ Image to Video</button>
   </div>
 
   <!-- Prompt Card -->
   <div class="card">
-    <div class="card-title">Prompt</div>
+    <div class="card-title" data-en="Prompt" data-he="תיאור" data-es="Descripción">Prompt</div>
     <div class="prompt-wrap">
-      <textarea id="promptInput" placeholder="Describe the video you want to generate...
-e.g. A contractor power-washing a driveway, cinematic, golden hour lighting, slow motion" maxlength="4000" oninput="updateCharCount()"></textarea>
+      <textarea id="promptInput"
+        placeholder="Describe the video you want to generate...&#10;e.g. A contractor power-washing a driveway, cinematic, golden hour lighting, slow motion"
+        data-en-placeholder="Describe the video you want to generate...&#10;e.g. A contractor power-washing a driveway, cinematic, golden hour lighting, slow motion"
+        data-he-placeholder="תאר את הוידאו שתרצה ליצור...&#10;לדוגמה: קבלן שטיפת לחץ לשביל, קולנועי, תאורת שעת הזהב, מהירות איטית"
+        data-es-placeholder="Describe el video que quieres generar...&#10;ej. Un contratista lavando a presión una entrada, cinematográfico, iluminación de hora dorada, cámara lenta"
+        maxlength="4000" oninput="updateCharCount()"></textarea>
       <span class="char-count"><span id="charCount">0</span>/4000</span>
     </div>
   </div>
 
   <!-- Image Upload (I2V only) -->
   <div class="card" id="imgCard" style="display:none;">
-    <div class="card-title">Reference Images</div>
+    <div class="card-title" data-en="Reference Images" data-he="תמונות התייחסות" data-es="Imágenes de referencia">Reference Images</div>
     <div class="img-row">
       <div>
         <div class="img-drop" id="dropFirst">
           <span class="di">🖼️</span>
-          <span class="dl">First Frame</span>
-          <span class="ds">Starting image</span>
+          <span class="dl" data-en="First Frame" data-he="פריים ראשון" data-es="Primer fotograma">First Frame</span>
+          <span class="ds" data-en="Starting image" data-he="תמונת פתיחה" data-es="Imagen inicial">Starting image</span>
           <img class="preview-img" id="previewFirst" style="display:none;" alt="First frame">
           <button class="clear-btn" onclick="clearImg('first')" title="Remove">×</button>
           <input type="file" id="inputFirst" accept="image/*" onchange="loadImg('first', this)">
         </div>
-        <div class="img-label">First Frame</div>
+        <div class="img-label" data-en="First Frame" data-he="פריים ראשון" data-es="Primer fotograma">First Frame</div>
       </div>
       <div>
         <div class="img-drop" id="dropLast">
           <span class="di">🖼️</span>
-          <span class="dl">Last Frame</span>
-          <span class="ds">Optional ending</span>
+          <span class="dl" data-en="Last Frame" data-he="פריים אחרון" data-es="Último fotograma">Last Frame</span>
+          <span class="ds" data-en="Optional ending" data-he="סיום אופציונלי" data-es="Cierre opcional">Optional ending</span>
           <img class="preview-img" id="previewLast" style="display:none;" alt="Last frame">
           <button class="clear-btn" onclick="clearImg('last')" title="Remove">×</button>
           <input type="file" id="inputLast" accept="image/*" onchange="loadImg('last', this)">
         </div>
-        <div class="img-label">Last Frame (optional)</div>
+        <div class="img-label" data-en="Last Frame (optional)" data-he="פריים אחרון (אופציונלי)" data-es="Último fotograma (opcional)">Last Frame (optional)</div>
       </div>
     </div>
   </div>
 
   <!-- Settings Card -->
   <div class="card">
-    <div class="card-title">Settings</div>
+    <div class="card-title" data-en="Settings" data-he="הגדרות" data-es="Configuración">Settings</div>
     <div class="settings-grid">
       <div class="setting-field">
-        <label>Model</label>
+        <label data-en="Model" data-he="מודל" data-es="Modelo">Model</label>
         <select id="modelSel" onchange="updateEstimate()">
-          <option value="seedance2-fast">⚡ Fast (28 cr/sec)</option>
-          <option value="seedance-20" selected>🎯 Pro (40 cr/sec)</option>
+          <option value="seedance2-fast" data-en="⚡ Fast (28 cr/sec)" data-he="⚡ מהיר (28 קר׳/שנייה)" data-es="⚡ Rápido (28 cr/seg)">⚡ Fast (28 cr/sec)</option>
+          <option value="seedance-20" selected data-en="🎯 Pro (40 cr/sec)" data-he="🎯 Pro (40 קר׳/שנייה)" data-es="🎯 Pro (40 cr/seg)">🎯 Pro (40 cr/sec)</option>
         </select>
       </div>
       <div class="setting-field">
-        <label>Aspect Ratio</label>
+        <label data-en="Aspect Ratio" data-he="יחס גובה-רוחב" data-es="Relación de aspecto">Aspect Ratio</label>
         <select id="aspectSel">
-          <option value="16:9" selected>16:9 — Landscape</option>
-          <option value="9:16">9:16 — Portrait</option>
-          <option value="1:1">1:1 — Square</option>
-          <option value="4:3">4:3 — Classic</option>
-          <option value="21:9">21:9 — Cinematic</option>
+          <option value="16:9" selected data-en="16:9 — Landscape" data-he="16:9 — רוחבי" data-es="16:9 — Horizontal">16:9 — Landscape</option>
+          <option value="9:16" data-en="9:16 — Portrait" data-he="9:16 — אנכי" data-es="9:16 — Vertical">9:16 — Portrait</option>
+          <option value="1:1" data-en="1:1 — Square" data-he="1:1 — ריבוע" data-es="1:1 — Cuadrado">1:1 — Square</option>
+          <option value="4:3" data-en="4:3 — Classic" data-he="4:3 — קלאסי" data-es="4:3 — Clásico">4:3 — Classic</option>
+          <option value="21:9" data-en="21:9 — Cinematic" data-he="21:9 — קולנועי" data-es="21:9 — Cinemático">21:9 — Cinematic</option>
         </select>
       </div>
       <div class="setting-field">
-        <label>Resolution</label>
+        <label data-en="Resolution" data-he="רזולוציה" data-es="Resolución">Resolution</label>
         <select id="resSel" onchange="updateEstimate()">
-          <option value="720p" selected>720p — Standard</option>
-          <option value="480p">480p — Half price</option>
+          <option value="720p" selected data-en="720p — Standard" data-he="720p — סטנדרטי" data-es="720p — Estándar">720p — Standard</option>
+          <option value="480p" data-en="480p — Half price" data-he="480p — מחיר חצי" data-es="480p — Mitad de precio">480p — Half price</option>
         </select>
       </div>
       <div class="setting-field">
-        <label>Upscale</label>
+        <label data-en="Upscale" data-he="שדרוג רזולוציה" data-es="Escalado">Upscale</label>
         <select id="upscaleSel" onchange="updateEstimate()">
-          <option value="" selected>No upscale</option>
-          <option value="4k">4K (+28 cr/sec)</option>
+          <option value="" selected data-en="No upscale" data-he="ללא שדרוג" data-es="Sin escalado">No upscale</option>
+          <option value="4k" data-en="4K (+28 cr/sec)" data-he="4K (+28 קר׳/שנייה)" data-es="4K (+28 cr/seg)">4K (+28 cr/sec)</option>
         </select>
       </div>
       <div class="setting-field dur-field">
-        <label>Duration</label>
+        <label data-en="Duration" data-he="משך" data-es="Duración">Duration</label>
         <div class="dur-row">
           <input type="range" id="durSlider" min="4" max="15" value="5" oninput="updateEstimate()">
           <span class="dur-val" id="durVal">5s</span>
@@ -331,16 +336,16 @@ e.g. A contractor power-washing a driveway, cinematic, golden hour lighting, slo
   <!-- Credit Estimate -->
   <div class="credit-est">
     <span>⚡</span>
-    <span class="ci-label">Estimated cost:</span>
+    <span class="ci-label" data-en="Estimated cost:" data-he="עלות משוערת:" data-es="Costo estimado:">Estimated cost:</span>
     <span class="ci-val" id="estCredits">200 credits</span>
     <span class="ci-usd" id="estUsd">≈ $1.00</span>
     <span style="flex:1;"></span>
-    <span style="font-size:11px;color:var(--txd);">Credits/sec: <span id="cps">40</span></span>
+    <span style="font-size:11px;color:var(--txd);"><span data-en="Credits/sec:" data-he="קרדיטים/שנ':" data-es="Créditos/seg:">Credits/sec:</span> <span id="cps">40</span></span>
   </div>
 
   <!-- Generate Button -->
   <button class="gen-btn" id="genBtn" onclick="generate()">
-    <span id="genBtnText">🎬 Generate Video</span>
+    <span id="genBtnText" data-en="🎬 Generate Video" data-he="🎬 יצור וידאו" data-es="🎬 Generar Video">🎬 Generate Video</span>
   </button>
 
   <!-- Status / Result -->
@@ -348,7 +353,7 @@ e.g. A contractor power-washing a driveway, cinematic, golden hour lighting, slo
 
   <!-- History -->
   <div class="history-section" id="historySection" style="display:none;">
-    <div class="history-title">Recent generations</div>
+    <div class="history-title" data-en="Recent generations" data-he="יצירות אחרונות" data-es="Generaciones recientes">Recent generations</div>
     <div class="history-grid" id="historyGrid"></div>
   </div>
 
@@ -429,7 +434,7 @@ e.g. A contractor power-washing a driveway, cinematic, golden hour lighting, slo
     const total = cps * dur;
     const usd = (total * 0.005).toFixed(2); // ~$0.005 per credit
 
-    document.getElementById('estCredits').textContent = total + ' credits';
+    document.getElementById('estCredits').textContent = total + ' ' + t({en:'credits',he:'קרדיטים',es:'créditos'});
     document.getElementById('estUsd').textContent = '≈ $' + usd;
     document.getElementById('cps').textContent = cps;
   }
@@ -444,10 +449,10 @@ e.g. A contractor power-washing a driveway, cinematic, golden hour lighting, slo
     if (!requirePro()) return;
 
     const prompt = document.getElementById('promptInput').value.trim();
-    if (!prompt) { showToast('Add a prompt first', 'err'); return; }
+    if (!prompt) { showToast(t({en:'Add a prompt first',he:'הוסף תיאור תחילה',es:'Agrega una descripción primero'}), 'err'); return; }
 
     if (currentMode === 'i2v' && !imgDataFirst) {
-      showToast('Upload a first frame image', 'err'); return;
+      showToast(t({en:'Upload a first frame image',he:'העלה תמונת פריים ראשון',es:'Sube la imagen del primer fotograma'}), 'err'); return;
     }
 
     setGenLoading(true);
@@ -480,7 +485,7 @@ e.g. A contractor power-washing a driveway, cinematic, golden hour lighting, slo
       }
 
       if (!data.taskId) {
-        showStatus('error', 'No taskId returned');
+        showStatus('error', t({en:'No taskId returned',he:'לא הוחזר מזהה משימה',es:'No se devolvió un ID de tarea'}));
         setGenLoading(false);
         return;
       }
@@ -488,7 +493,7 @@ e.g. A contractor power-washing a driveway, cinematic, golden hour lighting, slo
       poll(data.taskId, prompt, model);
 
     } catch (e) {
-      showStatus('error', e.message || 'Network error');
+      showStatus('error', e.message || t({en:'Network error',he:'שגיאת רשת',es:'Error de red'}));
       setGenLoading(false);
     }
   }
@@ -501,7 +506,7 @@ e.g. A contractor power-washing a driveway, cinematic, golden hour lighting, slo
       attempts++;
       if (attempts > maxAttempts) {
         clearInterval(pollTimer);
-        showStatus('error', 'Timed out after 10 minutes');
+        showStatus('error', t({en:'Timed out after 10 minutes',he:'פג זמן המתנה אחרי 10 דקות',es:'Se agotó el tiempo después de 10 minutos'}));
         setGenLoading(false);
         return;
       }
@@ -517,7 +522,7 @@ e.g. A contractor power-washing a driveway, cinematic, golden hour lighting, slo
           setGenLoading(false);
         } else if (data.status === 'fail') {
           clearInterval(pollTimer);
-          showStatus('error', data.error?.message || 'Generation failed');
+          showStatus('error', data.error?.message || t({en:'Generation failed',he:'היצירה נכשלה',es:'La generación falló'}));
           setGenLoading(false);
         }
         // else waiting/generating — keep polling
@@ -533,7 +538,9 @@ e.g. A contractor power-washing a driveway, cinematic, golden hour lighting, slo
     const txt = document.getElementById('genBtnText');
     btn.disabled = loading;
     btn.classList.toggle('loading', loading);
-    txt.textContent = loading ? '⏳ Generating...' : '🎬 Generate Video';
+    txt.textContent = loading
+      ? t({en:'⏳ Generating...',he:'⏳ מייצר...',es:'⏳ Generando...'})
+      : t({en:'🎬 Generate Video',he:'🎬 יצור וידאו',es:'🎬 Generar Video'});
   }
 
   function showStatus(type, msg) {
@@ -542,17 +549,17 @@ e.g. A contractor power-washing a driveway, cinematic, golden hour lighting, slo
       area.innerHTML = `
         <div class="status-card">
           <div class="status-icon">⏳</div>
-          <div class="status-title">Generating your video...</div>
-          <div class="status-sub">Seedance 2 is working. Usually takes 1–3 minutes.</div>
+          <div class="status-title">${t({en:'Generating your video...',he:'מייצר את הוידאו שלך...',es:'Generando tu video...'})}</div>
+          <div class="status-sub">${t({en:'Seedance 2 is working. Usually takes 1–3 minutes.',he:'Seedance 2 עובד. בדרך כלל לוקח 1–3 דקות.',es:'Seedance 2 está trabajando. Generalmente tarda 1–3 minutos.'})}</div>
           <div class="progress-bar-wrap"><div class="progress-bar"></div></div>
         </div>`;
     } else if (type === 'error') {
       area.innerHTML = `
         <div class="status-card">
           <div class="status-icon">❌</div>
-          <div class="status-title">Generation failed</div>
-          <div class="status-sub">${msg || 'Unknown error'}</div>
-          <button class="btn" onclick="document.getElementById('resultArea').innerHTML=''" style="margin-top:16px;">Dismiss</button>
+          <div class="status-title">${t({en:'Generation failed',he:'היצירה נכשלה',es:'La generación falló'})}</div>
+          <div class="status-sub">${msg || t({en:'Unknown error',he:'שגיאה לא ידועה',es:'Error desconocido'})}</div>
+          <button class="btn" onclick="document.getElementById('resultArea').innerHTML=''" style="margin-top:16px;">${t({en:'Dismiss',he:'סגור',es:'Cerrar'})}</button>
         </div>`;
     }
   }
@@ -571,16 +578,16 @@ e.g. A contractor power-washing a driveway, cinematic, golden hour lighting, slo
         <video src="${url}" controls autoplay muted loop playsinline></video>
         <div class="result-footer">
           <div class="result-meta">
-            ⚡ ${credits} credits · ${res}${res ? ' · ' : ''}⏱ ${dur}
+            ⚡ ${credits} ${t({en:'credits',he:'קרדיטים',es:'créditos'})} · ${res}${res ? ' · ' : ''}⏱ ${dur}
           </div>
           <div class="result-actions">
-            <a href="${url}" download="bq-video.mp4" class="btn btn-sm">⬇ Download</a>
-            <button class="btn btn-sm" onclick="navigator.clipboard.writeText('${url}').then(()=>showToast('Link copied!','ok'))">🔗 Copy Link</button>
+            <a href="${url}" download="bq-video.mp4" class="btn btn-sm">⬇ ${t({en:'Download',he:'הורדה',es:'Descargar'})}</a>
+            <button class="btn btn-sm" onclick="navigator.clipboard.writeText('${url}').then(()=>showToast('${t({en:'Link copied!',he:'הקישור הועתק!',es:'¡Enlace copiado!'})}','ok'))">🔗 ${t({en:'Copy Link',he:'העתק קישור',es:'Copiar enlace'})}</button>
           </div>
         </div>
       </div>`;
 
-    showToast('Video ready! ✓', 'ok');
+    showToast(t({en:'Video ready! ✓',he:'הוידאו מוכן! ✓',es:'¡Video listo! ✓'}), 'ok');
   }
 
   // ── History ──
@@ -608,10 +615,10 @@ e.g. A contractor power-washing a driveway, cinematic, golden hour lighting, slo
       <div class="result-card">
         <video src="${url}" controls autoplay muted loop playsinline></video>
         <div class="result-footer">
-          <div class="result-meta">From history</div>
+          <div class="result-meta">${t({en:'From history',he:'מההיסטוריה',es:'Del historial'})}</div>
           <div class="result-actions">
-            <a href="${url}" download="bq-video.mp4" class="btn btn-sm">⬇ Download</a>
-            <button class="btn btn-sm" onclick="navigator.clipboard.writeText('${url}').then(()=>showToast('Copied!','ok'))">🔗 Copy Link</button>
+            <a href="${url}" download="bq-video.mp4" class="btn btn-sm">⬇ ${t({en:'Download',he:'הורדה',es:'Descargar'})}</a>
+            <button class="btn btn-sm" onclick="navigator.clipboard.writeText('${url}').then(()=>showToast('${t({en:'Copied!',he:'הועתק!',es:'¡Copiado!'})}','ok'))">🔗 ${t({en:'Copy Link',he:'העתק קישור',es:'Copiar enlace'})}</button>
           </div>
         </div>
       </div>`;
