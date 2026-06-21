@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Obra — Video Brain</title>
+<link rel="stylesheet" href="../style.css">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#e8c547">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Obra">
+<link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png">
+<style>
+body { display: flex; flex-direction: column; }
+
+/* ── Upload zone ── */
+.vb-upload-zone {
+  border: 2px dashed var(--bd-strong);
+  border-radius: var(--r-lg);
+  background: var(--sf);
+  padding: 40px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition);
+  position: relative;
+}
+.vb-upload-zone:hover,
+.vb-upload-zone.drag-over {
+  border-color: var(--ac);
+  background: var(--acd);
+}
+.vb-upload-zone input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+.vb-upload-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  display: block;
+}
+.vb-upload-label {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--tx);
+  margin-bottom: 6px;
+}
+.vb-upload-sub {
+  font-size: 13px;
+  color: var(--txd);
+}
+.vb-file-name {
+  margin-top: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ac);
+  word-break: break-all;
+}
+
+/* ── Form fields ── */
+.vb-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 20px;
+}
+.vb-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.vb-field { display: flex; flex-direction: column; gap: 6px; }
+.vb-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--txd);
+}
+
+/* ── Cost badge ── */
+.vb-cost-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--acd);
+  border: 1px solid var(--ac);
+  color: var(--ac);
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ── Progress bar ── */
+.vb-progress-wrap {
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+.vb-progress-wrap.active { display: flex; }
+.vb-progress-label { font-size: 13px; color: var(--txd); text-align: center; }
+.vb-progress-bar {
+  height: 4px;
+  background: var(--sf-2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.vb-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--ac);
+  border-radius: 4px;
+  transition: width .3s ease;
+}
+
+/* ── Results ── */
+.vb-results { margin-top: 32px; display: none; }
+.vb-results.visible { display: block; }
+
+.vb-section {
+  background: var(--sf);
+  border: 1px solid var(--bd);
+  border-radius: var(--r-lg);
+  padding: 24px;
+  margin-bottom: 16px;
+}
+.vb-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--txd);
+  margin-bottom: 16px;
+}
+.vb-section-title span { margin-right: 6px; }
+
+/* Work plan */
+.vb-steps { display: flex; flex-direction: column; gap: 12px; }
+.vb-step {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.vb-step-num {
+  min-width: 28px;
+  height: 28px;
+  background: var(--ac);
+  color: var(--bg);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.vb-step-text { font-size: 14px; line-height: 1.6; color: var(--tx); padding-top: 4px; }
+
+/* Crew cards */
+.vb-crew-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.vb-crew-card {
+  background: var(--sf-2);
+  border: 1px solid var(--bd);
+  border-radius: var(--r);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.vb-crew-lang {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ac);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.vb-crew-text {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--tx);
+  white-space: pre-wrap;
+  flex: 1;
+}
+.vb-crew-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.vb-crew-actions .btn {
+  flex: 1;
+  font-size: 12px;
+  min-height: 36px;
+  padding: 0 10px;
+}
+
+/* Upsells */
+.vb-upsell-list { display: flex; flex-direction: column; gap: 10px; }
+.vb-upsell-item {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  background: var(--sf-2);
+  border-radius: var(--r);
+  padding: 14px 16px;
+}
+.vb-upsell-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.vb-upsell-body { flex: 1; }
+.vb-upsell-title { font-size: 14px; font-weight: 700; color: var(--tx); margin-bottom: 3px; }
+.vb-upsell-why { font-size: 13px; color: var(--txd); line-height: 1.5; }
+.vb-upsell-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--grn);
+  margin-top: 4px;
+}
+
+/* Estimate */
+.vb-estimate {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--ac);
+  margin-bottom: 6px;
+}
+.vb-estimate-note { font-size: 13px; color: var(--txd); line-height: 1.6; }
+
+/* Raw fallback */
+.vb-raw {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--tx);
+  background: var(--sf-2);
+  border-radius: var(--r);
+  padding: 16px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Error state */
+.vb-error {
+  background: rgba(255,107,107,0.08);
+  border: 1px solid var(--red);
+  border-radius: var(--r);
+  padding: 16px;
+  color: var(--red);
+  font-size: 14px;
+  margin-top: 16px;
+  display: none;
+}
+.vb-error.visible { display: block; }
+
+/* Analyze button */
+#analyzeBtn {
+  margin-top: 6px;
+  width: 100%;
+  font-size: 16px;
+  font-weight: 800;
+  min-height: 52px;
+}
+#analyzeBtn:disabled { opacity: .45; cursor: not-allowed; }
+
+/* Frame strip preview */
+.vb-frames-strip {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+.vb-frame-thumb {
+  width: 60px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--bd);
+  opacity: .7;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .vb-row { grid-template-columns: 1fr; }
+  .vb-crew-grid { grid-template-columns: 1fr; }
+  .vb-estimate { font-size: 22px; }
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/home.html" class="nav-logo">Obra</a>
+  <div class="nav-right">
+    <a href="/home.html" class="nav-link" data-en="Tools" data-he="כלים" data-es="Herramientas">Tools</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <a href="/home.html" class="page-back" data-en="← All Tools" data-he="כל הכלים →">← All Tools</a>
+
+  <div style="margin-bottom: 24px;">
+    <h1 class="page-title" style="margin-bottom: 8px;">
+      <span data-en="Video Brain" data-he="וידאו ברין">Video Brain</span>
+    </h1>
+    <p style="font-size: 15px; color: var(--txd); line-height: 1.6; max-width: 560px;"
+       data-en="Point your phone at the job. Obra explains it to your crew, prices it, and finds your upsells."
+       data-he="כוון את הטלפון לעבודה. Obra מסביר לצוות, מתמחר, ומוצא הזדמנויות.">
+      Point your phone at the job. Obra explains it to your crew, prices it, and finds your upsells.
+    </p>
+  </div>
+
+  <!-- Upload zone -->
+  <div class="vb-upload-zone" id="uploadZone">
+    <input type="file" id="videoInput" accept="video/*" capture="environment">
+    <span class="vb-upload-icon">🎥</span>
+    <div class="vb-upload-label" data-en="Tap to record or upload a job-site video" data-he="הקש להקלטה או העלאת וידאו מהאתר">Tap to record or upload a job-site video</div>
+    <div class="vb-upload-sub" data-en="MP4, MOV, WebM · up to a few minutes works great" data-he="MP4, MOV, WebM · כמה דקות עובד מעולה">MP4, MOV, WebM · up to a few minutes works great</div>
+    <div class="vb-file-name" id="fileName"></div>
+  </div>
+
+  <!-- Frame thumbnail strip (shown after pick) -->
+  <div class="vb-frames-strip" id="frameStrip"></div>
+
+  <!-- Form -->
+  <div class="vb-form" id="vbForm">
+    <div class="vb-row">
+      <div class="vb-field">
+        <label class="vb-label" for="tradeSelect" data-en="Trade" data-he="תחום">Trade</label>
+        <select class="input" id="tradeSelect">
+          <option value="">— Select trade —</option>
+          <option value="Remodel">Remodel / Renovation</option>
+          <option value="Demo">Demo / Demolition</option>
+          <option value="Roofing">Roofing</option>
+          <option value="Plumbing">Plumbing</option>
+          <option value="Electrical">Electrical</option>
+          <option value="Paint">Paint / Drywall</option>
+          <option value="Concrete">Concrete / Flatwork</option>
+          <option value="Framing">Framing / Carpentry</option>
+          <option value="Flooring">Flooring / Tile</option>
+          <option value="HVAC">HVAC</option>
+          <option value="Landscaping">Landscaping / Hardscape</option>
+          <option value="ADU">ADU / Addition</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="vb-field" style="align-self: end;">
+        <span class="vb-cost-badge">⚡ 2 credits</span>
+      </div>
+    </div>
+
+    <div class="vb-field">
+      <label class="vb-label" for="noteInput" data-en="Note (optional)" data-he="הערה (אופציונלי)">Note (optional)</label>
+      <textarea class="input" id="noteInput" rows="2"
+        placeholder="e.g. Second floor bathroom, owner wants tile replaced, tight access..."
+        style="resize: vertical; min-height: 60px;"></textarea>
+    </div>
+
+    <div class="vb-field">
+      <label class="vb-label" for="pricebookInput" data-en="Your prices (optional)" data-he="המחירים שלך (אופציונלי)">Your prices (optional)</label>
+      <textarea class="input" id="pricebookInput" rows="2"
+        placeholder="e.g. Demo: $4/sqft · Tile: $18/sqft · Daily labor: $450..."
+        style="resize: vertical; min-height: 60px;"></textarea>
+    </div>
+
+    <button class="btn btn-primary" id="analyzeBtn" disabled>
+      <span data-en="Analyze Video (2 credits)" data-he="נתח וידאו (2 קרדיטים)">Analyze Video (2 credits)</span>
+    </button>
+  </div>
+
+  <!-- Progress -->
+  <div class="vb-progress-wrap" id="progressWrap">
+    <div class="vb-progress-label" id="progressLabel">Extracting frames…</div>
+    <div class="vb-progress-bar"><div class="vb-progress-fill" id="progressFill"></div></div>
+  </div>
+
+  <!-- Error -->
+  <div class="vb-error" id="vbError"></div>
+
+  <!-- Results -->
+  <div class="vb-results" id="vbResults">
+
+    <!-- Work Plan -->
+    <div class="vb-section" id="secPlan" style="display:none;">
+      <div class="vb-section-title"><span>📋</span><span data-en="Work Plan" data-he="תוכנית עבודה">Work Plan</span></div>
+      <div class="vb-steps" id="planSteps"></div>
+    </div>
+
+    <!-- Crew Instructions -->
+    <div class="vb-section" id="secCrew" style="display:none;">
+      <div class="vb-section-title"><span>👷</span><span data-en="Crew Instructions" data-he="הוראות לצוות">Crew Instructions</span></div>
+      <div class="vb-crew-grid">
+        <!-- English -->
+        <div class="vb-crew-card">
+          <div class="vb-crew-lang">🇺🇸 English</div>
+          <div class="vb-crew-text" id="crewEn"></div>
+          <div class="vb-crew-actions">
+            <button class="btn" onclick="copyText('crewEn')">📋 Copy</button>
+            <button class="btn" style="background:#25D366;border-color:#25D366;color:#fff;" onclick="shareWA('crewEn')">💬 WhatsApp</button>
+          </div>
+        </div>
+        <!-- Spanish -->
+        <div class="vb-crew-card">
+          <div class="vb-crew-lang">🇲🇽 Español</div>
+          <div class="vb-crew-text" id="crewEs"></div>
+          <div class="vb-crew-actions">
+            <button class="btn" onclick="copyText('crewEs')">📋 Copy</button>
+            <button class="btn" style="background:#25D366;border-color:#25D366;color:#fff;" onclick="shareWA('crewEs')">💬 WhatsApp</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upsells -->
+    <div class="vb-section" id="secUpsell" style="display:none;">
+      <div class="vb-section-title"><span>💡</span><span data-en="Ways to Grow This Job" data-he="הזדמנויות להרחיב">Ways to Grow This Job</span></div>
+      <div class="vb-upsell-list" id="upsellList"></div>
+    </div>
+
+    <!-- Estimate -->
+    <div class="vb-section" id="secEstimate" style="display:none;">
+      <div class="vb-section-title"><span>💰</span><span data-en="Estimated Range" data-he="טווח מחירים משוער">Estimated Range</span></div>
+      <div class="vb-estimate" id="estimateRange"></div>
+      <div class="vb-estimate-note" id="estimateNote"></div>
+    </div>
+
+    <!-- Raw fallback -->
+    <div class="vb-section" id="secRaw" style="display:none;">
+      <div class="vb-section-title"><span>📄</span>Analysis</div>
+      <div class="vb-raw" id="rawText"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Scripts — mirror payment-tracker.html order exactly -->
+<script src="../js/ai.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/common.js"></script>
+<script>
+// ── Auth gate ──
+if (!isLoggedIn()) window.location.replace('/auth.html?next=' + encodeURIComponent(window.location.pathname));
+
+// ── State ──
+let extractedFrames = []; // raw base64 (no prefix)
+let videoFile = null;
+
+// ── Upload zone drag-and-drop ──
+const uploadZone = document.getElementById('uploadZone');
+const videoInput = document.getElementById('videoInput');
+const analyzeBtn = document.getElementById('analyzeBtn');
+
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('video/')) handleVideoFile(f);
+});
+
+videoInput.addEventListener('change', () => {
+  if (videoInput.files[0]) handleVideoFile(videoInput.files[0]);
+});
+
+function handleVideoFile(file) {
+  videoFile = file;
+  document.getElementById('fileName').textContent = file.name;
+  document.getElementById('frameStrip').innerHTML = '';
+  extractedFrames = [];
+  analyzeBtn.disabled = false;
+  analyzeBtn.querySelector('[data-en]').textContent = 'Analyze Video (2 credits)';
+}
+
+// ── Frame extraction (all in-browser) ──
+function extractFrames(file, frameCount = 8) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const video = document.createElement('video');
+    video.muted = true;
+    video.preload = 'metadata';
+    video.src = url;
+
+    const MAX_PX = 640;
+    const QUALITY = 0.6;
+    const frames = [];
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    video.addEventListener('loadedmetadata', () => {
+      const duration = video.duration;
+      if (!duration || duration === Infinity) {
+        // Fallback: seek to 0 and grab one frame
+        seekNext(0, [0]);
+        return;
+      }
+      // Evenly spaced timestamps, avoid first/last 2% to skip black frames
+      const margin = duration * 0.02;
+      const start = margin;
+      const end = duration - margin;
+      const step = frameCount <= 1 ? 0 : (end - start) / (frameCount - 1);
+      const times = Array.from({ length: frameCount }, (_, i) => start + i * step);
+      seekNext(0, times);
+    });
+
+    video.addEventListener('error', () => reject(new Error('Could not read video. Try a different format.')));
+
+    function seekNext(idx, times) {
+      if (idx >= times.length) {
+        URL.revokeObjectURL(url);
+        resolve(frames);
+        return;
+      }
+      setProgress(10 + Math.round((idx / times.length) * 55), `Extracting frame ${idx + 1} of ${times.length}…`);
+      video.currentTime = times[idx];
+    }
+
+    video.addEventListener('seeked', function onSeeked() {
+      // Draw frame
+      let w = video.videoWidth || 640;
+      let h = video.videoHeight || 360;
+      if (w > MAX_PX) { h = Math.round(h * MAX_PX / w); w = MAX_PX; }
+      canvas.width = w;
+      canvas.height = h;
+      ctx.drawImage(video, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL('image/jpeg', QUALITY);
+      const b64 = dataUrl.split(',')[1]; // strip prefix
+      frames.push(b64);
+
+      // Show thumbnail in strip
+      const img = document.createElement('img');
+      img.className = 'vb-frame-thumb';
+      img.src = dataUrl;
+      document.getElementById('frameStrip').appendChild(img);
+
+      // Continue
+      const nextIdx = frames.length;
+      const times = Array.from({ length: frameCount }, (_, i) => {
+        const duration = video.duration;
+        const margin = duration * 0.02;
+        const start = margin;
+        const end = duration - margin;
+        const step = frameCount <= 1 ? 0 : (end - start) / (frameCount - 1);
+        return start + i * step;
+      });
+      seekNext(nextIdx, times);
+    }, { once: false });
+
+    // Kick off
+    video.load();
+  });
+}
+
+// Rewrite seeked handler properly — avoid capturing stale closure
+function extractFramesClean(file, frameCount = 8) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const video = document.createElement('video');
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = 'metadata';
+    video.src = url;
+
+    const MAX_PX = 640;
+    const QUALITY = 0.6;
+    const canvas = document.createElement('canvas');
+    const ctx2d = canvas.getContext('2d');
+    const frames = [];
+    let times = [];
+    let seekIdx = 0;
+
+    function grabFrame() {
+      let w = video.videoWidth || 640;
+      let h = video.videoHeight || 360;
+      if (w > MAX_PX) { h = Math.round(h * MAX_PX / w); w = MAX_PX; }
+      canvas.width = w;
+      canvas.height = h;
+      ctx2d.drawImage(video, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL('image/jpeg', QUALITY);
+      frames.push(dataUrl.split(',')[1]);
+
+      const img = document.createElement('img');
+      img.className = 'vb-frame-thumb';
+      img.src = dataUrl;
+      document.getElementById('frameStrip').appendChild(img);
+
+      seekIdx++;
+      if (seekIdx >= times.length) {
+        URL.revokeObjectURL(url);
+        resolve(frames);
+      } else {
+        setProgress(10 + Math.round((seekIdx / times.length) * 55), `Extracting frame ${seekIdx + 1} of ${times.length}…`);
+        video.currentTime = times[seekIdx];
+      }
+    }
+
+    video.addEventListener('seeked', grabFrame);
+
+    video.addEventListener('loadedmetadata', () => {
+      const dur = isFinite(video.duration) ? video.duration : 10;
+      const margin = Math.min(dur * 0.02, 0.5);
+      const start = margin;
+      const end = dur - margin;
+      const span = end - start;
+      times = frameCount === 1
+        ? [start + span / 2]
+        : Array.from({ length: frameCount }, (_, i) => start + (i / (frameCount - 1)) * span);
+      setProgress(10, 'Extracting frame 1 of ' + frameCount + '…');
+      video.currentTime = times[0];
+    });
+
+    video.addEventListener('error', () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Could not read video file. Try MP4 or MOV.'));
+    });
+  });
+}
+
+// ── Progress helpers ──
+function setProgress(pct, label) {
+  document.getElementById('progressFill').style.width = pct + '%';
+  if (label) document.getElementById('progressLabel').textContent = label;
+}
+
+function showProgress(on) {
+  document.getElementById('progressWrap').classList.toggle('active', on);
+}
+
+// ── Analyze ──
+analyzeBtn.addEventListener('click', async () => {
+  if (!videoFile) { showToast('Please select a video first', 'err'); return; }
+
+  const confirmed = await confirmCredit('video-brain', 'Video Brain', 2);
+  if (!confirmed) return;
+
+  // Reset UI
+  hideError();
+  hideResults();
+  document.getElementById('frameStrip').innerHTML = '';
+  analyzeBtn.disabled = true;
+  showProgress(true);
+  setProgress(5, 'Loading video…');
+
+  try {
+    // 1. Extract frames
+    const frames = await extractFramesClean(videoFile, 8);
+    extractedFrames = frames;
+
+    setProgress(70, 'Sending to Obra AI…');
+
+    // 2. Call API
+    const trade = document.getElementById('tradeSelect').value;
+    const note = document.getElementById('noteInput').value.trim();
+    const pricebook = document.getElementById('pricebookInput').value.trim();
+
+    const result = await apiCall('/api/video/analyze', {
+      method: 'POST',
+      body: { frames, note, trade, pricebook }
+    });
+
+    setProgress(95, 'Building report…');
+
+    // Update credits cache
+    const user = getCachedUser();
+    if (user && result.credits !== undefined) {
+      user.credits = result.credits;
+      setCachedUser(user);
+      if (typeof updateCreditDisplay === 'function') updateCreditDisplay();
+    }
+
+    setProgress(100, 'Done!');
+    setTimeout(() => showProgress(false), 600);
+
+    renderResults(result);
+
+  } catch (err) {
+    showProgress(false);
+    showError(err.message || 'Something went wrong. Please try again.');
+  } finally {
+    analyzeBtn.disabled = false;
+  }
+});
+
+// ── Render results ──
+function renderResults(data) {
+  document.getElementById('vbResults').classList.add('visible');
+
+  // If raw fallback only
+  if (data.raw && !data.workPlan && !data.crewEn && !data.crewEs) {
+    show('secRaw');
+    document.getElementById('rawText').textContent = data.raw;
+    return;
+  }
+
+  // Work plan
+  if (data.workPlan && data.workPlan.length) {
+    const container = document.getElementById('planSteps');
+    container.innerHTML = '';
+    data.workPlan.forEach((step, i) => {
+      const div = document.createElement('div');
+      div.className = 'vb-step';
+      const text = typeof step === 'string' ? step : (step.text || step.step || JSON.stringify(step));
+      div.innerHTML = `<div class="vb-step-num">${i + 1}</div><div class="vb-step-text">${escHtml(text)}</div>`;
+      container.appendChild(div);
+    });
+    show('secPlan');
+  }
+
+  // Crew instructions
+  const enText = data.crewEn || data.crew_en || '';
+  const esText = data.crewEs || data.crew_es || '';
+  if (enText || esText) {
+    document.getElementById('crewEn').textContent = enText;
+    document.getElementById('crewEs').textContent = esText;
+    show('secCrew');
+  }
+
+  // Upsells
+  const upsells = data.upsells || data.upsell || [];
+  if (upsells.length) {
+    const list = document.getElementById('upsellList');
+    list.innerHTML = '';
+    const icons = ['🔧', '🪟', '🔌', '🚿', '🏠', '🎨', '🌿', '💡', '🔩', '⚡'];
+    upsells.forEach((u, i) => {
+      const item = typeof u === 'string' ? { title: u, why: '', value: '' } : u;
+      const div = document.createElement('div');
+      div.className = 'vb-upsell-item';
+      div.innerHTML = `
+        <div class="vb-upsell-icon">${icons[i % icons.length]}</div>
+        <div class="vb-upsell-body">
+          <div class="vb-upsell-title">${escHtml(item.title || item.name || String(item))}</div>
+          ${item.why ? `<div class="vb-upsell-why">${escHtml(item.why)}</div>` : ''}
+          ${item.value || item.est_value ? `<div class="vb-upsell-value">Est. ${escHtml(item.value || item.est_value)}</div>` : ''}
+        </div>`;
+      list.appendChild(div);
+    });
+    show('secUpsell');
+  }
+
+  // Estimate
+  const range = data.estimate || data.estimateRange || data.price_range || '';
+  const note = data.estimateNote || data.scope_notes || data.notes || '';
+  if (range) {
+    document.getElementById('estimateRange').textContent = range;
+    document.getElementById('estimateNote').textContent = note;
+    show('secEstimate');
+  }
+
+  // Raw fallback alongside structured
+  if (data.raw) {
+    show('secRaw');
+    document.getElementById('rawText').textContent = data.raw;
+  }
+}
+
+// ── Helpers ──
+function show(id) { document.getElementById(id).style.display = 'block'; }
+function hideResults() {
+  document.getElementById('vbResults').classList.remove('visible');
+  ['secPlan','secCrew','secUpsell','secEstimate','secRaw'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+}
+function showError(msg) {
+  const el = document.getElementById('vbError');
+  el.textContent = msg;
+  el.classList.add('visible');
+}
+function hideError() {
+  document.getElementById('vbError').classList.remove('visible');
+}
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function copyText(elId) {
+  const txt = document.getElementById(elId).textContent;
+  navigator.clipboard.writeText(txt).then(() => showToast('Copied!', 'ok')).catch(() => {
+    // Fallback for older mobile browsers
+    const ta = document.createElement('textarea');
+    ta.value = txt;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+    showToast('Copied!', 'ok');
+  });
+}
+
+function shareWA(elId) {
+  const txt = document.getElementById(elId).textContent;
+  window.open('https://wa.me/?text=' + encodeURIComponent(txt), '_blank');
+}
+
+// ── Init ──
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof injectProfileAvatar === 'function') injectProfileAvatar();
+  if (typeof buildFooter === 'function') buildFooter();
+  setLang(lang);
+});
+</script>
+<script src="/js/motion-engine.js" defer></script>
+<script src="/js/cmdk-palette.js" defer></script>
+<script src="/js/brain-assistant.js" defer></script>
+</body>
+</html>
