@@ -908,6 +908,13 @@ function renderResults(resp) {
   // Timeline (hero section)
   if (timeline.length) {
     const list = document.getElementById('timelineList');
+    if (!list._seekBound) {
+      list.addEventListener('click', e => {
+        const chip = e.target.closest('.vb-tl-chip');
+        if (chip) seekVideo(chip.dataset.time || '');
+      });
+      list._seekBound = true;
+    }
     list.innerHTML = '';
     timeline.forEach(item => {
       const row = document.createElement('div');
@@ -915,7 +922,7 @@ function renderResults(resp) {
       const timeStr = item.time || '';
       row.innerHTML = `
         <div class="vb-tl-left">
-          <button class="vb-tl-chip" onclick="seekVideo(${JSON.stringify(timeStr)})">${escHtml(timeStr || '—')}</button>
+          <button class="vb-tl-chip" data-time="${escHtml(timeStr)}">${escHtml(timeStr || '—')}</button>
         </div>
         <div class="vb-tl-body">
           ${item.said ? `<div class="vb-tl-said">🗣 ${escHtml(item.said)}</div>` : ''}
