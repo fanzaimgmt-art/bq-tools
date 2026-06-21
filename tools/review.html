@@ -52,7 +52,7 @@
 
 <div class="page">
   <a href="/" class="page-back" data-en="← All Tools" data-es="← Todas las Herramientas" data-he="כל הכלים →">← All Tools</a>
-  <h1 class="page-title" data-en="⭐ Review Request" data-he="⭐ בקשת ביקורת">⭐ Review Request</h1>
+  <h1 class="page-title" data-en="⭐ Review Request" data-es="⭐ Solicitud de Reseña" data-he="⭐ בקשת ביקורת">⭐ Review Request</h1>
   <p class="page-sub" data-en="Generate a personalized message to get Google reviews from happy clients." data-es="Genera un mensaje personalizado para obtener reseñas de Google de clientes satisfechos." data-he="צור הודעה מותאמת אישית לקבלת ביקורות Google מלקוחות מרוצים.">Generate a personalized message to get Google reviews from happy clients.</p>
 
   <div id="hiw-review"></div>
@@ -65,13 +65,13 @@
     <label class="input-label" data-en="Type of Work" data-es="Tipo de Trabajo" data-he="סוג העבודה">Type of Work</label>
     <input class="input" id="workType" placeholder="kitchen remodel" style="margin-bottom:12px;">
 
-    <label class="input-label" data-en="Your Business Name" data-he="שם העסק שלך">Your Business Name</label>
+    <label class="input-label" data-en="Your Business Name" data-es="Nombre de tu Negocio" data-he="שם העסק שלך">Your Business Name</label>
     <input class="input" id="bizName" placeholder="ABC Renovations" style="margin-bottom:12px;">
 
-    <label class="input-label" data-en="Google Review Link (optional)" data-he="לינק ביקורת Google (אופציונלי)">Google Review Link</label>
+    <label class="input-label" data-en="Google Review Link (optional)" data-es="Enlace de Reseña de Google (opcional)" data-he="לינק ביקורת Google (אופציונלי)">Google Review Link</label>
     <input class="input" id="reviewLink" placeholder="https://g.page/r/..." style="margin-bottom:14px;">
 
-    <label class="input-label" data-en="Channel" data-he="ערוץ">Channel</label>
+    <label class="input-label" data-en="Channel" data-es="Canal" data-he="ערוץ">Channel</label>
     <div class="channel-btns">
       <button class="ch-btn on" onclick="setChannel(this, 'sms')">SMS</button>
       <button class="ch-btn" onclick="setChannel(this, 'whatsapp')">WhatsApp</button>
@@ -79,13 +79,13 @@
     </div>
   </div>
 
-  <button class="btn btn-primary btn-large" style="width:100%;" onclick="generateReview()" id="genBtn" data-en="🧠 Generate Message" data-he="🧠 צור הודעה">🧠 Generate Message</button>
+  <button class="btn btn-primary btn-large" style="width:100%;" onclick="generateReview()" id="genBtn" data-en="🧠 Generate Message" data-es="🧠 Generar Mensaje" data-he="🧠 צור הודעה">🧠 Generate Message</button>
 
   <div class="msg-result" id="msgResult">
     <div class="msg-text" id="msgText" contenteditable="true"></div>
     <div class="msg-actions">
-      <button class="btn btn-primary" onclick="copyMsg()" style="flex:1;" data-en="📋 Copy" data-he="📋 העתק">📋 Copy</button>
-      <button class="btn" onclick="openWhatsApp()" id="waBtn" style="flex:1;display:none;" data-en="Open WhatsApp" data-he="פתח WhatsApp">Open WhatsApp</button>
+      <button class="btn btn-primary" onclick="copyMsg()" style="flex:1;" data-en="📋 Copy" data-es="📋 Copiar" data-he="📋 העתק">📋 Copy</button>
+      <button class="btn" onclick="openWhatsApp()" id="waBtn" style="flex:1;display:none;" data-en="Open WhatsApp" data-es="Abrir WhatsApp" data-he="פתח WhatsApp">Open WhatsApp</button>
     </div>
   </div>
 </div>

@@ -187,6 +187,7 @@
     <div class="lang-toggle">
       <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
       <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+      <button class="lang-btn" data-lang="es" onclick="setLang('es')">ES</button>
     </div>
   </div>
 </nav>
@@ -203,25 +204,25 @@
     <!-- Step 1: Welcome + Business Name -->
     <div class="ob-step active" id="obStep1">
       <div class="welcome-emoji">🏗️</div>
-      <h2 data-en="Welcome to Obra!" data-he="ברוכים הבאים ל-Obra!">Welcome to Obra!</h2>
-      <p class="sub" data-en="Let's set up your profile. This info auto-fills into reports, client pages, and exports." data-he="בוא נגדיר את הפרופיל שלך. המידע ימלא אוטומטית בדוחות, עמודי לקוח וייצוא.">Let's set up your profile. This info auto-fills into reports, client pages, and exports.</p>
+      <h2 data-en="Welcome to Obra!" data-he="ברוכים הבאים ל-Obra!" data-es="¡Bienvenido a Obra!">Welcome to Obra!</h2>
+      <p class="sub" data-en="Let's set up your profile. This info auto-fills into reports, client pages, and exports." data-he="בוא נגדיר את הפרופיל שלך. המידע ימלא אוטומטית בדוחות, עמודי לקוח וייצוא." data-es="Configuremos tu perfil. Esta información se rellena automáticamente en reportes, páginas de clientes y exportaciones.">Let's set up your profile. This info auto-fills into reports, client pages, and exports.</p>
 
-      <label class="ob-label" data-en="Business Name *" data-he="שם העסק *">Business Name *</label>
+      <label class="ob-label" data-en="Business Name *" data-he="שם העסק *" data-es="Nombre del Negocio *">Business Name *</label>
       <input type="text" class="ob-input" id="obBusinessName" placeholder="e.g. Gold Remodeling" autocomplete="organization">
 
       <div class="ob-nav">
-        <button class="btn btn-primary" onclick="goStep(2)" data-en="Next →" data-he="← הבא">Next →</button>
+        <button class="btn btn-primary" onclick="goStep(2)" data-en="Next →" data-he="← הבא" data-es="Siguiente →">Next →</button>
       </div>
     </div>
 
     <!-- Step 2: Business Type + Phone -->
     <div class="ob-step" id="obStep2">
-      <h2 data-en="About Your Business" data-he="על העסק שלך">About Your Business</h2>
-      <p class="sub" data-en="Help us personalize your experience." data-he="עזור לנו להתאים את החוויה שלך.">Help us personalize your experience.</p>
+      <h2 data-en="About Your Business" data-he="על העסק שלך" data-es="Sobre Tu Negocio">About Your Business</h2>
+      <p class="sub" data-en="Help us personalize your experience." data-he="עזור לנו להתאים את החוויה שלך." data-es="Ayúdanos a personalizar tu experiencia.">Help us personalize your experience.</p>
 
       <label class="ob-label" data-en="Business Type" data-es="Tipo de Negocio" data-he="סוג עסק">Business Type</label>
       <select class="ob-select" id="obBusinessType">
-        <option value="" data-en="Select..." data-he="בחר...">Select...</option>
+        <option value="" data-en="Select..." data-he="בחר..." data-es="Seleccionar...">Select...</option>
         <option value="General Contractor">General Contractor</option>
         <option value="Remodeler">Remodeler</option>
         <option value="Painter">Painter</option>
@@ -231,31 +232,31 @@
         <option value="Other">Other</option>
       </select>
 
-      <label class="ob-label" data-en="Phone (optional)" data-he="טלפון (אופציונלי)">Phone (optional)</label>
+      <label class="ob-label" data-en="Phone (optional)" data-he="טלפון (אופציונלי)" data-es="Teléfono (opcional)">Phone (optional)</label>
       <input type="tel" class="ob-input" id="obPhone" placeholder="+1 (555) 123-4567" autocomplete="tel">
 
       <div class="ob-nav">
         <button class="btn" onclick="goStep(1)" data-en="← Back" data-es="← Atrás" data-he="חזור →">← Back</button>
-        <button class="btn btn-primary" onclick="goStep(3)" data-en="Next →" data-he="← הבא">Next →</button>
+        <button class="btn btn-primary" onclick="goStep(3)" data-en="Next →" data-he="← הבא" data-es="Siguiente →">Next →</button>
       </div>
     </div>
 
     <!-- Step 3: Logo -->
     <div class="ob-step" id="obStep3">
-      <h2 data-en="Your Logo" data-he="הלוגו שלך">Your Logo</h2>
-      <p class="sub" data-en="Upload your business logo. It'll appear on reports and exports." data-he="העלה את הלוגו של העסק. הוא יופיע בדוחות ובייצוא.">Upload your business logo. It'll appear on reports and exports.</p>
+      <h2 data-en="Your Logo" data-he="הלוגו שלך" data-es="Tu Logotipo">Your Logo</h2>
+      <p class="sub" data-en="Upload your business logo. It'll appear on reports and exports." data-he="העלה את הלוגו של העסק. הוא יופיע בדוחות ובייצוא." data-es="Sube el logotipo de tu negocio. Aparecerá en reportes y exportaciones.">Upload your business logo. It'll appear on reports and exports.</p>
 
       <div class="logo-upload" id="logoUpload">
         <input type="file" accept="image/*" id="logoInput">
         <div id="logoPreview">
           <div style="font-size:32px;opacity:.3;">📷</div>
-          <div class="upload-text" data-en="Tap to upload logo" data-he="לחץ להעלאת לוגו">Tap to upload logo</div>
+          <div class="upload-text" data-en="Tap to upload logo" data-he="לחץ להעלאת לוגו" data-es="Toca para subir logotipo">Tap to upload logo</div>
         </div>
       </div>
 
       <div class="ob-nav">
         <button class="btn" onclick="goStep(2)" data-en="← Back" data-es="← Atrás" data-he="חזור →">← Back</button>
-        <button class="btn btn-primary" onclick="goStep(4)" data-en="Next →" data-he="← הבא">Next →</button>
+        <button class="btn btn-primary" onclick="goStep(4)" data-en="Next →" data-he="← הבא" data-es="Siguiente →">Next →</button>
       </div>
       <button class="ob-skip" onclick="goStep(4)" data-en="Skip for now" data-es="Omitir por ahora" data-he="דלג">Skip for now</button>
     </div>
@@ -263,7 +264,7 @@
     <!-- Step 4: Language + Finish -->
     <div class="ob-step" id="obStep4">
       <h2 data-en="Preferred Language" data-es="Idioma Preferido" data-he="שפה מועדפת">Preferred Language</h2>
-      <p class="sub" data-en="Choose your default language for the app." data-he="בחר את שפת ברירת המחדל.">Choose your default language for the app.</p>
+      <p class="sub" data-en="Choose your default language for the app." data-he="בחר את שפת ברירת המחדל." data-es="Elige tu idioma predeterminado para la app.">Choose your default language for the app.</p>
 
       <div class="lang-choice">
         <div class="lang-option selected" id="langEn" onclick="selectLang('en')">
@@ -276,7 +277,7 @@
 
       <div class="ob-nav">
         <button class="btn" onclick="goStep(3)" data-en="← Back" data-es="← Atrás" data-he="חזור →">← Back</button>
-        <button class="btn btn-primary" onclick="finishOnboarding()" id="finishBtn" data-en="Finish Setup ✓" data-he="סיים הגדרה ✓">Finish Setup ✓</button>
+        <button class="btn btn-primary" onclick="finishOnboarding()" id="finishBtn" data-en="Finish Setup ✓" data-he="סיים הגדרה ✓" data-es="Finalizar Configuración ✓">Finish Setup ✓</button>
       </div>
     </div>
   </div>

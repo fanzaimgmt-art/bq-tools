@@ -143,14 +143,12 @@ function _ddHTML(user) {
     <a href="/profile.html" class="nav-dd-item"><span class="dd-icon">🏢</span>${t({ en: 'Business Profile', he: 'פרופיל עסקי', es: 'Perfil del Negocio' })}</a>
     <a href="/dashboard.html" class="nav-dd-item"><span class="dd-icon">📊</span>${t({ en: 'Dashboard', he: 'דשבורד', es: 'Panel' })}</a>
     <a href="/gallery.html" class="nav-dd-item"><span class="dd-icon">📁</span>${t({ en: 'My Projects', he: 'הפרויקטים שלי', es: 'Mis Proyectos' })}</a>
-    <a href="/directory-profile.html?email=${encodeURIComponent(user.email)}" class="nav-dd-item"><span class="dd-icon">📋</span>${t({ en: 'Directory Listing', he: 'רישום Directory', es: 'Mi Directorio' })}</a>
     <div class="nav-dd-divider"></div>
     <div class="nav-dd-lang">
       <button class="nav-dd-lang-btn${lang === 'en' ? ' on' : ''}" onclick="setLang('en');_rebuildDropdown()">🇺🇸 EN</button>
       <button class="nav-dd-lang-btn${lang === 'he' ? ' on' : ''}" onclick="setLang('he');_rebuildDropdown()">🇮🇱 עב</button>
       <button class="nav-dd-lang-btn${lang === 'es' ? ' on' : ''}" onclick="setLang('es');_rebuildDropdown()">🇲🇽 ES</button>
     </div>
-    <a href="/memories.html" class="nav-dd-item"><span class="dd-icon">🧠</span>${t({ en: 'Memories', he: 'זיכרונות', es: 'Memorias' })}</a>
     <button class="nav-dd-item" onclick="showReferralLink()"><span class="dd-icon">🎁</span>${t({ en: 'Refer a Friend', he: 'הזמן חבר', es: 'Recomienda a un Amigo' })}</button>
     <button class="nav-dd-item" onclick="showRedeemCode()"><span class="dd-icon">🎟️</span>${t({ en: 'Redeem Code', he: 'הזן קוד', es: 'Canjear Código' })}</button>
     <a href="/affiliate.html" class="nav-dd-item"><span class="dd-icon">💰</span>${t({ en: 'Affiliate Program', he: 'תוכנית שותפים', es: 'Programa de Afiliados' })}</a>
@@ -529,11 +527,6 @@ function runTutorial() {
       target: '.nav-link[href="/home.html"]', pos: 'bottom',
       title: t({ en: 'Your AI Tools', he: 'הכלים שלך', es: 'Tus Herramientas IA' }),
       text: t({ en: 'Compare photos, create reports, get estimates — all powered by AI.', he: 'השווה תמונות, צור דוחות, קבל הצעות מחיר — הכל עם AI', es: 'Compara fotos, crea reportes, obtén estimados — todo con IA.' })
-    },
-    {
-      target: '.nav-link[href="/directory.html"]', pos: 'bottom',
-      title: t({ en: 'Directory', he: 'Directory', es: 'Directorio' }),
-      text: t({ en: 'Find contractors or list your business here.', he: 'מצא קבלנים או רשום את העסק שלך כאן', es: 'Encuentra contratistas o registra tu negocio aquí.' })
     },
     {
       target: '#creditBar, .nav-credit-pill', pos: 'bottom',
@@ -1104,7 +1097,7 @@ function _routingCheck() {
   // Not logged in hits tool page → go to auth
   // Exception: compare.html slider is free without login
   if (!loggedIn && p.startsWith('/tools/') && !p.includes('compare.html')) {
-    window.location.replace('/auth.html');
+    window.location.replace('/auth.html?next=' + encodeURIComponent(p));
     return true;
   }
 

@@ -197,7 +197,7 @@ Respond JSON only:
       </div>
       ${r.recommended_materials?.length ? `<div class="est-section" style="margin-top:14px;"><h3 data-en="Recommended" data-es="Recomendado" data-he="מומלץ">Recommended</h3>${r.recommended_materials.map(m => `<div class="est-row"><span>${m}</span></div>`).join('')}</div>` : ''}
       ${r.notes ? `<div class="est-row" style="margin-top:8px;"><span class="est-label">${r.notes}</span></div>` : ''}
-      <div class="disclaimer" data-en="⚠️ This is an AI estimate for reference only. Final costs may vary based on actual conditions, material availability, and local labor rates. Always get multiple quotes from licensed contractors." data-he="⚠️ זוהי הערכת AI לייחוס בלבד. עלויות סופיות עשויות להשתנות. קבל תמיד מספר הצעות מקבלנים מורשים.">⚠️ This is an AI estimate for reference only. Final costs may vary based on actual conditions, material availability, and local labor rates.</div>`;
+      <div class="disclaimer" data-en="⚠️ This is an AI estimate for reference only. Final costs may vary based on actual conditions, material availability, and local labor rates. Always get multiple quotes from licensed contractors." data-es="⚠️ Este es un estimado de IA solo de referencia. Los costos finales pueden variar según las condiciones reales, disponibilidad de materiales y tarifas locales de mano de obra. Siempre obtén varias cotizaciones de contratistas con licencia." data-he="⚠️ זוהי הערכת AI לייחוס בלבד. עלויות סופיות עשויות להשתנות. קבל תמיד מספר הצעות מקבלנים מורשים.">⚠️ This is an AI estimate for reference only. Final costs may vary based on actual conditions, material availability, and local labor rates.</div>`;
 
     setLang(lang);
     showToast(lang === 'he' ? 'הערכה מוכנה!' : 'Estimate ready!', 'ok');

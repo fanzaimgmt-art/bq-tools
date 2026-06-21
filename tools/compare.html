@@ -279,10 +279,6 @@
 <!-- Footer -->
 <footer class="footer" style="width:100%;">
   <div class="footer-brand">Powered by Obra — BQ Production LLC</div>
-  <div class="footer-links">
-    <a href="https://bqprod.pages.dev" target="_blank">bqprod.pages.dev</a>
-    <a href="https://instagram.com/bq_music" target="_blank">@bq_music</a>
-  </div>
 </footer>
 
 <script src="../js/ai.js"></script>
@@ -499,7 +495,7 @@ function exportImage() {
   ctx.fillText(wmText, w - ctx.measureText(wmText).width - pad, h - pad);
 
   const link = document.createElement('a');
-  link.download = 'bq-compare-export.png';
+  link.download = 'obra-compare-export.png';
   link.href = canvas.toDataURL('image/png');
   link.click();
   showToast(lang === 'he' ? 'תמונה יוצאה!' : 'Image exported!', 'ok');

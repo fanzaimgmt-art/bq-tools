@@ -55,7 +55,7 @@
 <body>
 
 <nav class="nav">
-  <a href="/home.html" class="nav-logo">BQ <span>Tools</span></a>
+  <a href="/home.html" class="nav-logo">Obra</a>
   <div class="nav-right">
     <a href="/business.html" class="nav-link" data-en="Business" data-he="עסק" data-es="Negocio">Business</a>
     <div class="lang-toggle">
@@ -167,7 +167,7 @@ async function init() {
     [knockers, bookings] = await Promise.all([Biz.list('doorknockers'), Biz.list('doorbookings')]);
     // If no knockers yet, seed with sample data for demo (client-side only for UI)
     if (knockers.length === 0) {
-      knockers = DEMO_KNOCKERS;
+      knockers = [];
     }
     renderKnockers();
     renderBookings();
