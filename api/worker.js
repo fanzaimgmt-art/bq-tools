@@ -929,10 +929,13 @@ async function handleVideoAnalyze(request, env) {
   if (!user) return json({ error: 'Unauthorized' }, 401);
 
   const body = await request.json();
-  const { frames, note, trade, pricebook } = body;
+  const { frames, note, trade, pricebook, video_base64, video_mime } = body;
 
-  if (!frames || !Array.isArray(frames) || frames.length === 0) {
-    return json({ error: 'At least one frame is required' }, 400);
+  // Accept either frames (fast path) or raw video (fallback for iPhone HEVC etc.)
+  const hasFrames = frames && Array.isArray(frames) && frames.length > 0;
+  const hasVideo = video_base64 && video_mime;
+  if (!hasFrames && !hasVideo) {
+    return json({ error: 'At least one frame or a video file is required' }, 400);
   }
 
   const CREDIT_COST = 2;
@@ -948,7 +951,11 @@ async function handleVideoAnalyze(request, env) {
 
   let rawText;
   try {
-    rawText = await callGeminiWithModel(env, 'gemini-2.5-flash', foremanPrompt, frames);
+    if (hasVideo) {
+      rawText = await callGeminiWithVideo(env, 'gemini-2.5-flash', foremanPrompt, video_base64, video_mime);
+    } else {
+      rawText = await callGeminiWithModel(env, 'gemini-2.5-flash', foremanPrompt, frames);
+    }
   } catch (err) {
     return json({ error: `AI failed: ${err.message}` }, 502);
   }
@@ -956,7 +963,7 @@ async function handleVideoAnalyze(request, env) {
   updated.credits -= CREDIT_COST;
   updated.creditsUsedThisMonth = (updated.creditsUsedThisMonth || 0) + CREDIT_COST;
   await env.BQ_USERS.put(`user:${updated.email}`, JSON.stringify(updated));
-  await logCreditUsage(updated.email, 'video:analyze', `${frames.length} frames`, env);
+  await logCreditUsage(updated.email, 'video:analyze', hasVideo ? 'video upload' : `${frames.length} frames`, env);
 
   let result;
   try {
@@ -967,6 +974,71 @@ async function handleVideoAnalyze(request, env) {
   }
 
   return json({ ok: true, result, credits_left: updated.credits });
+}
+
+// Upload a raw video to Gemini File API, poll until ACTIVE, then generate content
+async function callGeminiWithVideo(env, model, prompt, videoBase64, videoMime) {
+  const apiKey = env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error('Gemini API key not configured');
+
+  // Decode base64 → Uint8Array
+  const binaryStr = atob(videoBase64);
+  const bytes = new Uint8Array(binaryStr.length);
+  for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+
+  // 1. Upload to Gemini File API
+  const uploadRes = await fetch(
+    `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${apiKey}&uploadType=media`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': videoMime },
+      body: bytes
+    }
+  );
+  if (!uploadRes.ok) {
+    const errText = await uploadRes.text();
+    throw new Error(`Gemini upload failed (${uploadRes.status}): ${errText}`);
+  }
+  const uploadData = await uploadRes.json();
+  const fileUri = uploadData.file?.uri;
+  const fileName = uploadData.file?.name;
+  if (!fileUri || !fileName) throw new Error('Gemini upload: no file URI returned');
+
+  // 2. Poll until ACTIVE (file starts as PROCESSING)
+  const MAX_POLLS = 20;
+  const POLL_INTERVAL_MS = 1500;
+  let state = uploadData.file?.state || 'PROCESSING';
+  for (let i = 0; i < MAX_POLLS && state !== 'ACTIVE'; i++) {
+    await new Promise(r => setTimeout(r, POLL_INTERVAL_MS));
+    const pollRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/${fileName}?key=${apiKey}`
+    );
+    if (!pollRes.ok) throw new Error(`Gemini file poll failed (${pollRes.status})`);
+    const pollData = await pollRes.json();
+    state = pollData.state || 'PROCESSING';
+    if (state === 'FAILED') throw new Error('Gemini file processing failed');
+  }
+  if (state !== 'ACTIVE') throw new Error('Gemini file did not become ACTIVE in time');
+
+  // 3. Generate content referencing the uploaded file
+  const genRes = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
+          parts: [
+            { file_data: { mime_type: videoMime, file_uri: fileUri } },
+            { text: prompt }
+          ]
+        }]
+      })
+    }
+  );
+  const genData = await genRes.json();
+  if (genData.error) throw new Error(genData.error.message || JSON.stringify(genData.error));
+  return genData.candidates?.[0]?.content?.parts?.[0]?.text || '';
 }
 
 async function callClaudeWithModel(env, model, prompt, images) {

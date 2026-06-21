@@ -658,21 +658,57 @@ analyzeBtn.addEventListener('click', async () => {
   setProgress(5, 'Loading video…');
 
   try {
-    // 1. Extract frames
-    const frames = await extractFramesClean(videoFile, 8);
-    extractedFrames = frames;
-
-    setProgress(70, 'Sending to Obra AI…');
-
-    // 2. Call API
     const trade = document.getElementById('tradeSelect').value;
     const note = document.getElementById('noteInput').value.trim();
     const pricebook = document.getElementById('pricebookInput').value.trim();
 
-    const result = await apiCall('/api/video/analyze', {
-      method: 'POST',
-      body: { frames, note, trade, pricebook }
-    });
+    let result;
+
+    // 1. Fast path: try browser frame extraction (fails on iPhone HEVC/H.265)
+    let frames = null;
+    try {
+      frames = await extractFramesClean(videoFile, 8);
+      extractedFrames = frames;
+    } catch (frameErr) {
+      // Frame extraction failed (e.g. HEVC codec) — fall through to video upload path
+      frames = null;
+    }
+
+    if (frames && frames.length > 0) {
+      // Frame path: send extracted JPEG frames
+      setProgress(70, 'Sending to Obra AI…');
+      result = await apiCall('/api/video/analyze', {
+        method: 'POST',
+        body: { frames, note, trade, pricebook }
+      });
+    } else {
+      // Video upload path: send raw file to backend → Gemini File API
+      setProgress(40, 'Preparing video upload…');
+
+      // Size guard: Gemini File API supports up to ~2 GB, but we cap at 60 MB for speed
+      const MAX_BYTES = 60 * 1024 * 1024;
+      if (videoFile.size > MAX_BYTES) {
+        throw new Error('Video too large — please trim to ~20 seconds or under 60 MB before uploading.');
+      }
+
+      setProgress(55, 'Uploading video…');
+      const arrayBuf = await videoFile.arrayBuffer();
+      const uint8 = new Uint8Array(arrayBuf);
+      // Convert to base64 in chunks to avoid stack overflow on large files
+      let binary = '';
+      const chunkSize = 8192;
+      for (let i = 0; i < uint8.length; i += chunkSize) {
+        binary += String.fromCharCode(...uint8.subarray(i, i + chunkSize));
+      }
+      const video_base64 = btoa(binary);
+      const video_mime = videoFile.type || 'video/mp4';
+
+      setProgress(70, 'Sending to Obra AI…');
+      result = await apiCall('/api/video/analyze', {
+        method: 'POST',
+        body: { video_base64, video_mime, note, trade, pricebook }
+      });
+    }
 
     setProgress(95, 'Building report…');
 
