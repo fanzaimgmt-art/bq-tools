@@ -60,6 +60,12 @@
   .report-preview ul { padding-left: 20px; }
   .report-preview .report-score { font-size: 32px; font-weight: 900; color: var(--ac); }
   .report-preview .report-footer { font-size: 10px; color: #aaa; text-align: center; margin-top: 20px; padding-top: 10px; border-top: 1px solid #eee; }
+
+  @media (max-width: 600px) {
+    .upload-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
+    .report-preview { padding: 16px; margin-top: 12px; }
+    #exportRow { margin-top: 12px; }
+  }
 </style>
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#e8c547">

@@ -34,6 +34,15 @@
   .cp-actions { display: flex; gap: 8px; margin-top: 20px; flex-wrap: wrap; }
   .cp-actions .btn { flex: 1; min-width: 140px; }
 
+  @media (max-width: 600px) {
+    .cp-parties { grid-template-columns: 1fr; }
+    .cp-sign { grid-template-columns: 1fr; gap: 20px; }
+    .contract-preview { padding: 16px; }
+    .cp-actions .btn { min-width: 100px; }
+    /* Collapse date pickers row */
+    .card [style*="display:flex;gap:10px"] { flex-direction: column; }
+  }
+
   @media print {
     nav, .page > *:not(.contract-preview), .cp-actions, footer { display: none !important; }
     body { background: white; }

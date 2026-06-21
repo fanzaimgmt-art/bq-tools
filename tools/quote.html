@@ -70,6 +70,17 @@
   .qp-actions { display: flex; gap: 8px; margin-top: 20px; flex-wrap: wrap; }
   .qp-actions .btn { flex: 1; min-width: 140px; }
 
+  @media (max-width: 600px) {
+    .template-chips { flex-direction: column; }
+    .template-chip { min-width: unset; }
+    .qp-header { flex-direction: column; gap: 12px; }
+    .qp-meta { text-align: start; }
+    [dir="rtl"] .qp-meta { text-align: start; }
+    .qp-totals { max-width: 100%; margin-left: 0; }
+    .quote-preview { padding: 16px; }
+    .qp-actions .btn { min-width: 100px; }
+  }
+
   @media print {
     nav, .page > *:not(.quote-preview), .qp-actions, footer { display: none !important; }
     body { background: white; }

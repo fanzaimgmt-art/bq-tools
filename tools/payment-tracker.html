@@ -20,10 +20,10 @@
     display: inline-block; padding: 3px 10px; border-radius: 6px;
     font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
   }
-  .st-paid    { background: rgba(81,207,102,.15); color: #51cf66; }
-  .st-sent    { background: rgba(116,185,255,.12); color: #74b9ff; }
+  .st-paid    { background: rgba(81,207,102,.15); color: var(--grn); }
+  .st-sent    { background: rgba(116,185,255,.12); color: var(--blu); }
   .st-due_soon { background: rgba(253,203,110,.18); color: #fdcb6e; }
-  .st-overdue { background: rgba(255,107,107,.15); color: #ff6b6b; animation: pulse 1.5s ease infinite; }
+  .st-overdue { background: rgba(255,107,107,.15); color: var(--red); animation: pulse 1.5s ease infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.55} }
 
   /* Table */
@@ -66,9 +66,9 @@
   .sum-card { flex: 1; min-width: 130px; background: var(--sf); border: 1px solid var(--bd); border-radius: 12px; padding: 14px 16px; }
   .sum-card .sum-label { font-size: 11px; color: var(--txd); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
   .sum-card .sum-val { font-size: 22px; font-weight: 900; }
-  .sum-card.danger .sum-val { color: #ff6b6b; }
+  .sum-card.danger .sum-val { color: var(--red); }
   .sum-card.warn .sum-val { color: #fdcb6e; }
-  .sum-card.ok .sum-val { color: #51cf66; }
+  .sum-card.ok .sum-val { color: var(--grn); }
   .sum-card.accent .sum-val { color: var(--ac); }
 
   /* Empty state */
