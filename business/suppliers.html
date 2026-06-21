@@ -57,38 +57,39 @@
 
 <div class="page">
   <a href="/business.html" class="page-back" data-en="← Business Hub" data-es="← Centro de Negocio" data-he="← מרכז עסקי">← Business Hub</a>
-  <h1 class="page-title" data-en="🚚 Suppliers" data-he="🚚 ספקים">🚚 Suppliers</h1>
-  <p class="page-sub" data-en="All your vendors in one place. Compare prices automatically from your receipts." data-he="כל הספקים שלך במקום אחד. השווה מחירים אוטומטית מהקבלות.">All your vendors in one place. Compare prices automatically from your receipts.</p>
+  <h1 class="page-title" data-en="🚚 Suppliers" data-he="🚚 ספקים" data-es="🚚 Proveedores">🚚 Suppliers</h1>
+  <p class="page-sub" data-en="All your vendors in one place. Compare prices automatically from your receipts." data-he="כל הספקים שלך במקום אחד. השווה מחירים אוטומטית מהקבלות." data-es="Todos tus proveedores en un solo lugar. Compara precios automáticamente desde tus recibos.">All your vendors in one place. Compare prices automatically from your receipts.</p>
 
   <div id="hiw-sup"></div>
   <script>
     const HIW_SUP = {
       steps: [
-        { icon: '➕', en: 'Add suppliers with address + phone', he: 'הוסף ספקים עם כתובת וטלפון' },
-        { icon: '📸', en: 'Scan their receipts — prices auto-tracked', he: 'סרוק את הקבלות שלהם — מחירים נרשמים אוטומטית' },
-        { icon: '📊', en: 'Compare prices across suppliers over time', he: 'השווה מחירים בין ספקים לאורך זמן' },
+        { icon: '➕', en: 'Add suppliers with address + phone', he: 'הוסף ספקים עם כתובת וטלפון', es: 'Agrega proveedores con dirección y teléfono' },
+        { icon: '📸', en: 'Scan their receipts — prices auto-tracked', he: 'סרוק את הקבלות שלהם — מחירים נרשמים אוטומטית', es: 'Escanea sus recibos — precios registrados automáticamente' },
+        { icon: '📊', en: 'Compare prices across suppliers over time', he: 'השווה מחירים בין ספקים לאורך זמן', es: 'Compara precios entre proveedores a lo largo del tiempo' },
       ],
       example: {
         en: 'Home Depot lumber was $4.50 in Jan, $5.10 in Apr → 13% increase. Time to try another supplier.',
-        he: 'עץ ב-Home Depot היה $4.50 בינואר, $5.10 באפריל → עלייה של 13%. אולי זמן לנסות ספק אחר.'
+        he: 'עץ ב-Home Depot היה $4.50 בינואר, $5.10 באפריל → עלייה של 13%. אולי זמן לנסות ספק אחר.',
+        es: 'La madera de Home Depot costaba $4.50 en enero y $5.10 en abril → aumento del 13%. Hora de probar otro proveedor.'
       }
     };
     document.addEventListener('DOMContentLoaded',()=>{if(typeof buildHowItWorks==='function')buildHowItWorks('hiw-sup',HIW_SUP)});
   </script>
 
   <div class="s-bar">
-    <input type="text" id="fSearch" placeholder="Search..." oninput="render()">
+    <input type="text" id="fSearch" placeholder="Search..." data-en-placeholder="Search..." data-he-placeholder="חיפוש..." data-es-placeholder="Buscar..." oninput="render()">
     <select id="fType" onchange="render()">
-      <option value="">All Types</option>
-      <option>Lumber</option><option>Tile</option><option>Hardware</option><option>Paint</option>
-      <option>Electrical</option><option>Plumbing</option><option>Roofing</option><option>Concrete</option><option>Other</option>
+      <option value="" data-en="All Types" data-he="כל הסוגים" data-es="Todos los tipos">All Types</option>
+      <option data-en="Lumber" data-he="עץ" data-es="Madera">Lumber</option><option data-en="Tile" data-he="אריחים" data-es="Azulejo">Tile</option><option data-en="Hardware" data-he="חומרה" data-es="Ferretería">Hardware</option><option data-en="Paint" data-he="צבע" data-es="Pintura">Paint</option>
+      <option data-en="Electrical" data-he="חשמל" data-es="Eléctrico">Electrical</option><option data-en="Plumbing" data-he="אינסטלציה" data-es="Plomería">Plumbing</option><option data-en="Roofing" data-he="גג" data-es="Techos">Roofing</option><option data-en="Concrete" data-he="בטון" data-es="Concreto">Concrete</option><option data-en="Other" data-he="אחר" data-es="Otro">Other</option>
     </select>
-    <button class="btn btn-primary" onclick="showAddForm()">+ <span data-en="Add Supplier" data-he="הוסף ספק">Add Supplier</span></button>
+    <button class="btn btn-primary" onclick="showAddForm()">+ <span data-en="Add Supplier" data-he="הוסף ספק" data-es="Agregar proveedor">Add Supplier</span></button>
   </div>
 
   <div class="s-tabs">
-    <button class="s-tab on" onclick="setView('grid')">📋 <span data-en="Cards" data-he="כרטיסים">Cards</span></button>
-    <button class="s-tab" onclick="setView('map')">🗺️ <span data-en="Map" data-he="מפה">Map</span></button>
+    <button class="s-tab on" onclick="setView('grid')">📋 <span data-en="Cards" data-he="כרטיסים" data-es="Tarjetas">Cards</span></button>
+    <button class="s-tab" onclick="setView('map')">🗺️ <span data-en="Map" data-he="מפה" data-es="Mapa">Map</span></button>
   </div>
 
   <div class="s-grid" id="list"></div>
