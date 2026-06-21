@@ -155,7 +155,7 @@ When performing an action, include the ACTION: tag at the END of your response o
   panel.id = 'chatPanel';
   panel.innerHTML = `
     <div class="chat-header">
-      <h3>BQ Assistant</h3>
+      <h3>Obra Assistant</h3>
       <div class="chat-header-btns">
         <button onclick="clearChatHistory()" title="Clear">🗑️</button>
         <button onclick="toggleChat()" title="Close">✕</button>
@@ -177,8 +177,8 @@ When performing an action, include the ACTION: tag at the END of your response o
 
   if (history.length === 0) {
     addMessage('ai', lang === 'he'
-      ? 'היי! אני BQ Assistant. מה תרצה לעשות?'
-      : "Hi! I'm BQ Assistant. What do you want to do?");
+      ? 'היי! אני Obra Assistant. מה תרצה לעשות?'
+      : "Hi! I'm Obra Assistant. What do you want to do?");
   } else {
     history.forEach(m => addMessage(m.role, m.text, true));
   }

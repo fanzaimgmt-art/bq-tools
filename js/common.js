@@ -380,17 +380,7 @@ function buildFooter() {
   const footer = document.createElement('footer');
   footer.className = 'footer';
   footer.innerHTML = `
-    <div class="footer-brand">Obra — BQ Production LLC</div>
-    <div class="footer-links">
-      <a href="https://bqprod.pages.dev" target="_blank">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/></svg>
-        bqprod.pages.dev
-      </a>
-      <a href="https://instagram.com/bq_music" target="_blank">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/></svg>
-        @bq_music
-      </a>
-    </div>
+    <div class="footer-brand">Obra</div>
     <div class="footer-legal">
       <a href="/privacy.html">Privacy Policy</a>
       <span>|</span>
