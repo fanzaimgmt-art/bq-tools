@@ -16,14 +16,31 @@
 <style>
   body { display: flex; flex-direction: column; }
 
+  /* ── UI Notice Banner ── */
   .qp-diff {
-    background: var(--acd); border: 1px solid var(--ac); border-radius: 10px;
-    padding: 12px 16px; font-size: 13px; margin-bottom: 16px;
+    background: var(--acd); border: 1px solid var(--ac); border-radius: var(--r);
+    padding: var(--space-1) var(--space-2); font-size: 13px; margin-bottom: var(--space-2);
   }
   .qp-diff strong { color: var(--ac); }
 
-  /* Status chips */
-  .st-chip { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+  /* ── Outstanding Bar ── */
+  .outstanding-bar {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: var(--r);
+    padding: var(--space-1) var(--space-2); margin-bottom: var(--space-2);
+    display: none; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-1);
+  }
+  .outstanding-bar.show { display: flex; }
+  .outstanding-label {
+    font-size: 13px; color: var(--txd); text-transform: uppercase; letter-spacing: .5px;
+  }
+  .outstanding-amount {
+    font-family: var(--font-display); font-size: 24px; font-weight: 900; color: var(--ac);
+  }
+  .outstanding-meta { text-align: right; }
+  .outstanding-count { font-size: 13px; color: var(--txd); }
+
+  /* ── Status chips ── */
+  .st-chip { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
   .st-Draft { background: rgba(136,136,136,.15); color: var(--txd); }
   .st-Sent { background: rgba(116,185,255,.15); color: var(--blu); }
   .st-Viewed { background: rgba(232,197,71,.15); color: var(--ac); }
@@ -31,7 +48,49 @@
   .st-Overdue { background: rgba(255,107,107,.15); color: var(--red); animation: pulse 1.5s ease infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
 
-  /* Invoice preview (similar style to quote) */
+  /* ── UI: line items total row ── */
+  .totals-row-grand {
+    display: flex; justify-content: space-between; padding: 10px 0;
+    border-top: 2px solid var(--ac); margin-top: var(--space-1); font-size: 20px;
+    font-family: var(--font-display);
+  }
+
+  /* ── UI: section spacing ── */
+  .card-section { margin-bottom: var(--space-2); }
+
+  /* ── Actions row ── */
+  .actions-row { display: flex; gap: var(--space-1); margin-top: var(--space-2); flex-wrap: wrap; }
+  .actions-row .btn { flex: 1; min-width: 140px; }
+
+  /* ── History section ── */
+  .history-section { margin-top: var(--space-3); }
+  .history-section h2 {
+    font-family: var(--font-display); font-size: 24px; font-weight: 700;
+    letter-spacing: -0.01em; margin-bottom: var(--space-2);
+  }
+  .history-list {
+    background: var(--sf); border: 1px solid var(--bd); border-radius: var(--r-lg); overflow: hidden;
+  }
+  .history-empty {
+    padding: var(--space-2); text-align: center; color: var(--txd); font-size: 14px;
+  }
+  .history-item {
+    display: flex; align-items: center; gap: var(--space-1);
+    padding: var(--space-1) var(--space-2); border-bottom: 1px solid rgba(255,255,255,.04); cursor: pointer;
+  }
+  .history-item:last-child { border-bottom: none; }
+  .history-item:hover { background: var(--sf-2); }
+  .history-item-info { flex: 1; min-width: 0; }
+  .history-item-num { font-weight: 700; font-size: 14px; }
+  .history-item-sub { font-size: 13px; color: var(--txd); }
+  .history-item-amount { text-align: right; }
+  .history-item-total { font-weight: 700; color: var(--ac); font-size: 14px; }
+  .history-item-del {
+    background: none; border: none; color: var(--red); cursor: pointer; font-size: 16px;
+    padding: 4px; flex-shrink: 0;
+  }
+
+  /* ── Invoice preview — PRINT DOCUMENT — do not alter px sizing below ── */
   .inv-preview {
     background: #fff; color: #222; border-radius: 12px; padding: 32px;
     margin-top: 20px; font-family: var(--font-en); display: none;
@@ -45,26 +104,20 @@
   .ip-meta .inv-label { font-size: 28px; font-weight: 900; color: var(--ac); letter-spacing: -0.01em; margin-bottom: 4px; line-height: 1; }
   .ip-meta .inv-num { font-size: 14px; font-weight: 700; color: var(--ac); }
   [dir="rtl"] .ip-meta { text-align: left; }
-
   .ip-client { background: #faf8f0; padding: 14px 18px; border-radius: 8px; margin-bottom: 20px; }
   .ip-client .cl-label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: .5px; }
   .ip-client .cl-name { font-size: 16px; font-weight: 700; margin-top: 2px; }
-
   .ip-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 13px; }
   .ip-table th { background: #f0edd8; text-align: left; padding: 10px; font-size: 12px; color: #444; border-bottom: 1px solid #ddd; }
   .ip-table td { padding: 10px; border-bottom: 1px solid #eee; }
   .ip-table td.num, .ip-table th.num { text-align: right; }
-
   .ip-totals { margin-left: auto; max-width: 280px; width: 100%; padding: 12px 14px; background: #faf8f0; border-radius: 8px; margin-bottom: 16px; }
   .ip-totals .t-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; }
   .ip-totals .t-row.final { border-top: 2px solid var(--ac); margin-top: 6px; padding-top: 8px; font-size: 18px; font-weight: 700; color: var(--ac); }
   .ip-totals .t-row.due { color: #d63031; font-weight: 700; }
-
   .ip-payment { background: #eaf4ff; border: 1px solid #b4d4f0; border-radius: 8px; padding: 12px; font-size: 12px; color: #444; margin-bottom: 14px; }
   .ip-footer { text-align: center; margin-top: 24px; padding-top: 14px; border-top: 1px solid #eee; font-size: 10px; color: #999; }
-
-  .actions-row { display: flex; gap: 8px; margin-top: 20px; flex-wrap: wrap; }
-  .actions-row .btn { flex: 1; min-width: 140px; }
+  /* ── end print document ── */
 
   @media print {
     nav, .page > *:not(.inv-preview), .actions-row, footer { display: none !important; }
@@ -100,19 +153,19 @@
   </div>
 
   <!-- Outstanding summary -->
-  <div id="outstandingBar" style="display:none;background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:12px 16px;margin-bottom:16px;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+  <div id="outstandingBar" class="outstanding-bar">
     <div>
-      <div style="font-size:11px;color:var(--txd);text-transform:uppercase;letter-spacing:.5px;" data-en="Outstanding Invoices" data-he="חשבוניות לתשלום" data-es="Facturas Pendientes">Outstanding Invoices</div>
-      <div style="font-size:22px;font-weight:900;color:var(--ac);" id="outstandingAmount">$0</div>
+      <div class="outstanding-label" data-en="Outstanding Invoices" data-he="חשבוניות לתשלום" data-es="Facturas Pendientes">Outstanding Invoices</div>
+      <div class="outstanding-amount" id="outstandingAmount">$0</div>
     </div>
-    <div style="text-align:right;">
-      <div style="font-size:11px;color:var(--txd);" id="outstandingCount">0 invoices</div>
-      <a href="#history" style="font-size:12px;color:var(--ac);" data-en="View history →" data-he="ראה היסטוריה →" data-es="Ver historial →">View history →</a>
+    <div class="outstanding-meta">
+      <div class="outstanding-count" id="outstandingCount">0 invoices</div>
+      <a href="#history" data-en="View history →" data-he="ראה היסטוריה →" data-es="Ver historial →">View history →</a>
     </div>
   </div>
 
   <!-- Inputs -->
-  <div class="card" style="margin-bottom:14px;">
+  <div class="card card-section">
     <label class="input-label" data-en="Client" data-he="לקוח" data-es="Cliente">Client</label>
     <select class="input" id="clientSelect" onchange="fillClient()" style="margin-bottom:8px;">
       <option value="">Pick a client or enter manually</option>
@@ -163,7 +216,7 @@
   </div>
 
   <!-- Line items -->
-  <div class="card" style="margin-bottom:14px;">
+  <div class="card card-section">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
       <label class="input-label" style="margin:0;" data-en="Line Items" data-he="פריטים" data-es="Conceptos">Line Items</label>
       <button class="btn btn-sm" onclick="addItem()">+ <span data-en="Add Item" data-he="הוסף" data-es="Agregar">Add Item</span></button>
@@ -182,14 +235,14 @@
       </div>
       <strong id="taxAmount">$0.00</strong>
     </div>
-    <div style="display:flex;justify-content:space-between;padding:10px 0;border-top:2px solid var(--ac);margin-top:8px;font-size:18px;">
+    <div class="totals-row-grand">
       <strong data-en="Total" data-he="סה״כ" data-es="Total">Total</strong>
       <strong id="total" style="color:var(--ac);">$0.00</strong>
     </div>
   </div>
 
   <!-- Notes -->
-  <div class="card" style="margin-bottom:14px;">
+  <div class="card card-section">
     <label class="input-label" data-en="Notes / Payment Instructions" data-he="הערות / הוראות תשלום" data-es="Notas / Instrucciones de Pago">Notes / Payment Instructions</label>
     <textarea class="textarea" id="notes" rows="3" placeholder="Payment via Zelle, check, or PayPal. Thank you for your business!"></textarea>
   </div>
@@ -208,10 +261,10 @@
   </div>
 
   <!-- Invoice history -->
-  <div id="history" style="margin-top:32px;">
-    <h2 style="font-size:20px;margin-bottom:14px;" data-en="Invoice History" data-he="היסטוריה" data-es="Historial de Facturas">Invoice History</h2>
-    <div id="historyList" style="background:var(--sf);border:1px solid var(--bd);border-radius:12px;overflow:hidden;">
-      <p style="padding:20px;text-align:center;color:var(--txd);font-size:14px;">Loading...</p>
+  <div id="history" class="history-section">
+    <h2 data-en="Invoice History" data-he="היסטוריה" data-es="Historial de Facturas">Invoice History</h2>
+    <div id="historyList" class="history-list">
+      <p class="history-empty">Loading...</p>
     </div>
   </div>
 </div>
@@ -516,12 +569,13 @@ function emailInvoice() {
 
 function renderOutstanding() {
   const outstanding = invoices.filter(i => i.status !== 'Paid' && i.status !== 'Draft');
+  const bar = document.getElementById('outstandingBar');
   if (outstanding.length === 0) {
-    document.getElementById('outstandingBar').style.display = 'none';
+    bar.classList.remove('show');
     return;
   }
   const total = outstanding.reduce((s, i) => s + (parseFloat(i.total) - parseFloat(i.amountPaid || 0)), 0);
-  document.getElementById('outstandingBar').style.display = 'flex';
+  bar.classList.add('show');
   document.getElementById('outstandingAmount').textContent = fmtMoney(total);
   document.getElementById('outstandingCount').textContent = outstanding.length + (lang === 'he' ? ' חשבוניות' : ' invoice' + (outstanding.length !== 1 ? 's' : ''));
 }
@@ -529,23 +583,23 @@ function renderOutstanding() {
 function renderHistory() {
   const el = document.getElementById('historyList');
   if (invoices.length === 0) {
-    el.innerHTML = `<p style="padding:24px;text-align:center;color:var(--txd);font-size:14px;">${lang === 'he' ? 'אין חשבוניות עדיין' : 'No invoices yet'}</p>`;
+    el.innerHTML = `<p class="history-empty">${lang === 'he' ? 'אין חשבוניות עדיין' : 'No invoices yet'}</p>`;
     return;
   }
   el.innerHTML = invoices.slice(0, 30).map(inv => {
     const days = inv.dueDate ? Math.ceil((new Date(inv.dueDate) - Date.now()) / 86400000) : null;
     const isOverdue = inv.status !== 'Paid' && inv.status !== 'Draft' && days !== null && days < 0;
     const st = isOverdue ? 'Overdue' : inv.status;
-    return `<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;" onclick="loadInvoice('${inv.id}')">
-      <div style="flex:1;min-width:0;">
-        <div style="font-weight:700;font-size:14px;">${escHtml(inv.invoiceNumber)}</div>
-        <div style="font-size:12px;color:var(--txd);">${escHtml(inv.clientName || '')} · ${fmtDate(inv.issueDate)}</div>
+    return `<div class="history-item" onclick="loadInvoice('${inv.id}')">
+      <div class="history-item-info">
+        <div class="history-item-num">${escHtml(inv.invoiceNumber)}</div>
+        <div class="history-item-sub">${escHtml(inv.clientName || '')} · ${fmtDate(inv.issueDate)}</div>
       </div>
-      <div style="text-align:right;">
-        <div style="font-weight:700;color:var(--ac);">${fmtMoney(inv.total)}</div>
+      <div class="history-item-amount">
+        <div class="history-item-total">${fmtMoney(inv.total)}</div>
         <span class="st-chip st-${st}">${st}</span>
       </div>
-      <button style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;" onclick="event.stopPropagation();deleteInvoice('${inv.id}')">🗑️</button>
+      <button class="history-item-del" onclick="event.stopPropagation();deleteInvoice('${inv.id}')">🗑️</button>
     </div>`;
   }).join('');
 }
