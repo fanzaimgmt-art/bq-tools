@@ -1129,10 +1129,7 @@ function buildAppNav() {
   // Build nav links
   const links = [
     { href: '/home.html', en: 'Tools', he: 'כלים', es: 'Herramientas', match: ['/home.html'] },
-    { href: '/business.html', en: 'Business', he: 'עסק', es: 'Negocio', match: ['/business.html'] },
-    { href: '/learn.html', en: 'Learn', he: 'ללמוד', es: 'Aprende', match: ['/learn.html'] },
-    { href: '/news.html', en: 'News', he: 'חדשות', es: 'Noticias', match: ['/news.html'] },
-    { href: '/directory.html', en: 'Directory', he: 'ספר עסקים', es: 'Directorio', match: ['/directory.html', '/directory-profile.html'] },
+    { href: '/#pricing', en: 'Pricing', he: 'מחירים', es: 'Precios', match: [] },
   ];
 
   const linksHtml = links.map(l => {
