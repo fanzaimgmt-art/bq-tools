@@ -201,7 +201,7 @@
 <body>
 
 <div class="js-page">
-  <div class="js-brand">Obra <span>· Powered by BQ Production</span></div>
+  <div class="js-brand">Obra <span data-en="· Powered by BQ Production" data-he="· מופעל על ידי BQ Production" data-es="· Desarrollado por BQ Production">· Powered by BQ Production</span></div>
 
   <div id="mainContent">
     <!-- Loading state -->
@@ -216,8 +216,8 @@
     <!-- Error state (hidden until needed) -->
     <div id="errorState" style="display:none;" class="error-state">
       <div class="err-icon">🔗</div>
-      <h2>This job link is no longer active.</h2>
-      <p>The link may have expired or been removed by the contractor.<br>Please contact them directly for an update.</p>
+      <h2 data-en="This job link is no longer active." data-he="קישור הפרויקט אינו פעיל יותר." data-es="Este enlace de trabajo ya no está activo.">This job link is no longer active.</h2>
+      <p data-en="The link may have expired or been removed by the contractor.<br>Please contact them directly for an update." data-he="הקישור אולי פג תוקפו או הוסר על ידי הקבלן.<br>אנא פנה אליו ישירות לעדכון." data-es="El enlace puede haber expirado o sido eliminado por el contratista.<br>Por favor contáctalo directamente para obtener una actualización.">The link may have expired or been removed by the contractor.<br>Please contact them directly for an update.</p>
     </div>
 
     <!-- Job content (hidden until loaded) -->
@@ -226,11 +226,19 @@
 </div>
 
 <div class="js-footer">
-  Powered by <a href="https://bqtools.dev" target="_blank">Obra</a> &middot; BQ Production LLC &copy; 2026
+  <span data-en="Powered by" data-he="מופעל על ידי" data-es="Desarrollado por">Powered by</span> <a href="https://bqtools.dev" target="_blank">Obra</a> &middot; BQ Production LLC &copy; 2026
 </div>
 
 <script>
 const API = 'https://bq-tools-api.fanzai-mgmt.workers.dev';
+
+// i18n helper — reads current lang from <html lang>
+function t({ en, he, es }) {
+  const l = document.documentElement.lang || 'en';
+  if (l === 'he') return he;
+  if (l === 'es') return es;
+  return en;
+}
 
 function escHtml(s) {
   if (!s) return '';
@@ -250,7 +258,12 @@ function fmtDate(d) {
 }
 
 function statusLabel(s) {
-  const map = { paid: 'Paid in Full', sent: 'Invoice Sent', due_soon: 'Due Soon', overdue: 'Overdue' };
+  const map = {
+    paid:     t({ en: 'Paid in Full', he: 'שולם במלואו',     es: 'Pagado en su totalidad' }),
+    sent:     t({ en: 'Invoice Sent', he: 'חשבונית נשלחה',   es: 'Factura enviada' }),
+    due_soon: t({ en: 'Due Soon',     he: 'מועד תשלום קרוב', es: 'Vence pronto' }),
+    overdue:  t({ en: 'Overdue',      he: 'באיחור',           es: 'Vencida' })
+  };
   return map[s] || s;
 }
 
@@ -303,7 +316,7 @@ function renderJob(job) {
   if (milestones.length > 0) {
     msHtml = `
       <div style="margin-bottom:16px;">
-        <div style="font-size:12px;color:var(--txd);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:10px;">Payment Milestones</div>
+        <div style="font-size:12px;color:var(--txd);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:10px;">${t({ en: 'Payment Milestones', he: 'אבני דרך לתשלום', es: 'Hitos de pago' })}</div>
         <div class="timeline">
           ${milestones.map((m, i) => {
             const isDone = m.done;
@@ -314,7 +327,7 @@ function renderJob(job) {
                 <div class="timeline-dot ${dotClass}"></div>
                 <div class="timeline-name">
                   ${escHtml(m.name)}
-                  ${isDone ? '<span class="timeline-done-label">✓ Done</span>' : ''}
+                  ${isDone ? `<span class="timeline-done-label">✓ ${t({ en: 'Done', he: 'בוצע', es: 'Listo' })}</span>` : ''}
                 </div>
                 ${m.amount ? `<div class="timeline-amount">${fmtMoney(m.amount)}</div>` : ''}
               </div>`;
@@ -327,13 +340,13 @@ function renderJob(job) {
   let nextPaymentHtml = '';
   if (!isFullyPaid) {
     const nextAmt = nextMs ? parseFloat(nextMs.amount) || amountDue : amountDue;
-    const nextName = nextMs ? nextMs.name : 'Remaining Balance';
+    const nextName = nextMs ? nextMs.name : t({ en: 'Remaining Balance', he: 'יתרת תשלום', es: 'Saldo restante' });
     nextPaymentHtml = `
       <div class="next-payment-banner">
         <div class="npb-icon">📅</div>
         <div class="npb-text">
-          <strong>${fmtMoney(nextAmt)}</strong> due for <em>${escHtml(nextName)}</em>
-          ${job.due_date ? `<br>Due by <strong>${fmtDate(job.due_date)}</strong>` : ''}
+          <strong>${fmtMoney(nextAmt)}</strong> ${t({ en: 'due for', he: 'לתשלום עבור', es: 'pendiente de pago por' })} <em>${escHtml(nextName)}</em>
+          ${job.due_date ? `<br>${t({ en: 'Due by', he: 'תאריך יעד', es: 'Fecha límite' })} <strong>${fmtDate(job.due_date)}</strong>` : ''}
         </div>
       </div>`;
   } else {
@@ -341,7 +354,7 @@ function renderJob(job) {
       <div class="next-payment-banner" style="background:rgba(81,207,102,.1);border-color:rgba(81,207,102,.3);">
         <div class="npb-icon">🎉</div>
         <div class="npb-text" style="color:#51cf66;">
-          <strong>Paid in Full</strong> — Thank you for your business!
+          <strong>${t({ en: 'Paid in Full', he: 'שולם במלואו', es: 'Pagado en su totalidad' })}</strong> — ${t({ en: 'Thank you for your business!', he: 'תודה על הביטחון שנתת בנו!', es: '¡Gracias por su preferencia!' })}
         </div>
       </div>`;
   }
@@ -349,7 +362,7 @@ function renderJob(job) {
   // Note
   const noteHtml = job.last_note ? `
     <div class="note-box">
-      <div class="note-label">Contractor Update</div>
+      <div class="note-label">${t({ en: 'Contractor Update', he: 'עדכון מהקבלן', es: 'Actualización del contratista' })}</div>
       ${escHtml(job.last_note)}
     </div>` : '';
 
@@ -361,23 +374,23 @@ function renderJob(job) {
       : '#';
     payBtn = `
       <a href="${contactHref}" class="pay-now-btn">
-        💳 Pay Now — Contact Contractor
+        💳 ${t({ en: 'Pay Now — Contact Contractor', he: 'לתשלום — צור קשר עם הקבלן', es: 'Pagar ahora — Contactar al contratista' })}
       </a>
-      <p class="pay-note">Online payments coming soon. Tap above to arrange payment via email.</p>`;
+      <p class="pay-note">${t({ en: 'Online payments coming soon. Tap above to arrange payment via email.', he: 'תשלומים מקוונים יגיעו בקרוב. לחץ למעלה לתיאום תשלום במייל.', es: 'Pagos en línea próximamente. Toca arriba para coordinar el pago por correo electrónico.' })}</p>`;
   } else {
-    payBtn = `<div class="pay-now-btn disabled" style="pointer-events:none;">✅ All Paid — Nothing Due</div>`;
+    payBtn = `<div class="pay-now-btn disabled" style="pointer-events:none;">✅ ${t({ en: 'All Paid — Nothing Due', he: 'שולם הכל — אין יתרה', es: 'Todo pagado — Sin saldo pendiente' })}</div>`;
   }
 
   const html = `
     <div style="margin-bottom:16px;">
-      <div class="job-title">${escHtml(job.job_name || 'Job Status')}</div>
+      <div class="job-title">${escHtml(job.job_name || t({ en: 'Job Status', he: 'סטטוס פרויקט', es: 'Estado del trabajo' }))}</div>
       <span class="job-status-badge st-${status}">${statusLabel(status)}</span>
     </div>
 
     <div class="contractor-card">
       <div class="contractor-avatar">${initials}</div>
       <div class="contractor-info">
-        <h2>${escHtml(c.name || 'Your Contractor')}</h2>
+        <h2>${escHtml(c.name || t({ en: 'Your Contractor', he: 'הקבלן שלך', es: 'Tu contratista' }))}</h2>
         <div class="contractor-contact">
           ${c.phone ? `<a href="tel:${escHtml(c.phone)}">📞 ${escHtml(c.phone)}</a>` : ''}
           ${c.email ? `<a href="mailto:${escHtml(c.email)}">✉️ ${escHtml(c.email)}</a>` : ''}
@@ -387,15 +400,15 @@ function renderJob(job) {
 
     <div class="pay-summary">
       <div class="pay-box green">
-        <div class="pb-label">Paid</div>
+        <div class="pb-label">${t({ en: 'Paid', he: 'שולם', es: 'Pagado' })}</div>
         <div class="pb-val">${fmtMoney(paid)}</div>
       </div>
       <div class="pay-box yellow">
-        <div class="pb-label">Still Owed</div>
+        <div class="pb-label">${t({ en: 'Still Owed', he: 'נותר לתשלום', es: 'Saldo pendiente' })}</div>
         <div class="pb-val">${fmtMoney(amountDue)}</div>
       </div>
       <div class="pay-box accent">
-        <div class="pb-label">Total</div>
+        <div class="pb-label">${t({ en: 'Total', he: 'סה"כ', es: 'Total' })}</div>
         <div class="pb-val">${fmtMoney(total)}</div>
       </div>
     </div>
