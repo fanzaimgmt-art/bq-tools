@@ -678,8 +678,8 @@ analyzeBtn.addEventListener('click', async () => {
 
     // Update credits cache
     const user = getCachedUser();
-    if (user && result.credits !== undefined) {
-      user.credits = result.credits;
+    if (user && (result.credits_left !== undefined || result.credits !== undefined)) {
+      user.credits = (result.credits_left !== undefined) ? result.credits_left : result.credits;
       setCachedUser(user);
       if (typeof updateCreditDisplay === 'function') updateCreditDisplay();
     }
@@ -698,11 +698,24 @@ analyzeBtn.addEventListener('click', async () => {
 });
 
 // ── Render results ──
-function renderResults(data) {
+function renderResults(resp) {
   document.getElementById('vbResults').classList.add('visible');
 
+  // Normalize backend shape: {ok, result:{plan, crew_instructions:{en,es}, upsells:[{item,why,est_value}], estimated_range, scope_notes}, raw}
+  const r = (resp && resp.result) ? resp.result : (resp || {});
+  const data = {
+    workPlan: (r.plan || r.workPlan || []).map(s =>
+      (typeof s === 'string') ? s : { text: [s.step, s.detail].filter(Boolean).join(' — ') }),
+    crewEn: Array.isArray(r.crew_instructions && r.crew_instructions.en) ? r.crew_instructions.en.join('\n') : (r.crewEn || r.crew_en || ''),
+    crewEs: Array.isArray(r.crew_instructions && r.crew_instructions.es) ? r.crew_instructions.es.join('\n') : (r.crewEs || r.crew_es || ''),
+    upsells: (r.upsells || []).map(u => (typeof u === 'string') ? { title: u } : { title: u.item || u.title || u.name || '', why: u.why || '', est_value: u.est_value || u.value || '' }),
+    estimate: r.estimated_range || r.estimate || '',
+    estimateNote: r.scope_notes || r.estimateNote || '',
+    raw: (resp && resp.raw) || r.raw || ''
+  };
+
   // If raw fallback only
-  if (data.raw && !data.workPlan && !data.crewEn && !data.crewEs) {
+  if (data.raw && !data.workPlan.length && !data.crewEn && !data.crewEs) {
     show('secRaw');
     document.getElementById('rawText').textContent = data.raw;
     return;
