@@ -23,7 +23,7 @@ html.editorial {
 }
 
 html.editorial body {
-  font-family: 'DM Sans', -apple-system, system-ui, sans-serif !important;
+  font-family: var(--font-en) !important;
   background: var(--ed-ink) !important;
   color: var(--ed-paper) !important;
   font-size: 17px;
@@ -31,10 +31,10 @@ html.editorial body {
   line-height: 1.65;
   letter-spacing: -0.005em;
   -webkit-font-smoothing: antialiased;
-  cursor: none;
+  cursor: auto;
 }
 html.editorial body[lang="he"], html.editorial [lang="he"], html.editorial body[dir="rtl"] {
-  font-family: 'Rubik', 'DM Sans', system-ui, sans-serif !important;
+  font-family: 'Rubik', 'Inter', system-ui, sans-serif !important;
 }
 @media (max-width: 900px), (pointer: coarse) {
   html.editorial body { cursor: auto; font-size: 16px; }
@@ -50,7 +50,7 @@ html.editorial .ed-cursor-ring {
   mix-blend-mode: difference;
   will-change: transform;
 }
-html.editorial .ed-cursor-dot { width: 4px; height: 4px; background: #fff; border-radius: 50%; }
+html.editorial .ed-cursor-dot { display:none !important; width: 4px; height: 4px; background: #fff; border-radius: 50%; }
 html.editorial .ed-cursor-ring {
   width: 38px; height: 38px; border: 1px solid rgba(255,255,255,0.4); border-radius: 50%;
   transition: width .25s var(--ed-ease), height .25s var(--ed-ease), border-color .2s, background .2s;
@@ -78,43 +78,43 @@ html.editorial .ed-grain {
 
 /* ── Typography ── */
 html.editorial h1, html.editorial .ed-h1 {
-  font-family: 'Instrument Serif', Georgia, serif !important;
+  font-family: var(--font-display) !important;
   font-size: clamp(56px, 9vw, 128px) !important;
-  font-weight: 400 !important;
+  font-weight: 700 !important;
   line-height: 0.95 !important;
   letter-spacing: -0.04em !important;
 }
 html.editorial h2, html.editorial .ed-h2 {
-  font-family: 'Instrument Serif', Georgia, serif !important;
+  font-family: var(--font-display) !important;
   font-size: clamp(40px, 6vw, 88px) !important;
-  font-weight: 400 !important;
+  font-weight: 700 !important;
   line-height: 1.0 !important;
   letter-spacing: -0.035em !important;
 }
 html.editorial h3, html.editorial .ed-h3 {
-  font-family: 'Instrument Serif', Georgia, serif !important;
+  font-family: var(--font-display) !important;
   font-size: 28px !important;
-  font-weight: 400 !important;
+  font-weight: 700 !important;
   line-height: 1.15 !important;
   letter-spacing: -0.02em !important;
 }
 html.editorial h1 em, html.editorial h2 em, html.editorial h3 em {
-  font-style: italic; color: var(--ed-gold);
+  font-style: normal; color: var(--ed-gold);
 }
 
 html.editorial .ed-eyebrow {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: var(--font-en);
   font-size: 11px; color: var(--ed-gold);
-  text-transform: uppercase; letter-spacing: 0.18em;
+  text-transform: uppercase; letter-spacing: 0.06em;
   display: inline-flex; align-items: center; gap: 10px;
 }
 html.editorial .ed-eyebrow::before {
-  content: '§'; font-family: 'Instrument Serif', serif; font-size: 16px;
-  font-style: italic; color: var(--ed-paper-dim);
+  content: '§'; font-family: var(--font-display); font-size: 16px;
+  font-style: normal; color: var(--ed-paper-dim);
 }
 
 html.editorial .ed-lede {
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-en);
   font-size: clamp(17px, 1.8vw, 21px);
   font-weight: 400; line-height: 1.6; color: var(--ed-paper-dim);
   max-width: 56ch;
@@ -130,7 +130,7 @@ html.editorial .ed-btn-prim, html.editorial .ed-btn-ghost {
   padding: 16px 28px; font-size: 14px; font-weight: 500;
   border-radius: 100px;
   transition: transform .35s var(--ed-ease-spring), box-shadow .25s, background .25s, color .25s;
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-en);
   border: 0;
 }
 html.editorial .ed-btn-prim {
@@ -169,23 +169,23 @@ html.editorial .ed-topnav.scrolled {
   border-bottom: 1px solid var(--ed-line);
 }
 html.editorial .ed-logo {
-  font-family: 'Instrument Serif', serif;
-  font-size: 26px; font-weight: 400; font-style: italic;
+  font-family: var(--font-display);
+  font-size: 26px; font-weight: 400; font-style: normal;
   letter-spacing: -0.02em;
 }
 html.editorial .ed-logo .gold {
-  color: var(--ed-gold); font-style: normal; font-family: 'DM Sans', sans-serif;
+  color: var(--ed-gold); font-style: normal; font-family: var(--font-en);
   font-weight: 500; font-size: 18px; letter-spacing: 0.02em; margin-left: 4px;
 }
 html.editorial .ed-topnav-links {
   display: flex; gap: 32px; align-items: center;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-en);
 }
 html.editorial .ed-topnav-links a { font-size: 12px; color: var(--ed-paper-dim); transition: color .2s; }
 html.editorial .ed-topnav-links a:hover { color: var(--ed-paper); }
 html.editorial .ed-topnav-cta {
   justify-self: end;
-  font-family: 'JetBrains Mono', monospace; font-size: 12px;
+  font-family: var(--font-en); font-size: 12px;
   padding: 10px 20px; border: 1px solid var(--ed-line-strong); border-radius: 100px;
   color: var(--ed-paper); transition: border-color .2s, background .2s, color .2s;
 }
@@ -228,7 +228,7 @@ html.editorial .ed-cell::before {
 }
 html.editorial .ed-cell:hover::before { opacity: 1; }
 html.editorial .ed-cell .ed-icon {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-en);
   font-size: 13px; font-weight: 500; color: var(--ed-paper-faint);
   letter-spacing: 0.08em; margin-bottom: 18px;
   display: flex; align-items: center; gap: 8px;
@@ -241,7 +241,7 @@ html.editorial .ed-cell p {
   font-size: 15px; color: var(--ed-paper-dim); line-height: 1.6; font-weight: 400;
 }
 html.editorial .ed-cell .ed-tag {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-en);
   font-size: 9px; font-weight: 600;
   padding: 3px 8px; border-radius: 4px; letter-spacing: 0.08em;
   display: inline-block; align-self: flex-start; margin-top: auto; margin-bottom: 4px;
@@ -268,3 +268,5 @@ html.editorial .ed-bento .col-6 { grid-column: span 6; }
     transition-duration: 0.01ms !important;
   }
 }
+
+html.editorial .ed-cursor-dot, html.editorial .ed-cursor-ring { display:none !important; }
