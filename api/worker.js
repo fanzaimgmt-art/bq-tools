@@ -944,10 +944,25 @@ async function handleVideoAnalyze(request, env) {
     return json({ error: 'Not enough credits', credits: updated.credits, cost: CREDIT_COST }, 402);
   }
 
-  const foremanPrompt = `You are an expert construction foreman and estimator. You are given still frames from a job-site walkthrough video plus an optional contractor note. Produce a clear work plan a crew can follow. The crew may speak Spanish — give crew instructions in BOTH English and plain Mexican-Spanish trade language. Also suggest upsell opportunities a smart contractor would offer the homeowner (things worth adding that raise the job value) with a short why. If a pricebook/note with prices is provided, give an estimated price range. Return STRICT MINIFIED JSON ONLY, no markdown, with this exact shape: {"summary":"","plan":[{"step":"","detail":""}],"crew_instructions":{"en":[""],"es":[""]},"upsells":[{"item":"","why":"","est_value":""}],"scope_notes":"","estimated_range":""}.` +
+  const today = new Date().toISOString().slice(0, 10);
+  const foremanPrompt = `You are an expert construction foreman and estimator reviewing a contractor's job-site walkthrough video. The contractor NARRATES while filming — they TALK and POINT at things ("remove this cabinet here", "demo this wall"). Your job: LISTEN to the audio narration AND WATCH where they point, then produce a bilingual crew plan with a frame-by-frame timeline.
+
+RULES:
+- Use the AUDIO narration as the primary source of truth for what needs to be done; use the video frames to locate and identify exactly what/where.
+- If there is no audio, build the timeline purely from what is visible on screen.
+- Give all crew instructions in BOTH plain American English AND plain Mexican trade Spanish (use everyday trade words like "quitar", "tirar abajo", "instalar", "limpiar" — not formal Spanish).
+- Suggest upsell opportunities a smart contractor would offer the homeowner.
+- If a pricebook is provided, give an estimated price range.
+- Return STRICT MINIFIED JSON ONLY. No markdown fences (no \`\`\`). No commentary before or after. No extra keys.
+- ALL top-level keys must be at the TOP LEVEL. NEVER nest timeline, crew_instructions, or upsells inside a plan item or inside any other key. This is critical — if you nest them the output is broken.
+
+REQUIRED JSON SCHEMA (all keys top-level, exact names):
+{"summary":"","timeline":[{"time":"M:SS","said":"<exact words contractor said>","location":"<what/where he is pointing at>","do_en":"<crew instruction in English>","do_es":"<crew instruction in plain Mexican trade Spanish>"}],"plan":[{"step":"","detail":""}],"crew_instructions":{"en":[""],"es":[""]},"upsells":[{"item":"","why":"","est_value":""}],"scope_notes":"","estimated_range":""}
+
+TODAY: ${today}` +
     (note ? `\n\nContractor note: ${note}` : '') +
     (trade ? `\n\nTrade: ${trade}` : '') +
-    (pricebook ? `\n\nPricebook: ${pricebook}` : '');
+    (pricebook ? `\n\nPricebook/prices: ${pricebook}` : '');
 
   let rawText;
   try {
@@ -967,9 +982,56 @@ async function handleVideoAnalyze(request, env) {
 
   let result;
   try {
-    const stripped = rawText.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
-    result = JSON.parse(stripped);
+    // Strip markdown fences robustly
+    let stripped = rawText
+      .replace(/^```json\s*/i, '')
+      .replace(/^```\s*/i, '')
+      .replace(/\s*```$/i, '')
+      .trim();
+
+    // First attempt: parse as-is
+    try {
+      result = JSON.parse(stripped);
+    } catch (_) {
+      // Second attempt: extract from first { to last }
+      const start = stripped.indexOf('{');
+      const end = stripped.lastIndexOf('}');
+      if (start !== -1 && end !== -1 && end > start) {
+        result = JSON.parse(stripped.slice(start, end + 1));
+      } else {
+        throw new Error('no JSON object found');
+      }
+    }
+
+    // Normalize: hoist timeline/crew_instructions/upsells if misplaced inside plan items
+    const keysToHoist = ['timeline', 'crew_instructions', 'upsells'];
+    if (Array.isArray(result.plan)) {
+      for (const key of keysToHoist) {
+        if (!result[key]) {
+          for (const item of result.plan) {
+            if (item[key] !== undefined) {
+              result[key] = item[key];
+              delete item[key];
+            }
+          }
+        }
+      }
+    }
+    // Also search one level deeper (nested in any top-level object value)
+    if (!result.timeline || !result.crew_instructions || !result.upsells) {
+      for (const [k, v] of Object.entries(result)) {
+        if (v && typeof v === 'object' && !Array.isArray(v)) {
+          for (const key of keysToHoist) {
+            if (!result[key] && v[key] !== undefined) {
+              result[key] = v[key];
+              delete v[key];
+            }
+          }
+        }
+      }
+    }
   } catch (_) {
+    // Truly unparseable — return raw so frontend can show friendly message
     return json({ ok: true, raw: rawText, credits_left: updated.credits });
   }
 

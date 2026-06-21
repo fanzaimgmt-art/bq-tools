@@ -239,17 +239,74 @@ body { display: flex; flex-direction: column; }
 }
 .vb-estimate-note { font-size: 13px; color: var(--txd); line-height: 1.6; }
 
-/* Raw fallback */
-.vb-raw {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  line-height: 1.7;
-  color: var(--tx);
+/* Timeline */
+.vb-timeline { display: flex; flex-direction: column; gap: 14px; }
+.vb-tl-row {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
   background: var(--sf-2);
   border-radius: var(--r);
-  padding: 16px;
+  padding: 14px 16px;
+}
+.vb-tl-left { display: flex; flex-direction: column; align-items: center; gap: 8px; flex-shrink: 0; }
+.vb-tl-chip {
+  background: var(--acd);
+  border: 1px solid var(--ac);
+  color: var(--ac);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--transition);
+  font-variant-numeric: tabular-nums;
+}
+.vb-tl-chip:hover { background: var(--ac); color: var(--bg); }
+.vb-tl-body { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.vb-tl-said { font-size: 13px; color: var(--txd); font-style: italic; line-height: 1.5; }
+.vb-tl-loc { font-size: 12px; color: var(--txd); }
+.vb-tl-en { font-size: 14px; color: var(--tx); line-height: 1.5; }
+.vb-tl-es { font-size: 14px; color: var(--tx); line-height: 1.5; }
+.vb-tl-divider { border: none; border-top: 1px solid var(--bd); margin: 2px 0; }
+
+/* Playback video (hidden by default, shown when video is available) */
+#vbVideoWrap {
+  display: none;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  background: #000;
+  margin-bottom: 16px;
+}
+#vbVideoWrap.visible { display: block; }
+#vbVideo {
+  width: 100%;
+  max-height: 260px;
+  object-fit: contain;
+  display: block;
+}
+
+/* Raw fallback */
+.vb-raw-debug {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--txd);
+  background: var(--sf-2);
+  border-radius: var(--r);
+  padding: 12px;
   white-space: pre-wrap;
   word-break: break-word;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.vb-parse-fail {
+  padding: 24px;
+  text-align: center;
+  color: var(--txd);
+  font-size: 14px;
+  line-height: 1.7;
 }
 
 /* Error state */
@@ -393,8 +450,23 @@ body { display: flex; flex-direction: column; }
   <!-- Error -->
   <div class="vb-error" id="vbError"></div>
 
+  <!-- Video playback for timeline seeking -->
+  <div id="vbVideoWrap">
+    <video id="vbVideo" controls playsinline></video>
+  </div>
+
   <!-- Results -->
   <div class="vb-results" id="vbResults">
+
+    <!-- Timeline (hero) -->
+    <div class="vb-section" id="secTimeline" style="display:none;">
+      <div class="vb-section-title"><span>🎬</span><span data-en="Step-by-Step Timeline" data-he="ציר זמן צעד אחר צעד">Step-by-Step Timeline</span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+        <button class="btn" id="btnCopyEs" onclick="copyTimelineEs()">📋 Copy crew steps (Español)</button>
+        <button class="btn" id="btnWAEs" style="background:#25D366;border-color:#25D366;color:#fff;" onclick="shareTimelineEs()">💬 WhatsApp Español</button>
+      </div>
+      <div class="vb-timeline" id="timelineList"></div>
+    </div>
 
     <!-- Work Plan -->
     <div class="vb-section" id="secPlan" style="display:none;">
@@ -440,10 +512,15 @@ body { display: flex; flex-direction: column; }
       <div class="vb-estimate-note" id="estimateNote"></div>
     </div>
 
-    <!-- Raw fallback -->
+    <!-- Parse-fail fallback (never show raw JSON as main view) -->
     <div class="vb-section" id="secRaw" style="display:none;">
-      <div class="vb-section-title"><span>📄</span>Analysis</div>
-      <div class="vb-raw" id="rawText"></div>
+      <div class="vb-parse-fail">
+        Couldn't format the result — tap Analyze again.
+      </div>
+      <details style="margin-top:12px;">
+        <summary style="font-size:12px;color:var(--txd);cursor:pointer;">Debug info</summary>
+        <div class="vb-raw-debug" id="rawText"></div>
+      </details>
     </div>
 
   </div>
@@ -460,6 +537,7 @@ if (!isLoggedIn()) window.location.replace('/auth.html?next=' + encodeURICompone
 // ── State ──
 let extractedFrames = []; // raw base64 (no prefix)
 let videoFile = null;
+let videoObjectURL = null; // kept alive for timeline seeking
 
 // ── Upload zone drag-and-drop ──
 const uploadZone = document.getElementById('uploadZone');
@@ -486,6 +564,14 @@ function handleVideoFile(file) {
   extractedFrames = [];
   analyzeBtn.disabled = false;
   analyzeBtn.querySelector('[data-en]').textContent = 'Analyze Video (2 credits)';
+
+  // Keep an object URL for the video player (timeline seeking)
+  if (videoObjectURL) URL.revokeObjectURL(videoObjectURL);
+  videoObjectURL = URL.createObjectURL(file);
+  const vbVid = document.getElementById('vbVideo');
+  vbVid.src = videoObjectURL;
+  // Don't show the player yet — only once results arrive
+  document.getElementById('vbVideoWrap').classList.remove('visible');
 }
 
 // ── Frame extraction (all in-browser) ──
@@ -733,69 +819,150 @@ analyzeBtn.addEventListener('click', async () => {
   }
 });
 
+// ── Timeline timestamp helpers ──
+function timeToSeconds(t) {
+  // Accepts "M:SS", "MM:SS", "H:MM:SS"
+  if (!t) return 0;
+  const parts = String(t).split(':').map(Number);
+  if (parts.length === 2) return (parts[0] || 0) * 60 + (parts[1] || 0);
+  if (parts.length === 3) return (parts[0] || 0) * 3600 + (parts[1] || 0) * 60 + (parts[2] || 0);
+  return 0;
+}
+
+function seekVideo(timeStr) {
+  const vid = document.getElementById('vbVideo');
+  if (!vid || !vid.src) return;
+  const secs = timeToSeconds(timeStr);
+  vid.currentTime = secs;
+  // Show the player if hidden
+  document.getElementById('vbVideoWrap').classList.add('visible');
+  // Toggle play/pause
+  if (vid.paused) vid.play().catch(() => {});
+  else vid.pause();
+}
+
+// ── Deep-find a key anywhere in an object (for misplaced nesting) ──
+function deepFind(obj, key) {
+  if (!obj || typeof obj !== 'object') return undefined;
+  if (key in obj) return obj[key];
+  for (const v of Object.values(obj)) {
+    if (Array.isArray(v)) {
+      for (const item of v) {
+        const found = deepFind(item, key);
+        if (found !== undefined) return found;
+      }
+    } else if (v && typeof v === 'object') {
+      const found = deepFind(v, key);
+      if (found !== undefined) return found;
+    }
+  }
+  return undefined;
+}
+
 // ── Render results ──
 function renderResults(resp) {
   document.getElementById('vbResults').classList.add('visible');
 
-  // Normalize backend shape: {ok, result:{plan, crew_instructions:{en,es}, upsells:[{item,why,est_value}], estimated_range, scope_notes}, raw}
-  const r = (resp && resp.result) ? resp.result : (resp || {});
-  const data = {
-    workPlan: (r.plan || r.workPlan || []).map(s =>
-      (typeof s === 'string') ? s : { text: [s.step, s.detail].filter(Boolean).join(' — ') }),
-    crewEn: Array.isArray(r.crew_instructions && r.crew_instructions.en) ? r.crew_instructions.en.join('\n') : (r.crewEn || r.crew_en || ''),
-    crewEs: Array.isArray(r.crew_instructions && r.crew_instructions.es) ? r.crew_instructions.es.join('\n') : (r.crewEs || r.crew_es || ''),
-    upsells: (r.upsells || []).map(u => (typeof u === 'string') ? { title: u } : { title: u.item || u.title || u.name || '', why: u.why || '', est_value: u.est_value || u.value || '' }),
-    estimate: r.estimated_range || r.estimate || '',
-    estimateNote: r.scope_notes || r.estimateNote || '',
-    raw: (resp && resp.raw) || r.raw || ''
-  };
+  // Client-side parse if backend returned raw string
+  let r = (resp && resp.result) ? resp.result : null;
+  if (!r && resp && resp.raw) {
+    try {
+      let s = resp.raw.replace(/^```json\s*/i,'').replace(/^```\s*/i,'').replace(/\s*```$/i,'').trim();
+      try { r = JSON.parse(s); } catch(_) {
+        const st = s.indexOf('{'), en = s.lastIndexOf('}');
+        if (st !== -1 && en > st) r = JSON.parse(s.slice(st, en+1));
+      }
+    } catch(_) { r = null; }
+  }
+  if (!r) r = resp || {};
 
-  // If raw fallback only
-  if (data.raw && !data.workPlan.length && !data.crewEn && !data.crewEs) {
+  // Deep-find keys that may be misplaced
+  const timeline = deepFind(r, 'timeline') || [];
+  const crew = deepFind(r, 'crew_instructions') || {};
+  const upsellsRaw = deepFind(r, 'upsells') || [];
+  const planRaw = (r.plan || r.workPlan || []);
+
+  const crewEn = Array.isArray(crew.en) ? crew.en.join('\n') : (r.crewEn || r.crew_en || '');
+  const crewEs = Array.isArray(crew.es) ? crew.es.join('\n') : (r.crewEs || r.crew_es || '');
+  const upsells = upsellsRaw.map(u => typeof u === 'string' ? { title: u } : { title: u.item || u.title || u.name || '', why: u.why || '', est_value: u.est_value || u.value || '' });
+  const workPlan = planRaw.map(s => typeof s === 'string' ? s : [s.step, s.detail].filter(Boolean).join(' — '));
+  const estimate = r.estimated_range || r.estimate || '';
+  const estimateNote = r.scope_notes || r.estimateNote || '';
+  const rawStr = resp && resp.raw || '';
+
+  // Check if we have ANY structured content
+  const hasStructured = timeline.length || crewEn || crewEs || workPlan.length;
+
+  if (!hasStructured) {
+    // Show friendly fail — never show raw JSON as the main view
     show('secRaw');
-    document.getElementById('rawText').textContent = data.raw;
+    document.getElementById('rawText').textContent = rawStr || JSON.stringify(resp, null, 2);
     return;
   }
 
+  // Show video player if we have a video loaded
+  if (videoObjectURL) {
+    document.getElementById('vbVideoWrap').classList.add('visible');
+  }
+
+  // Timeline (hero section)
+  if (timeline.length) {
+    const list = document.getElementById('timelineList');
+    list.innerHTML = '';
+    timeline.forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'vb-tl-row';
+      const timeStr = item.time || '';
+      row.innerHTML = `
+        <div class="vb-tl-left">
+          <button class="vb-tl-chip" onclick="seekVideo(${JSON.stringify(timeStr)})">${escHtml(timeStr || '—')}</button>
+        </div>
+        <div class="vb-tl-body">
+          ${item.said ? `<div class="vb-tl-said">🗣 ${escHtml(item.said)}</div>` : ''}
+          ${item.location ? `<div class="vb-tl-loc">📍 ${escHtml(item.location)}</div>` : ''}
+          ${(item.said || item.location) && (item.do_en || item.do_es) ? '<hr class="vb-tl-divider">' : ''}
+          ${item.do_en ? `<div class="vb-tl-en">🇺🇸 ${escHtml(item.do_en)}</div>` : ''}
+          ${item.do_es ? `<div class="vb-tl-es">🇲🇽 ${escHtml(item.do_es)}</div>` : ''}
+        </div>`;
+      list.appendChild(row);
+    });
+    show('secTimeline');
+  }
+
   // Work plan
-  if (data.workPlan && data.workPlan.length) {
+  if (workPlan.length) {
     const container = document.getElementById('planSteps');
     container.innerHTML = '';
-    data.workPlan.forEach((step, i) => {
+    workPlan.forEach((text, i) => {
       const div = document.createElement('div');
       div.className = 'vb-step';
-      const text = typeof step === 'string' ? step : (step.text || step.step || JSON.stringify(step));
-      div.innerHTML = `<div class="vb-step-num">${i + 1}</div><div class="vb-step-text">${escHtml(text)}</div>`;
+      div.innerHTML = `<div class="vb-step-num">${i + 1}</div><div class="vb-step-text">${escHtml(String(text))}</div>`;
       container.appendChild(div);
     });
     show('secPlan');
   }
 
   // Crew instructions
-  const enText = data.crewEn || data.crew_en || '';
-  const esText = data.crewEs || data.crew_es || '';
-  if (enText || esText) {
-    document.getElementById('crewEn').textContent = enText;
-    document.getElementById('crewEs').textContent = esText;
+  if (crewEn || crewEs) {
+    document.getElementById('crewEn').textContent = crewEn;
+    document.getElementById('crewEs').textContent = crewEs;
     show('secCrew');
   }
 
   // Upsells
-  const upsells = data.upsells || data.upsell || [];
   if (upsells.length) {
     const list = document.getElementById('upsellList');
     list.innerHTML = '';
     const icons = ['🔧', '🪟', '🔌', '🚿', '🏠', '🎨', '🌿', '💡', '🔩', '⚡'];
     upsells.forEach((u, i) => {
-      const item = typeof u === 'string' ? { title: u, why: '', value: '' } : u;
       const div = document.createElement('div');
       div.className = 'vb-upsell-item';
       div.innerHTML = `
         <div class="vb-upsell-icon">${icons[i % icons.length]}</div>
         <div class="vb-upsell-body">
-          <div class="vb-upsell-title">${escHtml(item.title || item.name || String(item))}</div>
-          ${item.why ? `<div class="vb-upsell-why">${escHtml(item.why)}</div>` : ''}
-          ${item.value || item.est_value ? `<div class="vb-upsell-value">Est. ${escHtml(item.value || item.est_value)}</div>` : ''}
+          <div class="vb-upsell-title">${escHtml(u.title || String(u))}</div>
+          ${u.why ? `<div class="vb-upsell-why">${escHtml(u.why)}</div>` : ''}
+          ${u.est_value ? `<div class="vb-upsell-value">Est. ${escHtml(u.est_value)}</div>` : ''}
         </div>`;
       list.appendChild(div);
     });
@@ -803,26 +970,55 @@ function renderResults(resp) {
   }
 
   // Estimate
-  const range = data.estimate || data.estimateRange || data.price_range || '';
-  const note = data.estimateNote || data.scope_notes || data.notes || '';
-  if (range) {
-    document.getElementById('estimateRange').textContent = range;
-    document.getElementById('estimateNote').textContent = note;
+  if (estimate) {
+    document.getElementById('estimateRange').textContent = estimate;
+    document.getElementById('estimateNote').textContent = estimateNote;
     show('secEstimate');
   }
+}
 
-  // Raw fallback alongside structured
-  if (data.raw) {
-    show('secRaw');
-    document.getElementById('rawText').textContent = data.raw;
-  }
+// ── Timeline copy/share helpers ──
+function getTimelineEs() {
+  // Prefer timeline do_es lines; fall back to crew_instructions.es
+  const rows = document.querySelectorAll('#timelineList .vb-tl-row');
+  const lines = [];
+  rows.forEach((row, i) => {
+    const esEl = row.querySelector('.vb-tl-es');
+    const timeEl = row.querySelector('.vb-tl-chip');
+    if (esEl) {
+      const time = timeEl ? timeEl.textContent.trim() : '';
+      lines.push(`${i + 1}. [${time}] ${esEl.textContent.replace(/^🇲🇽\s*/, '').trim()}`);
+    }
+  });
+  if (lines.length) return lines.join('\n');
+  // Fallback to crew card
+  return document.getElementById('crewEs').textContent || '';
+}
+
+function copyTimelineEs() {
+  const txt = getTimelineEs();
+  navigator.clipboard.writeText(txt).then(() => showToast('Copiado!', 'ok')).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = txt;
+    ta.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+    showToast('Copiado!', 'ok');
+  });
+}
+
+function shareTimelineEs() {
+  window.open('https://wa.me/?text=' + encodeURIComponent(getTimelineEs()), '_blank');
 }
 
 // ── Helpers ──
 function show(id) { document.getElementById(id).style.display = 'block'; }
 function hideResults() {
   document.getElementById('vbResults').classList.remove('visible');
-  ['secPlan','secCrew','secUpsell','secEstimate','secRaw'].forEach(id => {
+  document.getElementById('vbVideoWrap').classList.remove('visible');
+  ['secTimeline','secPlan','secCrew','secUpsell','secEstimate','secRaw'].forEach(id => {
     document.getElementById(id).style.display = 'none';
   });
 }
