@@ -68,26 +68,28 @@
     <div class="lang-toggle">
       <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
       <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+      <button class="lang-btn" data-lang="es" onclick="setLang('es')">ES</button>
     </div>
   </div>
 </nav>
 
 <div class="page">
   <a href="/business.html" class="page-back" data-en="← Business Hub" data-es="← Centro de Negocio" data-he="← מרכז עסקי">← Business Hub</a>
-  <h1 class="page-title" data-en="⏱️ Time Tracking" data-he="⏱️ מעקב זמן">⏱️ Time Tracking</h1>
-  <p class="page-sub" data-en="Clock in and clock out. Know exactly how many hours go into each job." data-he="היכנס ויצא. דע בדיוק כמה שעות נכנסות לכל עבודה.">Clock in and clock out. Know exactly how many hours go into each job.</p>
+  <h1 class="page-title" data-en="⏱️ Time Tracking" data-he="⏱️ מעקב זמן" data-es="⏱️ Control de Horas">⏱️ Time Tracking</h1>
+  <p class="page-sub" data-en="Clock in and clock out. Know exactly how many hours go into each job." data-he="היכנס ויצא. דע בדיוק כמה שעות נכנסות לכל עבודה." data-es="Entrada y salida. Sabe exactamente cuántas horas va cada trabajo.">Clock in and clock out. Know exactly how many hours go into each job.</p>
 
   <div id="hiw-t"></div>
   <script>
     const HIW_T = {
       steps: [
-        { icon: '▶️', en: 'Tap Clock In, pick a project', he: 'לחץ כניסה, בחר פרויקט' },
-        { icon: '💼', en: 'Do your work', he: 'עבוד' },
-        { icon: '⏹️', en: 'Tap Clock Out → hours × rate = pay', he: 'לחץ יציאה → שעות × תעריף = שכר' },
+        { icon: '▶️', en: 'Tap Clock In, pick a project', he: 'לחץ כניסה, בחר פרויקט', es: 'Toca Entrada, elige un proyecto' },
+        { icon: '💼', en: 'Do your work', he: 'עבוד', es: 'Haz tu trabajo' },
+        { icon: '⏹️', en: 'Tap Clock Out → hours × rate = pay', he: 'לחץ יציאה → שעות × תעריף = שכר', es: 'Toca Salida → horas × tarifa = pago' },
       ],
       example: {
         en: 'You worked 8.5 hours at $45/hour on Johnson Kitchen = $382.50 labor cost for that day.',
-        he: 'עבדת 8.5 שעות ב-$45/שעה ב-Johnson Kitchen = $382.50 עלות עבודה ליום זה.'
+        he: 'עבדת 8.5 שעות ב-$45/שעה ב-Johnson Kitchen = $382.50 עלות עבודה ליום זה.',
+        es: 'Trabajaste 8.5 horas a $45/hora en Johnson Kitchen = $382.50 de costo de mano de obra ese día.'
       }
     };
     document.addEventListener('DOMContentLoaded',()=>{if(typeof buildHowItWorks==='function')buildHowItWorks('hiw-t',HIW_T)});
@@ -126,11 +128,11 @@
   <!-- Table -->
   <div class="t-list">
     <div class="t-row header">
-      <div>Date</div>
-      <div>Project</div>
-      <div class="c-hide">Task</div>
-      <div class="c-hide">Hours</div>
-      <div>Pay</div>
+      <div data-en="Date" data-he="תאריך" data-es="Fecha">Date</div>
+      <div data-en="Project" data-he="פרויקט" data-es="Proyecto">Project</div>
+      <div class="c-hide" data-en="Task" data-he="משימה" data-es="Tarea">Task</div>
+      <div class="c-hide" data-en="Hours" data-he="שעות" data-es="Horas">Hours</div>
+      <div data-en="Pay" data-he="שכר" data-es="Pago">Pay</div>
       <div></div>
     </div>
     <div id="rows"></div>

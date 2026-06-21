@@ -32,6 +32,12 @@
 
   .empty-state { text-align: center; padding: 40px; color: var(--txd); grid-column: 1/-1; }
   .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+
+  @media (max-width: 600px) {
+    .s-bar input, .s-bar select { width: 100%; min-width: 0; }
+    .s-grid { grid-template-columns: 1fr; }
+    #mapView { height: 300px; }
+  }
 </style>
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#e8c547">
@@ -51,6 +57,7 @@
     <div class="lang-toggle">
       <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
       <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+      <button class="lang-btn" data-lang="es" onclick="setLang('es')">ES</button>
     </div>
   </div>
 </nav>

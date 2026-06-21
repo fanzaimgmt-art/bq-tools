@@ -55,6 +55,11 @@
   .punch-item.done { opacity: 0.5; text-decoration: line-through; }
   .punch-item input { accent-color: var(--ac); width: 18px; height: 18px; }
   .punch-item .p-txt { flex: 1; font-size: 14px; }
+
+  @media (max-width: 600px) {
+    .p-grid { grid-template-columns: 1fr; }
+    .pnl-grid { grid-template-columns: 1fr 1fr; }
+  }
 </style>
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#e8c547">
@@ -74,6 +79,7 @@
     <div class="lang-toggle">
       <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
       <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+      <button class="lang-btn" data-lang="es" onclick="setLang('es')">ES</button>
     </div>
   </div>
 </nav>
@@ -87,13 +93,14 @@
   <script>
     const HIW_PROJ = {
       steps: [
-        { icon: '➕', en: 'Create a project with client + value', he: 'צור פרויקט עם לקוח וערך' },
-        { icon: '📝', en: 'Log daily work, punch list, change orders', he: 'תעד עבודה יומית, משימות, שינויים' },
-        { icon: '💰', en: 'See P&L automatically (revenue minus expenses)', he: 'ראה רווח והפסד אוטומטית (הכנסות פחות הוצאות)' },
+        { icon: '➕', en: 'Create a project with client + value', he: 'צור פרויקט עם לקוח וערך', es: 'Crea un proyecto con cliente + valor' },
+        { icon: '📝', en: 'Log daily work, punch list, change orders', he: 'תעד עבודה יומית, משימות, שינויים', es: 'Registra trabajo diario, lista de pendientes, órdenes de cambio' },
+        { icon: '💰', en: 'See P&L automatically (revenue minus expenses)', he: 'ראה רווח והפסד אוטומטית (הכנסות פחות הוצאות)', es: 'Ve ganancias y pérdidas automáticamente (ingresos menos gastos)' },
       ],
       example: {
         en: 'Johnson Kitchen: $12K project, $4,200 spent on materials + $2,800 labor = $5,000 profit (41.6% margin).',
-        he: 'מטבח ג׳ונסון: פרויקט של $12K, $4,200 חומרים + $2,800 עבודה = $5,000 רווח (41.6% שוליים).'
+        he: 'מטבח ג׳ונסון: פרויקט של $12K, $4,200 חומרים + $2,800 עבודה = $5,000 רווח (41.6% שוליים).',
+        es: 'Cocina Johnson: proyecto de $12K, $4,200 en materiales + $2,800 de mano de obra = $5,000 de ganancia (41.6% de margen).'
       }
     };
     document.addEventListener('DOMContentLoaded',()=>{if(typeof buildHowItWorks==='function')buildHowItWorks('hiw-proj',HIW_PROJ)});

@@ -68,26 +68,28 @@
     <div class="lang-toggle">
       <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
       <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+      <button class="lang-btn" data-lang="es" onclick="setLang('es')">ES</button>
     </div>
   </div>
 </nav>
 
 <div class="page">
   <a href="/business.html" class="page-back" data-en="← Business Hub" data-es="← Centro de Negocio" data-he="← מרכז עסקי">← Business Hub</a>
-  <h1 class="page-title" data-en="💰 Expenses" data-he="💰 הוצאות">💰 Expenses</h1>
-  <p class="page-sub" data-en="See where every dollar goes. Know your profit per project." data-he="ראה לאן כל דולר הולך. דע את הרווח שלך בכל פרויקט.">See where every dollar goes. Know your profit per project.</p>
+  <h1 class="page-title" data-en="💰 Expenses" data-he="💰 הוצאות" data-es="💰 Gastos">💰 Expenses</h1>
+  <p class="page-sub" data-en="See where every dollar goes. Know your profit per project." data-he="ראה לאן כל דולר הולך. דע את הרווח שלך בכל פרויקט." data-es="Ve a dónde va cada dólar. Conoce tu ganancia por proyecto.">See where every dollar goes. Know your profit per project.</p>
 
   <div id="hiw-exp"></div>
   <script>
     const HIW_EXP = {
       steps: [
-        { icon: '📸', en: 'Scan receipts — they auto-add as expenses', he: 'סרוק קבלות — הן נוספות כהוצאות' },
-        { icon: '✏️', en: 'Or add manual expenses (rent, insurance, etc.)', he: 'או הוסף הוצאות ידנית (שכירות, ביטוח)' },
-        { icon: '📊', en: 'See charts, tag expenses to projects, export for accountant', he: 'ראה גרפים, תייג הוצאות לפרויקטים, ייצא לרו״ח' },
+        { icon: '📸', en: 'Scan receipts — they auto-add as expenses', he: 'סרוק קבלות — הן נוספות כהוצאות', es: 'Escanea recibos — se agregan automáticamente como gastos' },
+        { icon: '✏️', en: 'Or add manual expenses (rent, insurance, etc.)', he: 'או הוסף הוצאות ידנית (שכירות, ביטוח)', es: 'O agrega gastos manuales (renta, seguro, etc.)' },
+        { icon: '📊', en: 'See charts, tag expenses to projects, export for accountant', he: 'ראה גרפים, תייג הוצאות לפרויקטים, ייצא לרו״ח', es: 'Ve gráficas, etiqueta gastos a proyectos, exporta para el contador' },
       ],
       example: {
         en: 'Tag $400 Home Depot receipt to "Johnson Kitchen" → know you spent $4,200 on materials out of $12K project.',
-        he: 'תייג קבלה של $400 מ-Home Depot ל"Johnson Kitchen" → דע שהוצאת $4,200 על חומרים בפרויקט של $12K.'
+        he: 'תייג קבלה של $400 מ-Home Depot ל"Johnson Kitchen" → דע שהוצאת $4,200 על חומרים בפרויקט של $12K.',
+        es: 'Etiqueta un recibo de $400 de Home Depot a "Johnson Kitchen" → sabe que gastaste $4,200 en materiales de un proyecto de $12K.'
       }
     };
     document.addEventListener('DOMContentLoaded',()=>{if(typeof buildHowItWorks==='function')buildHowItWorks('hiw-exp',HIW_EXP)});
@@ -134,7 +136,7 @@
   <div style="background:var(--sf);border:1px solid var(--bd);border-radius:12px;overflow:hidden;overflow-x:auto;">
     <table class="e-table" id="table">
       <thead><tr>
-        <th>Date</th><th>Vendor</th><th>Category</th><th>Project</th><th style="text-align:right;">Amount</th><th></th>
+        <th data-en="Date" data-he="תאריך" data-es="Fecha">Date</th><th data-en="Vendor" data-he="ספק" data-es="Proveedor">Vendor</th><th data-en="Category" data-he="קטגוריה" data-es="Categoría">Category</th><th data-en="Project" data-he="פרויקט" data-es="Proyecto">Project</th><th style="text-align:right;" data-en="Amount" data-he="סכום" data-es="Monto">Amount</th><th></th>
       </tr></thead>
       <tbody id="tbody"></tbody>
     </table>

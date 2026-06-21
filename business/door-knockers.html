@@ -174,15 +174,6 @@ async function init() {
   } catch (err) { showToast(err.message, 'err'); }
 }
 
-// Seed demo knockers so the page doesn't look empty on first use
-const DEMO_KNOCKERS = [
-  { id: 'demo-1', name: 'Carlos Rodríguez', city: 'Los Angeles', areas: 'Van Nuys, Panorama City, Pacoima, Sylmar', languages: ['Spanish', 'English'], rating: 4.9, ratePerDoor: 100, experience: 7, verified: true, available: true, bio: 'Roofing sales pro. Spanish native. Closed 340+ appointments in LA County last year.' },
-  { id: 'demo-2', name: 'Miguel Santos', city: 'Los Angeles', areas: 'East LA, Boyle Heights, Montebello', languages: ['Spanish', 'English'], rating: 4.8, ratePerDoor: 100, experience: 4, verified: true, available: true, bio: 'Solar + roofing. Door-to-door since 2021. Fluent Spanish, strong English.' },
-  { id: 'demo-3', name: 'James Foster', city: 'Los Angeles', areas: 'Santa Monica, Venice, Mar Vista, Culver City', languages: ['English'], rating: 4.7, ratePerDoor: 100, experience: 5, verified: true, available: true, bio: 'Premium neighborhoods. High-end remodel leads. Professional appearance.' },
-  { id: 'demo-4', name: 'Ana Martínez', city: 'Los Angeles', areas: 'Downey, Whittier, Pico Rivera, Norwalk', languages: ['Spanish', 'English'], rating: 5.0, ratePerDoor: 100, experience: 3, verified: true, available: true, bio: 'Female knocker — opens more doors in traditional neighborhoods. Spanish native.' },
-  { id: 'demo-5', name: 'Dmitri Volkov', city: 'Los Angeles', areas: 'Fairfax, Beverly Hills, West Hollywood', languages: ['English', 'Russian', 'Hebrew'], rating: 4.6, ratePerDoor: 100, experience: 2, verified: true, available: true, bio: 'Multi-lingual. Jewish/Israeli/Russian communities. Perfect for specialty contractors.' }
-];
-
 function setTab(t) {
   document.querySelectorAll('.dk-tab').forEach(x => x.classList.toggle('on', x.dataset.tab === t));
   document.querySelectorAll('.dk-pane').forEach(x => x.classList.toggle('on', x.id === 'pane-' + t));

@@ -56,6 +56,11 @@
   .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
 
   .post-card { background: var(--sf); border: 1px solid var(--bd); border-radius: 14px; padding: 20px; max-width: 600px; margin: 0 auto; }
+
+  @media (max-width: 600px) {
+    .j-filters input, .j-filters select { width: 100%; min-width: 0; }
+    .j-list { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
@@ -67,6 +72,7 @@
     <div class="lang-toggle">
       <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
       <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+      <button class="lang-btn" data-lang="es" onclick="setLang('es')">ES</button>
     </div>
   </div>
 </nav>
@@ -234,26 +240,9 @@ if (!isLoggedIn()) window.location.replace('/auth.html');
 let jobs = [];
 let workers = [];
 
-// Demo seed data for first visit
-const DEMO_JOBS = [
-  { id: 'dj-1', title: 'Framers needed — 2 weeks, Van Nuys', skill: 'Carpentry', location: 'Van Nuys, CA', rate: 35, rateType: 'hour', description: 'Residential addition. Bring own tools. 40hr/week. Spanish welcome.', postedBy: 'Gold Remodeling', contactPhone: '818-555-0120', featured: true, createdAt: new Date().toISOString() },
-  { id: 'dj-2', title: 'Runner for material pickup', skill: 'Runner / Driver', location: 'San Fernando Valley', rate: 180, rateType: 'day', description: 'Daily runs to Home Depot, lumber yards. Must have truck. 2-3 days/week.', postedBy: 'JB Construction', contactPhone: '818-555-0100', createdAt: new Date().toISOString() },
-  { id: 'dj-3', title: 'Door-to-door sales, Spanish + English', skill: 'Sales / Door-to-Door', location: 'South LA', rate: 100, rateType: 'job', description: 'Roofing company needs bilingual door-knockers. $100 per confirmed appointment. Commission + base.', postedBy: 'RoofPro LA', contactPhone: '323-555-0150', createdAt: new Date().toISOString() },
-  { id: 'dj-4', title: 'Electrician helper', skill: 'Electrical', location: 'Los Angeles', rate: 28, rateType: 'hour', description: 'Licensed electrician needs assistant. 2+ years experience. Long-term position.', postedBy: 'SparkCo Electric', contactPhone: '213-555-0190', createdAt: new Date().toISOString() }
-];
-
-const DEMO_WORKERS = [
-  { id: 'dw-1', name: 'Miguel Ramírez', skills: 'Carpentry, Framing', location: 'San Fernando Valley', rate: 32, rateType: 'hour', yearsExperience: 12, languages: ['Spanish', 'English'], rating: 4.9, bio: 'Master framer. Own truck and tools. Spanish native. References available.' },
-  { id: 'dw-2', name: 'Jose Hernández', skills: 'General Labor, Demo', location: 'Los Angeles', rate: 22, rateType: 'hour', yearsExperience: 8, languages: ['Spanish', 'English'], rating: 4.7, bio: 'Reliable, hard worker. Demo specialist. Show up on time every day.' },
-  { id: 'dw-3', name: 'David Kim', skills: 'Electrical', location: 'Los Angeles', rate: 40, rateType: 'hour', yearsExperience: 15, languages: ['English', 'Korean'], licenseNumber: 'C-10 1234567', rating: 5.0, bio: 'Licensed C-10 electrician. Commercial and residential. Clean background.' },
-  { id: 'dw-4', name: 'Ricardo Lopez', skills: 'Runner / Driver', location: 'Los Angeles', rate: 180, rateType: 'day', yearsExperience: 5, languages: ['Spanish', 'English'], rating: 4.8, bio: 'Own pickup truck. Know every lumber yard and supply house in LA. Daily runs $180, also do site prep.' }
-];
-
 async function init() {
   try {
     [jobs, workers] = await Promise.all([Biz.list('jobs'), Biz.list('workers')]);
-    if (jobs.length === 0) jobs = DEMO_JOBS;
-    if (workers.length === 0) workers = DEMO_WORKERS;
     renderJobs();
     renderWorkers();
   } catch (err) { showToast(err.message, 'err'); }

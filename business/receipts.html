@@ -89,26 +89,28 @@
     <div class="lang-toggle">
       <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
       <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+      <button class="lang-btn" data-lang="es" onclick="setLang('es')">ES</button>
     </div>
   </div>
 </nav>
 
 <div class="page">
   <a href="/business.html" class="page-back" data-en="← Business Hub" data-es="← Centro de Negocio" data-he="← מרכז עסקי">← Business Hub</a>
-  <h1 class="page-title" data-en="📸 Receipt Scanner" data-he="📸 סורק קבלות">📸 Receipt Scanner</h1>
-  <p class="page-sub" data-en="Snap a photo, AI fills in everything." data-he="צלם תמונה, AI ממלא הכל.">Snap a photo, AI fills in everything.</p>
+  <h1 class="page-title" data-en="📸 Receipt Scanner" data-he="📸 סורק קבלות" data-es="📸 Escáner de Recibos">📸 Receipt Scanner</h1>
+  <p class="page-sub" data-en="Snap a photo, AI fills in everything." data-he="צלם תמונה, AI ממלא הכל." data-es="Toma una foto, la IA completa todo.">Snap a photo, AI fills in everything.</p>
 
   <div id="hiw-receipts"></div>
   <script>
     const HIW_RECEIPTS = {
       steps: [
-        { icon: '📸', en: 'Snap a photo of your receipt', he: 'צלם את הקבלה' },
-        { icon: '🤖', en: 'AI reads vendor, total, items, tax automatically', he: 'AI קורא ספק, סה״כ, פריטים, ומע״מ אוטומטית' },
-        { icon: '💾', en: 'Saved. Tag to a project. Export for accountant later.', he: 'נשמר. תייג לפרויקט. ייצא לרו״ח בהמשך.' },
+        { icon: '📸', en: 'Snap a photo of your receipt', he: 'צלם את הקבלה', es: 'Toma una foto de tu recibo' },
+        { icon: '🤖', en: 'AI reads vendor, total, items, tax automatically', he: 'AI קורא ספק, סה״כ, פריטים, ומע״מ אוטומטית', es: 'La IA lee proveedor, total, artículos e impuesto automáticamente' },
+        { icon: '💾', en: 'Saved. Tag to a project. Export for accountant later.', he: 'נשמר. תייג לפרויקט. ייצא לרו״ח בהמשך.', es: 'Guardado. Etiqueta al proyecto. Exporta para el contador después.' },
       ],
       example: {
         en: 'Scan a Home Depot receipt → AI detects: Home Depot, $247.83, Materials, 5 items, $22.30 tax.',
-        he: 'סרוק קבלה מ-Home Depot → AI מזהה: Home Depot, $247.83, חומרים, 5 פריטים, $22.30 מע״מ.'
+        he: 'סרוק קבלה מ-Home Depot → AI מזהה: Home Depot, $247.83, חומרים, 5 פריטים, $22.30 מע״מ.',
+        es: 'Escanea un recibo de Home Depot → la IA detecta: Home Depot, $247.83, Materiales, 5 artículos, $22.30 de impuesto.'
       }
     };
     document.addEventListener('DOMContentLoaded',()=>{if(typeof buildHowItWorks==='function')buildHowItWorks('hiw-receipts',HIW_RECEIPTS)});
@@ -121,7 +123,7 @@
     <h3 data-en="Snap a Receipt" data-es="Toma Foto del Recibo" data-he="צלם קבלה">Snap a Receipt</h3>
     <p data-en="Tap to take a photo or choose from gallery" data-es="Toca para tomar una foto o elige de la galería" data-he="לחץ לצילום או בחר מהגלריה">Tap to take a photo or choose from gallery</p>
     <div class="chip-row">
-      <span class="chip" data-en="📷 Camera or Gallery" data-he="📷 מצלמה או גלריה">📷 Camera or Gallery</span>
+      <span class="chip" data-en="📷 Camera or Gallery" data-he="📷 מצלמה או גלריה" data-es="📷 Cámara o Galería">📷 Camera or Gallery</span>
       <span class="chip">⚡ 1 credit</span>
     </div>
   </label>

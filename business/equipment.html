@@ -37,6 +37,11 @@
   .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
 
   .maint-warning { background: rgba(255,159,67,.1); border: 1px solid rgba(255,159,67,.3); color: var(--orange, #ff9f43); padding: 3px 8px; border-radius: 6px; font-size: 11px; margin-top: 4px; display: inline-block; }
+
+  @media (max-width: 600px) {
+    .eq-bar input, .eq-bar select { width: 100%; min-width: 0; }
+    .eq-grid { grid-template-columns: 1fr 1fr; }
+  }
 </style>
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#e8c547">
@@ -56,26 +61,28 @@
     <div class="lang-toggle">
       <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
       <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
+      <button class="lang-btn" data-lang="es" onclick="setLang('es')">ES</button>
     </div>
   </div>
 </nav>
 
 <div class="page">
   <a href="/business.html" class="page-back" data-en="← Business Hub" data-es="← Centro de Negocio" data-he="← מרכז עסקי">← Business Hub</a>
-  <h1 class="page-title" data-en="🛠️ Equipment" data-he="🛠️ ציוד">🛠️ Equipment</h1>
-  <p class="page-sub" data-en="Every tool, every vehicle, always know who has what." data-he="כל כלי, כל רכב, תמיד יודע מי לקח מה.">Every tool, every vehicle, always know who has what.</p>
+  <h1 class="page-title" data-en="🛠️ Equipment" data-he="🛠️ ציוד" data-es="🛠️ Equipo">🛠️ Equipment</h1>
+  <p class="page-sub" data-en="Every tool, every vehicle, always know who has what." data-he="כל כלי, כל רכב, תמיד יודע מי לקח מה." data-es="Cada herramienta, cada vehículo, siempre sabe quién tiene qué.">Every tool, every vehicle, always know who has what.</p>
 
   <div id="hiw-eq"></div>
   <script>
     const HIW_EQ = {
       steps: [
-        { icon: '➕', en: 'Add each tool with photo + serial #', he: 'הוסף כל כלי עם תמונה ומספר סידורי' },
-        { icon: '👷', en: 'Assign to worker or project when it leaves the shop', he: 'הקצה לעובד או פרויקט כשזה יוצא מהמחסן' },
-        { icon: '🔔', en: 'Get maintenance reminders before tools break', he: 'קבל תזכורות תחזוקה לפני שכלים מתקלקלים' },
+        { icon: '➕', en: 'Add each tool with photo + serial #', he: 'הוסף כל כלי עם תמונה ומספר סידורי', es: 'Agrega cada herramienta con foto y número de serie' },
+        { icon: '👷', en: 'Assign to worker or project when it leaves the shop', he: 'הקצה לעובד או פרויקט כשזה יוצא מהמחסן', es: 'Asigna al trabajador o proyecto cuando salga del taller' },
+        { icon: '🔔', en: 'Get maintenance reminders before tools break', he: 'קבל תזכורות תחזוקה לפני שכלים מתקלקלים', es: 'Recibe recordatorios de mantenimiento antes de que las herramientas fallen' },
       ],
       example: {
         en: 'Drill #3 with John on Johnson Kitchen → never lose a $200 tool again.',
-        he: 'מקדחה #3 עם ג׳ון ב-Johnson Kitchen → לעולם לא תאבד כלי של $200 שוב.'
+        he: 'מקדחה #3 עם ג׳ון ב-Johnson Kitchen → לעולם לא תאבד כלי של $200 שוב.',
+        es: 'Taladro #3 con Juan en Johnson Kitchen → nunca pierdas una herramienta de $200 otra vez.'
       }
     };
     document.addEventListener('DOMContentLoaded',()=>{if(typeof buildHowItWorks==='function')buildHowItWorks('hiw-eq',HIW_EQ)});
