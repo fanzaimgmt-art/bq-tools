@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BQ Tools — Quick Report</title>
+<title>Obra — Quick Report</title>
 <link rel="stylesheet" href="../style.css">
 <style>
   body { display: flex; flex-direction: column; }
@@ -65,7 +65,7 @@
   <meta name="theme-color" content="#e8c547">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="BQ Tools">
+  <meta name="apple-mobile-web-app-title" content="Obra">
   <meta name="mobile-web-app-capable" content="yes">
   <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png">
@@ -73,7 +73,7 @@
 <body>
 
 <nav class="nav">
-  <a href="/" class="nav-logo">BQ <span>Tools</span></a>
+  <a href="/" class="nav-logo">Obra</a>
   <div class="nav-right">
     <a href="/" class="nav-link" data-en="← Back" data-es="← Atrás" data-he="חזור →">← Back</a>
     <div class="lang-toggle">
@@ -125,7 +125,7 @@
 </div>
 
 <footer class="footer">
-  <div class="footer-brand">Powered by BQ Tools — BQ Production LLC</div>
+  <div class="footer-brand">Powered by Obra — BQ Production LLC</div>
 </footer>
 
 <script src="../js/auth.js"></script>
@@ -232,7 +232,7 @@ Respond JSON only:
       ${Array.isArray(r.materials_noted) && r.materials_noted.length ? `<div class="report-section"><h3>Materials</h3><ul>${r.materials_noted.map(m => '<li>' + m + '</li>').join('')}</ul></div>` : ''}
       <div class="report-section"><h3>AI Quality Assessment</h3><div class="report-score">${r.quality_score}/10</div><p>${r.quality_notes}</p></div>
       ${r.recommendations ? `<div class="report-section"><h3>Recommendations</h3><p>${r.recommendations}</p></div>` : ''}
-      <div class="report-footer">Powered by BQ Tools — bqtools.dev</div>`;
+      <div class="report-footer">Powered by Obra — bqtools.dev</div>`;
 
     document.getElementById('exportRow').style.display = 'block';
     showToast(lang === 'he' ? 'הדוח מוכן!' : 'Report ready!', 'ok');

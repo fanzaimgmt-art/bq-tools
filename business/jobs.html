@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BQ Tools — Jobs Portal</title>
+<title>Obra — Jobs Portal</title>
 <link rel="stylesheet" href="../style.css">
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#e8c547">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="BQ Tools">
+  <meta name="apple-mobile-web-app-title" content="Obra">
   <meta name="mobile-web-app-capable" content="yes">
   <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png">
@@ -303,7 +303,7 @@ function renderJobs() {
       <div style="font-size:11px;color:var(--txd);">${lang === 'he' ? 'פורסם על ידי' : 'Posted by'}: ${escHtml(j.postedBy || 'Contractor')}</div>
       <div class="j-actions">
         ${j.contactPhone ? `<a href="tel:${escHtml(j.contactPhone)}" class="btn btn-sm btn-primary" style="flex:1;">📞 ${lang === 'he' ? 'התקשר' : 'Call'}</a>` : ''}
-        ${j.contactPhone ? `<a href="sms:${escHtml(j.contactPhone)}?body=${encodeURIComponent('Hi — I saw your job post on BQ Tools: ' + j.title)}" class="btn btn-sm" style="flex:1;">💬 SMS</a>` : ''}
+        ${j.contactPhone ? `<a href="sms:${escHtml(j.contactPhone)}?body=${encodeURIComponent('Hi — I saw your job post on Obra: ' + j.title)}" class="btn btn-sm" style="flex:1;">💬 SMS</a>` : ''}
         ${j.contactEmail ? `<a href="mailto:${escHtml(j.contactEmail)}" class="btn btn-sm" style="flex:1;">📧 Email</a>` : ''}
       </div>
     </div>`).join('');

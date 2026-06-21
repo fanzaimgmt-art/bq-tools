@@ -268,8 +268,8 @@ function showReferralLink() {
   if (!user) return;
   const h = lang === 'he';
   const link = `${window.location.origin}/?ref=${encodeURIComponent(user.email)}`;
-  const waUrl = `https://wa.me/?text=${encodeURIComponent((h ? 'נסה את BQ Tools — כלי AI לקבלנים! ' : 'Check out BQ Tools — AI tools for contractors! ') + link)}`;
-  const mailUrl = `mailto:?subject=${encodeURIComponent('BQ Tools')}&body=${encodeURIComponent((h ? 'נסה את BQ Tools: ' : 'Try BQ Tools: ') + link)}`;
+  const waUrl = `https://wa.me/?text=${encodeURIComponent((h ? 'נסה את Obra — כלי AI לקבלנים! ' : 'Check out Obra — AI tools for contractors! ') + link)}`;
+  const mailUrl = `mailto:?subject=${encodeURIComponent('Obra')}&body=${encodeURIComponent((h ? 'נסה את Obra: ' : 'Try Obra: ') + link)}`;
 
   const m = document.createElement('div');
   m.className = 'modal-overlay';
@@ -380,7 +380,7 @@ function buildFooter() {
   const footer = document.createElement('footer');
   footer.className = 'footer';
   footer.innerHTML = `
-    <div class="footer-brand">BQ Tools — BQ Production LLC</div>
+    <div class="footer-brand">Obra — BQ Production LLC</div>
     <div class="footer-links">
       <a href="https://bqprod.pages.dev" target="_blank">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/></svg>
@@ -532,7 +532,7 @@ function runTutorial() {
   const steps = [
     {
       target: null, pos: 'center',
-      title: t({ en: 'Welcome to BQ Tools!', he: 'ברוך הבא ל-BQ Tools!', es: '¡Bienvenido a BQ Tools!' }),
+      title: t({ en: 'Welcome to Obra!', he: 'ברוך הבא ל-Obra!', es: '¡Bienvenido a Obra!' }),
       text: t({ en: 'Let me show you around — it only takes a minute', he: 'בוא אראה לך את הכל בקצרה', es: 'Te muestro todo — solo toma un minuto' })
     },
     {
@@ -1169,7 +1169,7 @@ function buildAppNav() {
   }
 
   oldNav.innerHTML = `
-    <a href="${loggedIn ? '/home.html' : '/'}" class="nav-logo">BQ <span>Tools</span></a>
+    <a href="${loggedIn ? '/home.html' : '/'}" class="nav-logo">Obra</a>
     <div class="nav-right">
       ${linksHtml}
       ${creditPill}
@@ -1291,7 +1291,7 @@ function showInstallBanner() {
   banner.innerHTML = `
     <img src="/img/icon-192.png" alt="" style="width:44px;height:44px;border-radius:10px;flex-shrink:0;">
     <div style="flex:1;min-width:0;">
-      <div style="font-weight:700;font-size:14px;margin-bottom:2px;">${t({ en: 'Install BQ Tools', he: 'התקן BQ Tools', es: 'Instalar BQ Tools' })}</div>
+      <div style="font-weight:700;font-size:14px;margin-bottom:2px;">${t({ en: 'Install Obra', he: 'התקן Obra', es: 'Instalar Obra' })}</div>
       <div style="font-size:12px;color:var(--txd);">${t({ en: 'Add to home screen for quick access', he: 'הוסף למסך הבית לגישה מהירה', es: 'Agrega a la pantalla de inicio para acceso rápido' })}</div>
     </div>
     <button id="pwaInstallBtn" class="btn btn-sm btn-primary" style="flex-shrink:0;">${t({ en: 'Install', he: 'התקן', es: 'Instalar' })}</button>
@@ -1325,7 +1325,7 @@ function showIOSInstallModal() {
   m.innerHTML = `
     <div class="modal-card" style="max-width:360px;text-align:center;">
       <img src="/img/icon-192.png" alt="" style="width:72px;height:72px;border-radius:16px;margin:0 auto 12px;display:block;">
-      <h3 style="margin-bottom:6px;">${t({ en: 'Install BQ Tools', he: 'התקן BQ Tools', es: 'Instalar BQ Tools' })}</h3>
+      <h3 style="margin-bottom:6px;">${t({ en: 'Install Obra', he: 'התקן Obra', es: 'Instalar Obra' })}</h3>
       <p style="font-size:13px;color:var(--txd);line-height:1.6;margin-bottom:14px;">${t({
         en: 'To install on iOS: tap the Share button <span style="display:inline-block;width:16px;height:16px;border:1px solid var(--txd);border-radius:3px;vertical-align:-3px;"></span>⬆️ then select "Add to Home Screen".',
         he: 'להתקנה ב-iOS: לחץ על כפתור השיתוף ⬆️ ואז בחר "הוסף למסך הבית".',
@@ -1334,7 +1334,7 @@ function showIOSInstallModal() {
       <div style="background:var(--bg);border-radius:8px;padding:10px;font-size:12px;color:var(--txd);margin-bottom:14px;text-align:left;">
         <div style="margin-bottom:6px;"><b>1.</b> ${t({ en: 'Tap the Share icon ⬆️ in Safari', he: 'לחץ על אייקון השיתוף ב-Safari', es: 'Toca el ícono de Compartir ⬆️ en Safari' })}</div>
         <div style="margin-bottom:6px;"><b>2.</b> ${t({ en: 'Scroll and tap "Add to Home Screen"', he: 'גלול ולחץ "הוסף למסך הבית"', es: 'Desplázate y toca "Agregar a pantalla de inicio"' })}</div>
-        <div><b>3.</b> ${t({ en: 'Tap "Add" — BQ Tools is now on your home screen!', he: 'לחץ "הוסף" — BQ Tools עכשיו במסך הבית שלך', es: 'Toca "Agregar" — ¡BQ Tools ya está en tu pantalla!' })}</div>
+        <div><b>3.</b> ${t({ en: 'Tap "Add" — Obra is now on your home screen!', he: 'לחץ "הוסף" — Obra עכשיו במסך הבית שלך', es: 'Toca "Agregar" — ¡Obra ya está en tu pantalla!' })}</div>
       </div>
       <button class="btn" style="width:100%;" onclick="this.closest('.modal-overlay').remove();">${t({ en: 'Got it', he: 'הבנתי', es: 'Entendido' })}</button>
     </div>`;

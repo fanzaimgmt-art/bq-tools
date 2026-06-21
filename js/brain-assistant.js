@@ -15,20 +15,20 @@
 
   const i18n = {
     he: {
-      tip: 'שאל אותי הכל על BQ Tools',
+      tip: 'שאל אותי הכל על Obra',
       placeholder: 'שאל על Pusher, AI Video, מחירים…',
       send: 'שלח',
-      welcome: 'אהלן 👋\nאני המוח של BQ Tools.\nכל מה שתרצה לדעת על הכלים, מחירים, או איך להתחיל — אני פה.\n\nכמה רעיונות:',
+      welcome: 'אהלן 👋\nאני המוח של Obra.\nכל מה שתרצה לדעת על הכלים, מחירים, או איך להתחיל — אני פה.\n\nכמה רעיונות:',
       ideas: ['איזה כלי מתאים לי?', 'איך עובד Pusher?', 'איך מתחילים לעשות AI Video?', 'מה זה הdashboard?'],
       thinking: 'חושב...',
       error: 'משהו השתבש. נסה שוב.',
       clear: 'נקה',
     },
     en: {
-      tip: 'Ask me anything about BQ Tools',
+      tip: 'Ask me anything about Obra',
       placeholder: 'Ask about Pusher, AI Video, pricing…',
       send: 'Send',
-      welcome: 'Hey 👋\nI\'m BQ Tools\' brain.\nAsk me about any tool, pricing, or how to get started.\n\nA few ideas:',
+      welcome: 'Hey 👋\nI\'m Obra\'s brain.\nAsk me about any tool, pricing, or how to get started.\n\nA few ideas:',
       ideas: ['Which tool fits me?', 'How does Pusher work?', 'How do I start with AI Video?', 'What\'s in the dashboard?'],
       thinking: 'Thinking...',
       error: 'Something went wrong. Try again.',

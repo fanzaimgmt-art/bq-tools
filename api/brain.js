@@ -2,7 +2,7 @@
 // Mounted at POST /api/brain/chat in worker.js
 // Uses Groq llama-3.3-70b for cost + speed. Returns plain text answer.
 
-const SYSTEM_BASE = `You are the BQ Tools site assistant — friendly, concise, action-oriented.
+const SYSTEM_BASE = `You are the Obra site assistant — friendly, concise, action-oriented.
 
 You speak Hebrew or English depending on the user. Match their language. Default to Hebrew if unsure.
 
@@ -15,10 +15,10 @@ When user asks for a tool, give them:
 2. Direct link in markdown form: [tool name](/path)
 3. Optional: how it fits their goal
 
-If the user asks something off-topic (general life advice, code questions unrelated to the site) — politely redirect: "I'm focused on BQ Tools. For [topic], try [Claude/Google].\""`;
+If the user asks something off-topic (general life advice, code questions unrelated to the site) — politely redirect: "I'm focused on Obra. For [topic], try [Claude/Google].\""`;
 
 const TOOLS_KNOWLEDGE = `
-=== BQ Tools — full toolbox ===
+=== Obra — full toolbox ===
 
 🎯 PUSHER BETA — /tools/pusher  ($20/mo, capped at 10 seats)
 Buyer-intent Facebook lead engine. Scans 3–10 of YOUR FB groups daily, classifies posts as buyer-intent via AI, drafts a 4-part comment-reply in your voice, sends alert to your Telegram. You paste the reply manually. Setup at /tools/pusher-setup.

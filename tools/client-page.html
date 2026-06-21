@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BQ Tools — Client Page</title>
+<title>Obra — Client Page</title>
 <link rel="stylesheet" href="../style.css">
 <style>
   body { display: flex; flex-direction: column; }
@@ -55,7 +55,7 @@
   <meta name="theme-color" content="#e8c547">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="BQ Tools">
+  <meta name="apple-mobile-web-app-title" content="Obra">
   <meta name="mobile-web-app-capable" content="yes">
   <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png">
@@ -63,7 +63,7 @@
 <body>
 
 <nav class="nav">
-  <a href="/" class="nav-logo">BQ <span>Tools</span></a>
+  <a href="/" class="nav-logo">Obra</a>
   <div class="nav-right">
     <a href="/" class="nav-link" data-en="← Back" data-es="← Atrás" data-he="חזור →">← Back</a>
     <div class="lang-toggle">
@@ -112,7 +112,7 @@
 </div>
 
 <footer class="footer">
-  <div class="footer-brand">Powered by BQ Tools — BQ Production LLC</div>
+  <div class="footer-brand">Powered by Obra — BQ Production LLC</div>
 </footer>
 
 <script src="../js/auth.js"></script>
@@ -192,7 +192,7 @@ function createPage() {
     <div class="cp-desc">${escHtml(page.desc)}</div>
     <div class="cp-photos">${page.photos.map(s => `<img src="${s}">`).join('')}</div>
     ${biz || phone || email ? `<div class="cp-contact"><strong>${escHtml(biz)}</strong>${phone ? '<br>' + escHtml(phone) : ''}${email ? '<br>' + escHtml(email) : ''}</div>` : ''}
-    <div class="cp-footer">Powered by <a href="https://bqprod.pages.dev">BQ Tools</a> — Get yours free</div>`;
+    <div class="cp-footer">Powered by <a href="https://bqprod.pages.dev">Obra</a> — Get yours free</div>`;
 
   const shareBox = document.getElementById('shareBox');
   shareBox.classList.add('on');
@@ -223,7 +223,7 @@ if (window.location.hash.startsWith('#view=')) {
         <div class="cp-desc">${escHtml(page.desc)}</div>
         <div class="cp-photos">${page.photos.map(s => `<img src="${s}">`).join('')}</div>
         ${page.biz || page.phone || page.email ? `<div class="cp-contact"><strong>${escHtml(page.biz)}</strong>${page.phone ? '<br>' + escHtml(page.phone) : ''}${page.email ? '<br>' + escHtml(page.email) : ''}</div>` : ''}
-        <div class="cp-footer">Powered by <a href="https://bqprod.pages.dev">BQ Tools</a> — Get yours free</div>`;
+        <div class="cp-footer">Powered by <a href="https://bqprod.pages.dev">Obra</a> — Get yours free</div>`;
     });
   }
 }

@@ -2392,13 +2392,13 @@ const NEWS_CATEGORIES = [
     id: 'jobs',
     label: 'Job Seekers / Runners',
     icon: '👷',
-    prompt: 'Generate 6 realistic job seeker profiles for construction workers, helpers, runners, and skilled tradesmen looking for work in Los Angeles. Fictional but realistic. Return as JSON array: [{"title":"Name — Role","summary":"experience, skills, availability, what they want","source":"BQ Tools Network","url":null,"image":null,"amazonUrl":null}]. JSON only.',
+    prompt: 'Generate 6 realistic job seeker profiles for construction workers, helpers, runners, and skilled tradesmen looking for work in Los Angeles. Fictional but realistic. Return as JSON array: [{"title":"Name — Role","summary":"experience, skills, availability, what they want","source":"Obra Network","url":null,"image":null,"amazonUrl":null}]. JSON only.',
   },
   {
     id: 'tips',
     label: 'Business Tips',
     icon: '💡',
-    prompt: 'Provide 6 actionable business tips for small construction/remodeling companies. Topics: getting clients, managing projects, pricing, marketing, scaling, avoiding common mistakes. Each tip specific and practical. Return as JSON array: [{"title":"tip title","summary":"detailed actionable advice in 2-3 sentences","source":"BQ Tools","url":null,"image":null,"amazonUrl":null}]. JSON only.',
+    prompt: 'Provide 6 actionable business tips for small construction/remodeling companies. Topics: getting clients, managing projects, pricing, marketing, scaling, avoiding common mistakes. Each tip specific and practical. Return as JSON array: [{"title":"tip title","summary":"detailed actionable advice in 2-3 sentences","source":"Obra","url":null,"image":null,"amazonUrl":null}]. JSON only.',
   },
   {
     id: 'deals',
@@ -2578,11 +2578,11 @@ async function nightlyReengagement(env) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           personalizations: [{ to: [{ email: user.email, name: user.name || user.email }] }],
-          from: { email: 'hello@bq-tools.com', name: 'BQ Tools' },
-          subject: 'Your BQ Tools account is waiting for you 👋',
+          from: { email: 'hello@bq-tools.com', name: 'Obra' },
+          subject: 'Your Obra account is waiting for you 👋',
           content: [{
             type: 'text/plain',
-            value: `Hi ${user.name || 'there'},\n\nWe noticed you haven't logged in to BQ Tools for a while. Your Pro account has ${user.credits || 0} credits ready to use!\n\nLog in at https://bq-tools.fanzai-mgmt.workers.dev\n\nBQ Tools Team`
+            value: `Hi ${user.name || 'there'},\n\nWe noticed you haven't logged in to Obra for a while. Your Pro account has ${user.credits || 0} credits ready to use!\n\nLog in at https://bq-tools.fanzai-mgmt.workers.dev\n\nObra Team`
           }]
         })
       });
@@ -2624,7 +2624,7 @@ async function nightlyAnalyticsDigest(env, taskResults) {
 
   const date = new Date().toISOString().split('T')[0];
   const body = [
-    `BQ Tools — Daily Digest (${date})`,
+    `Obra — Daily Digest (${date})`,
     '',
     `Users: ${totalUsers} total, ${proUsers} Pro`,
     `Credits in circulation: ${totalCredits}`,
@@ -2635,7 +2635,7 @@ async function nightlyAnalyticsDigest(env, taskResults) {
     `  Scrape: ${taskResults.scrape || 'n/a'}`,
     `  Re-engagement: ${taskResults.reengagement || 'n/a'}`,
     '',
-    'BQ Tools Cron'
+    'Obra Cron'
   ].join('\n');
 
   await fetch('https://api.mailchannels.net/tx/v1/send', {
@@ -2643,8 +2643,8 @@ async function nightlyAnalyticsDigest(env, taskResults) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       personalizations: [{ to: [{ email: adminEmail }] }],
-      from: { email: 'cron@bq-tools.com', name: 'BQ Tools Cron' },
-      subject: `📊 BQ Tools Digest — ${date}`,
+      from: { email: 'cron@bq-tools.com', name: 'Obra Cron' },
+      subject: `📊 Obra Digest — ${date}`,
       content: [{ type: 'text/plain', value: body }]
     })
   });
@@ -2670,7 +2670,7 @@ async function refreshNews(env, force = false) {
       try {
         items = JSON.parse(aiResponse.replace(/```json|```/g, '').trim());
       } catch {
-        items = [{ title: 'Update coming soon', summary: 'Check back later for ' + cat.label, source: 'BQ Tools', url: null, image: null }];
+        items = [{ title: 'Update coming soon', summary: 'Check back later for ' + cat.label, source: 'Obra', url: null, image: null }];
       }
       results[cat.id] = {
         label: cat.label,
@@ -2681,7 +2681,7 @@ async function refreshNews(env, force = false) {
       results[cat.id] = {
         label: cat.label,
         icon: cat.icon,
-        items: [{ title: 'Temporarily unavailable', summary: 'News will be updated shortly.', source: 'BQ Tools', url: null, image: null }],
+        items: [{ title: 'Temporarily unavailable', summary: 'News will be updated shortly.', source: 'Obra', url: null, image: null }],
       };
     }
   }
@@ -3642,7 +3642,7 @@ async function scrapeYouTube(env, url) {
         title: v.title || '',
         author: v.channelName || '',
         duration: v.duration || null,
-        note: 'YouTube direct download is temporarily unavailable. Try TikTok or Instagram URLs, or use the BQ Tools Chrome Extension for YouTube.',
+        note: 'YouTube direct download is temporarily unavailable. Try TikTok or Instagram URLs, or use the Obra Chrome Extension for YouTube.',
         platform: 'youtube'
       };
     }
@@ -4146,8 +4146,8 @@ async function handleAdminNotifyClient(request, env) {
 
   // If MailChannels (free Cloudflare email relay) is available, send an email
   const emailBody = type === 'video_ready'
-    ? `Hi ${user.name || 'there'},\n\nYour AI video is ready!\n\nView and download it here:\n${safeAdUrl || 'Log in to your BQ Tools account to see it.'}\n\nBQ Tools Team`
-    : `Hi ${user.name || 'there'},\n\nYou have a new notification from BQ Tools.\n\nBQ Tools Team`;
+    ? `Hi ${user.name || 'there'},\n\nYour AI video is ready!\n\nView and download it here:\n${safeAdUrl || 'Log in to your Obra account to see it.'}\n\nObra Team`
+    : `Hi ${user.name || 'there'},\n\nYou have a new notification from Obra.\n\nObra Team`;
 
   try {
     const mailRes = await fetch('https://api.mailchannels.net/tx/v1/send', {
@@ -4155,8 +4155,8 @@ async function handleAdminNotifyClient(request, env) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         personalizations: [{ to: [{ email: user.email, name: user.name || user.email }] }],
-        from: { email: 'noreply@bq-tools.com', name: 'BQ Tools' },
-        subject: type === 'video_ready' ? '🎬 Your AI Video is Ready!' : '📬 BQ Tools Notification',
+        from: { email: 'noreply@bq-tools.com', name: 'Obra' },
+        subject: type === 'video_ready' ? '🎬 Your AI Video is Ready!' : '📬 Obra Notification',
         content: [{ type: 'text/plain', value: emailBody }]
       })
     });

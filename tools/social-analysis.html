@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BQ Tools — Social Media Analysis</title>
+<title>Obra — Social Media Analysis</title>
 <link rel="stylesheet" href="../style.css">
 <style>
   body { display: flex; flex-direction: column; }
@@ -49,7 +49,7 @@
   <meta name="theme-color" content="#e8c547">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="BQ Tools">
+  <meta name="apple-mobile-web-app-title" content="Obra">
   <meta name="mobile-web-app-capable" content="yes">
   <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png">
@@ -57,7 +57,7 @@
 <body>
 
 <nav class="nav">
-  <a href="/home.html" class="nav-logo">BQ <span>Tools</span></a>
+  <a href="/home.html" class="nav-logo">Obra</a>
   <div class="nav-right">
     <a href="/home.html" class="nav-link" data-en="← Back" data-es="← Atrás" data-he="חזור →">← Back</a>
     <div class="lang-toggle">
@@ -113,7 +113,7 @@
   </div>
 </div>
 
-<footer class="footer"><div class="footer-brand">Powered by BQ Tools — BQ Production LLC</div></footer>
+<footer class="footer"><div class="footer-brand">Powered by Obra — BQ Production LLC</div></footer>
 
 <script src="../js/ai.js"></script>
 <script src="../js/auth.js"></script>
@@ -303,7 +303,7 @@ function exportAnalysis() {
     <div class="score">${lastResult.overall_score}/100</div>
     <h2>Recommendations</h2>
     ${(lastResult.recommendations||[]).map(r=>`<p><b>${r.title}</b> (${r.priority}): ${r.description}</p>`).join('')}
-    <div class="footer">Powered by BQ Tools — bqtools.dev</div><script src="/js/motion-engine.js" defer></script>
+    <div class="footer">Powered by Obra — bqtools.dev</div><script src="/js/motion-engine.js" defer></script>
 <script src="/js/cmdk-palette.js" defer></script>
 <script src="/js/brain-assistant.js" defer></script>
 </body></html>`);

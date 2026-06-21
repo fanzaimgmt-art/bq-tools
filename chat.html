@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BQ Tools — AI Chat</title>
+<title>Obra — AI Chat</title>
 <link rel="stylesheet" href="style.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -338,7 +338,7 @@ body { display:flex; flex-direction:column; height:100vh; overflow:hidden; -webk
   <meta name="theme-color" content="#e8c547">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="BQ Tools">
+  <meta name="apple-mobile-web-app-title" content="Obra">
   <meta name="mobile-web-app-capable" content="yes">
   <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png">
@@ -346,7 +346,7 @@ body { display:flex; flex-direction:column; height:100vh; overflow:hidden; -webk
 <body>
 
 <nav class="nav">
-  <a href="/home.html" class="nav-logo">BQ <span>Tools</span></a>
+  <a href="/home.html" class="nav-logo">Obra</a>
   <div class="nav-right">
     <a href="/home.html" class="nav-link" data-en="Tools" data-es="Herramientas" data-he="כלים">Tools</a>
     <div class="lang-toggle">
@@ -361,7 +361,7 @@ body { display:flex; flex-direction:column; height:100vh; overflow:hidden; -webk
   <div class="chat-sidebar" id="chatSidebar">
     <div class="sidebar-brand">
       <div class="brand-mark">BQ</div>
-      <div class="brand-name">BQ Tools <span class="dim">/ Chat</span></div>
+      <div class="brand-name">Obra <span class="dim">/ Chat</span></div>
     </div>
     <button class="new-chat-btn" onclick="newChat()">
       <span>+ New Chat</span>
@@ -522,12 +522,12 @@ const MODEL_GROUPS = [
 
 // Language instruction injected into every chat request
 function getLangInstruction() {
-  if (lang === 'es') return '\n\nIMPORTANT: Respond in Mexican-American Spanish (español mexicano-americano) — the kind spoken by Hispanic contractors in California, Texas, and Florida. Use "tú" informal. Use contractor terminology (contratista, cotización, estimado, plomería, electricidad, yarda, pies cuadrados). Never translate brand terms like "BQ Tools".';
-  if (lang === 'he') return '\n\nIMPORTANT: Respond in casual Hebrew (עברית). Use "אתה" direct. Use Israeli contractor terminology. Never translate brand terms like "BQ Tools".';
+  if (lang === 'es') return '\n\nIMPORTANT: Respond in Mexican-American Spanish (español mexicano-americano) — the kind spoken by Hispanic contractors in California, Texas, and Florida. Use "tú" informal. Use contractor terminology (contratista, cotización, estimado, plomería, electricidad, yarda, pies cuadrados). Never translate brand terms like "Obra".';
+  if (lang === 'he') return '\n\nIMPORTANT: Respond in casual Hebrew (עברית). Use "אתה" direct. Use Israeli contractor terminology. Never translate brand terms like "Obra".';
   return '\n\nRespond in English.';
 }
 
-const SYSTEM_PROMPT = `You are BQ Assistant for contractors. You know every feature of BQ Tools inside out. Keep answers practical and actionable.
+const SYSTEM_PROMPT = `You are Obra Assistant for contractors. You know every feature of Obra inside out. Keep answers practical and actionable.
 
 TOOLS:
 - Compare: Upload 2 photos (before/after), slider shows difference, AI Analysis scores changes (1 credit)
@@ -590,10 +590,10 @@ When users ask questions about their business, guide them:
 - "I need a helper" / "Find a runner" → direct to /business/jobs.html
 - "I need leads" / "Door-to-door" → direct to /business/door-knockers.html
 - "Send an invoice" / "Customer hasn't paid" → direct to /tools/invoice.html
-- "How do I use BQ Tools" / "Best practices" / "I'm overwhelmed" → direct to /learn.html
+- "How do I use Obra" / "Best practices" / "I'm overwhelmed" → direct to /learn.html
 
 You also know about: permits, estimates, materials, contracts, building codes, OSHA safety, client management, and marketing.
-When users ask how to do something, give step-by-step instructions specific to BQ Tools.`;
+When users ask how to do something, give step-by-step instructions specific to Obra.`;
 
 // ── Session Management ──
 let sessions = JSON.parse(localStorage.getItem('bq_chat_sessions') || '[]');
@@ -1176,7 +1176,7 @@ function exportChat() {
       ${m.model ? `<div class="model">${MODELS[m.model]?.label || m.model}</div>` : ''}
       ${m.content.replace(/\n/g, '<br>')}
     </div>`).join('')}
-    <div class="footer">Powered by BQ Tools — bqtools.dev</div></body></html>`);
+    <div class="footer">Powered by Obra — bqtools.dev</div></body></html>`);
   w.document.close();
   setTimeout(() => w.print(), 500);
 }
