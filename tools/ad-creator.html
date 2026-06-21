@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Obra — Auto Ad Creator</title>
+<meta name="i18n-page" content="ad-creator">
 <link rel="stylesheet" href="../style.css">
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#e8c547">
@@ -160,7 +161,7 @@
 <nav class="nav">
   <a href="/" class="nav-logo">Obra</a>
   <div class="nav-right">
-    <a href="/" class="nav-link" data-en="← Back" data-es="← Atrás" data-he="חזור →">← Back</a>
+    <a href="/" class="nav-link" data-en="← Back" data-he="→ חזור" data-es="← Atrás">← Back</a>
     <div class="lang-toggle">
       <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
       <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
@@ -169,31 +170,31 @@
 </nav>
 
 <div class="page">
-  <h1 class="page-title">🎬 Auto Ad Creator</h1>
-  <p class="page-sub">Upload your photos → get a full 15s or 30s video ad with voiceover.</p>
-  <p style="font-size:13px;color:var(--ac);margin-bottom:20px;">Costs 20 credits per ad</p>
+  <h1 class="page-title" data-en="🎬 Auto Ad Creator" data-he="🎬 יוצר פרסומות אוטומטי" data-es="🎬 Creador Automático de Anuncios">🎬 Auto Ad Creator</h1>
+  <p class="page-sub" data-en="Upload your photos → get a full 15s or 30s video ad with voiceover." data-he="העלה תמונות ← קבל פרסומת וידאו מלאה של 15 או 30 שניות עם קריינות." data-es="Sube tus fotos → obtén un anuncio de video completo de 15 o 30 s con narración.">Upload your photos → get a full 15s or 30s video ad with voiceover.</p>
+  <p style="font-size:13px;color:var(--ac);margin-bottom:20px;" data-en="Costs 20 credits per ad" data-he="עולה 20 קרדיטים לפרסומת" data-es="Cuesta 20 créditos por anuncio">Costs 20 credits per ad</p>
 
   <div class="step-wrap" id="stepDots">
-    <div class="step-dot active" id="dot1">1 Photos</div>
-    <div class="step-dot" id="dot2">2 Logo</div>
-    <div class="step-dot" id="dot3">3 Business</div>
-    <div class="step-dot" id="dot4">4 Style</div>
-    <div class="step-dot" id="dot5">5 Duration</div>
+    <div class="step-dot active" id="dot1" data-en="1 Photos" data-he="1 תמונות" data-es="1 Fotos">1 Photos</div>
+    <div class="step-dot" id="dot2" data-en="2 Logo" data-he="2 לוגו" data-es="2 Logo">2 Logo</div>
+    <div class="step-dot" id="dot3" data-en="3 Business" data-he="3 עסק" data-es="3 Negocio">3 Business</div>
+    <div class="step-dot" id="dot4" data-en="4 Style" data-he="4 סגנון" data-es="4 Estilo">4 Style</div>
+    <div class="step-dot" id="dot5" data-en="5 Duration" data-he="5 משך" data-es="5 Duración">5 Duration</div>
   </div>
 
   <!-- Step 1: Photos -->
   <div class="card" id="step1">
-    <label class="input-label">Step 1 — Upload Work Photos (3–10 photos)</label>
+    <label class="input-label" data-en="Step 1 — Upload Work Photos (3–10 photos)" data-he="שלב 1 — העלאת תמונות עבודה (3–10 תמונות)" data-es="Paso 1 — Sube fotos de tu trabajo (3–10 fotos)">Step 1 — Upload Work Photos (3–10 photos)</label>
     <div class="photo-grid" id="photoGrid">
       <!-- slots rendered by JS -->
     </div>
-    <p style="font-size:12px;color:var(--txd);">Before/after, finished work, team in action — the more variety the better.</p>
-    <button class="btn btn-primary" style="width:100%;margin-top:12px;" onclick="goToStep(2)">Next →</button>
+    <p style="font-size:12px;color:var(--txd);" data-en="Before/after, finished work, team in action — the more variety the better." data-he="לפני/אחרי, עבודה מוגמרת, צוות בפעולה — ככל שיש יותר מגוון, כך ייטב." data-es="Antes/después, trabajo terminado, equipo en acción — mientras más variedad, mejor.">Before/after, finished work, team in action — the more variety the better.</p>
+    <button class="btn btn-primary" style="width:100%;margin-top:12px;" onclick="goToStep(2)" data-en="Next →" data-he="הבא ←" data-es="Siguiente →">Next →</button>
   </div>
 
   <!-- Step 2: Logo -->
   <div class="card" id="step2" style="display:none;">
-    <label class="input-label">Step 2 — Upload Your Logo <span style="color:var(--txd);font-weight:400;">(optional)</span></label>
+    <label class="input-label" data-en="Step 2 — Upload Your Logo" data-he="שלב 2 — העלאת הלוגו שלך" data-es="Paso 2 — Sube tu logo">Step 2 — Upload Your Logo <span style="color:var(--txd);font-weight:400;" data-en="(optional)" data-he="(אופציונלי)" data-es="(opcional)">(optional)</span></label>
 
     <!-- Preview (shown after upload) -->
     <div class="logo-preview" id="logoPreview">
@@ -204,82 +205,86 @@
     <!-- Drop zone (hidden after upload) -->
     <div class="logo-drop" id="logoDropZone">
       <div class="drop-icon">🖼️</div>
-      <div class="drop-title">Drag your logo here or click to browse</div>
-      <div class="drop-sub">PNG, JPG, or SVG · Your logo will appear in the corner of every scene</div>
+      <div class="drop-title" data-en="Drag your logo here or click to browse" data-he="גרור את הלוגו לכאן או לחץ לעיון" data-es="Arrastra tu logo aquí o haz clic para explorar">Drag your logo here or click to browse</div>
+      <div class="drop-sub" data-en="PNG, JPG, or SVG · Your logo will appear in the corner of every scene" data-he="PNG, JPG או SVG · הלוגו יופיע בפינת כל סצנה" data-es="PNG, JPG o SVG · Tu logo aparecerá en la esquina de cada escena">PNG, JPG, or SVG · Your logo will appear in the corner of every scene</div>
       <input type="file" accept="image/png,image/jpeg,image/svg+xml,image/*" id="logoInput">
     </div>
 
     <div style="display:flex;gap:8px;">
-      <button class="btn" onclick="goToStep(1)">← Back</button>
-      <button class="btn btn-primary" style="flex:1;" onclick="goToStep(3)">Next →</button>
+      <button class="btn" onclick="goToStep(1)" data-en="← Back" data-he="→ חזור" data-es="← Atrás">← Back</button>
+      <button class="btn btn-primary" style="flex:1;" onclick="goToStep(3)" data-en="Next →" data-he="הבא ←" data-es="Siguiente →">Next →</button>
     </div>
   </div>
 
   <!-- Step 3: Description -->
   <div class="card" id="step3" style="display:none;">
-    <label class="input-label">Step 3 — Describe Your Business</label>
-    <p style="font-size:13px;color:var(--txd);margin-bottom:10px;">AI will analyze your photos and suggest a description. Edit it or write your own.</p>
+    <label class="input-label" data-en="Step 3 — Describe Your Business" data-he="שלב 3 — תאר את העסק שלך" data-es="Paso 3 — Describe tu negocio">Step 3 — Describe Your Business</label>
+    <p style="font-size:13px;color:var(--txd);margin-bottom:10px;" data-en="AI will analyze your photos and suggest a description. Edit it or write your own." data-he="הבינה המלאכותית תנתח את התמונות שלך ותציע תיאור. ערוך אותו או כתוב משלך." data-es="La IA analizará tus fotos y sugerirá una descripción. Edítala o escribe la tuya.">AI will analyze your photos and suggest a description. Edit it or write your own.</p>
     <div class="suggest-row">
-      <input class="input" id="bizDesc" placeholder="Kitchen & bathroom remodeling, Los Angeles CA">
-      <button class="btn btn-suggest" id="suggestBtn" onclick="suggestDescription()">🔄 Suggest</button>
+      <input class="input" id="bizDesc"
+        placeholder="Kitchen &amp; bathroom remodeling, Los Angeles CA"
+        data-en-placeholder="Kitchen &amp; bathroom remodeling, Los Angeles CA"
+        data-he-placeholder="שיפוץ מטבחים ואמבטיות, לוס אנג׳לס CA"
+        data-es-placeholder="Remodelación de cocinas y baños, Los Ángeles CA">
+      <button class="btn btn-suggest" id="suggestBtn" onclick="suggestDescription()" data-en="🔄 Suggest" data-he="🔄 הצע" data-es="🔄 Sugerir">🔄 Suggest</button>
     </div>
     <p id="suggestStatus" style="font-size:12px;color:var(--txd);margin-bottom:10px;display:none;"></p>
     <div style="display:flex;gap:8px;">
-      <button class="btn" onclick="goToStep(2)">← Back</button>
-      <button class="btn btn-primary" style="flex:1;" onclick="goToStep(4)">Next →</button>
+      <button class="btn" onclick="goToStep(2)" data-en="← Back" data-he="→ חזור" data-es="← Atrás">← Back</button>
+      <button class="btn btn-primary" style="flex:1;" onclick="goToStep(4)" data-en="Next →" data-he="הבא ←" data-es="Siguiente →">Next →</button>
     </div>
   </div>
 
   <!-- Step 4: Style -->
   <div class="card" id="step4" style="display:none;">
-    <label class="input-label">Step 4 — Choose Ad Style</label>
+    <label class="input-label" data-en="Step 4 — Choose Ad Style" data-he="שלב 4 — בחר סגנון פרסומת" data-es="Paso 4 — Elige el estilo del anuncio">Step 4 — Choose Ad Style</label>
     <div class="style-btns">
       <button class="style-btn on" onclick="setStyle(this,'Professional')" id="stylePro">
         <div class="icon">🏛️</div>
-        <div class="label">Professional</div>
-        <div class="sub">Clean & trustworthy</div>
+        <div class="label" data-en="Professional" data-he="מקצועי" data-es="Profesional">Professional</div>
+        <div class="sub" data-en="Clean & trustworthy" data-he="נקי ואמין" data-es="Limpio y confiable">Clean & trustworthy</div>
       </button>
       <button class="style-btn" onclick="setStyle(this,'Energetic')" id="styleEn">
         <div class="icon">⚡</div>
-        <div class="label">Energetic</div>
-        <div class="sub">Bold & fast-paced</div>
+        <div class="label" data-en="Energetic" data-he="אנרגטי" data-es="Enérgico">Energetic</div>
+        <div class="sub" data-en="Bold & fast-paced" data-he="נועז ודינמי" data-es="Audaz y dinámico">Bold & fast-paced</div>
       </button>
       <button class="style-btn" onclick="setStyle(this,'Luxury')" id="styleLux">
         <div class="icon">💎</div>
-        <div class="label">Luxury</div>
-        <div class="sub">Cinematic & premium</div>
+        <div class="label" data-en="Luxury" data-he="יוקרה" data-es="Lujo">Luxury</div>
+        <div class="sub" data-en="Cinematic & premium" data-he="קולנועי ופרמיום" data-es="Cinematográfico y premium">Cinematic & premium</div>
       </button>
       <button class="style-btn" onclick="setStyle(this,'Timelapse')" id="styleTL">
         <div class="icon">⏱️</div>
-        <div class="label">Timelapse</div>
-        <div class="sub">Transformation reveal</div>
+        <div class="label" data-en="Timelapse" data-he="טיים-לאפס" data-es="Timelapse">Timelapse</div>
+        <div class="sub" data-en="Transformation reveal" data-he="חשיפת טרנספורמציה" data-es="Revelación de transformación">Transformation reveal</div>
       </button>
     </div>
 
     <!-- Sub-story selector (shown after style pick) -->
     <div class="substory-wrap on" id="substoryWrap">
-      <div class="substory-label">Choose your story direction</div>
+      <div class="substory-label" data-en="Choose your story direction" data-he="בחר את כיוון הסיפור" data-es="Elige la dirección de tu historia">Choose your story direction</div>
       <div class="substory-cards" id="substoryCards">
         <!-- populated by JS when style changes -->
       </div>
     </div>
 
     <div style="display:flex;gap:8px;margin-top:14px;">
-      <button class="btn" onclick="goToStep(3)">← Back</button>
-      <button class="btn btn-primary" style="flex:1;" onclick="goToStep(5)">Next →</button>
+      <button class="btn" onclick="goToStep(3)" data-en="← Back" data-he="→ חזור" data-es="← Atrás">← Back</button>
+      <button class="btn btn-primary" style="flex:1;" onclick="goToStep(5)" data-en="Next →" data-he="הבא ←" data-es="Siguiente →">Next →</button>
     </div>
   </div>
 
   <!-- Step 5: Duration -->
   <div class="card" id="step5" style="display:none;">
-    <label class="input-label">Step 5 — Duration</label>
+    <label class="input-label" data-en="Step 5 — Duration" data-he="שלב 5 — משך הפרסומת" data-es="Paso 5 — Duración">Step 5 — Duration</label>
     <div class="dur-btns">
-      <button class="dur-btn on" onclick="setDuration(this,'15s')" id="dur15">⏱ 15 seconds</button>
-      <button class="dur-btn" onclick="setDuration(this,'30s')" id="dur30">⏱ 30 seconds</button>
+      <button class="dur-btn on" onclick="setDuration(this,'15s')" id="dur15" data-en="⏱ 15 seconds" data-he="⏱ 15 שניות" data-es="⏱ 15 segundos">⏱ 15 seconds</button>
+      <button class="dur-btn" onclick="setDuration(this,'30s')" id="dur30" data-en="⏱ 30 seconds" data-he="⏱ 30 שניות" data-es="⏱ 30 segundos">⏱ 30 seconds</button>
     </div>
     <div style="display:flex;gap:8px;margin-top:8px;">
-      <button class="btn" onclick="goToStep(4)">← Back</button>
-      <button class="btn btn-primary" style="flex:1;font-size:16px;padding:16px;" onclick="generateAd()" id="genBtn">
+      <button class="btn" onclick="goToStep(4)" data-en="← Back" data-he="→ חזור" data-es="← Atrás">← Back</button>
+      <button class="btn btn-primary" style="flex:1;font-size:16px;padding:16px;" onclick="generateAd()" id="genBtn" data-en="🎬 Generate Ad (20 credits)" data-he="🎬 צור פרסומת (20 קרדיטים)" data-es="🎬 Generar anuncio (20 créditos)">
         🎬 Generate Ad (20 credits)
       </button>
     </div>
@@ -287,37 +292,37 @@
 
   <!-- Progress -->
   <div class="progress-panel" id="progressPanel">
-    <h3 style="font-size:16px;font-weight:700;margin-bottom:12px;">🎬 Building your ad...</h3>
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:12px;" data-en="🎬 Building your ad..." data-he="🎬 בונה את הפרסומת שלך..." data-es="🎬 Construyendo tu anuncio...">🎬 Building your ad...</h3>
     <div class="step-row">
       <span class="step-icon">🧠</span>
-      <span class="step-label">AI writing script & scene breakdown</span>
-      <span class="step-badge badge-wait" id="st-script">waiting</span>
+      <span class="step-label" data-en="AI writing script & scene breakdown" data-he="בינה מלאכותית כותבת תסריט ופירוק סצנות" data-es="IA redactando guion y desglose de escenas">AI writing script & scene breakdown</span>
+      <span class="step-badge badge-wait" id="st-script" data-en="waiting" data-he="ממתין" data-es="esperando">waiting</span>
     </div>
     <div class="step-row">
       <span class="step-icon">🎨</span>
-      <span class="step-label">Generating scene frames (NanoBanana)</span>
-      <span class="step-badge badge-wait" id="st-frames">waiting</span>
+      <span class="step-label" data-en="Generating scene frames (NanoBanana)" data-he="יוצר פריימים לסצנות (NanoBanana)" data-es="Generando fotogramas de escena (NanoBanana)">Generating scene frames (NanoBanana)</span>
+      <span class="step-badge badge-wait" id="st-frames" data-en="waiting" data-he="ממתין" data-es="esperando">waiting</span>
     </div>
     <div class="step-row">
       <span class="step-icon">🎥</span>
-      <span class="step-label">Animating frames into video clips (Seedance 2)</span>
-      <span class="step-badge badge-wait" id="st-video">waiting</span>
+      <span class="step-label" data-en="Animating frames into video clips (Seedance 2)" data-he="מנפש פריימים לקליפי וידאו (Seedance 2)" data-es="Animando fotogramas en clips de video (Seedance 2)">Animating frames into video clips (Seedance 2)</span>
+      <span class="step-badge badge-wait" id="st-video" data-en="waiting" data-he="ממתין" data-es="esperando">waiting</span>
     </div>
     <div class="step-row">
       <span class="step-icon">🎙️</span>
-      <span class="step-label">Generating voiceover (ElevenLabs)</span>
-      <span class="step-badge badge-wait" id="st-tts">waiting</span>
+      <span class="step-label" data-en="Generating voiceover (ElevenLabs)" data-he="יוצר קריינות (ElevenLabs)" data-es="Generando narración en voz (ElevenLabs)">Generating voiceover (ElevenLabs)</span>
+      <span class="step-badge badge-wait" id="st-tts" data-en="waiting" data-he="ממתין" data-es="esperando">waiting</span>
     </div>
     <div class="step-row">
       <span class="step-icon">✂️</span>
-      <span class="step-label">Assembling final video (FFmpeg)</span>
-      <span class="step-badge badge-wait" id="st-ffmpeg">waiting</span>
+      <span class="step-label" data-en="Assembling final video (FFmpeg)" data-he="מרכיב וידאו סופי (FFmpeg)" data-es="Ensamblando video final (FFmpeg)">Assembling final video (FFmpeg)</span>
+      <span class="step-badge badge-wait" id="st-ffmpeg" data-en="waiting" data-he="ממתין" data-es="esperando">waiting</span>
     </div>
   </div>
 
   <!-- Script preview -->
   <div class="script-box" id="scriptBox">
-    <p style="font-size:12px;color:var(--txd);margin-bottom:8px;">VOICEOVER SCRIPT</p>
+    <p style="font-size:12px;color:var(--txd);margin-bottom:8px;" data-en="VOICEOVER SCRIPT" data-he="תסריט קריינות" data-es="GUION DE NARRACIÓN">VOICEOVER SCRIPT</p>
     <div class="vo-text" id="voText"></div>
     <div class="cta-line" id="ctaLine"></div>
   </div>
@@ -327,13 +332,13 @@
 
   <!-- Final result -->
   <div class="result-panel" id="resultPanel">
-    <h3 style="font-size:16px;font-weight:700;margin-bottom:12px;">✅ Your Ad Is Ready!</h3>
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:12px;" data-en="✅ Your Ad Is Ready!" data-he="✅ הפרסומת שלך מוכנה!" data-es="✅ ¡Tu anuncio está listo!">✅ Your Ad Is Ready!</h3>
     <video id="finalVideo" controls style="width:100%;border-radius:10px;margin-bottom:12px;" playsinline></video>
-    <a id="downloadBtn" class="btn btn-primary" download="bq-ad.mp4" style="width:100%;text-align:center;display:block;">⬇️ Download MP4</a>
+    <a id="downloadBtn" class="btn btn-primary" download="bq-ad.mp4" style="width:100%;text-align:center;display:block;" data-en="⬇️ Download MP4" data-he="⬇️ הורד MP4" data-es="⬇️ Descargar MP4">⬇️ Download MP4</a>
   </div>
 </div>
 
-<footer class="footer"><div class="footer-brand">Powered by Obra — BQ Production LLC</div></footer>
+<footer class="footer"><div class="footer-brand" data-en="Powered by Obra — BQ Production LLC" data-he="מופעל על ידי Obra — BQ Production LLC" data-es="Desarrollado por Obra — BQ Production LLC">Powered by Obra — BQ Production LLC</div></footer>
 
 <script src="../js/auth.js"></script>
 <script src="../js/crypto.js"></script>
