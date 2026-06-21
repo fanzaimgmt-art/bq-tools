@@ -260,6 +260,30 @@
   .foot-meta a { color: var(--ed-paper-dim); transition: color .2s; }
   .foot-meta a:hover { color: var(--ed-gold); }
 </style>
+<script>
+/* Self-contained i18n for home.html (this page is on the editorial system and does NOT load common.js) */
+(function(){
+  function applyLang(l){
+    if(['en','he','es'].indexOf(l)<0) l='en';
+    try{ localStorage.setItem('bq_lang', l); }catch(e){}
+    document.documentElement.dir = l==='he' ? 'rtl' : 'ltr';
+    document.documentElement.lang = l;
+    if(document.body) document.body.setAttribute('lang', l);
+    document.querySelectorAll('[data-en],[data-he],[data-es]').forEach(function(el){
+      var v = el.getAttribute('data-'+l); if(v==null) return;
+      if(v.indexOf('<')>=0) el.innerHTML=v; else el.textContent=v;
+    });
+    document.querySelectorAll('[data-en-placeholder],[data-he-placeholder],[data-es-placeholder]').forEach(function(el){
+      var p = el.getAttribute('data-'+l+'-placeholder'); if(p!=null) el.placeholder=p;
+    });
+    document.querySelectorAll('.lang-btn').forEach(function(b){ b.classList.toggle('on', b.dataset.lang===l); });
+  }
+  window.setLang = applyLang;
+  window.t = function(o){ var l='en'; try{ l=localStorage.getItem('bq_lang')||'en'; }catch(e){} return (o && (o[l]||o.en)) || ''; };
+  document.addEventListener('DOMContentLoaded', function(){ var l='en'; try{ l=localStorage.getItem('bq_lang')||'en'; }catch(e){} applyLang(l); });
+})();
+</script>
+<style>.lang-btn.on{ background:rgba(212,166,75,0.2)!important; color:var(--ed-gold)!important; }</style>
 </head>
 <body>
 
@@ -271,7 +295,14 @@
     <a href="/directory.html" data-en="Directory" data-he="מדריך" data-es="Directorio">Directory</a>
     <a href="/tools/pusher.html">Pusher</a>
   </div>
-  <a class="ed-topnav-cta cmdk-trigger"><span data-en="Search" data-he="חיפוש" data-es="Buscar">Search</span> · <kbd>⌘K</kbd></a>
+  <div style="display:flex;align-items:center;gap:12px;justify-self:end;">
+    <div class="lang-toggle" style="display:flex;gap:1px;background:rgba(245,241,232,0.06);border-radius:7px;padding:2px;">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')" style="padding:6px 10px;border:0;background:transparent;color:var(--ed-paper-dim);font-family:var(--font-en);font-size:12px;font-weight:600;cursor:pointer;border-radius:5px;">EN</button>
+      <button class="lang-btn" data-lang="he" onclick="setLang('he')" style="padding:6px 10px;border:0;background:transparent;color:var(--ed-paper-dim);font-family:var(--font-en);font-size:13px;font-weight:600;cursor:pointer;border-radius:5px;">עב</button>
+      <button class="lang-btn" data-lang="es" onclick="setLang('es')" style="padding:6px 10px;border:0;background:transparent;color:var(--ed-paper-dim);font-family:var(--font-en);font-size:12px;font-weight:600;cursor:pointer;border-radius:5px;">ES</button>
+    </div>
+    <a class="ed-topnav-cta cmdk-trigger"><span data-en="Search" data-he="חיפוש" data-es="Buscar">Search</span> · <kbd>⌘K</kbd></a>
+  </div>
 </nav>
 
 <section class="home-hero">
@@ -279,7 +310,7 @@
     <div class="home-greeting-row">
       <div>
         <span class="ed-eyebrow" style="margin-bottom: 16px;" data-en="Welcome back" data-he="ברוך שובך" data-es="Bienvenido de vuelta">Welcome back</span>
-        <h1>Good <em id="greetingWord" data-en="afternoon" data-he="אחר הצהריים" data-es="tarde">afternoon</em>,<br><span class="name" id="userName">there</span>.</h1>
+        <h1><em id="greetingWord" data-en="Good afternoon" data-he="צהריים טובים" data-es="Buenas tardes">Good afternoon</em>,<br><span class="name" id="userName">there</span>.</h1>
       </div>
       <div class="credit-block">
         <span class="label" data-en="Credits available" data-he="קרדיטים זמינים" data-es="Créditos disponibles">Credits available</span>
@@ -523,9 +554,9 @@ const greetingKey = (() => {
   return 'evening';
 })();
 const greetingMap = {
-  morning:   { en: 'morning',   he: 'בוקר',          es: 'mañana'   },
-  afternoon: { en: 'afternoon', he: 'אחר הצהריים',   es: 'tarde'    },
-  evening:   { en: 'evening',   he: 'ערב',            es: 'noche'    },
+  morning:   { en: 'Good morning',   he: 'בוקר טוב',     es: 'Buenos días'   },
+  afternoon: { en: 'Good afternoon', he: 'צהריים טובים', es: 'Buenas tardes' },
+  evening:   { en: 'Good evening',   he: 'ערב טוב',       es: 'Buenas noches' },
 };
 const greetingEl = document.getElementById('greetingWord');
 if (greetingEl) {
@@ -536,8 +567,15 @@ if (greetingEl) {
   greetingEl.textContent = g.en; // setLang will override if lang != 'en'
 }
 
-const name = (user.email || '').split('@')[0] || 'there';
-document.getElementById('userName').textContent = name;
+const rawName = (user.email || '').split('@')[0];
+const nameEl = document.getElementById('userName');
+if (rawName) {
+  nameEl.removeAttribute('data-en'); nameEl.removeAttribute('data-he'); nameEl.removeAttribute('data-es');
+  nameEl.textContent = rawName;
+} else {
+  nameEl.setAttribute('data-en','there'); nameEl.setAttribute('data-he','שלום'); nameEl.setAttribute('data-es','amigo');
+  nameEl.textContent = (typeof t === 'function' ? t({en:'there',he:'שלום',es:'amigo'}) : 'there');
+}
 document.getElementById('userCredits').textContent = user.credits ?? '—';
 document.getElementById('userTier').textContent = user.isPro
   ? (typeof t === 'function' ? t({ en: 'PRO', he: 'פרו', es: 'PRO' }) : 'PRO')
