@@ -6,940 +6,546 @@
 <title>Obra — Get Paid Faster</title>
 <meta name="description" content="Obra — the money and paperwork layer for contractors. Smart estimates, quotes, contracts, invoices, and payment tracking. Get paid faster.">
 <link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#e8c547">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Obra">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png">
 <style>
-  /* ── Higgsfield-inspired deep black theme + animated mesh ── */
-  body {
-    background:
-      radial-gradient(at 12% 0%, rgba(232,197,71,0.08) 0%, transparent 45%),
-      radial-gradient(at 88% 100%, rgba(107,70,193,0.10) 0%, transparent 50%),
-      #000;
-    background-attachment: fixed;
-  }
-  /* Hero parallax glow — moves slowly with scroll */
-  .hero::after {
-    content: ''; position: absolute; inset: -50% -20% auto -20%; height: 200%;
-    background:
-      radial-gradient(circle at 30% 30%, rgba(232,197,71,0.18) 0%, transparent 40%),
-      radial-gradient(circle at 70% 70%, rgba(107,70,193,0.15) 0%, transparent 40%);
-    filter: blur(80px); pointer-events: none; z-index: -1;
-    animation: hero-drift 28s ease-in-out infinite alternate;
-  }
-  @keyframes hero-drift {
-    0%   { transform: translate(0, 0) scale(1); }
-    100% { transform: translate(8%, -3%) scale(1.1); }
-  }
+/* ── Page background ── */
+body {
+  background:
+    radial-gradient(at 12% 0%, rgba(232,197,71,0.06) 0%, transparent 45%),
+    radial-gradient(at 88% 100%, rgba(107,70,193,0.07) 0%, transparent 50%),
+    #000;
+  background-attachment: fixed;
+}
 
-  /* ── Hero ── */
-  .hero {
-    width: 100%;
-    padding: 140px 24px 120px;
-    text-align: center;
-    background: #000;
-    position: relative;
-    overflow: hidden;
-  }
-  .hero::before {
-    content: '';
-    position: absolute;
-    top: -30%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 900px;
-    height: 900px;
-    background: radial-gradient(circle, rgba(232,197,71,.08) 0%, transparent 60%);
-    pointer-events: none;
-  }
-  .hero h1 {
-    font-family: var(--font-display);
-    font-size: 88px;
-    font-weight: 800;
-    letter-spacing: -0.04em;
-    margin-bottom: 24px;
-    line-height: 0.95;
-    text-transform: uppercase;
-    position: relative;
-    color: #fff;
-  }
-  .hero h1 .accent { color: var(--ac); }
-  .hero h1 span[data-en],
-  .hero h1 br + span { display: block; }
-  .hero h1 .sub-hero {
-    display: block; font-size: 16px; font-weight: 500; color: rgba(255,255,255,0.55);
-    text-transform: uppercase; letter-spacing: 0.18em; margin-top: 20px; line-height: 1.5;
-    font-family: var(--font-en);
-  }
-  .hero .tagline {
-    font-size: 20px;
-    color: rgba(255,255,255,0.65);
-    max-width: 540px;
-    margin: 0 auto 14px;
-    line-height: 1.5;
-    font-weight: 400;
-  }
-  .hero .tagline-bold {
-    font-size: 15px;
-    color: var(--ac);
-    font-weight: 500;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    margin-bottom: 32px;
-  }
-  .hero-buttons {
-    display: flex;
-    gap: 14px;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-  .hero-image {
-    width: 92%;
-    max-width: 720px;
-    margin: 48px auto 0;
-    border-radius: 18px;
-    overflow: hidden;
-    border: 1px solid var(--bd);
-    box-shadow: 0 30px 80px rgba(0,0,0,.5), 0 0 0 1px rgba(232,197,71,.1);
-    aspect-ratio: 16/9;
-    background: linear-gradient(135deg, #1a1a1c, #0f0f10);
-    position: relative;
-  }
-  .hero-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-  .hero-image::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, transparent 50%, rgba(0,0,0,.5));
-    pointer-events: none;
-  }
-  .hero-image-caption {
-    position: absolute;
-    bottom: 18px; left: 24px; right: 24px;
-    color: #fff;
-    font-size: 14px;
-    font-weight: 600;
-    z-index: 2;
-    text-shadow: 0 2px 8px rgba(0,0,0,.7);
-    letter-spacing: 0.02em;
-  }
+/* ── Nav ── */
+.nav {
+  width: 100%;
+  height: 64px;
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  background: rgba(10,10,12,0.72);
+  backdrop-filter: saturate(1.6) blur(18px);
+  -webkit-backdrop-filter: saturate(1.6) blur(18px);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  transition: background .3s;
+}
+.nav.scrolled {
+  background: rgba(8,8,13,0.92);
+  border-bottom-color: rgba(255,255,255,0.10);
+}
+[data-theme="light"] .nav {
+  background: rgba(255,255,255,0.72);
+  border-bottom-color: rgba(0,0,0,0.08);
+}
+.nav-logo {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 18px;
+  letter-spacing: 2px;
+  color: var(--ac);
+  text-decoration: none;
+}
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.nav-link {
+  font-size: 14px;
+  color: var(--txd);
+  text-decoration: none;
+  padding: 8px 4px;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  transition: color .2s;
+}
+.nav-link:hover { color: var(--ac); opacity: 1; }
+.theme-toggle {
+  width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--bd);
+  background: var(--sf); color: var(--ac); cursor: pointer; font-size: 18px;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: all var(--transition); flex-shrink: 0;
+}
+.theme-toggle:hover { border-color: var(--ac); transform: rotate(20deg); }
+.lang-toggle {
+  display: flex; gap: 1px; background: var(--bg); border-radius: 6px; padding: 2px;
+}
+.lang-btn {
+  padding: 10px 12px; border: none; border-radius: 5px; background: transparent;
+  color: var(--txd); font-family: var(--font-en); font-size: 14px; cursor: pointer;
+  transition: all .2s; min-height: 44px; min-width: 44px;
+  display: flex; align-items: center; justify-content: center;
+}
+.lang-btn.on { background: var(--sf); color: var(--ac); }
+.lang-btn:hover:not(.on) { color: var(--tx); }
 
-  /* ── Demo ── */
-  .demo-section {
-    width: 92%;
-    max-width: 760px;
-    margin: 10px auto 60px;
-    text-align: center;
-  }
-  .demo-intro {
-    font-size: 17px;
-    color: rgba(255,255,255,0.7);
-    line-height: 1.55;
-    margin: 0 auto 24px;
-    max-width: 580px;
-  }
-  .demo-instruction {
-    font-size: 28px;
-    font-weight: 900;
-    color: #fff;
-    margin: 0 0 8px;
-    letter-spacing: -0.02em;
-    line-height: 1.2;
-  }
-  .demo-instruction .pulse-hand {
-    display: inline-block;
-    animation: handPulse 1.6s ease-in-out infinite;
-  }
-  @keyframes handPulse {
-    0%, 100% { transform: translateY(0) scale(1); }
-    50% { transform: translateY(-4px) scale(1.15); }
-  }
-  .demo-instruction-sub {
-    font-size: 14px;
-    color: rgba(255,255,255,0.55);
-    margin: 0 0 18px;
-    font-weight: 500;
-  }
-  .demo-box {
-    width: 100%;
-    aspect-ratio: 16/10;
-    border-radius: 16px;
-    border: 2px solid var(--ac);
-    overflow: hidden;
-    position: relative;
-    background: var(--sf);
-    box-shadow: 0 0 60px rgba(232,197,71,.15);
-    cursor: ew-resize;
-    user-select: none;
-    -webkit-user-select: none;
-    touch-action: none;
-  }
-  .demo-img {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    pointer-events: none;
-    -webkit-user-drag: none;
-  }
-  .demo-img-after-wrap {
-    position: absolute; inset: 0;
-    clip-path: inset(0 0 0 50%);
-    overflow: hidden;
-    transition: clip-path .05s linear;
-  }
-  .demo-line {
-    position: absolute; top: 0; bottom: 0; width: 4px;
-    background: #fff; left: 50%;
-    transform: translateX(-50%);
-    z-index: 2;
-    box-shadow: 0 0 18px rgba(0,0,0,.6);
-    pointer-events: none;
-  }
-  .demo-handle {
-    position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%,-50%);
-    width: 48px; height: 48px;
-    border-radius: 50%;
-    background: var(--ac);
-    border: 3px solid #fff;
-    z-index: 3;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #000;
-    font-size: 20px;
-    font-weight: 900;
-    box-shadow: 0 6px 20px rgba(0,0,0,.5);
-    pointer-events: none;
-    animation: handlePulse 2s ease-in-out infinite;
-  }
-  @keyframes handlePulse {
-    0%, 100% { box-shadow: 0 6px 20px rgba(0,0,0,.5), 0 0 0 0 rgba(232,197,71,.5); }
-    50% { box-shadow: 0 6px 20px rgba(0,0,0,.5), 0 0 0 14px rgba(232,197,71,0); }
-  }
-  .demo-label-b, .demo-label-a {
-    position: absolute; top: 16px;
-    padding: 8px 18px; border-radius: 8px;
-    font-size: 14px; font-weight: 900; letter-spacing: 2px;
-    background: rgba(0,0,0,.75); color: #fff;
-    backdrop-filter: blur(8px); z-index: 3;
-    pointer-events: none;
-    text-transform: uppercase;
-  }
-  .demo-label-b { left: 16px; border-left: 4px solid #ff6b6b; }
-  .demo-label-a { right: 16px; border-right: 4px solid #51cf66; }
-  .demo-footnote {
-    font-size: 15px;
-    color: rgba(255,255,255,0.7);
-    margin: 18px auto 0;
-    max-width: 520px;
-    line-height: 1.5;
-  }
-  .demo-footnote strong { color: var(--ac); font-weight: 700; }
+/* ── Hero ── */
+.hero {
+  position: relative;
+  text-align: center;
+  padding: var(--space-5) 24px;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -20%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 800px;
+  height: 800px;
+  background: radial-gradient(circle, rgba(232,197,71,.07) 0%, transparent 65%);
+  pointer-events: none;
+}
+.hero-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ac);
+  margin-bottom: var(--space-2);
+  opacity: 0.8;
+}
+.hero h1 {
+  font-family: var(--font-display);
+  font-size: 96px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 0.93;
+  text-transform: uppercase;
+  color: #fff;
+  margin-bottom: var(--space-3);
+  position: relative;
+}
+.hero h1 .accent { color: var(--ac); }
+.hero-sub {
+  font-size: 18px;
+  color: rgba(255,255,255,0.55);
+  max-width: 480px;
+  margin: 0 auto var(--space-3);
+  line-height: 1.55;
+  font-weight: 400;
+}
+.hero-cta {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+}
+.hero-image {
+  width: 92%;
+  max-width: 760px;
+  margin: 0 auto;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.07);
+  box-shadow: 0 40px 100px rgba(0,0,0,.6), 0 0 0 1px rgba(232,197,71,.06);
+  aspect-ratio: 16/9;
+  position: relative;
+}
+.hero-image img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.hero-image::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, transparent 45%, rgba(0,0,0,.55));
+  pointer-events: none;
+}
+.hero-image-caption {
+  position: absolute;
+  bottom: 20px; left: 24px; right: 24px;
+  color: #fff; font-size: 14px; font-weight: 600; z-index: 2;
+  text-shadow: 0 2px 8px rgba(0,0,0,.7); letter-spacing: 0.02em;
+}
 
-  /* ── Section ── */
-  .section {
-    width: 92%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 120px 0;
-  }
-  .section:nth-of-type(even) { background: #0a0a0c; }
-  .section-title {
-    font-family: var(--font-display);
-    font-size: 60px;
-    font-weight: 800;
-    text-align: center;
-    margin-bottom: 12px;
-    letter-spacing: -0.03em;
-    text-transform: uppercase;
-    line-height: 1.05;
-    color: #fff;
-  }
-  .section-sub {
-    font-size: 18px;
-    color: rgba(255,255,255,0.55);
-    text-align: center;
-    max-width: 640px;
-    margin: 0 auto 56px;
-    line-height: 1.5;
-  }
+/* ── Sections ── */
+.home-section {
+  width: 92%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: var(--space-5) 0;
+}
+.section-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ac);
+  text-align: center;
+  margin-bottom: var(--space-2);
+}
+.section-heading {
+  font-family: var(--font-display);
+  font-size: 48px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  text-align: center;
+  color: #fff;
+  margin-bottom: var(--space-2);
+}
+.section-sub {
+  font-size: 17px;
+  color: rgba(255,255,255,0.5);
+  text-align: center;
+  max-width: 540px;
+  margin: 0 auto var(--space-4);
+  line-height: 1.55;
+}
 
-  /* ── Tools Grid (Higgsfield-style) ── */
-  .tools-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-  }
-  .tool-card {
-    background: #0f0f10;
-    border: 1px solid #1f1f20;
-    border-radius: 18px;
-    padding: 28px 22px;
-    cursor: pointer;
-    transition: all .35s cubic-bezier(.4,0,.2,1);
-    text-decoration: none;
-    color: #fff;
-    display: flex;
-    flex-direction: column;
-    min-height: 220px;
-    position: relative;
-    overflow: hidden;
-  }
-  .tool-card::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: var(--card-gradient, radial-gradient(circle at top right, rgba(232,197,71,.15), transparent 60%));
-    opacity: 0.6;
-    transition: opacity .35s;
-    pointer-events: none;
-  }
-  .tool-card:hover {
-    border-color: rgba(232,197,71,0.4);
-    transform: translateY(-6px) scale(1.02);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(232,197,71,0.2);
-    opacity: 1;
-  }
-  .tool-card:hover::before { opacity: 1; }
-  .tool-card > * { position: relative; z-index: 1; }
-  .tool-card .tool-emoji { font-size: 44px; margin-bottom: 18px; }
-  .tool-card .demo-pill {
-    position: absolute;
-    top: 14px; right: 14px;
-    z-index: 4;
-    display: flex; align-items: center; gap: 6px;
-    background: rgba(0,0,0,.7);
-    border: 1px solid rgba(232,197,71,.35);
-    color: #fff;
-    font-size: 10px;
-    font-weight: 700;
-    padding: 5px 9px 5px 7px;
-    border-radius: 100px;
-    backdrop-filter: blur(8px);
-    transition: all .25s ease;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-  .tool-card .demo-pill .play-dot {
-    width: 16px; height: 16px;
-    border-radius: 50%;
-    background: var(--ac);
-    color: #000;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 8px;
-  }
-  .tool-card:hover .demo-pill {
-    background: var(--ac);
-    color: #000;
-    border-color: var(--ac);
-  }
-  .tool-card:hover .demo-pill .play-dot {
-    background: #000;
-    color: var(--ac);
-  }
-  .tool-card h3 {
-    font-family: var(--font-display);
-    font-size: 18px; font-weight: 700; margin-bottom: 8px;
-    letter-spacing: -0.01em; text-transform: uppercase;
-  }
-  .tool-card p {
-    font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.55; flex: 1;
-  }
-  .tool-card .tool-badge {
-    margin-top: 14px;
-    font-size: 10px;
-    font-weight: 800;
-    padding: 4px 10px;
-    border-radius: 6px;
-    display: inline-block;
-    align-self: flex-start;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-  .tool-badge.free { background: rgba(81,207,102,.15); color: var(--grn); }
-  .tool-badge.pro { background: rgba(232,197,71,.15); color: var(--ac); }
+/* ── Video Brain showcase ── */
+.vb-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+  align-items: center;
+}
+.vb-text { }
+.vb-text h2 {
+  font-family: var(--font-display);
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  color: #fff;
+  margin-bottom: var(--space-2);
+}
+.vb-text p {
+  font-size: 16px;
+  color: rgba(255,255,255,0.55);
+  line-height: 1.65;
+  margin-bottom: var(--space-3);
+  max-width: 420px;
+}
+/* Timeline mock */
+.vb-mock {
+  background: #0d0d10;
+  border: 1px solid rgba(232,197,71,0.18);
+  border-radius: var(--r-lg);
+  padding: var(--space-3);
+  box-shadow: 0 24px 64px rgba(0,0,0,.5);
+}
+.vb-mock-header {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ac);
+  margin-bottom: var(--space-2);
+  opacity: 0.8;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.vb-mock-header::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(232,197,71,0.15);
+}
+.vb-row {
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.vb-row:last-child { border-bottom: none; }
+.vb-timestamp {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ac);
+  background: rgba(232,197,71,0.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+}
+.vb-line {
+  font-size: 13px;
+  line-height: 1.55;
+  color: rgba(255,255,255,0.75);
+  margin-bottom: 4px;
+}
+.vb-line .flag { opacity: 0.8; margin-right: 4px; }
+.vb-line.en { color: rgba(255,255,255,0.75); }
+.vb-line.es { color: rgba(255,255,255,0.45); font-size: 12px; }
+.vb-upsell {
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: rgba(232,197,71,0.07);
+  border-left: 2px solid var(--ac);
+  border-radius: 0 6px 6px 0;
+  font-size: 12px;
+  color: var(--ac);
+  font-weight: 600;
+}
 
-  /* Card-specific gradients — Higgsfield-style per-tool color accent */
-  .tool-card:nth-child(1) { --card-gradient: radial-gradient(circle at top right, rgba(232,197,71,.18), transparent 60%); }
-  .tool-card:nth-child(2) { --card-gradient: radial-gradient(circle at top right, rgba(116,185,255,.18), transparent 60%); }
-  .tool-card:nth-child(3) { --card-gradient: radial-gradient(circle at top right, rgba(81,207,102,.18), transparent 60%); }
-  .tool-card:nth-child(4) { --card-gradient: radial-gradient(circle at top right, rgba(255,159,67,.18), transparent 60%); }
-  .tool-card:nth-child(5) { --card-gradient: radial-gradient(circle at top right, rgba(178,102,255,.18), transparent 60%); }
-  .tool-card:nth-child(6) { --card-gradient: radial-gradient(circle at top right, rgba(255,107,107,.18), transparent 60%); }
-  .tool-card:nth-child(7) { --card-gradient: radial-gradient(circle at top right, rgba(99,205,218,.18), transparent 60%); }
-  .tool-card:nth-child(8) { --card-gradient: radial-gradient(circle at top right, rgba(255,107,129,.18), transparent 60%); }
-  .tool-card:nth-child(9) { --card-gradient: radial-gradient(circle at top right, rgba(116,185,255,.18), transparent 60%); }
-  .tool-card:nth-child(10) { --card-gradient: radial-gradient(circle at top right, rgba(232,197,71,.18), transparent 60%); }
+/* ── Money Suite grid ── */
+.tools-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+.tool-card {
+  background: #0f0f10;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: var(--r-lg);
+  padding: 24px 20px;
+  text-decoration: none;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  min-height: 190px;
+  position: relative;
+  transition: border-color .25s, transform .25s, box-shadow .25s;
+}
+.tool-card:hover {
+  border-color: rgba(232,197,71,0.3);
+  transform: translateY(-3px);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.4);
+  opacity: 1;
+}
+.tool-card .tool-emoji { font-size: 36px; margin-bottom: 14px; }
+.tool-card h3 {
+  font-family: var(--font-display);
+  font-size: 16px; font-weight: 700; margin-bottom: 6px;
+  letter-spacing: -0.01em;
+}
+.tool-card p {
+  font-size: 13px; color: rgba(255,255,255,0.45); line-height: 1.55; flex: 1;
+}
+.tool-badge {
+  margin-top: 14px;
+  font-size: 10px; font-weight: 800; padding: 3px 9px; border-radius: 5px;
+  display: inline-block; align-self: flex-start;
+  letter-spacing: 0.07em; text-transform: uppercase;
+}
+.tool-badge.free { background: rgba(81,207,102,.12); color: var(--grn); }
+.tool-badge.pro  { background: rgba(232,197,71,.12); color: var(--ac); }
+.tool-badge.new  {
+  background: rgba(232,197,71,.18);
+  color: var(--ac);
+  border: 1px solid rgba(232,197,71,.3);
+}
+.tools-see-all {
+  text-align: center;
+  margin-top: var(--space-3);
+}
+.tools-see-all a {
+  font-size: 14px; color: var(--txd); text-decoration: none;
+  transition: color .2s;
+}
+.tools-see-all a:hover { color: var(--ac); opacity: 1; }
 
-  /* ── Pricing ── */
-  .pricing-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    max-width: 680px;
-    margin: 0 auto;
-  }
+/* ── Pricing ── */
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+.price-card {
+  background: #0f0f10;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--r-lg);
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+}
+.price-card.recommended {
+  border-color: var(--ac);
+  box-shadow: 0 0 32px rgba(232,197,71,0.12);
+  position: relative;
+}
+.price-card.recommended::before {
+  content: 'RECOMMENDED';
+  position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+  background: var(--ac); color: var(--bg);
+  font-size: 9px; font-weight: 800; padding: 2px 12px;
+  border-radius: 8px; letter-spacing: 1px; white-space: nowrap;
+}
+.price-card.dfy {
+  border-color: rgba(232,197,71,0.3);
+  background: linear-gradient(145deg, rgba(232,197,71,.04) 0%, #0f0f10 100%);
+}
+.price-name { font-size: 16px; font-weight: 700; margin-bottom: var(--space-1); }
+.price-name.gold { color: var(--ac); }
+.price-amount {
+  font-size: 40px; font-weight: 900; margin: 12px 0 4px;
+  line-height: 1;
+}
+.price-amount.gold { color: var(--ac); }
+.price-amount span { font-size: 15px; font-weight: 400; color: var(--txd); }
+.price-desc { font-size: 13px; color: var(--txd); margin-bottom: var(--space-2); }
+.price-features {
+  list-style: none; flex: 1; margin: var(--space-2) 0;
+}
+.price-features li {
+  font-size: 13px; color: var(--txd); padding: 6px 0;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+  display: flex; align-items: flex-start; gap: 8px;
+}
+.price-features li::before {
+  content: ''; width: 5px; height: 5px; border-radius: 50%;
+  background: var(--grn); flex-shrink: 0; margin-top: 5px;
+}
+.price-card.recommended .price-features li::before { background: var(--ac); }
+.price-card.dfy .price-features li::before { background: var(--ac); }
+.price-btn-stack { display: flex; flex-direction: column; gap: 8px; margin-top: auto; padding-top: var(--space-2); }
 
-  /* Credit packs dropdown */
-  .credit-packs-toggle {
-    max-width: 680px;
-    margin: 20px auto 0;
-    text-align: center;
-  }
-  .credit-packs-toggle summary {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 14px;
-    color: var(--txd);
-    cursor: pointer;
-    padding: 8px 18px;
-    border: 1px solid var(--bd);
-    border-radius: 40px;
-    background: var(--sf);
-    list-style: none;
-    transition: all .2s;
-    user-select: none;
-  }
-  .credit-packs-toggle summary:hover { border-color: var(--ac); color: var(--ac); }
-  .credit-packs-toggle summary::-webkit-details-marker { display: none; }
-  .credit-packs-content {
-    margin-top: 16px;
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-  .cp-pill {
-    background: var(--sf);
-    border: 1px solid var(--bd);
-    border-radius: 12px;
-    padding: 14px 20px;
-    text-align: center;
-    min-width: 150px;
-  }
-  .cp-pill .cp-amount { font-size: 22px; font-weight: 900; color: var(--ac); }
-  .cp-pill .cp-label { font-size: 12px; color: var(--txd); margin: 4px 0 10px; }
+/* Buttons */
+.btn {
+  padding: 10px 24px;
+  border: 1px solid var(--bd);
+  border-radius: var(--r);
+  background: var(--sf);
+  color: var(--tx);
+  font-family: var(--font-en);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all .2s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 48px;
+}
+.btn:hover { border-color: var(--ac); color: var(--ac); opacity: 1; }
+.btn-primary {
+  background: linear-gradient(135deg, var(--ac) 0%, #d4af3f 100%);
+  color: var(--bg); border-color: var(--ac); font-weight: 700;
+  box-shadow: 0 6px 20px -6px rgba(232,197,71,0.45);
+}
+.btn-primary:hover {
+  filter: brightness(1.05); color: var(--bg); opacity: 1;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 28px -6px rgba(232,197,71,0.55);
+}
+.btn-large {
+  padding: 14px 36px; font-size: 16px; border-radius: 12px; min-height: 54px;
+}
+.btn-sm {
+  padding: 8px 14px; font-size: 14px; min-height: 44px;
+}
 
-  /* ── ROI Calculator ── */
-  .roi-section {
-    width: 92%;
-    max-width: 680px;
-    margin: 0 auto;
-    padding: 80px 0;
-    text-align: center;
-  }
-  .roi-card {
-    background: var(--sf);
-    border: 1px solid var(--bd);
-    border-radius: 18px;
-    padding: 36px 32px;
-    margin-top: 32px;
-  }
-  .roi-inputs {
-    display: flex;
-    gap: 20px;
-    margin: 24px 0;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  .roi-field {
-    flex: 1;
-    min-width: 200px;
-    text-align: left;
-  }
-  .roi-field label {
-    display: block;
-    font-size: 13px;
-    color: var(--txd);
-    font-weight: 600;
-    margin-bottom: 8px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-  .roi-field input[type="range"] {
-    width: 100%;
-    accent-color: var(--ac);
-    cursor: pointer;
-    height: 4px;
-  }
-  .roi-field .roi-val {
-    font-size: 24px;
-    font-weight: 900;
-    color: var(--ac);
-    margin-top: 4px;
-  }
-  .roi-result {
-    background: linear-gradient(135deg, rgba(232,197,71,.12), rgba(232,197,71,.04));
-    border: 1px solid rgba(232,197,71,.3);
-    border-radius: 14px;
-    padding: 24px;
-    margin-top: 8px;
-  }
-  .roi-result .roi-number {
-    font-size: 56px;
-    font-weight: 900;
-    color: var(--ac);
-    line-height: 1;
-  }
-  .roi-result .roi-unit {
-    font-size: 16px;
-    color: rgba(255,255,255,.7);
-    margin-top: 6px;
-  }
-  .roi-result .roi-sub {
-    font-size: 14px;
-    color: var(--txd);
-    margin-top: 10px;
-  }
+/* Mega Footer */
+.mega-footer {
+  width: 100%; padding: 60px 32px 24px;
+  background: #0d0d10; border-top: 1px solid var(--bd);
+}
+.mf-grid {
+  max-width: 1000px; margin: 0 auto;
+  display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 32px;
+  margin-bottom: 40px;
+}
+.mf-brand {
+  font-family: var(--font-display);
+  font-size: 20px; font-weight: 900; color: var(--ac); letter-spacing: 2px; margin-bottom: 8px;
+}
+.mf-desc { font-size: 14px; color: var(--txd); line-height: 1.6; }
+.mf-col h4 {
+  font-size: 12px; font-weight: 700; color: var(--txd); letter-spacing: .5px;
+  margin-bottom: 12px; text-transform: uppercase;
+}
+.mf-col a {
+  display: block; font-size: 13px; color: var(--txd); text-decoration: none;
+  padding: 3px 0; transition: color .15s; opacity: .7;
+}
+.mf-col a:hover { color: var(--ac); opacity: 1; }
+.mf-bottom {
+  max-width: 1000px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 20px; border-top: 1px solid rgba(255,255,255,.05);
+  font-size: 12px; color: rgba(255,255,255,.25);
+}
+.mf-legal { display: flex; gap: 16px; }
+.mf-legal a { color: rgba(255,255,255,.25); text-decoration: none; transition: color .15s; }
+.mf-legal a:hover { color: var(--ac); opacity: 1; }
 
-  /* ── Social Proof (Testimonials) ── */
-  .social-proof-wrap {
-    width: 92%;
-    max-width: 960px;
-    margin: 0 auto 60px;
-    text-align: center;
-  }
-  .proof-headline {
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--txd);
-    margin-bottom: 24px;
-  }
-  .proof-headline span { color: var(--ac); }
-  .testimonials-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    margin-bottom: 20px;
-  }
-  .testi-card {
-    background: var(--sf);
-    border: 1px solid var(--bd);
-    border-radius: 14px;
-    padding: 22px 20px;
-    text-align: left;
-  }
-  .testi-stars { font-size: 14px; margin-bottom: 10px; color: var(--ac); letter-spacing: 2px; }
-  .testi-quote {
-    font-size: 14px;
-    font-style: italic;
-    line-height: 1.65;
-    color: rgba(255,255,255,.8);
-    margin-bottom: 14px;
-  }
-  .testi-author { font-size: 13px; font-weight: 700; color: var(--tx); }
-  .testi-role { font-size: 11px; color: var(--txd); margin-top: 2px; }
+/* Modal */
+.video-modal-backdrop {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.75); backdrop-filter: blur(8px);
+  z-index: 1000; align-items: center; justify-content: center; padding: 20px;
+}
+.video-modal-backdrop.open { display: flex; }
+.video-modal {
+  background: #0f0f10; border: 1px solid var(--bd); border-radius: 18px;
+  max-width: 480px; width: 100%; padding: 36px 30px; text-align: center; position: relative;
+}
+.video-modal h3 { font-family: var(--font-display); font-size: 26px; font-weight: 800; margin-bottom: 12px; color: #fff; }
+.video-modal .vm-tool { font-size: 13px; color: var(--ac); font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 18px; }
+.vm-placeholder {
+  aspect-ratio: 16/9; background: #0a0a0c; border: 1px dashed rgba(232,197,71,.2);
+  border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 10px; margin-bottom: 22px; color: rgba(255,255,255,.4);
+}
+.vm-icon { font-size: 40px; opacity: .6; }
+.vm-text { font-size: 13px; font-weight: 600; }
+.video-modal p { color: rgba(255,255,255,.6); font-size: 14px; line-height: 1.55; margin-bottom: 22px; }
+.video-modal-close {
+  position: absolute; top: 14px; right: 16px; background: transparent; border: none;
+  color: rgba(255,255,255,.5); font-size: 22px; cursor: pointer;
+  width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  transition: all .2s;
+}
+.video-modal-close:hover { background: rgba(255,255,255,.08); color: #fff; }
 
-  /* ── Sign-up-to-save CTA ── */
-  .save-cta {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 14px;
-    margin-top: 20px;
-    padding: 14px 20px;
-    background: rgba(232,197,71,.07);
-    border: 1px solid rgba(232,197,71,.2);
-    border-radius: 12px;
-    flex-wrap: wrap;
-  }
-  .save-cta p { font-size: 14px; color: rgba(255,255,255,.7); margin: 0; }
-  .save-cta p strong { color: #fff; }
-
-  @media (max-width: 768px) {
-    .testimonials-grid { grid-template-columns: 1fr; }
-    .roi-inputs { flex-direction: column; }
-    .roi-result .roi-number { font-size: 44px; }
-    .credit-packs-content { flex-direction: column; align-items: center; }
-    .cp-pill { min-width: 200px; }
-  }
-  .price-card {
-    background: var(--sf);
-    border: 1px solid var(--bd);
-    border-radius: 16px;
-    padding: 28px;
-    text-align: center;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-  }
-  .price-card.recommended {
-    border-color: var(--ac);
-    box-shadow: 0 0 40px var(--acd);
-    transform: scale(1.03);
-  }
-  .price-card.recommended::before {
-    content: 'RECOMMENDED';
-    position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
-    background: var(--ac); color: var(--bg);
-    font-size: 10px; font-weight: 700; padding: 2px 12px;
-    border-radius: 10px; letter-spacing: 1px;
-    white-space: nowrap;
-  }
-  .price-card.compact { padding: 22px; }
-  .price-name { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
-  .price-amount { font-size: 42px; font-weight: 900; margin: 12px 0; }
-  .price-amount span { font-size: 16px; font-weight: 400; color: var(--txd); }
-  .price-features { list-style: none; text-align: start; margin: 20px 0; flex: 1; }
-  .price-features li {
-    font-size: 14px; color: var(--txd); padding: 7px 0;
-    border-bottom: 1px solid rgba(255,255,255,.04);
-    display: flex; align-items: center; gap: 8px;
-  }
-  .price-features li::before {
-    content: ''; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
-  }
-  .price-card .price-features li::before { background: var(--grn); }
-  .price-card.recommended .price-features li::before { background: var(--ac); }
-  .price-btn-stack { display: flex; flex-direction: column; gap: 8px; margin-top: auto; }
-
-  /* Featured listing */
-  .featured-listing {
-    max-width: 720px;
-    margin: 32px auto 0;
-    background: linear-gradient(135deg, rgba(232,197,71,.08), rgba(232,197,71,.02));
-    border: 1px solid var(--ac);
-    border-radius: 16px;
-    padding: 28px;
-    text-align: center;
-  }
-  .featured-listing h3 { font-size: 20px; font-weight: 900; color: var(--ac); margin-bottom: 4px; }
-  .featured-listing .featured-price { font-size: 32px; font-weight: 900; margin: 8px 0 16px; }
-  .featured-listing .featured-price span { font-size: 14px; font-weight: 400; color: var(--txd); }
-  .featured-listing ul { list-style: none; text-align: start; max-width: 400px; margin: 0 auto 20px; }
-  .featured-listing ul li {
-    font-size: 14px; color: var(--txd); padding: 6px 0;
-    display: flex; align-items: center; gap: 8px;
-  }
-  .featured-listing ul li::before {
-    content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--ac); flex-shrink: 0;
-  }
-
-  /* ── Demo Video Modal ── */
-  .video-modal-backdrop {
-    display: none;
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,.75);
-    backdrop-filter: blur(8px);
-    z-index: 1000;
-    align-items: center; justify-content: center;
-    padding: 20px;
-  }
-  .video-modal-backdrop.open { display: flex; }
-  .video-modal {
-    background: #0f0f10;
-    border: 1px solid var(--bd);
-    border-radius: 18px;
-    max-width: 480px;
-    width: 100%;
-    padding: 36px 30px;
-    text-align: center;
-    position: relative;
-  }
-  .video-modal h3 {
-    font-family: var(--font-display);
-    font-size: 26px;
-    font-weight: 800;
-    margin-bottom: 12px;
-    color: #fff;
-    letter-spacing: -0.01em;
-  }
-  .video-modal .vm-tool {
-    font-size: 14px;
-    color: var(--ac);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    margin-bottom: 18px;
-  }
-  .video-modal .vm-placeholder {
-    aspect-ratio: 16/9;
-    background: linear-gradient(135deg, #1a1a1c, #0a0a0c);
-    border: 1px dashed rgba(232,197,71,.3);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 10px;
-    margin-bottom: 22px;
-    color: rgba(255,255,255,.55);
-  }
-  .video-modal .vm-placeholder .vm-icon { font-size: 44px; opacity: .6; }
-  .video-modal .vm-placeholder .vm-text { font-size: 14px; font-weight: 600; }
-  .video-modal p {
-    color: rgba(255,255,255,.65);
-    font-size: 15px;
-    line-height: 1.55;
-    margin-bottom: 22px;
-  }
-  .video-modal-close {
-    position: absolute; top: 14px; right: 16px;
-    background: transparent;
-    border: none;
-    color: rgba(255,255,255,.55);
-    font-size: 24px;
-    cursor: pointer;
-    width: 36px; height: 36px;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    transition: all .2s;
-  }
-  .video-modal-close:hover { background: rgba(255,255,255,.08); color: #fff; }
-
-  /* ── Coming Soon ── */
-  .coming-soon-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 16px;
-    max-width: 920px;
-    margin: 0 auto 32px;
-  }
-  .cs-card {
-    background: var(--sf);
-    border: 1px solid var(--bd);
-    border-radius: 14px;
-    padding: 24px;
-    text-align: center;
-  }
-  .cs-card .cs-icon { font-size: 36px; margin-bottom: 12px; }
-  .cs-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
-  .cs-card p { font-size: 14px; color: var(--txd); line-height: 1.5; margin-bottom: 16px; }
-  .waitlist-form {
-    max-width: 420px;
-    margin: 0 auto;
-    display: flex;
-    gap: 8px;
-  }
-  .waitlist-form input {
-    flex: 1;
-    padding: 12px 14px;
-    border: 1px solid var(--bd);
-    border-radius: var(--r);
-    background: var(--bg);
-    color: var(--tx);
-    font-family: var(--font-en);
-    font-size: 16px;
-  }
-  .waitlist-form input:focus { outline: none; border-color: var(--ac); }
-
-  /* ── Video Showcase (animated thumbnails) ── */
-  .video-showcase {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
-    max-width: 1100px; margin: 0 auto 8px;
-  }
-  .vs-card {
-    border-radius: 14px; overflow: hidden; text-decoration: none;
-    transition: all .3s cubic-bezier(.4,0,.2,1);
-    border: 1px solid var(--bd); position: relative;
-  }
-  .vs-card:hover {
-    border-color: var(--ac); transform: translateY(-4px);
-    box-shadow: 0 12px 32px rgba(232,197,71,.15); opacity: 1;
-  }
-  .vs-thumb {
-    aspect-ratio: 16/9; background: linear-gradient(135deg,#3a2d1f,#5a4a3a);
-    display: flex; align-items: center; justify-content: center; position: relative;
-    overflow: hidden;
-  }
-  /* Ken Burns effect on the background image */
-  .vs-thumb {
-    background-size: cover !important;
-    background-position: center !important;
-    animation: kenBurns 14s ease-in-out infinite alternate;
-  }
-  .vs-card:nth-child(2) .vs-thumb { animation-delay: -2s; }
-  .vs-card:nth-child(3) .vs-thumb { animation-delay: -4s; }
-  .vs-card:nth-child(4) .vs-thumb { animation-delay: -6s; }
-  .vs-card:nth-child(5) .vs-thumb { animation-delay: -8s; }
-  .vs-card:nth-child(6) .vs-thumb { animation-delay: -10s; }
-  @keyframes kenBurns {
-    0% { background-size: 100% auto !important; background-position: center center !important; }
-    50% { background-size: 115% auto !important; background-position: 55% 45% !important; }
-    100% { background-size: 110% auto !important; background-position: 45% 55% !important; }
-  }
-
-  .vs-play {
-    width: 64px; height: 64px; border-radius: 50%; background: rgba(0,0,0,.65);
-    border: 2px solid rgba(255,255,255,.5); display: flex; align-items: center;
-    justify-content: center; font-size: 26px; color: #fff;
-    transition: all .3s cubic-bezier(.4,0,.2,1);
-    backdrop-filter: blur(6px); z-index: 2; position: relative;
-    animation: pulsePlay 2.5s ease-in-out infinite;
-  }
-  @keyframes pulsePlay {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(232,197,71,.6); }
-    50% { box-shadow: 0 0 0 12px rgba(232,197,71,0); }
-  }
-  .vs-card:hover .vs-play {
-    background: var(--ac); color: var(--bg); border-color: var(--ac);
-    transform: scale(1.2); animation: none;
-  }
-  .vs-thumb::after {
-    content: ''; position: absolute; inset: 0;
-    background: linear-gradient(to top, rgba(0,0,0,.6) 0%, transparent 55%);
-    pointer-events: none;
-  }
-  .vs-label {
-    position: absolute; bottom: 10px; left: 10px; font-size: 13px; font-weight: 700;
-    color: #fff; background: rgba(0,0,0,.65); padding: 6px 12px; border-radius: 8px;
-    z-index: 2;
-    backdrop-filter: blur(4px);
-  }
-
-  /* ── Social Proof ── */
-  .proof {
-    width: 92%;
-    max-width: 700px;
-    margin: 0 auto 50px;
-    text-align: center;
-    padding: 36px 24px;
-    background: var(--sf);
-    border: 1px solid var(--bd);
-    border-radius: 16px;
-  }
-  .proof blockquote {
-    font-size: 16px;
-    font-style: italic;
-    line-height: 1.6;
-    color: var(--tx);
-    margin-bottom: 14px;
-  }
-  .proof .proof-cite {
-    font-size: 14px;
-    color: var(--txd);
-  }
-
-  /* ── CTA ── */
-  .cta-banner {
-    width: 92%;
-    max-width: 700px;
-    margin: 0 auto 60px;
-    background: linear-gradient(135deg, rgba(232,197,71,.1), rgba(232,197,71,.03));
-    border: 1px solid var(--acd);
-    border-radius: 16px;
-    padding: 40px;
-    text-align: center;
-  }
-  .cta-banner h3 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
-  .cta-banner p { color: var(--txd); margin-bottom: 20px; }
-
-  /* ── Mega Footer ── */
-  .mega-footer {
-    width: 100%; margin-top: 0; padding: 60px 32px 24px;
-    background: #0d0d10; border-top: 1px solid var(--bd);
-  }
-  .mf-grid {
-    max-width: 1000px; margin: 0 auto;
-    display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 32px;
-    margin-bottom: 40px;
-  }
-  .mf-brand {
-    font-size: 20px; font-weight: 900; color: var(--ac); letter-spacing: 2px; margin-bottom: 8px;
-  }
-  .mf-brand span { color: var(--tx); font-weight: 300; }
-  .mf-desc { font-size: 14px; color: var(--txd); line-height: 1.6; }
-  .mf-col h4 {
-    font-size: 13px; font-weight: 700; color: var(--tx); letter-spacing: .5px;
-    margin-bottom: 12px; text-transform: uppercase;
-  }
-  .mf-col a {
-    display: block; font-size: 14px; color: var(--txd); text-decoration: none;
-    padding: 4px 0; transition: color .15s;
-  }
-  .mf-col a:hover { color: var(--ac); opacity: 1; }
-  .mf-bottom {
-    max-width: 1000px; margin: 0 auto;
-    display: flex; align-items: center; justify-content: space-between;
-    padding-top: 20px; border-top: 1px solid rgba(255,255,255,.05);
-    font-size: 12px; color: rgba(255,255,255,.25);
-  }
-  .mf-legal { display: flex; gap: 16px; }
-  .mf-legal a { color: rgba(255,255,255,.25); text-decoration: none; transition: color .15s; }
-  .mf-legal a:hover { color: var(--ac); opacity: 1; }
-
-  @media (max-width: 600px) {
-    .mega-footer { padding: 40px 20px 20px; }
-    .mf-grid { grid-template-columns: 1fr 1fr; gap: 24px; }
-    .mf-bottom { flex-direction: column; gap: 8px; text-align: center; }
-  }
-
-  @media (max-width: 1024px) {
-    .hero h1 { font-size: 64px; }
-    .tools-grid { grid-template-columns: repeat(3, 1fr); }
-    .section { padding: 80px 0; }
-    .section-title { font-size: 44px; }
-  }
-
-  @media (max-width: 768px) {
-    .hero { padding: 80px 20px 60px; }
-    .hero h1 { font-size: 48px; letter-spacing: -0.03em; }
-    .hero .tagline { font-size: 17px; }
-    .hero h1 .sub-hero { font-size: 13px; letter-spacing: 0.14em; }
-    .hero-image { margin-top: 36px; }
-    .hero-image-caption { font-size: 13px; bottom: 12px; left: 16px; right: 16px; }
-    .tools-grid { grid-template-columns: repeat(2, 1fr); }
-    .section { padding: 60px 0; }
-    .section-title { font-size: 32px; }
-    .section-sub { font-size: 15px; margin-bottom: 32px; }
-    .tool-card { min-height: 180px; padding: 22px 18px; }
-    .tool-card .tool-emoji { font-size: 36px; }
-    .tool-card h3 { font-size: 16px; }
-    .tool-card .demo-pill { top: 10px; right: 10px; font-size: 9px; padding: 4px 7px 4px 5px; }
-    .demo-instruction { font-size: 18px; }
-    .demo-intro { font-size: 15px; }
-    .demo-label-b, .demo-label-a { font-size: 11px; padding: 6px 12px; top: 12px; letter-spacing: 1.2px; }
-    .demo-handle { width: 40px; height: 40px; font-size: 16px; }
-  }
-
-  @media (max-width: 600px) {
-    .hero { padding: 60px 16px 40px; }
-    .hero h1 { font-size: 38px; }
-    .hero .tagline { font-size: 15px; }
-    .hero-image { margin-top: 28px; }
-    .tools-grid { grid-template-columns: 1fr; }
-    .pricing-grid { grid-template-columns: 1fr; }
-    .price-card.recommended { transform: none; }
-    .coming-soon-grid { grid-template-columns: 1fr; }
-    .video-showcase { grid-template-columns: repeat(2, 1fr); }
-    .waitlist-form { flex-direction: column; }
-    .section-title { font-size: 28px; }
-    .proof blockquote { font-size: 14px; }
-    .video-modal { padding: 28px 22px; }
-    .video-modal h3 { font-size: 22px; }
-    .demo-section { margin-top: 0; }
-    .demo-instruction { font-size: 17px; }
-    .demo-footnote { font-size: 14px; }
-  }
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .hero h1 { font-size: 72px; }
+  .tools-grid { grid-template-columns: repeat(2, 1fr); }
+  .pricing-grid { grid-template-columns: 1fr 1fr; }
+  .vb-layout { grid-template-columns: 1fr; }
+  .vb-text p { max-width: 100%; }
+}
+@media (max-width: 768px) {
+  .hero { padding: 80px 20px 60px; }
+  .hero h1 { font-size: 52px; }
+  .hero-sub { font-size: 16px; }
+  .section-heading { font-size: 36px; }
+  .mf-grid { grid-template-columns: 1fr 1fr; gap: 24px; }
+}
+@media (max-width: 600px) {
+  .nav { padding: 12px 16px; }
+  .nav-link { display: none; }
+  .hero { padding: 60px 16px 40px; }
+  .hero h1 { font-size: 42px; }
+  .tools-grid { grid-template-columns: 1fr; }
+  .pricing-grid { grid-template-columns: 1fr; }
+  .price-card.recommended { }
+  .section-heading { font-size: 28px; }
+  .mf-grid { grid-template-columns: 1fr; }
+  .mf-bottom { flex-direction: column; gap: 8px; text-align: center; }
+  .home-section { padding: 64px 0; }
+  .hero-image-caption { font-size: 13px; bottom: 12px; left: 16px; right: 16px; }
+}
 </style>
-  <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#e8c547">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Obra">
-  <meta name="mobile-web-app-capable" content="yes">
-  <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png">
 </head>
 <body>
 
 <!-- Nav -->
-<nav class="nav">
+<nav class="nav" id="mainNav">
   <a href="/" class="nav-logo">Obra</a>
   <div class="nav-right">
     <a href="#tools" class="nav-link" data-en="Tools" data-es="Herramientas" data-he="כלים">Tools</a>
-    <a href="/directory.html" class="nav-link" data-en="Directory" data-es="Directorio" data-he="ספר עסקים">Directory</a>
     <a href="#pricing" class="nav-link" data-en="Pricing" data-es="Precios" data-he="מחירים">Pricing</a>
-    <a href="/auth.html" class="btn btn-sm" id="navProBtn" data-en="Pro" data-he="Pro">Pro</a>
+    <a href="/auth.html" class="btn btn-sm" id="navProBtn" data-en="Sign in" data-es="Iniciar sesión" data-he="כניסה">Sign in</a>
     <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">☀️</button>
     <div class="lang-toggle">
       <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
@@ -948,96 +554,102 @@
   </div>
 </nav>
 
+<main>
+
 <!-- Hero -->
 <section class="hero">
+  <p class="hero-eyebrow" data-en="For contractors" data-es="Para contratistas" data-he="לקבלנים">For contractors</p>
   <h1>
-    <span data-en="GET PAID" data-es="COBRA MÁS" data-he="קבל תשלום" data-split>GET PAID</span><br>
-    <span class="accent" data-en="FASTER" data-es="RÁPIDO" data-he="מהר יותר" data-split>FASTER</span>
-    <span class="sub-hero" data-en="The money &amp; paperwork layer for contractors" data-es="La capa financiera para contratistas" data-he="הכלים הפיננסיים לקבלנים" data-reveal="up" data-reveal-delay="0.4">The money &amp; paperwork layer for contractors</span>
+    <span data-en="GET PAID" data-es="COBRA" data-he="קבל תשלום">GET PAID</span><br>
+    <span class="accent" data-en="FASTER" data-es="MÁS RÁPIDO" data-he="מהר יותר">FASTER</span>
   </h1>
-  <p class="tagline" data-reveal="up" data-reveal-delay="0.6" data-en="Estimates, quotes, contracts, invoices, and payment tracking — all in one place." data-es="Estimados, cotizaciones, contratos, facturas y seguimiento de pagos — todo en un lugar." data-he="הערכות, הצעות מחיר, חוזים, חשבוניות ומעקב תשלומים — הכל במקום אחד.">Estimates, quotes, contracts, invoices, and payment tracking — all in one place.</p>
-  <p class="tagline-bold" data-reveal="up" data-reveal-delay="0.7" data-en="Stop chasing checks. Start getting paid on time." data-es="Deja de perseguir pagos. Empieza a cobrar a tiempo." data-he="תפסיק לרדוף אחרי תשלומים. תתחיל לקבל כסף בזמן.">Stop chasing checks. Start getting paid on time.</p>
-  <div class="hero-buttons" data-stagger>
-    <a href="/auth.html" class="btn btn-primary btn-large" data-magnetic="0.3" data-en="Start Free →" data-es="Empieza Gratis →" data-he="← התחל בחינם">Start Free →</a>
-    <a href="#pricing" class="btn btn-large" data-magnetic="0.25" data-en="See Pricing ↓" data-es="Ver Precios ↓" data-he="מחירים ↓">See Pricing ↓</a>
+  <p class="hero-sub" data-en="The money &amp; paperwork layer for contractors — estimate, invoice, and get paid on time." data-es="La capa financiera para contratistas — estima, factura y cobra a tiempo." data-he="הכלים הפיננסיים לקבלנים — הערכות, חשבוניות, ותשלום בזמן.">The money &amp; paperwork layer for contractors — estimate, invoice, and get paid on time.</p>
+  <div class="hero-cta">
+    <a href="/auth.html" class="btn btn-primary btn-large" data-en="Start Free →" data-es="Empieza Gratis →" data-he="← התחל בחינם">Start Free →</a>
   </div>
-
   <div class="hero-image">
     <img src="img/demos/hero-construction.jpg" alt="Construction professional on the job">
-    <div class="hero-image-caption" data-en="From job done → invoice sent → payment received" data-es="Del trabajo terminado → factura enviada → pago recibido" data-he="מעבודה שהסתיימה → חשבונית נשלחה → תשלום התקבל">From job done → invoice sent → payment received</div>
+    <div class="hero-image-caption" data-en="From job done → invoice sent → payment received" data-es="Del trabajo terminado → factura → pago" data-he="מעבודה שהסתיימה → חשבונית → תשלום">From job done → invoice sent → payment received</div>
   </div>
 </section>
 
-<!-- Demo -->
-<section class="demo-section">
-  <!-- ① Upload CTA — first thing they read -->
-  <p class="demo-footnote" style="font-size:18px;font-weight:700;color:#fff;margin-bottom:6px;" data-en="📸 Upload any 2 photos → Get a shareable slider in 5 seconds" data-es="📸 Sube 2 fotos → Obtén un slider compartible en 5 segundos" data-he="📸 העלה 2 תמונות → קבל סליידר משותף תוך 5 שניות"><strong>📸 Upload any 2 photos</strong> → Get a shareable slider in 5 seconds</p>
-
-  <p class="demo-intro" data-en="See how Obra turns your project photos into instant client-ready comparisons." data-es="Mira cómo Obra convierte tus fotos de proyectos en comparaciones listas para clientes al instante." data-he="ראה איך Obra הופך תמונות פרויקט להשוואות מוכנות ללקוח תוך שניות.">See how Obra turns your project photos into instant client-ready comparisons.</p>
-
-  <!-- ② Big drag instruction — right above the slider -->
-  <p class="demo-instruction" data-en="👆 Drag the slider to see the transformation" data-es="👆 Desliza para ver la transformación" data-he="👆 גרור את הסליידר לראות את השינוי"><span class="pulse-hand">👆</span> <span data-en="Drag the slider to see the transformation" data-es="Desliza para ver la transformación" data-he="גרור את הסליידר לראות את השינוי">Drag the slider to see the transformation</span></p>
-
-  <p class="demo-instruction-sub" data-en="This is how your before/after photos will look to clients" data-es="Así es como tus fotos de antes/después se verán para los clientes" data-he="ככה תמונות הלפני/אחרי שלך ייראו ללקוחות">This is how your before/after photos will look to clients</p>
-
-  <!-- ③ Slider -->
-  <div class="demo-box" id="demoBox">
-    <img src="img/demos/kitchen-before.jpg" alt="Before renovation" class="demo-img">
-    <div class="demo-img-after-wrap" id="demoAfterWrap">
-      <img src="img/demos/kitchen-after.jpg" alt="After renovation" class="demo-img">
+<!-- Video Brain Showcase -->
+<section class="home-section" id="video-brain">
+  <div class="vb-layout">
+    <div class="vb-text">
+      <p class="section-eyebrow" data-en="NEW" data-es="NUEVO" data-he="חדש">NEW</p>
+      <h2 data-en="Point your phone at the job." data-es="Apunta tu teléfono al trabajo." data-he="כוון את הטלפון לעבודה.">Point your phone<br>at the job.</h2>
+      <p data-en="Obra watches your walkthrough video and gives your crew the plan in their language — English and Spanish — plus a price estimate and upsell ideas you can send to the client right away." data-es="Obra analiza tu video de recorrido y le da a tu equipo el plan en su idioma — inglés y español — más una estimación de precio e ideas de venta adicional." data-he="Obra צופה בסרטון ההדרכה שלך ונותן לצוות את התוכנית בשפה שלהם — עברית ואנגלית — עם הערכת מחיר והצעות למכירה.">Obra watches your walkthrough video and gives your crew the plan in their language — English and Spanish — plus a price estimate and upsell ideas you can send to the client right away.</p>
+      <a href="/tools/video-brain.html" class="btn btn-primary" data-en="Try Video Brain →" data-es="Prueba Video Brain →" data-he="← נסה את Video Brain">Try Video Brain →</a>
     </div>
-    <div class="demo-label-b" data-en="BEFORE" data-es="ANTES" data-he="לפני">BEFORE</div>
-    <div class="demo-label-a" data-en="AFTER" data-es="DESPUÉS" data-he="אחרי">AFTER</div>
-    <div class="demo-line" id="demoLine"></div>
-    <div class="demo-handle">⇆</div>
-  </div>
+    <div class="vb-mock">
+      <div class="vb-mock-header">Obra Video Brain · Live output</div>
 
-  <div class="save-cta">
-    <p><strong>No signup needed</strong> — try it free right now.</p>
-    <a href="/tools/compare.html" class="btn btn-primary">Open Compare Tool →</a>
-    <p style="font-size:12px;color:var(--txd);">Want to save &amp; share? <a href="/auth.html" style="color:var(--ac);font-weight:700;">Sign up free →</a></p>
+      <div class="vb-row">
+        <div class="vb-timestamp">0:12</div>
+        <div class="vb-line en"><span class="flag">🗣</span> Homeowner wants full bathroom gut — tile, vanity, fixtures, lighting.</div>
+        <div class="vb-line es"><span class="flag">🇲🇽</span> Renovación completa de baño — azulejo, tocador, accesorios, iluminación.</div>
+      </div>
+
+      <div class="vb-row">
+        <div class="vb-timestamp">0:38</div>
+        <div class="vb-line en"><span class="flag">📍</span> Subfloor looks solid. No visible moisture damage near tub area.</div>
+        <div class="vb-line es"><span class="flag">🇲🇽</span> El subsuelo parece sólido. Sin daños visibles por humedad cerca de la tina.</div>
+      </div>
+
+      <div class="vb-row">
+        <div class="vb-timestamp">1:05</div>
+        <div class="vb-line en"><span class="flag">💰</span> Estimated range: <strong style="color:var(--ac);">$8,400 – $11,200</strong></div>
+        <div class="vb-line es"><span class="flag">🇲🇽</span> Rango estimado: <strong style="color:var(--ac);">$8,400 – $11,200</strong></div>
+      </div>
+
+      <div class="vb-upsell">
+        💡 Upsell opportunity: Heated floor upgrade — add $1,200, easy sell on a full gut job.
+      </div>
+    </div>
   </div>
 </section>
 
-<!-- Tools -->
-<section class="section" id="tools">
-  <h2 class="section-title" data-en="Money Suite" data-es="Suite Financiera" data-he="כלים פיננסיים">Money Suite</h2>
-  <p class="section-sub" data-en="The tools that get you paid — quotes, estimates, contracts, invoices, and payment tracking" data-es="Las herramientas que te hacen cobrar — cotizaciones, estimados, contratos, facturas y seguimiento de pagos" data-he="הכלים שמביאים לך כסף — הצעות מחיר, הערכות, חוזים, חשבוניות ומעקב תשלומים">The tools that get you paid — quotes, estimates, contracts, invoices, and payment tracking</p>
+<!-- Money Suite -->
+<section class="home-section" id="tools">
+  <p class="section-eyebrow" data-en="Money Suite" data-es="Suite Financiera" data-he="כלים פיננסיים">Money Suite</p>
+  <h2 class="section-heading" data-en="Every tool to get paid." data-es="Todo para cobrar." data-he="כל הכלים לקבל תשלום.">Every tool to get paid.</h2>
+  <p class="section-sub" data-en="Quotes, estimates, contracts, invoices, and payment tracking — in one place." data-es="Cotizaciones, estimados, contratos, facturas y seguimiento — en un lugar." data-he="הצעות מחיר, הערכות, חוזים, חשבוניות ומעקב — במקום אחד.">Quotes, estimates, contracts, invoices, and payment tracking — in one place.</p>
 
   <div class="tools-grid">
-    <!-- 0. Video Brain (hero differentiator) -->
-    <a href="/tools/video-brain.html" class="tool-card" style="border-color:rgba(232,197,71,0.5);">
+    <!-- Video Brain -->
+    <a href="/tools/video-brain.html" class="tool-card" style="border-color:rgba(232,197,71,0.22);">
       <div class="tool-emoji">📹</div>
       <h3 data-en="Video Brain" data-es="Cerebro de Video" data-he="מוח וידאו">Video Brain</h3>
-      <p data-en="Point your phone at the job → AI gives your crew the plan in their language, a price, and upsells." data-es="Apunta tu teléfono al trabajo → la IA le da a tu equipo el plan en su idioma, un precio y ventas adicionales." data-he="כוון את הטלפון לעבודה → ה-AI נותן לצוות שלך את התוכנית בשפה שלהם, מחיר, והצעות מכירה.">Point your phone at the job → AI gives your crew the plan in their language, a price, and upsells.</p>
-      <span class="tool-badge pro" data-en="✨ NEW" data-es="✨ NUEVO" data-he="✨ חדש">✨ NEW</span>
+      <p data-en="Point your phone at the job → AI plan, price, and upsells for your crew." data-es="Apunta tu teléfono → plan de IA, precio y ventas adicionales para tu equipo." data-he="כוון טלפון לעבודה → תוכנית AI, מחיר והצעות מכירה לצוות.">Point your phone at the job → AI plan, price, and upsells for your crew.</p>
+      <span class="tool-badge new" data-en="NEW" data-es="NUEVO" data-he="חדש">NEW</span>
     </a>
 
-    <!-- 1. Smart Estimate -->
+    <!-- Smart Estimate -->
     <a href="/tools/estimate.html" class="tool-card">
       <div class="tool-emoji">💰</div>
       <h3 data-en="Smart Estimate" data-es="Estimado Inteligente" data-he="הערכת עלות">Smart Estimate</h3>
-      <p data-en="Photo + job description → AI estimates materials, labor, and total cost range in seconds." data-es="Foto + descripción → la IA estima materiales, mano de obra y rango de costo en segundos." data-he="תמונה + תיאור → AI מעריך חומרים, עבודה וטווח עלויות תוך שניות.">Photo + job description → AI estimates materials, labor, and total cost range in seconds.</p>
+      <p data-en="Photo + description → AI estimates materials, labor, and total cost in seconds." data-es="Foto + descripción → la IA estima materiales, mano de obra y costo total." data-he="תמונה + תיאור → AI מעריך חומרים, עבודה ועלות כוללת תוך שניות.">Photo + description → AI estimates materials, labor, and total cost in seconds.</p>
       <span class="tool-badge pro">PRO</span>
     </a>
 
-    <!-- 2. Quote -->
+    <!-- Quote -->
     <a href="/tools/estimate.html" class="tool-card">
       <div class="tool-emoji">📋</div>
       <h3 data-en="Quote" data-es="Cotización" data-he="הצעת מחיר">Quote</h3>
-      <p data-en="Generate a clean, professional quote to send clients. No more WhatsApp bids." data-es="Genera una cotización limpia y profesional para enviar a clientes. Adiós a los presupuestos por WhatsApp." data-he="צור הצעת מחיר מסודרת ומקצועית לשלוח ללקוחות. לא עוד הצעות מחיר בוואטסאפ.">Generate a clean, professional quote to send clients. No more WhatsApp bids.</p>
+      <p data-en="Generate a clean, professional quote to send clients. No more WhatsApp bids." data-es="Genera una cotización limpia para clientes. Adiós a los presupuestos por WhatsApp." data-he="צור הצעת מחיר מסודרת ומקצועית לשלוח ללקוחות.">Generate a clean, professional quote to send clients. No more WhatsApp bids.</p>
       <span class="tool-badge pro">PRO</span>
     </a>
 
-    <!-- 3. Contract -->
+    <!-- Contract -->
     <a href="/tools/estimate.html" class="tool-card">
       <div class="tool-emoji">📝</div>
       <h3 data-en="Contract" data-es="Contrato" data-he="חוזה">Contract</h3>
-      <p data-en="AI drafts a job contract with scope, milestones, and payment terms. Export and sign." data-es="La IA redacta un contrato con alcance, hitos y condiciones de pago. Exporta y firma." data-he="AI מנסח חוזה עבודה עם היקף, אבני דרך ותנאי תשלום. ייצוא וחתימה.">AI drafts a job contract with scope, milestones, and payment terms. Export and sign.</p>
+      <p data-en="AI drafts a job contract with scope, milestones, and payment terms. Export and sign." data-es="La IA redacta un contrato con alcance, hitos y condiciones de pago." data-he="AI מנסח חוזה עבודה עם היקף, אבני דרך ותנאי תשלום.">AI drafts a job contract with scope, milestones, and payment terms. Export and sign.</p>
       <span class="tool-badge pro">PRO</span>
     </a>
 
-    <!-- 4. Invoice -->
+    <!-- Invoice -->
     <a href="/tools/invoice.html" class="tool-card">
       <div class="tool-emoji">🧾</div>
       <h3 data-en="Invoice" data-es="Factura" data-he="חשבונית">Invoice</h3>
@@ -1045,164 +657,37 @@
       <span class="tool-badge pro">PRO</span>
     </a>
 
-    <!-- 5. Payment Tracker -->
-    <a href="/tools/invoice.html" class="tool-card" style="position:relative;">
+    <!-- Payment Tracker -->
+    <a href="/tools/invoice.html" class="tool-card">
       <div class="tool-emoji">📊</div>
       <h3 data-en="Payment Tracker" data-es="Seguimiento de Pagos" data-he="מעקב תשלומים">Payment Tracker</h3>
-      <p data-en="See every job's payment status at a glance. Unpaid, partial, overdue — all in one dashboard." data-es="Ve el estado de pago de cada trabajo de un vistazo. Impagado, parcial, vencido — todo en un panel." data-he="ראה את סטטוס התשלום של כל עבודה בבת אחת. לא שולם, חלקי, באיחור — הכל בדשבורד אחד.">See every job's payment status at a glance. Unpaid, partial, overdue — all in one dashboard.</p>
-      <span class="tool-badge pro" style="background:rgba(232,197,71,.25);color:var(--ac);border:1px solid rgba(232,197,71,.4);">NEW</span>
+      <p data-en="Every job's payment status at a glance — unpaid, partial, overdue." data-es="El estado de pago de cada trabajo de un vistazo — impagado, parcial, vencido." data-he="סטטוס תשלום של כל עבודה בבת אחת — לא שולם, חלקי, באיחור.">Every job's payment status at a glance — unpaid, partial, overdue.</p>
+      <span class="tool-badge new" data-en="NEW" data-es="NUEVO" data-he="חדש">NEW</span>
     </a>
   </div>
 
-  <h2 class="section-title" style="font-size:36px;margin-top:64px;margin-bottom:8px;" data-en="More Tools" data-es="Más Herramientas" data-he="כלים נוספים">More Tools</h2>
-  <p class="section-sub" style="margin-bottom:32px;" data-en="Before/after comparisons, reports, social content, and more" data-es="Comparaciones antes/después, reportes, contenido social y más" data-he="השוואות לפני/אחרי, דוחות, תוכן לסושיאל ועוד">Before/after comparisons, reports, social content, and more</p>
-
-  <div class="tools-grid">
-    <!-- Compare -->
-    <a href="/tools/compare.html" class="tool-card">
-      <div class="tool-emoji">🔀</div>
-      <h3 data-en="Compare" data-es="Comparar" data-he="השוואה">Compare</h3>
-      <p data-en="Before/after slider in one click. Image + video, horizontal + vertical." data-es="Slider de antes/después en un clic. Imagen + video, horizontal + vertical." data-he="סליידר לפני/אחרי בלחיצה. תמונה + וידאו, אופקי + אנכי.">Before/after slider in one click. Image + video, horizontal + vertical.</p>
-      <span class="tool-badge free">FREE</span>
-    </a>
-
-    <!-- Quick Report -->
-    <a href="/tools/report.html" class="tool-card">
-      <div class="tool-emoji">📄</div>
-      <h3 data-en="Quick Report" data-es="Reporte Rápido" data-he="דוח מהיר">Quick Report</h3>
-      <p data-en="Upload photos → AI generates a professional project report. Export PDF." data-es="Sube fotos → la IA genera un reporte profesional del proyecto. Exporta a PDF." data-he="העלה תמונות → AI מייצר דוח פרויקט מקצועי. ייצוא PDF.">Upload photos → AI generates a professional project report. Export PDF.</p>
-      <span class="tool-badge pro">PRO</span>
-    </a>
-
-    <!-- Client Page -->
-    <a href="/tools/client-page.html" class="tool-card">
-      <div class="tool-emoji">🔗</div>
-      <h3 data-en="Client Page" data-es="Página de Cliente" data-he="עמוד לקוח">Client Page</h3>
-      <p data-en="Beautiful shareable page with before/after, timeline, and your info." data-es="Página bonita y compartible con antes/después, cronología y tu información." data-he="עמוד יפה לשיתוף עם לפני/אחרי, ציר זמן ופרטים שלך.">Beautiful shareable page with before/after, timeline, and your info.</p>
-      <span class="tool-badge free" data-en="1 FREE" data-es="1 GRATIS" data-he="1 חינם">1 FREE</span>
-    </a>
-
-    <!-- Review Request -->
-    <a href="/tools/review.html" class="tool-card">
-      <div class="tool-emoji">⭐</div>
-      <h3 data-en="Review Request" data-es="Solicitud de Reseña" data-he="בקשת ביקורת">Review Request</h3>
-      <p data-en="Generate personalized SMS/WhatsApp/email to get Google reviews." data-es="Genera SMS/WhatsApp/email personalizados para obtener reseñas de Google." data-he="צור הודעה מותאמת ל-SMS/WhatsApp/מייל לקבלת ביקורות ב-Google.">Generate personalized SMS/WhatsApp/email to get Google reviews.</p>
-      <span class="tool-badge pro">PRO</span>
-    </a>
-
-    <!-- Social Post -->
-    <a href="/tools/social-post.html" class="tool-card">
-      <div class="tool-emoji">📱</div>
-      <h3 data-en="Social Post" data-es="Post Social" data-he="פוסט חברתי">Social Post</h3>
-      <p data-en="AI writes your Instagram/Facebook caption with hooks and hashtags." data-es="La IA escribe tu texto de Instagram/Facebook con ganchos y hashtags." data-he="AI כותב לך קפשן לאינסטגרם/פייסבוק עם הוקים והאשטגים.">AI writes your Instagram/Facebook caption with hooks and hashtags.</p>
-      <span class="tool-badge pro">PRO</span>
-    </a>
-
-    <!-- AI Chat -->
-    <a href="/chat.html" class="tool-card">
-      <div class="tool-emoji">💬</div>
-      <h3 data-en="AI Chat" data-es="Chat IA" data-he="צ'אט AI">AI Chat</h3>
-      <p data-en="Full AI chat — bids, permits, contracts, materials. Choose model: Claude or Gemini." data-es="Chat IA completo — presupuestos, permisos, contratos, materiales. Elige modelo: Claude o Gemini." data-he="צ'אט AI מלא — הצעות מחיר, היתרים, חוזים, חומרים. בחר מודל: Claude או Gemini.">Full AI chat — bids, permits, contracts, materials.</p>
-      <span class="tool-badge pro">PRO</span>
-    </a>
-  </div>
-</section>
-
-<!-- Directory Preview -->
-<section class="section" id="directory">
-  <h2 class="section-title" data-en="Find Contractors Near You" data-es="Encuentra Contratistas Cerca de Ti" data-he="מצא קבלנים באזור שלך">Find Contractors Near You</h2>
-  <p class="section-sub" data-en="Browse the BQ Directory — trusted professionals in your area" data-es="Explora el Directorio BQ — profesionales confiables en tu área" data-he="דפדף בספר העסקים של BQ — אנשי מקצוע מהימנים באזור שלך">Browse the BQ Directory — trusted professionals in your area</p>
-
-  <div style="width:100%;border-radius:14px;overflow:hidden;border:1px solid var(--bd);margin-bottom:24px;height:200px;background:var(--sf);position:relative;">
-    <div id="previewMap" style="width:100%;height:100%;"></div>
-    <div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 50%,var(--bg));pointer-events:none;z-index:1;"></div>
-  </div>
-
-  <div style="text-align:center;">
-    <a href="/directory.html" class="btn btn-primary btn-large" data-en="Browse Directory →" data-es="Ver Directorio →" data-he="← דפדף בספר העסקים">Browse Directory →</a>
-  </div>
-</section>
-
-<!-- AI Video -->
-<section class="section" id="video">
-  <h2 class="section-title" data-en="AI Video Production" data-es="Producción de Video IA" data-he="הפקת וידאו AI">AI Video Production</h2>
-  <p class="section-sub" data-en="Turn your project photos into short AI-generated videos for social and client presentations" data-es="Convierte tus fotos de proyecto en videos cortos generados por IA para redes sociales y presentaciones a clientes" data-he="הפוך תמונות פרויקט לסרטוני AI קצרים לסושיאל ומצגות ללקוחות">Turn your project photos into short AI-generated videos for social and client presentations</p>
-
-  <div class="coming-soon-grid">
-    <div class="cs-card">
-      <div class="cs-icon">🎬</div>
-      <h3 data-en="Custom Video" data-es="Video Personalizado" data-he="וידאו מותאם אישית">Custom Video</h3>
-      <p data-en="Upload photos → our team creates a cinematic AI video. Professional editing by BQ Production. 3-5 business days delivery." data-he="העלה תמונות → הצוות שלנו יוצר סרטון AI קולנועי. עריכה מקצועית של BQ Production. אספקה תוך 3-5 ימי עסקים.">Upload photos → our team creates a cinematic AI video. Professional editing by BQ Production. 3-5 business days delivery.</p>
-      <button class="btn" style="width:100%;" onclick="scrollToWaitlist()" data-en="Join Waitlist" data-es="Únete a la Lista de Espera" data-he="הצטרף לרשימת המתנה">Join Waitlist</button>
-    </div>
-
-    <div class="cs-card">
-      <div class="cs-icon">🤖</div>
-      <h3 data-en="Auto Video (Self-Service)" data-es="Video Automático (Autoservicio)" data-he="וידאו אוטומטי (שירות עצמי)">Auto Video (Self-Service)</h3>
-      <p data-en="AI automatically creates videos from your before/after photos. Powered by Seedance 2.0. Choose style, music, duration — no editing needed." data-he="AI יוצר סרטונים אוטומטית מתמונות לפני/אחרי. מופעל על ידי Seedance 2.0. בחר סגנון, מוזיקה, משך — בלי עריכה.">AI automatically creates videos from your before/after photos. Powered by Seedance 2.0. Choose style, music, duration — no editing needed.</p>
-      <button class="btn" style="width:100%;" onclick="scrollToWaitlist()" data-en="Join Waitlist" data-es="Únete a la Lista de Espera" data-he="הצטרף לרשימת המתנה">Join Waitlist</button>
-    </div>
-
-    <div class="cs-card">
-      <div class="cs-icon">▶️</div>
-      <h3 data-en="See Examples" data-es="Ver Ejemplos" data-he="צפה בדוגמאות">See Examples</h3>
-      <p data-en="Watch AI videos created for real contractors. By BQ Production — AI Video Studio." data-es="Mira videos de IA creados para contratistas reales. Por BQ Production — Estudio de Video IA." data-he="צפה בסרטוני AI שנוצרו לקבלנים אמיתיים. מאת BQ Production — סטודיו וידאו AI.">Watch AI videos created for real contractors. By BQ Production — AI Video Studio.</p>
-      <a href="https://bqprod.pages.dev/" target="_blank" rel="noopener" class="btn btn-primary" style="width:100%;" data-en="View Portfolio →" data-es="Ver Portafolio →" data-he="← צפה בתיק עבודות">View Portfolio →</a>
-    </div>
-  </div>
-
-  <!-- Video Showcase -->
-  <p style="font-size:16px;font-weight:700;text-align:center;margin-bottom:4px;color:var(--tx);" data-en="Example AI videos — what this tool can produce" data-es="Videos de IA de ejemplo — lo que puede producir esta herramienta" data-he="סרטוני AI לדוגמה — מה שהכלי יכול לייצר">Example AI videos — what this tool can produce</p>
-  <p style="font-size:13px;color:var(--txd);text-align:center;margin-bottom:16px;">These are EXAMPLES of the AI video style. Not client testimonials.</p>
-  <div class="video-showcase">
-    <a href="https://bqprod.pages.dev/?ref=bqtools" target="_blank" rel="noopener" class="vs-card">
-      <div class="vs-thumb" style="background:url('img/thumb-kitchen7.jpg') center/cover;"><div class="vs-play">▶</div><div class="vs-label">Kitchen Remodel — EXAMPLE</div></div>
-    </a>
-    <a href="https://bqprod.pages.dev/?ref=bqtools" target="_blank" rel="noopener" class="vs-card">
-      <div class="vs-thumb" style="background:url('img/thumb-basement.jpg') center/cover;"><div class="vs-play">▶</div><div class="vs-label">Basement — EXAMPLE</div></div>
-    </a>
-    <a href="https://bqprod.pages.dev/?ref=bqtools" target="_blank" rel="noopener" class="vs-card">
-      <div class="vs-thumb" style="background:url('img/thumb-siding.jpg') center/cover;"><div class="vs-play">▶</div><div class="vs-label">Siding — EXAMPLE</div></div>
-    </a>
-    <a href="https://bqprod.pages.dev/?ref=bqtools" target="_blank" rel="noopener" class="vs-card">
-      <div class="vs-thumb" style="background:url('img/thumb-deck.jpg') center/cover;"><div class="vs-play">▶</div><div class="vs-label">Deck Build — EXAMPLE</div></div>
-    </a>
-    <a href="https://bqprod.pages.dev/?ref=bqtools" target="_blank" rel="noopener" class="vs-card">
-      <div class="vs-thumb" style="background:url('img/thumb-michal.jpg') center/cover;"><div class="vs-play">▶</div><div class="vs-label">Renovation — EXAMPLE</div></div>
-    </a>
-    <a href="https://bqprod.pages.dev/?ref=bqtools" target="_blank" rel="noopener" class="vs-card">
-      <div class="vs-thumb" style="background:url('img/thumb-artur.jpg') center/cover;"><div class="vs-play">▶</div><div class="vs-label">Surface Demo — EXAMPLE</div></div>
-    </a>
-  </div>
-  <p style="font-size:14px;color:var(--ac);text-align:center;margin:16px 0 24px;font-weight:600;" data-en="Try the AI Video tool →" data-es="Prueba la herramienta de Video IA →" data-he="נסה את כלי וידאו AI →"><a href="/tools/ai-video.html" style="color:var(--ac);">Try the AI Video tool →</a></p>
-
-  <div style="text-align:center;">
-    <p style="color:var(--txd);font-size:15px;margin-bottom:12px;" data-en="Be first to know when AI Video launches" data-es="Sé el primero en saber cuando se lance Video IA" data-he="היה הראשון לדעת כשוידאו AI יושק" id="waitlistAnchor">Be first to know when AI Video launches</p>
-    <div class="waitlist-form" id="waitlistForm">
-      <input type="email" id="waitlistEmail" placeholder="your@email.com" spellcheck="false" autocomplete="email">
-      <button class="btn btn-primary" onclick="joinVideoWaitlist()" data-en="Notify Me" data-es="Avísame" data-he="עדכנו אותי">Notify Me</button>
-    </div>
+  <div class="tools-see-all">
+    <a href="/home.html" data-en="See all tools →" data-es="Ver todas las herramientas →" data-he="ראה את כל הכלים →">See all tools →</a>
   </div>
 </section>
 
 <!-- Pricing -->
-<section class="section" id="pricing">
-  <h2 class="section-title" data-en="Simple Pricing" data-es="Precios Simples" data-he="מחירים פשוטים">Simple Pricing</h2>
-  <p class="section-sub" data-en="Start free. Upgrade when you're ready." data-es="Empieza gratis. Actualiza cuando estés listo." data-he="התחל בחינם. שדרג כשאתה מוכן.">Start free. Upgrade when you're ready.</p>
+<section class="home-section" id="pricing">
+  <p class="section-eyebrow" data-en="Pricing" data-es="Precios" data-he="מחירים">Pricing</p>
+  <h2 class="section-heading" data-en="Start free. Upgrade when ready." data-es="Empieza gratis. Actualiza cuando estés listo." data-he="התחל בחינם. שדרג כשאתה מוכן.">Start free. Upgrade when ready.</h2>
 
-  <div class="pricing-grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr));">
+  <div class="pricing-grid">
     <!-- FREE -->
     <div class="price-card">
       <div class="price-name" data-en="Free" data-es="Gratis" data-he="חינם">Free</div>
       <div class="price-amount">$0</div>
-      <p style="font-size:13px;color:var(--txd);margin:-4px 0 14px;">The tools. No card needed.</p>
+      <p class="price-desc" data-en="The tools. No card needed." data-es="Las herramientas. Sin tarjeta." data-he="הכלים. ללא כרטיס.">The tools. No card needed.</p>
       <ul class="price-features">
-        <li data-en="Before/after Compare (unlimited)" data-es="Comparación antes/después (sin límite)" data-he="השוואה לפני/אחרי (ללא הגבלה)">Before/after Compare (unlimited)</li>
-        <li data-en="Estimate builder" data-es="Generador de estimados" data-he="בניית הערכת מחיר">Estimate builder</li>
+        <li data-en="Before/after Compare (unlimited)" data-es="Comparación antes/después" data-he="השוואה לפני/אחרי">Before/after Compare (unlimited)</li>
+        <li data-en="Estimate builder" data-es="Generador de estimados" data-he="בנאי הערכות">Estimate builder</li>
         <li data-en="Invoice generator" data-es="Generador de facturas" data-he="יצירת חשבונית">Invoice generator</li>
-        <li data-en="5 AI credits to try AI tools" data-es="5 créditos de IA para probar" data-he="5 קרדיטים לניסיון">5 AI credits to try AI tools</li>
+        <li data-en="5 AI credits to try tools" data-es="5 créditos de IA de prueba" data-he="5 קרדיטים לניסיון">5 AI credits to try tools</li>
         <li data-en="1 Client Page" data-es="1 Página de Cliente" data-he="1 עמוד לקוח">1 Client Page</li>
-        <li data-en="Basic Directory listing" data-es="Listado básico en el Directorio" data-he="רישום בסיסי ב-Directory">Basic Directory listing</li>
       </ul>
       <div class="price-btn-stack">
         <a href="/auth.html" class="btn" style="width:100%;" data-en="Start Free — No Card" data-es="Empieza Gratis — Sin Tarjeta" data-he="התחל בחינם — ללא כרטיס">Start Free — No Card</a>
@@ -1213,140 +698,62 @@
     <div class="price-card recommended">
       <div class="price-name">Pro</div>
       <div class="price-amount">$14.99<span>/mo</span></div>
-      <p style="font-size:13px;color:var(--txd);margin:-4px 0 14px;">All tools. More credits. Pay tracker.</p>
+      <p class="price-desc" data-en="All tools. More credits. Pay tracker." data-es="Todas las herramientas. Más créditos." data-he="כל הכלים. יותר קרדיטים.">All tools. More credits. Pay tracker.</p>
       <ul class="price-features">
         <li data-en="50 AI credits/month" data-es="50 créditos de IA/mes" data-he="50 קרדיטים/חודש">50 AI credits/month</li>
-        <li data-en="All tools — quotes, contracts, invoices" data-es="Todas las herramientas — cotizaciones, contratos, facturas" data-he="כל הכלים — הצעות, חוזים, חשבוניות">All tools — quotes, contracts, invoices</li>
-        <li data-en="Payment tracker + client status links" data-es="Rastreador de pagos + enlaces de estado para clientes" data-he="מעקב תשלומים + לינקים לסטטוס ללקוחות">Payment tracker + client status links</li>
+        <li data-en="All tools — quotes, contracts, invoices" data-es="Todas las herramientas" data-he="כל הכלים">All tools — quotes, contracts, invoices</li>
+        <li data-en="Payment tracker + client status links" data-es="Rastreador de pagos" data-he="מעקב תשלומים">Payment tracker + client status links</li>
         <li data-en="Your logo on every export" data-es="Tu logo en todas las exportaciones" data-he="הלוגו שלך על כל ייצוא">Your logo on every export</li>
-        <li data-en="Pro Directory listing (phone, photos, reviews)" data-es="Listado Pro en Directorio (teléfono, fotos, reseñas)" data-he="רישום Pro ב-Directory (טלפון, תמונות, ביקורות)">Pro Directory listing (phone, photos, reviews)</li>
         <li data-en="Project Gallery + Dashboard" data-es="Galería de Proyectos + Panel" data-he="גלריה + דשבורד">Project Gallery + Dashboard</li>
       </ul>
       <div class="price-btn-stack">
         <a href="https://www.paypal.com/ncp/payment/G7EG5WBG8VSDG" target="_blank" rel="noopener" class="btn btn-primary" style="width:100%;" data-en="Go Pro → PayPal" data-es="Hazte Pro → PayPal" data-he="עבור ל-Pro → PayPal">Go Pro → PayPal</a>
-        <button onclick="openCryptoModal()" class="btn" style="width:100%;border-color:rgba(81,207,102,.3);color:var(--grn);font-size:13px;" data-en="Pay with Crypto — 35% OFF → $9.74/mo" data-es="Pagar con Cripto — 35% DESCUENTO → $9.74/mes" data-he="שלם בקריפטו — 35% הנחה → $9.74/חודש">Pay with Crypto — 35% OFF → $9.74/mo</button>
+        <button onclick="openCryptoModal()" class="btn" style="width:100%;border-color:rgba(81,207,102,.3);color:var(--grn);font-size:13px;" data-en="Pay with Crypto — 35% OFF" data-es="Pagar con Cripto — 35% DESCUENTO" data-he="שלם בקריפטו — 35% הנחה">Pay with Crypto — 35% OFF → $9.74/mo</button>
       </div>
     </div>
 
     <!-- DONE-FOR-YOU -->
-    <div class="price-card" style="border-color:rgba(232,197,71,.5);background:linear-gradient(145deg,rgba(232,197,71,.06) 0%,var(--bg) 100%);">
-      <div class="price-name" style="color:var(--ac);">Done-For-You</div>
-      <div class="price-amount" style="color:var(--ac);">From $500<span>/mo</span></div>
-      <p style="font-size:13px;color:var(--txd);margin:-4px 0 14px;">We run your money ops. You just build.</p>
-      <ul class="price-features" style="margin-bottom:20px;">
-        <li data-en="We send your invoices + attach W9 &amp; COI" data-es="Enviamos tus facturas + adjuntamos W9 y COI" data-he="שולחים חשבוניות + מצרפים W9 ו-COI">We send your invoices + attach W9 &amp; COI</li>
-        <li data-en="We chase every payment — so you don't have to" data-es="Perseguimos cada pago — para que no tengas que hacerlo" data-he="אנחנו רודפים כל תשלום — אתה לא צריך">We chase every payment — so you don't have to</li>
-        <li data-en="Milestone payment management + client updates" data-es="Gestión de pagos por hitos + actualizaciones al cliente" data-he="ניהול תשלומי אבני דרך + עדכוני לקוחות">Milestone payment management + client updates</li>
-        <li data-en="One recovered payment covers months of service" data-es="Un pago recuperado cubre meses de servicio" data-he="תשלום אחד שחזרנו מממן חודשים של שירות">One recovered payment covers months of service</li>
-        <li data-en="Everything in Pro, managed for you" data-es="Todo lo de Pro, administrado para ti" data-he="הכל ב-Pro, מנוהל עבורך">Everything in Pro, managed for you</li>
+    <div class="price-card dfy">
+      <div class="price-name gold" data-en="Done-For-You" data-es="Hecho Para Ti" data-he="נעשה עבורך">Done-For-You</div>
+      <div class="price-amount gold">From $500<span>/mo</span></div>
+      <p class="price-desc" data-en="We run your money ops. You just build." data-es="Nosotros gestionamos tus cobros. Tú solo construye." data-he="אנחנו מנהלים את הכסף. אתה בונה.">We run your money ops. You just build.</p>
+      <ul class="price-features">
+        <li data-en="We send your invoices + attach W9 &amp; COI" data-es="Enviamos tus facturas + W9 y COI" data-he="שולחים חשבוניות + W9 ו-COI">We send your invoices + attach W9 &amp; COI</li>
+        <li data-en="We chase every payment for you" data-es="Perseguimos cada pago por ti" data-he="אנחנו רודפים כל תשלום במקומך">We chase every payment for you</li>
+        <li data-en="Milestone management + client updates" data-es="Gestión de hitos + actualizaciones al cliente" data-he="ניהול אבני דרך + עדכוני לקוחות">Milestone management + client updates</li>
+        <li data-en="Everything in Pro, managed for you" data-es="Todo lo de Pro, gestionado para ti" data-he="הכל ב-Pro, מנוהל עבורך">Everything in Pro, managed for you</li>
       </ul>
       <div class="price-btn-stack">
         <a href="mailto:fanzai.mgmt@gmail.com?subject=Done-For-You%20Inquiry" class="btn btn-primary" style="width:100%;background:var(--ac);border-color:var(--ac);color:#000;" data-en="Talk to Us →" data-es="Habla con Nosotros →" data-he="דבר איתנו →">Talk to Us →</a>
       </div>
     </div>
-
-  </div>
-
-  <details class="credit-packs-toggle">
-    <summary>⚡ Need more credits? See credit packs ▾</summary>
-    <div class="credit-packs-content">
-      <div class="cp-pill">
-        <div class="cp-amount">25</div>
-        <div class="cp-label">credits</div>
-        <a href="https://www.paypal.com/ncp/payment/2Z5X5PPL26R2L" target="_blank" rel="noopener" class="btn" style="width:100%;font-size:13px;">$4.99 → PayPal</a>
-      </div>
-      <div class="cp-pill">
-        <div class="cp-amount">60</div>
-        <div class="cp-label">credits</div>
-        <a href="https://www.paypal.com/ncp/payment/65YNKHNBL9V3G" target="_blank" rel="noopener" class="btn" style="width:100%;font-size:13px;">$9.99 → PayPal</a>
-      </div>
-      <div class="cp-pill">
-        <div class="cp-amount">150</div>
-        <div class="cp-label">credits</div>
-        <a href="https://www.paypal.com/ncp/payment/WKVG2RPF7JEDE" target="_blank" rel="noopener" class="btn" style="width:100%;font-size:13px;">$19.99 → PayPal</a>
-      </div>
-    </div>
-  </details>
-
-  <!-- Featured Listing -->
-  <div class="featured-listing">
-    <h3 data-en="⭐ FEATURED LISTING" data-es="⭐ LISTADO DESTACADO" data-he="⭐ FEATURED LISTING">⭐ FEATURED LISTING</h3>
-    <div class="featured-price">$49.99<span>/mo</span></div>
-    <ul>
-      <li data-en="Everything in Pro" data-es="Todo lo de Pro" data-he="הכל ב-Pro">Everything in Pro</li>
-      <li data-en="WhatsApp Group promoted in Directory" data-es="Grupo de WhatsApp promocionado en el Directorio" data-he="קבוצת WhatsApp מקודמת ב-Directory">WhatsApp Group promoted in Directory</li>
-      <li data-en="Top placement + ⭐ Premium badge" data-es="Posición superior + insignia Premium ⭐" data-he="מיקום עליון + ⭐ תג Premium">Top placement + ⭐ Premium badge</li>
-      <li data-en="20 work photos" data-es="20 fotos de trabajo" data-he="20 תמונות עבודה">20 work photos</li>
-    </ul>
-    <a href="mailto:fanzai.mgmt@gmail.com?subject=Featured%20Listing%20Interest" class="btn btn-primary btn-large" data-en="Contact for Featured" data-es="Contactar para Destacado" data-he="צור קשר ל-Featured Listing">Contact for Featured</a>
   </div>
 </section>
 
-<!-- ROI Calculator -->
-<section class="roi-section">
-  <h2 class="section-title" style="font-size:42px;">How Much Time Will Obra Save You?</h2>
-  <p class="section-sub">Real numbers, no marketing fluff.</p>
-  <div class="roi-card">
-    <div class="roi-inputs">
-      <div class="roi-field">
-        <label>Quotes per month</label>
-        <input type="range" id="roiQuotes" min="1" max="40" value="10" oninput="calcROI()">
-        <div class="roi-val" id="roiQuotesVal">10</div>
-      </div>
-      <div class="roi-field">
-        <label>Minutes per quote (manual)</label>
-        <input type="range" id="roiMins" min="10" max="120" value="45" step="5" oninput="calcROI()">
-        <div class="roi-val" id="roiMinsVal">45 min</div>
-      </div>
-    </div>
-    <div class="roi-result">
-      <div class="roi-number" id="roiHours">7.5</div>
-      <div class="roi-unit">hours saved per month</div>
-      <div class="roi-sub" id="roiSub">10 quotes × 45 min → Obra cuts it to ~5 min each. You keep 6.7 hrs.</div>
-    </div>
-    <p style="font-size:13px;color:var(--txd);margin-top:16px;">At $75/hr your time is worth <strong id="roiMoney" style="color:var(--ac);">$562/mo</strong> — BQ Pro costs $14.99.</p>
-  </div>
-</section>
-
-<!-- Honest Social Proof -->
-<div class="social-proof-wrap">
-  <p class="proof-headline">Built with real LA contractors</p>
-  <p style="font-size:15px;color:var(--txd);max-width:540px;margin:0 auto;">We built these tools in collaboration with contractors in the LA area. No fake reviews, no invented numbers. Real feedback from real jobs.</p>
-</div>
-
-<!-- CTA -->
-<div class="cta-banner">
-  <h3 data-en="Stop chasing checks. Get paid on time." data-es="Deja de perseguir pagos. Cobra a tiempo." data-he="תפסיק לרדוף אחרי תשלומים. קבל כסף בזמן.">Stop chasing checks. Get paid on time.</h3>
-  <p data-en="Free to start. No credit card required." data-he="חינם להתחלה. לא צריך כרטיס אשראי.">Free to start. No credit card required.</p>
-  <a href="/auth.html" class="btn btn-primary btn-large" data-en="Start Free →" data-he="← התחל בחינם">Start Free →</a>
-</div>
+</main>
 
 <!-- Footer -->
 <footer class="mega-footer">
   <div class="mf-grid">
     <div class="mf-col">
       <div class="mf-brand">Obra</div>
-      <p class="mf-desc" data-en="The money &amp; paperwork layer for contractors. Get paid faster." data-es="La capa financiera para contratistas. Cobra más rápido." data-he="הכלים הפיננסיים לקבלנים. קבל תשלום מהר יותר.">The money &amp; paperwork layer for contractors. Get paid faster.</p>
+      <p class="mf-desc" data-en="The money &amp; paperwork layer for contractors. Get paid faster." data-es="La capa financiera para contratistas." data-he="הכלים הפיננסיים לקבלנים. קבל תשלום מהר יותר.">The money &amp; paperwork layer for contractors. Get paid faster.</p>
     </div>
     <div class="mf-col">
       <h4 data-en="Tools" data-es="Herramientas" data-he="כלים">Tools</h4>
-      <a href="/tools/compare.html" data-en="Compare" data-es="Comparar" data-he="השוואה">Compare</a>
-      <a href="/tools/compare.html" data-en="AI Analysis" data-es="Análisis IA" data-he="ניתוח AI">AI Analysis</a>
-      <a href="/tools/report.html" data-en="Quick Report" data-es="Reporte Rápido" data-he="דוח מהיר">Quick Report</a>
+      <a href="/tools/video-brain.html" data-en="Video Brain" data-es="Video Brain" data-he="Video Brain">Video Brain</a>
       <a href="/tools/estimate.html" data-en="Smart Estimate" data-es="Estimado Inteligente" data-he="הערכת עלות">Smart Estimate</a>
-      <a href="/tools/social-post.html" data-en="Social Post" data-es="Post Social" data-he="פוסט חברתי">Social Post</a>
-      <a href="/tools/review.html" data-en="Review Request" data-es="Solicitud de Reseña" data-he="בקשת ביקורת">Review Request</a>
-      <a href="/tools/sketch.html" data-en="Quick Sketch" data-es="Boceto Rápido" data-he="סקיצה מהירה">Quick Sketch</a>
-      <a href="/tools/social-analysis.html" data-en="Social Analysis" data-es="Análisis Social" data-he="ניתוח סושיאל">Social Analysis</a>
+      <a href="/tools/invoice.html" data-en="Invoice" data-es="Factura" data-he="חשבונית">Invoice</a>
+      <a href="/tools/compare.html" data-en="Compare" data-es="Comparar" data-he="השוואה">Compare</a>
+      <a href="/tools/report.html" data-en="Quick Report" data-es="Reporte Rápido" data-he="דוח מהיר">Quick Report</a>
       <a href="/chat.html" data-en="AI Chat" data-es="Chat IA" data-he="צ'אט AI">AI Chat</a>
     </div>
     <div class="mf-col">
       <h4 data-en="Obra" data-es="Obra" data-he="Obra">Obra</h4>
       <a href="#pricing" data-en="Pricing" data-es="Precios" data-he="מחירים">Pricing</a>
       <a href="/directory.html" data-en="Directory" data-es="Directorio" data-he="ספר עסקים">Directory</a>
-      <a href="#" style="color:var(--txd);pointer-events:none;" data-en="Blog (coming soon)" data-es="Blog (próximamente)" data-he="בלוג (בקרוב)">Blog (coming soon)</a>
-      <a href="#" style="color:var(--txd);pointer-events:none;" data-en="Help Center (coming soon)" data-es="Centro de Ayuda (próximamente)" data-he="מרכז עזרה (בקרוב)">Help Center (coming soon)</a>
-      <a href="#" style="color:var(--txd);pointer-events:none;" data-en="API (coming soon)" data-es="API (próximamente)" data-he="API (בקרוב)">API (coming soon)</a>
+      <a href="/home.html" data-en="All Tools" data-es="Todos los Herramientas" data-he="כל הכלים">All Tools</a>
+      <a href="#" style="pointer-events:none;opacity:.4;" data-en="Blog (coming soon)" data-es="Blog (próximamente)" data-he="בלוג (בקרוב)">Blog (coming soon)</a>
     </div>
     <div class="mf-col">
       <h4 data-en="Connect" data-es="Conectar" data-he="התחבר">Connect</h4>
@@ -1364,7 +771,7 @@
   </div>
 </footer>
 
-<!-- Demo Video Modal -->
+<!-- Demo Video Modal (kept for tool card pills injected by common.js) -->
 <div class="video-modal-backdrop" id="videoModal" onclick="if(event.target===this)closeVideoModal()">
   <div class="video-modal">
     <button class="video-modal-close" onclick="closeVideoModal()" aria-label="Close">×</button>
@@ -1374,170 +781,42 @@
       <div class="vm-icon">🎬</div>
       <div class="vm-text" data-en="Demo video coming soon" data-es="Video demo próximamente" data-he="סרטון הדגמה בקרוב">Demo video coming soon</div>
     </div>
-    <p data-en="We're recording short walkthroughs for every tool. In the meantime, the easiest way to see it work is to try it." data-es="Estamos grabando demostraciones cortas para cada herramienta. Mientras tanto, la mejor forma de verlo es probarlo." data-he="אנחנו מקליטים הדגמות קצרות לכל כלי. בינתיים, הדרך הכי טובה לראות איך זה עובד היא לנסות.">We're recording short walkthroughs for every tool. In the meantime, the easiest way to see it work is to try it.</p>
+    <p data-en="We're recording short walkthroughs for every tool. In the meantime, the easiest way to see it work is to try it." data-es="Estamos grabando demostraciones cortas para cada herramienta. Mientras tanto, pruébalo." data-he="אנחנו מקליטים הדגמות קצרות לכל כלי. בינתיים, נסה אותו.">We're recording short walkthroughs for every tool. In the meantime, the easiest way to see it work is to try it.</p>
     <a href="#" id="videoModalCta" class="btn btn-primary btn-large" data-en="Try the Tool →" data-es="Probar la Herramienta →" data-he="← נסה את הכלי">Try the Tool →</a>
   </div>
 </div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="js/ai.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/crypto.js"></script>
 <script src="js/common.js"></script>
 <script src="js/assistant.js"></script>
 <script>
-  // Preview map
-  try {
-    const pm = L.map('previewMap', { zoomControl: false, dragging: false, scrollWheelZoom: false, attributionControl: false }).setView([34.05, -118.25], 10);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(pm);
-  } catch(e) {}
+  // Nav scroll shrink
+  const nav = document.getElementById('mainNav');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 20);
+  }, { passive: true });
 
-  // Waitlist
-  function scrollToWaitlist() {
-    document.getElementById('waitlistAnchor').scrollIntoView({ behavior: 'smooth', block: 'center' });
-    setTimeout(() => document.getElementById('waitlistEmail').focus(), 400);
-  }
-
-  async function joinVideoWaitlist() {
-    const email = document.getElementById('waitlistEmail').value.trim();
-    if (!email || !email.includes('@')) {
-      showToast(lang === 'he' ? 'הכנס מייל תקין' : 'Enter a valid email', 'err');
-      return;
-    }
-    try {
-      const res = await fetch(API_URL + '/api/waitlist/video', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-      if (res.ok) {
-        showToast(lang === 'he' ? 'נרשמת! נעדכן אותך כשזה יושק.' : "You're on the list! We'll notify you when it launches.", 'ok');
-        document.getElementById('waitlistEmail').value = '';
-      } else {
-        showToast('Error — try again', 'err');
-      }
-    } catch {
-      showToast('Network error', 'err');
-    }
-  }
-
-  // Update nav based on login state
-  if (isLoggedIn()) {
+  // Update nav button based on login state
+  if (typeof isLoggedIn === 'function' && isLoggedIn()) {
     const btn = document.getElementById('navProBtn');
     if (btn) {
-      if (isPro()) {
+      if (typeof isPro === 'function' && isPro()) {
         btn.dataset.en = 'PRO ✓';
         btn.dataset.he = 'PRO ✓';
-        btn.dataset.es = 'PRO ✓';
         btn.textContent = 'PRO ✓';
         btn.classList.add('btn-pro-active');
       } else {
         btn.dataset.en = 'Account';
         btn.dataset.he = 'חשבון';
-        btn.dataset.es = 'Cuenta';
         btn.textContent = btn.dataset[lang] || 'Account';
         btn.href = '/auth.html';
       }
     }
   }
 
-  // ── Draggable Before/After Slider ──
-  (function initDemoSlider() {
-    const box = document.getElementById('demoBox');
-    const wrap = document.getElementById('demoAfterWrap');
-    const line = document.getElementById('demoLine');
-    if (!box || !wrap || !line) return;
-
-    const handle = box.querySelector('.demo-handle');
-    let dragging = false;
-    let pct = 50;
-    let autoTimer = null;
-
-    function setPct(p) {
-      pct = Math.max(0, Math.min(100, p));
-      wrap.style.clipPath = `inset(0 0 0 ${pct}%)`;
-      line.style.left = pct + '%';
-      if (handle) handle.style.left = pct + '%';
-    }
-
-    function pctFromEvent(e) {
-      const r = box.getBoundingClientRect();
-      const x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
-      return (x / r.width) * 100;
-    }
-
-    function start(e) {
-      dragging = true;
-      stopAuto();
-      box.style.cursor = 'grabbing';
-      setPct(pctFromEvent(e));
-      e.preventDefault();
-    }
-    function move(e) {
-      if (!dragging) return;
-      setPct(pctFromEvent(e));
-      e.preventDefault();
-    }
-    function end() {
-      dragging = false;
-      box.style.cursor = 'ew-resize';
-    }
-
-    box.addEventListener('mousedown', start);
-    window.addEventListener('mousemove', move);
-    window.addEventListener('mouseup', end);
-    box.addEventListener('touchstart', start, { passive: false });
-    window.addEventListener('touchmove', move, { passive: false });
-    window.addEventListener('touchend', end);
-
-    // Auto-demo until user touches it (so visitors see it move)
-    function startAuto() {
-      let t = 0;
-      autoTimer = setInterval(() => {
-        if (dragging) return;
-        t += 0.04;
-        const p = 50 + Math.sin(t) * 28;
-        setPct(p);
-      }, 40);
-    }
-    function stopAuto() {
-      if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
-    }
-
-    setPct(50);
-    startAuto();
-    box.addEventListener('mousedown', stopAuto, { once: true });
-    box.addEventListener('touchstart', stopAuto, { once: true });
-  })();
-
-  // ── Demo Video Pills on Tool Cards ──
-  (function injectDemoPills() {
-    const cards = document.querySelectorAll('.tools-grid .tool-card');
-    const labels = {
-      en: { pill: 'Watch demo', play: '▶' },
-      es: { pill: 'Ver demo', play: '▶' },
-      he: { pill: 'צפה בהדגמה', play: '▶' }
-    };
-    cards.forEach(card => {
-      const pill = document.createElement('span');
-      pill.className = 'demo-pill';
-      pill.innerHTML = '<span class="play-dot">▶</span><span class="pill-text" data-en="Watch demo" data-es="Ver demo" data-he="צפה בהדגמה">Watch demo</span>';
-      pill.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const titleEl = card.querySelector('h3');
-        const toolName = titleEl ? titleEl.textContent.trim() : 'Tool';
-        openVideoModal(toolName, card.getAttribute('href'));
-      });
-      card.appendChild(pill);
-    });
-    // Re-apply current language so injected pills show the right text
-    if (typeof setLang === 'function' && typeof lang !== 'undefined') {
-      try { setLang(lang); } catch(e) {}
-    }
-  })();
-
-  // ── Demo Video Modal ──
+  // Demo Video Modal
   function openVideoModal(toolName, toolHref) {
     const modal = document.getElementById('videoModal');
     if (!modal) return;
@@ -1556,20 +835,6 @@
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeVideoModal();
   });
-
-  // ── ROI Calculator ──
-  function calcROI() {
-    const quotes = parseInt(document.getElementById('roiQuotes').value);
-    const mins = parseInt(document.getElementById('roiMins').value);
-    const saved = quotes * (mins - 5) / 60;
-    const money = Math.round(saved * 75);
-    document.getElementById('roiQuotesVal').textContent = quotes;
-    document.getElementById('roiMinsVal').textContent = mins + ' min';
-    document.getElementById('roiHours').textContent = saved.toFixed(1);
-    document.getElementById('roiSub').textContent = `${quotes} quotes × ${mins} min → Obra cuts it to ~5 min each. You keep ${(quotes*(mins-5)/60).toFixed(1)} hrs.`;
-    document.getElementById('roiMoney').textContent = '$' + money.toLocaleString() + '/mo';
-  }
-  calcROI();
 </script>
 <script src="/js/motion-engine.js" defer></script>
 <script src="/js/cmdk-palette.js" defer></script>
