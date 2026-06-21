@@ -1,4 +1,4 @@
-/* BQ Brain Assistant — floating AI helper for the whole site.
+/* Obra Assistant Assistant — floating AI helper for the whole site.
    Drop in <script src="/js/brain-assistant.js" defer></script> on any page.
    Auto-mounts a rotating 3D brain bottom-right + opens a chat modal on click.
 
@@ -230,7 +230,7 @@
     <div class="bq-brain-modal" role="dialog" aria-modal="true">
       <div class="bq-brain-header">
         <span class="em">🧠</span>
-        <div class="title">BQ Brain<small>${escapeHtml(t.tip)}</small></div>
+        <div class="title">Obra Assistant<small>${escapeHtml(t.tip)}</small></div>
         <button class="bq-brain-clear" aria-label="${escapeHtml(t.clear)}" title="${escapeHtml(t.clear)}">↺</button>
         <button class="bq-brain-close" aria-label="Close">✕</button>
       </div>
