@@ -266,41 +266,41 @@
 <nav class="ed-topnav">
   <a href="/" class="ed-logo">Obra</a>
   <div class="ed-topnav-links">
-    <a href="/home.html">Tools</a>
-    <a href="/dashboard.html">Dashboard</a>
-    <a href="/directory.html">Directory</a>
+    <a href="/home.html" data-en="Tools" data-he="כלים" data-es="Herramientas">Tools</a>
+    <a href="/dashboard.html" data-en="Dashboard" data-he="לוח בקרה" data-es="Panel">Dashboard</a>
+    <a href="/directory.html" data-en="Directory" data-he="מדריך" data-es="Directorio">Directory</a>
     <a href="/tools/pusher.html">Pusher</a>
   </div>
-  <a class="ed-topnav-cta cmdk-trigger">Search · <kbd>⌘K</kbd></a>
+  <a class="ed-topnav-cta cmdk-trigger"><span data-en="Search" data-he="חיפוש" data-es="Buscar">Search</span> · <kbd>⌘K</kbd></a>
 </nav>
 
 <section class="home-hero">
   <div class="ed-container">
     <div class="home-greeting-row">
       <div>
-        <span class="ed-eyebrow" style="margin-bottom: 16px;">Welcome back</span>
-        <h1>Good <em>afternoon</em>,<br><span class="name" id="userName">there</span>.</h1>
+        <span class="ed-eyebrow" style="margin-bottom: 16px;" data-en="Welcome back" data-he="ברוך שובך" data-es="Bienvenido de vuelta">Welcome back</span>
+        <h1>Good <em id="greetingWord" data-en="afternoon" data-he="אחר הצהריים" data-es="tarde">afternoon</em>,<br><span class="name" id="userName">there</span>.</h1>
       </div>
       <div class="credit-block">
-        <span class="label">Credits available</span>
+        <span class="label" data-en="Credits available" data-he="קרדיטים זמינים" data-es="Créditos disponibles">Credits available</span>
         <span class="num" id="userCredits">—</span>
         <span class="pro-pill" id="userTier">FREE</span>
       </div>
     </div>
 
     <div style="display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
-      <span class="ed-eyebrow">Your toolbox · <span id="toolCount">18</span> tools</span>
-      <button class="cmdk-hint cmdk-trigger">⌘ Quick search · <kbd>⌘K</kbd></button>
+      <span class="ed-eyebrow"><span data-en="Your toolbox" data-he="ארגז הכלים שלך" data-es="Tu caja de herramientas">Your toolbox</span> · <span id="toolCount">18</span> <span data-en="tools" data-he="כלים" data-es="herramientas">tools</span></span>
+      <button class="cmdk-hint cmdk-trigger">⌘ <span data-en="Quick search" data-he="חיפוש מהיר" data-es="Búsqueda rápida">Quick search</span> · <kbd>⌘K</kbd></button>
     </div>
 
     <div class="filter-row" id="filterRow">
-      <button class="filter-chip active" data-filter="all">All <span class="count">18</span></button>
-      <button class="filter-chip" data-filter="sales">Sales</button>
-      <button class="filter-chip" data-filter="content">Content</button>
-      <button class="filter-chip" data-filter="business">Business</button>
-      <button class="filter-chip" data-filter="research">Research</button>
-      <button class="filter-chip" data-filter="new">NEW</button>
-      <button class="filter-chip" data-filter="free">FREE</button>
+      <button class="filter-chip active" data-filter="all" data-en="All" data-he="הכל" data-es="Todos">All <span class="count">18</span></button>
+      <button class="filter-chip" data-filter="sales" data-en="Sales" data-he="מכירות" data-es="Ventas">Sales</button>
+      <button class="filter-chip" data-filter="content" data-en="Content" data-he="תוכן" data-es="Contenido">Content</button>
+      <button class="filter-chip" data-filter="business" data-en="Business" data-he="עסקים" data-es="Negocios">Business</button>
+      <button class="filter-chip" data-filter="research" data-en="Research" data-he="מחקר" data-es="Investigación">Research</button>
+      <button class="filter-chip" data-filter="new" data-en="NEW" data-he="חדש" data-es="NUEVO">NEW</button>
+      <button class="filter-chip" data-filter="free" data-en="FREE" data-he="חינם" data-es="GRATIS">FREE</button>
     </div>
   </div>
 </section>
@@ -310,177 +310,177 @@
     <div class="ed-bento" id="toolsBento">
       <!-- PUSHER — featured big -->
       <a href="/tools/pusher.html" class="ed-cell tool-cell col-4" data-cat="sales" data-tag="new">
-        <span class="ed-icon">FEATURED · SALES</span>
+        <span class="ed-icon" data-en="FEATURED · SALES" data-he="מומלץ · מכירות" data-es="DESTACADO · VENTAS">FEATURED · SALES</span>
         <span class="ed-icon-em">🎯</span>
         <h3>Pusher <em>Beta</em></h3>
-        <p>Buyer-intent Facebook lead engine. Daily AI-drafted comment-replies sent to your Telegram. $20/mo · 10 seats only.</p>
-        <span class="ed-tag new">NEW · BETA</span>
+        <p data-en="Buyer-intent Facebook lead engine. Daily AI-drafted comment-replies sent to your Telegram. $20/mo · 10 seats only." data-he="מנוע לידים מבוסס כוונת קנייה בפייסבוק. תגובות AI יומיות נשלחות לטלגרם שלך. $20/חודש · 10 מקומות בלבד." data-es="Motor de leads con intención de compra en Facebook. Respuestas AI diarias enviadas a tu Telegram. $20/mes · solo 10 lugares.">Buyer-intent Facebook lead engine. Daily AI-drafted comment-replies sent to your Telegram. $20/mo · 10 seats only.</p>
+        <span class="ed-tag new" data-en="NEW · BETA" data-he="חדש · בטא" data-es="NUEVO · BETA">NEW · BETA</span>
       </a>
 
       <a href="/tools/ai-video.html" class="ed-cell tool-cell col-2" data-cat="content">
-        <span class="ed-icon">VIDEO</span>
+        <span class="ed-icon" data-en="VIDEO" data-he="וידאו" data-es="VIDEO">VIDEO</span>
         <span class="ed-icon-em">🎬</span>
-        <h3>AI Video</h3>
-        <p>Cinematic prompt builder powered by Seedance 2.</p>
-        <span class="ed-tag">PRO</span>
+        <h3 data-en="AI Video" data-he="וידאו AI" data-es="Video IA">AI Video</h3>
+        <p data-en="Cinematic prompt builder powered by Seedance 2." data-he="בונה פרומפטים קולנועיים מבוסס Seedance 2." data-es="Constructor de prompts cinematográficos impulsado por Seedance 2.">Cinematic prompt builder powered by Seedance 2.</p>
+        <span class="ed-tag" data-en="PRO" data-he="פרו" data-es="PRO">PRO</span>
       </a>
 
       <a href="/tools/ad-creator.html" class="ed-cell tool-cell col-2" data-cat="content">
-        <span class="ed-icon">AD</span>
+        <span class="ed-icon" data-en="AD" data-he="פרסומת" data-es="ANUNCIO">AD</span>
         <span class="ed-icon-em">🎨</span>
-        <h3>Ad <em>Creator</em></h3>
-        <p>Generate ad creative for Meta, TikTok, Google.</p>
+        <h3 data-en="Ad Creator" data-he="יוצר פרסומות" data-es="Creador de Anuncios">Ad <em>Creator</em></h3>
+        <p data-en="Generate ad creative for Meta, TikTok, Google." data-he="יצירת קריאייטיב לפרסומות למטא, טיקטוק, גוגל." data-es="Genera creatividades publicitarias para Meta, TikTok y Google.">Generate ad creative for Meta, TikTok, Google.</p>
         <span class="ed-tag">20 CR</span>
       </a>
 
       <a href="/tools/compare.html" class="ed-cell tool-cell col-2" data-cat="sales" data-tag="free">
-        <span class="ed-icon">COMPARE</span>
+        <span class="ed-icon" data-en="COMPARE" data-he="השוואה" data-es="COMPARAR">COMPARE</span>
         <span class="ed-icon-em">🔀</span>
-        <h3>Compare</h3>
-        <p>Side-by-side comparison.</p>
-        <span class="ed-tag free">FREE</span>
+        <h3 data-en="Compare" data-he="השוואה" data-es="Comparar">Compare</h3>
+        <p data-en="Side-by-side comparison." data-he="השוואה זה לצד זה." data-es="Comparación lado a lado.">Side-by-side comparison.</p>
+        <span class="ed-tag free" data-en="FREE" data-he="חינם" data-es="GRATIS">FREE</span>
       </a>
 
       <a href="/tools/social-post.html" class="ed-cell tool-cell col-2" data-cat="content">
-        <span class="ed-icon">SOCIAL</span>
+        <span class="ed-icon" data-en="SOCIAL" data-he="סושיאל" data-es="SOCIAL">SOCIAL</span>
         <span class="ed-icon-em">📱</span>
-        <h3>Social Post</h3>
-        <p>Generate posts for IG, FB, X, LinkedIn.</p>
+        <h3 data-en="Social Post" data-he="פוסט לרשתות" data-es="Publicación Social">Social Post</h3>
+        <p data-en="Generate posts for IG, FB, X, LinkedIn." data-he="יצירת פוסטים לאינסטגרם, פייסבוק, X, לינקדאין." data-es="Genera publicaciones para IG, FB, X y LinkedIn.">Generate posts for IG, FB, X, LinkedIn.</p>
         <span class="ed-tag">1 CR</span>
       </a>
 
       <a href="/tools/social-analysis.html" class="ed-cell tool-cell col-2" data-cat="research">
-        <span class="ed-icon">ANALYTICS</span>
+        <span class="ed-icon" data-en="ANALYTICS" data-he="אנליטיקס" data-es="ANÁLISIS">ANALYTICS</span>
         <span class="ed-icon-em">📊</span>
-        <h3>Social <em>Analysis</em></h3>
-        <p>Audit any IG profile.</p>
+        <h3 data-en="Social Analysis" data-he="ניתוח רשתות חברתיות" data-es="Análisis Social">Social <em>Analysis</em></h3>
+        <p data-en="Audit any IG profile." data-he="בדיקת כל פרופיל באינסטגרם." data-es="Audita cualquier perfil de Instagram.">Audit any IG profile.</p>
         <span class="ed-tag">2 CR</span>
       </a>
 
       <a href="/chat.html" class="ed-cell tool-cell col-2" data-cat="content">
-        <span class="ed-icon">CHAT</span>
+        <span class="ed-icon" data-en="CHAT" data-he="צ'אט" data-es="CHAT">CHAT</span>
         <span class="ed-icon-em">💬</span>
-        <h3>AI Chat</h3>
-        <p>Multi-model chat — Claude, Gemini, Groq.</p>
+        <h3 data-en="AI Chat" data-he="צ'אט AI" data-es="Chat IA">AI Chat</h3>
+        <p data-en="Multi-model chat — Claude, Gemini, Groq." data-he="צ'אט רב-מודלי — Claude, Gemini, Groq." data-es="Chat multimodelo — Claude, Gemini, Groq.">Multi-model chat — Claude, Gemini, Groq.</p>
         <span class="ed-tag">1-6 CR</span>
       </a>
 
       <a href="/tools/quote.html" class="ed-cell tool-cell col-2" data-cat="business">
-        <span class="ed-icon">QUOTE</span>
+        <span class="ed-icon" data-en="QUOTE" data-he="הצעת מחיר" data-es="COTIZACIÓN">QUOTE</span>
         <span class="ed-icon-em">📝</span>
-        <h3>Quote <em>Generator</em></h3>
-        <p>Professional quotes in seconds.</p>
+        <h3 data-en="Quote Generator" data-he="מחולל הצעות מחיר" data-es="Generador de Cotizaciones">Quote <em>Generator</em></h3>
+        <p data-en="Professional quotes in seconds." data-he="הצעות מחיר מקצועיות תוך שניות." data-es="Cotizaciones profesionales en segundos.">Professional quotes in seconds.</p>
         <span class="ed-tag">1 CR</span>
       </a>
 
       <a href="/tools/estimate.html" class="ed-cell tool-cell col-2" data-cat="sales">
-        <span class="ed-icon">ESTIMATE</span>
+        <span class="ed-icon" data-en="ESTIMATE" data-he="אומדן" data-es="ESTIMADO">ESTIMATE</span>
         <span class="ed-icon-em">💰</span>
-        <h3>Smart <em>Estimate</em></h3>
-        <p>Cost estimate generator.</p>
+        <h3 data-en="Smart Estimate" data-he="אומדן עלויות חכם" data-es="Estimado Inteligente">Smart <em>Estimate</em></h3>
+        <p data-en="Cost estimate generator." data-he="מחולל אומדן עלויות." data-es="Generador de estimados de costos.">Cost estimate generator.</p>
         <span class="ed-tag">1 CR</span>
       </a>
 
       <a href="/tools/client-page.html" class="ed-cell tool-cell col-2" data-cat="sales" data-tag="free">
-        <span class="ed-icon">CLIENT</span>
+        <span class="ed-icon" data-en="CLIENT" data-he="לקוח" data-es="CLIENTE">CLIENT</span>
         <span class="ed-icon-em">🔗</span>
-        <h3>Client Page</h3>
-        <p>Personalized client landing page.</p>
-        <span class="ed-tag free">FREE</span>
+        <h3 data-en="Client Page" data-he="דף לקוח" data-es="Página de Cliente">Client Page</h3>
+        <p data-en="Personalized client landing page." data-he="דף נחיתה מותאם אישית ללקוח." data-es="Página de aterrizaje personalizada para el cliente.">Personalized client landing page.</p>
+        <span class="ed-tag free" data-en="FREE" data-he="חינם" data-es="GRATIS">FREE</span>
       </a>
 
       <a href="/tools/report.html" class="ed-cell tool-cell col-2" data-cat="sales">
-        <span class="ed-icon">REPORT</span>
+        <span class="ed-icon" data-en="REPORT" data-he="דוח" data-es="REPORTE">REPORT</span>
         <span class="ed-icon-em">📄</span>
-        <h3>Quick Report</h3>
-        <p>Reports in seconds.</p>
+        <h3 data-en="Quick Report" data-he="דוח מהיר" data-es="Reporte Rápido">Quick Report</h3>
+        <p data-en="Reports in seconds." data-he="דוחות תוך שניות." data-es="Reportes en segundos.">Reports in seconds.</p>
         <span class="ed-tag">1 CR</span>
       </a>
 
       <a href="/tools/content-spy.html" class="ed-cell tool-cell col-2" data-cat="research">
-        <span class="ed-icon">SPY</span>
+        <span class="ed-icon" data-en="SPY" data-he="ריגול תוכן" data-es="ESPIAR">SPY</span>
         <span class="ed-icon-em">🔍</span>
-        <h3>Content <em>Spy</em></h3>
-        <p>Reverse-engineer competitor content.</p>
+        <h3 data-en="Content Spy" data-he="ריגול תוכן" data-es="Espía de Contenido">Content <em>Spy</em></h3>
+        <p data-en="Reverse-engineer competitor content." data-he="פענוח תוכן של מתחרים." data-es="Ingeniería inversa del contenido de competidores.">Reverse-engineer competitor content.</p>
         <span class="ed-tag">2 CR</span>
       </a>
 
       <a href="/tools/review.html" class="ed-cell tool-cell col-2" data-cat="sales">
-        <span class="ed-icon">REVIEW</span>
+        <span class="ed-icon" data-en="REVIEW" data-he="ביקורת" data-es="RESEÑA">REVIEW</span>
         <span class="ed-icon-em">⭐</span>
-        <h3>Review Request</h3>
-        <p>Personalized review asks.</p>
+        <h3 data-en="Review Request" data-he="בקשת ביקורת" data-es="Solicitud de Reseña">Review Request</h3>
+        <p data-en="Personalized review asks." data-he="בקשות ביקורת מותאמות אישית." data-es="Solicitudes de reseña personalizadas.">Personalized review asks.</p>
         <span class="ed-tag">1 CR</span>
       </a>
 
       <a href="/tools/sketch.html" class="ed-cell tool-cell col-2" data-cat="content">
-        <span class="ed-icon">SKETCH</span>
+        <span class="ed-icon" data-en="SKETCH" data-he="סקיצה" data-es="BOCETO">SKETCH</span>
         <span class="ed-icon-em">✏️</span>
-        <h3>Quick Sketch</h3>
-        <p>Visual concept in seconds.</p>
+        <h3 data-en="Quick Sketch" data-he="סקיצה מהירה" data-es="Boceto Rápido">Quick Sketch</h3>
+        <p data-en="Visual concept in seconds." data-he="קונספט ויזואלי תוך שניות." data-es="Concepto visual en segundos.">Visual concept in seconds.</p>
         <span class="ed-tag">1 CR</span>
       </a>
 
       <a href="/tools/moodboard.html" class="ed-cell tool-cell col-2" data-cat="content" data-tag="free">
-        <span class="ed-icon">MOOD</span>
+        <span class="ed-icon" data-en="MOOD" data-he="מצב רוח" data-es="AMBIENTE">MOOD</span>
         <span class="ed-icon-em">💖</span>
-        <h3>Moodboard</h3>
-        <p>Visual moodboards.</p>
-        <span class="ed-tag free">FREE</span>
+        <h3 data-en="Moodboard" data-he="לוח מצב רוח" data-es="Moodboard">Moodboard</h3>
+        <p data-en="Visual moodboards." data-he="לוחות מצב רוח ויזואליים." data-es="Tableros de ambiente visual.">Visual moodboards.</p>
+        <span class="ed-tag free" data-en="FREE" data-he="חינם" data-es="GRATIS">FREE</span>
       </a>
 
       <a href="/tools/downloader.html" class="ed-cell tool-cell col-2" data-cat="research">
-        <span class="ed-icon">DOWNLOAD</span>
+        <span class="ed-icon" data-en="DOWNLOAD" data-he="הורדה" data-es="DESCARGA">DOWNLOAD</span>
         <span class="ed-icon-em">📥</span>
-        <h3>Downloader</h3>
-        <p>Extract content from any URL.</p>
+        <h3 data-en="Downloader" data-he="מוריד תוכן" data-es="Descargador">Downloader</h3>
+        <p data-en="Extract content from any URL." data-he="חילוץ תוכן מכל כתובת URL." data-es="Extrae contenido de cualquier URL.">Extract content from any URL.</p>
         <span class="ed-tag">1 CR</span>
       </a>
 
       <a href="/tools/import-memory.html" class="ed-cell tool-cell col-2" data-cat="content" data-tag="new free">
-        <span class="ed-icon">MEMORY</span>
+        <span class="ed-icon" data-en="MEMORY" data-he="זיכרון" data-es="MEMORIA">MEMORY</span>
         <span class="ed-icon-em">🧠</span>
-        <h3>Import <em>AI Memory</em></h3>
-        <p>Bring your ChatGPT/Claude memory in.</p>
-        <span class="ed-tag new">NEW · FREE</span>
+        <h3 data-en="Import AI Memory" data-he="ייבוא זיכרון AI" data-es="Importar Memoria IA">Import <em>AI Memory</em></h3>
+        <p data-en="Bring your ChatGPT/Claude memory in." data-he="ייבוא הזיכרון שלך מ-ChatGPT/Claude." data-es="Importa tu memoria de ChatGPT/Claude.">Bring your ChatGPT/Claude memory in.</p>
+        <span class="ed-tag new" data-en="NEW · FREE" data-he="חדש · חינם" data-es="NUEVO · GRATIS">NEW · FREE</span>
       </a>
 
       <a href="/tools/invoice.html" class="ed-cell tool-cell col-2" data-cat="business" data-tag="free">
-        <span class="ed-icon">INVOICE</span>
+        <span class="ed-icon" data-en="INVOICE" data-he="חשבונית" data-es="FACTURA">INVOICE</span>
         <span class="ed-icon-em">🧾</span>
-        <h3>Invoice</h3>
-        <p>Send invoices fast.</p>
-        <span class="ed-tag free">FREE</span>
+        <h3 data-en="Invoice" data-he="חשבונית" data-es="Factura">Invoice</h3>
+        <p data-en="Send invoices fast." data-he="שליחת חשבוניות במהירות." data-es="Envía facturas rápidamente.">Send invoices fast.</p>
+        <span class="ed-tag free" data-en="FREE" data-he="חינם" data-es="GRATIS">FREE</span>
       </a>
 
       <a href="/tools/contract.html" class="ed-cell tool-cell col-2" data-cat="business">
-        <span class="ed-icon">CONTRACT</span>
+        <span class="ed-icon" data-en="CONTRACT" data-he="חוזה" data-es="CONTRATO">CONTRACT</span>
         <span class="ed-icon-em">📜</span>
-        <h3>Contract</h3>
-        <p>Contracts that hold up.</p>
+        <h3 data-en="Contract" data-he="חוזה" data-es="Contrato">Contract</h3>
+        <p data-en="Contracts that hold up." data-he="חוזות שעומדים בכל מצב." data-es="Contratos que se sostienen.">Contracts that hold up.</p>
         <span class="ed-tag">2 CR</span>
       </a>
 
       <a href="/business.html" class="ed-cell tool-cell col-4" data-cat="business" data-tag="suite">
-        <span class="ed-icon">BUSINESS · SUITE</span>
+        <span class="ed-icon" data-en="BUSINESS · SUITE" data-he="חבילת עסקים" data-es="SUITE EMPRESARIAL">BUSINESS · SUITE</span>
         <span class="ed-icon-em">💼</span>
-        <h3>Business <em>Suite</em></h3>
-        <p>Quote, Invoice, Contract, Client Pages — your entire client workflow in one tab. 8 tools wired together.</p>
-        <span class="ed-tag">8 TOOLS</span>
+        <h3 data-en="Business Suite" data-he="חבילת עסקים" data-es="Suite Empresarial">Business <em>Suite</em></h3>
+        <p data-en="Quote, Invoice, Contract, Client Pages — your entire client workflow in one tab. 8 tools wired together." data-he="הצעת מחיר, חשבונית, חוזה, דפי לקוח — כל תהליך העבודה עם לקוחות בטאב אחד. 8 כלים מחוברים יחד." data-es="Cotización, Factura, Contrato, Páginas de Cliente — todo tu flujo de trabajo en una pestaña. 8 herramientas conectadas.">Quote, Invoice, Contract, Client Pages — your entire client workflow in one tab. 8 tools wired together.</p>
+        <span class="ed-tag" data-en="8 TOOLS" data-he="8 כלים" data-es="8 HERRAMIENTAS">8 TOOLS</span>
       </a>
     </div>
 
     <div class="stats-row">
       <div class="stat-cell">
-        <div class="lab">Projects</div>
+        <div class="lab" data-en="Projects" data-he="פרויקטים" data-es="Proyectos">Projects</div>
         <div class="num" id="statProjects">0</div>
       </div>
       <div class="stat-cell">
-        <div class="lab">Credits used (this cycle)</div>
+        <div class="lab" data-en="Credits used (this cycle)" data-he="קרדיטים שנוצלו (מחזור נוכחי)" data-es="Créditos usados (este ciclo)">Credits used (this cycle)</div>
         <div class="num gold" id="statCreditsUsed">0</div>
       </div>
       <div class="stat-cell">
-        <div class="lab">Plan</div>
+        <div class="lab" data-en="Plan" data-he="תוכנית" data-es="Plan">Plan</div>
         <div class="num" id="statPlan">Free</div>
       </div>
     </div>
@@ -488,13 +488,13 @@
     <div class="recent">
       <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 16px;">
         <div>
-          <span class="ed-eyebrow">Recent activity</span>
-          <h2 style="margin-top: 16px;">Your latest <em>work</em>.</h2>
+          <span class="ed-eyebrow" data-en="Recent activity" data-he="פעילות אחרונה" data-es="Actividad reciente">Recent activity</span>
+          <h2 style="margin-top: 16px;" data-en="Your latest work." data-he="העבודות האחרונות שלך." data-es="Tu trabajo más reciente.">Your latest <em>work</em>.</h2>
         </div>
-        <a href="/dashboard.html" class="ed-btn-ghost">View all</a>
+        <a href="/dashboard.html" class="ed-btn-ghost" data-en="View all" data-he="הצג הכל" data-es="Ver todo">View all</a>
       </div>
       <div class="recent-list" id="recentList">
-        <div class="recent-empty">No recent projects yet. Pick a tool above to start.</div>
+        <div class="recent-empty" data-en="No recent projects yet. Pick a tool above to start." data-he="אין פרויקטים אחרונים עדיין. בחר כלי למעלה כדי להתחיל." data-es="Aún no hay proyectos recientes. Elige una herramienta arriba para empezar.">No recent projects yet. Pick a tool above to start.</div>
       </div>
     </div>
   </div>
@@ -504,11 +504,11 @@
   <div class="ed-container foot-grid">
     <div>
       <div class="foot-brand">Obra</div>
-      <div style="font-family: var(--font-en); font-size: 12px; color: var(--ed-paper-faint); margin-top: 6px; letter-spacing: 0.03em; font-weight: 500;">AI TOOLBOX FOR SERVICE BUSINESSES · BUILT BY MOSHE SHOHET · LA</div>
+      <div style="font-family: var(--font-en); font-size: 12px; color: var(--ed-paper-faint); margin-top: 6px; letter-spacing: 0.03em; font-weight: 500;" data-en="AI TOOLBOX FOR SERVICE BUSINESSES · BUILT BY MOSHE SHOHET · LA" data-he="ארגז כלים AI לעסקי שירות · נבנה על ידי משה שוחט · LA" data-es="CAJA DE HERRAMIENTAS AI PARA NEGOCIOS DE SERVICIO · CREADO POR MOSHE SHOHET · LA">AI TOOLBOX FOR SERVICE BUSINESSES · BUILT BY MOSHE SHOHET · LA</div>
     </div>
     <div class="foot-meta">
       <a href="mailto:music.iambq@gmail.com">music.iambq@gmail.com</a><br>
-      <a href="/tools/pusher.html">PUSHER BETA — $20/MO</a>
+      <a href="/tools/pusher.html" data-en="PUSHER BETA — $20/MO" data-he="Pusher בטא — $20/חודש" data-es="PUSHER BETA — $20/MES">PUSHER BETA — $20/MO</a>
     </div>
   </div>
 </footer>
@@ -516,22 +516,38 @@
 <script>
 // ── User data ──
 const user = JSON.parse(localStorage.getItem('bq_user') || '{}');
-const greeting = (() => {
+const greetingKey = (() => {
   const h = new Date().getHours();
   if (h < 12) return 'morning';
   if (h < 18) return 'afternoon';
   return 'evening';
 })();
-document.querySelector('h1 em').textContent = greeting;
+const greetingMap = {
+  morning:   { en: 'morning',   he: 'בוקר',          es: 'mañana'   },
+  afternoon: { en: 'afternoon', he: 'אחר הצהריים',   es: 'tarde'    },
+  evening:   { en: 'evening',   he: 'ערב',            es: 'noche'    },
+};
+const greetingEl = document.getElementById('greetingWord');
+if (greetingEl) {
+  const g = greetingMap[greetingKey];
+  greetingEl.setAttribute('data-en', g.en);
+  greetingEl.setAttribute('data-he', g.he);
+  greetingEl.setAttribute('data-es', g.es);
+  greetingEl.textContent = g.en; // setLang will override if lang != 'en'
+}
 
 const name = (user.email || '').split('@')[0] || 'there';
 document.getElementById('userName').textContent = name;
 document.getElementById('userCredits').textContent = user.credits ?? '—';
-document.getElementById('userTier').textContent = user.isPro ? 'PRO' : 'FREE';
+document.getElementById('userTier').textContent = user.isPro
+  ? (typeof t === 'function' ? t({ en: 'PRO', he: 'פרו', es: 'PRO' }) : 'PRO')
+  : (typeof t === 'function' ? t({ en: 'FREE', he: 'חינם', es: 'GRATIS' }) : 'FREE');
 if (user.isPro) document.getElementById('userTier').style.color = '#4ade80';
 
 document.getElementById('statCreditsUsed').textContent = user.creditsUsedThisMonth ?? 0;
-document.getElementById('statPlan').textContent = user.isPro ? 'Pro' : 'Free';
+document.getElementById('statPlan').textContent = user.isPro
+  ? (typeof t === 'function' ? t({ en: 'Pro', he: 'פרו', es: 'Pro' }) : 'Pro')
+  : (typeof t === 'function' ? t({ en: 'Free', he: 'חינם', es: 'Gratis' }) : 'Free');
 
 // Projects
 try {
