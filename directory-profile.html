@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BQ Directory — Contractor Profile</title>
+<title>Obra Directory — Contractor Profile</title>
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
@@ -224,7 +224,7 @@ function renderProfile(l) {
   const canSeeMarketing = isOwner || (isFeatured && viewerIsPro);
   const isUnclaimed = !!l.seeded && !l.claimed;
 
-  document.title = `${l.businessName || 'Contractor'} — BQ Directory`;
+  document.title = `${l.businessName || 'Contractor'} — Obra Directory`;
 
   const logoHTML = l.logo
     ? `<img src="${l.logo}" class="profile-logo" alt="${escHtml(l.businessName)}">`
@@ -361,7 +361,7 @@ function renderProfile(l) {
   // Mailto CTA
   let contactBtnHTML = '';
   if (canSeeContact && l.contactEmail) {
-    const mailto = `mailto:${l.contactEmail}?subject=Inquiry from BQ Directory`;
+    const mailto = `mailto:${l.contactEmail}?subject=Inquiry from Obra Directory`;
     contactBtnHTML = `<a href="${mailto}" class="btn btn-primary btn-large contact-btn" data-en="📩 Contact This Contractor" data-he="📩 צור קשר עם הקבלן">📩 Contact This Contractor</a>`;
   }
 

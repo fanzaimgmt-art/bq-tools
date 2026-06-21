@@ -1164,7 +1164,7 @@ function exportChat() {
   const msgs = chatHistory.filter(m => typeof m.content === 'string');
   if (!msgs.length) { showToast(lang === 'he' ? 'אין הודעות' : 'No messages', 'info'); return; }
   const w = window.open('', '_blank');
-  w.document.write(`<html><head><title>BQ AI Chat Export</title>
+  w.document.write(`<html><head><title>Obra AI Chat Export</title>
     <style>body{font-family:system-ui,sans-serif;padding:40px;max-width:700px;margin:0 auto;color:#222;}
     .user{background:#f5f0d0;padding:10px 14px;border-radius:10px;margin:8px 0;}
     .ai{background:#f0f0f0;padding:10px 14px;border-radius:10px;margin:8px 0;}
