@@ -128,7 +128,7 @@
 <nav class="nav">
   <a href="/home.html" class="nav-logo">Obra</a>
   <div class="nav-right">
-    <a href="/home.html" class="nav-link" data-en="← Back" data-es="← Atrás" data-he="חזור →">← Back</a>
+    <a href="/home.html" class="nav-link" data-en="← Back" data-he="חזור →" data-es="← Atrás">← Back</a>
     <div class="lang-toggle">
       <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
       <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
@@ -138,7 +138,7 @@
 
 <div class="page">
   <a href="/home.html" class="page-back" data-en="← All Tools" data-es="← Todas las Herramientas" data-he="כל הכלים →">← All Tools</a>
-  <h1 class="page-title" data-en="📊 Social Media Analysis" data-he="📊 ניתוח רשתות חברתיות">📊 Social Media Analysis</h1>
+  <h1 class="page-title" data-en="📊 Social Media Analysis" data-he="📊 ניתוח רשתות חברתיות" data-es="📊 Análisis de Redes Sociales">📊 Social Media Analysis</h1>
   <p class="page-sub" data-en="Enter your Instagram or Facebook URL. AI analyzes your profile and gives actionable recommendations." data-es="Ingresa tu URL de Instagram o Facebook. La IA analiza tu perfil y te da recomendaciones prácticas." data-he="הכנס את ה-URL של האינסטגרם או הפייסבוק שלך. AI מנתח את הפרופיל ונותן המלצות.">Enter your Instagram or Facebook URL. AI analyzes your profile and gives actionable recommendations.</p>
 
   <div id="hiw-social-analysis"></div>
@@ -151,18 +151,27 @@
       <button class="plat-btn" onclick="setPlatform(this,'facebook')">📘 Facebook</button>
     </div>
 
-    <label class="input-label" data-en="Profile URL or Username" data-he="URL פרופיל או שם משתמש">Profile URL or Username</label>
-    <input class="input" type="text" id="profileUrl" placeholder="https://instagram.com/your_handle or @your_handle" style="margin-bottom:12px;">
+    <label class="input-label" data-en="Profile URL or Username" data-he="URL פרופיל או שם משתמש" data-es="URL de perfil o nombre de usuario">Profile URL or Username</label>
+    <input class="input" type="text" id="profileUrl"
+      placeholder="https://instagram.com/your_handle or @your_handle"
+      data-en-placeholder="https://instagram.com/your_handle or @your_handle"
+      data-he-placeholder="https://instagram.com/your_handle או @your_handle"
+      data-es-placeholder="https://instagram.com/tu_usuario o @tu_usuario"
+      style="margin-bottom:12px;">
 
-    <label class="input-label" data-en="What does your business do? (helps AI give better advice)" data-he="מה העסק שלך עושה? (עוזר ל-AI לתת עצות טובות יותר)">What does your business do?</label>
-    <input class="input" type="text" id="bizContext" placeholder="Kitchen and bathroom remodeling in LA">
+    <label class="input-label" data-en="What does your business do? (helps AI give better advice)" data-he="מה העסק שלך עושה? (עוזר ל-AI לתת עצות טובות יותר)" data-es="¿Qué hace tu negocio? (ayuda a la IA a dar mejores consejos)">What does your business do?</label>
+    <input class="input" type="text" id="bizContext"
+      placeholder="Kitchen and bathroom remodeling in LA"
+      data-en-placeholder="Kitchen and bathroom remodeling in LA"
+      data-he-placeholder="שיפוץ מטבחים וחדרי אמבטיה בלוס אנג׳לס"
+      data-es-placeholder="Remodelación de cocinas y baños en Los Ángeles">
   </div>
 
   <div class="credit-notice">
-    ⚡ <span data-en="This tool uses 2 credits" data-he="כלי זה משתמש ב-2 קרדיטים">This tool uses 2 credits</span>
+    ⚡ <span data-en="This tool uses 2 credits" data-he="כלי זה משתמש ב-2 קרדיטים" data-es="Esta herramienta usa 2 créditos">This tool uses 2 credits</span>
   </div>
 
-  <button class="btn btn-primary btn-large" style="width:100%;" onclick="analyzeSocial()" id="analyzeBtn" data-en="🧠 Analyze Profile" data-he="🧠 נתח פרופיל">🧠 Analyze Profile</button>
+  <button class="btn btn-primary btn-large" style="width:100%;" onclick="analyzeSocial()" id="analyzeBtn" data-en="🧠 Analyze Profile" data-he="🧠 נתח פרופיל" data-es="🧠 Analizar Perfil">🧠 Analyze Profile</button>
 
   <!-- Loading -->
   <div id="loadingSection" style="display:none;text-align:center;padding:40px 0;">
@@ -177,12 +186,12 @@
     <div id="breakdownSection"></div>
     <div id="recsSection"></div>
     <div style="text-align:center;margin-top:16px;">
-      <button class="btn btn-primary" onclick="exportAnalysis()" data-en="📥 Export PDF" data-he="📥 ייצוא PDF">📥 Export PDF</button>
+      <button class="btn btn-primary" onclick="exportAnalysis()" data-en="📥 Export PDF" data-he="📥 ייצוא PDF" data-es="📥 Exportar PDF">📥 Export PDF</button>
     </div>
   </div>
 </div>
 
-<footer class="footer"><div class="footer-brand">Powered by Obra — BQ Production LLC</div></footer>
+<footer class="footer"><div class="footer-brand" data-en="Powered by Obra — BQ Production LLC" data-he="מופעל על ידי Obra — BQ Production LLC" data-es="Desarrollado por Obra — BQ Production LLC">Powered by Obra — BQ Production LLC</div></footer>
 
 <script src="../js/ai.js"></script>
 <script src="../js/auth.js"></script>
@@ -198,16 +207,24 @@ function setPlatform(el, p) {
   platform = p;
   document.querySelectorAll('.plat-btn').forEach(b => b.classList.remove('on'));
   el.classList.add('on');
-  document.getElementById('profileUrl').placeholder = p === 'instagram'
-    ? 'https://instagram.com/your_handle or @your_handle'
-    : 'https://facebook.com/your-page';
+  const input = document.getElementById('profileUrl');
+  if (p === 'instagram') {
+    input.setAttribute('data-en-placeholder', 'https://instagram.com/your_handle or @your_handle');
+    input.setAttribute('data-he-placeholder', 'https://instagram.com/your_handle או @your_handle');
+    input.setAttribute('data-es-placeholder', 'https://instagram.com/tu_usuario o @tu_usuario');
+  } else {
+    input.setAttribute('data-en-placeholder', 'https://facebook.com/your-page');
+    input.setAttribute('data-he-placeholder', 'https://facebook.com/your-page');
+    input.setAttribute('data-es-placeholder', 'https://facebook.com/tu-pagina');
+  }
+  setLang(lang);
 }
 
 async function analyzeSocial() {
   if (!requirePro()) return;
 
   const url = document.getElementById('profileUrl').value.trim();
-  if (!url) { showToast(lang === 'he' ? 'הכנס URL או שם משתמש' : 'Enter a URL or username', 'err'); return; }
+  if (!url) { showToast(t({en:'Enter a URL or username', he:'הכנס URL או שם משתמש', es:'Ingresa un URL o nombre de usuario'}), 'err'); return; }
 
   const credits = getCredits();
   if (credits < 2) { showNoCreditModal(); return; }
@@ -219,11 +236,11 @@ async function analyzeSocial() {
     m.innerHTML = `
       <div class="modal-card" style="max-width:360px;text-align:center;">
         <div style="font-size:32px;margin-bottom:12px;">⚡⚡</div>
-        <h3>${lang === 'he' ? 'השתמש ב-2 קרדיטים' : 'Use 2 Credits'}</h3>
-        <p style="color:var(--txd);font-size:14px;margin:8px 0 20px;">${lang === 'he' ? 'ניתוח רשתות חברתיות' : 'Social Media Analysis'}<br>⚡ ${credits} ${lang === 'he' ? 'נשאר' : 'remaining'}</p>
+        <h3>${t({en:'Use 2 Credits', he:'השתמש ב-2 קרדיטים', es:'Usar 2 Créditos'})}</h3>
+        <p style="color:var(--txd);font-size:14px;margin:8px 0 20px;">${t({en:'Social Media Analysis', he:'ניתוח רשתות חברתיות', es:'Análisis de Redes Sociales'})}<br>⚡ ${credits} ${t({en:'remaining', he:'נשאר', es:'restantes'})}</p>
         <div style="display:flex;gap:8px;">
-          <button class="btn" style="flex:1;" id="saCancel">${lang === 'he' ? 'ביטול' : 'Cancel'}</button>
-          <button class="btn btn-primary" style="flex:1;" id="saConfirm">${lang === 'he' ? 'המשך' : 'Continue'}</button>
+          <button class="btn" style="flex:1;" id="saCancel">${t({en:'Cancel', he:'ביטול', es:'Cancelar'})}</button>
+          <button class="btn btn-primary" style="flex:1;" id="saConfirm">${t({en:'Continue', he:'המשך', es:'Continuar'})}</button>
         </div>
       </div>`;
     document.body.appendChild(m);
@@ -236,7 +253,7 @@ async function analyzeSocial() {
 
   const btn = document.getElementById('analyzeBtn');
   btn.disabled = true;
-  btn.textContent = lang === 'he' ? '⏳ מנתח...' : '⏳ Analyzing...';
+  btn.textContent = t({en:'⏳ Analyzing...', he:'⏳ מנתח...', es:'⏳ Analizando...'});
 
   const loadingEl = document.getElementById('loadingSection');
   const loadingText = document.getElementById('loadingText');
@@ -246,7 +263,7 @@ async function analyzeSocial() {
   const biz = document.getElementById('bizContext').value.trim();
 
   try {
-    loadingText.textContent = lang === 'he' ? '...מביא נתונים אמיתיים מאינסטגרם' : 'Fetching real data from Instagram...';
+    loadingText.textContent = t({en:'Fetching real data from Instagram...', he:'...מביא נתונים אמיתיים מאינסטגרם', es:'Obteniendo datos reales de Instagram...'});
 
     const data = await apiCall('/api/social/analyze', {
       method: 'POST',
@@ -273,7 +290,7 @@ async function analyzeSocial() {
   }
 
   btn.disabled = false;
-  btn.textContent = lang === 'he' ? '🧠 נתח פרופיל' : '🧠 Analyze Profile';
+  btn.textContent = t({en:'🧠 Analyze Profile', he:'🧠 נתח פרופיל', es:'🧠 Analizar Perfil'});
 }
 
 function renderResults(r, pd) {
@@ -289,39 +306,39 @@ function renderResults(r, pd) {
         ${pd.profilePicUrl ? `<img src="${pd.profilePicUrl}" style="width:56px;height:56px;border-radius:50%;border:2px solid var(--ac);object-fit:cover;">` : ''}
         <div style="flex:1;min-width:140px;">
           <div class="profile-name">@${pd.username || ''} ${pd.verified ? '✓' : ''}</div>
-          <div class="profile-sub">${pd.fullName || ''} ${pd.isBusinessAccount ? '• Business' : ''}</div>
+          <div class="profile-sub">${pd.fullName || ''} ${pd.isBusinessAccount ? '• ' + t({en:'Business', he:'עסקי', es:'Negocio'}) : ''}</div>
           ${pd.biography ? `<div class="profile-bio">${pd.biography.substring(0, 120)}</div>` : ''}
         </div>
         <div style="display:flex;gap:16px;text-align:center;">
-          <div><div class="profile-stat-num">${formatNum(pd.followersCount)}</div><div class="profile-stat-label">Followers</div></div>
-          <div><div class="profile-stat-num neutral">${formatNum(pd.followsCount)}</div><div class="profile-stat-label">Following</div></div>
-          <div><div class="profile-stat-num neutral">${formatNum(pd.postsCount)}</div><div class="profile-stat-label">Posts</div></div>
+          <div><div class="profile-stat-num">${formatNum(pd.followersCount)}</div><div class="profile-stat-label" data-en="Followers" data-he="עוקבים" data-es="Seguidores">${t({en:'Followers', he:'עוקבים', es:'Seguidores'})}</div></div>
+          <div><div class="profile-stat-num neutral">${formatNum(pd.followsCount)}</div><div class="profile-stat-label" data-en="Following" data-he="עוקב אחרי" data-es="Siguiendo">${t({en:'Following', he:'עוקב אחרי', es:'Siguiendo'})}</div></div>
+          <div><div class="profile-stat-num neutral">${formatNum(pd.postsCount)}</div><div class="profile-stat-label" data-en="Posts" data-he="פוסטים" data-es="Publicaciones">${t({en:'Posts', he:'פוסטים', es:'Publicaciones'})}</div></div>
         </div>
       </div>
       <div style="display:flex;gap:var(--space-1);margin-bottom:var(--space-2);">
-        <div class="metric-card"><div class="metric-card-num">${engRate}</div><div class="metric-card-label">Engagement Rate</div></div>
-        <div class="metric-card"><div class="metric-card-num neutral">${freq}</div><div class="metric-card-label">Post Frequency</div></div>
+        <div class="metric-card"><div class="metric-card-num">${engRate}</div><div class="metric-card-label" data-en="Engagement Rate" data-he="שיעור מעורבות" data-es="Tasa de Interacción">${t({en:'Engagement Rate', he:'שיעור מעורבות', es:'Tasa de Interacción'})}</div></div>
+        <div class="metric-card"><div class="metric-card-num neutral">${freq}</div><div class="metric-card-label" data-en="Post Frequency" data-he="תדירות פוסטים" data-es="Frecuencia de Publicación">${t({en:'Post Frequency', he:'תדירות פוסטים', es:'Frecuencia de Publicación'})}</div></div>
       </div>`;
   } else {
-    hdr.innerHTML = '<div class="card" style="margin-bottom:var(--space-2);"><p class="fallback-notice">Analysis based on best practices (live data unavailable)</p></div>';
+    hdr.innerHTML = `<div class="card" style="margin-bottom:var(--space-2);"><p class="fallback-notice" data-en="Analysis based on best practices (live data unavailable)" data-he="ניתוח מבוסס על שיטות עבודה מומלצות (נתונים חיים לא זמינים)" data-es="Análisis basado en buenas prácticas (datos en vivo no disponibles)">${t({en:'Analysis based on best practices (live data unavailable)', he:'ניתוח מבוסס על שיטות עבודה מומלצות (נתונים חיים לא זמינים)', es:'Análisis basado en buenas prácticas (datos en vivo no disponibles)'})}</p></div>`;
   }
 
   // Scores
   const scoreColor = s => s >= 7 ? 'var(--grn)' : s >= 4 ? 'var(--ac)' : 'var(--red)';
   document.getElementById('scoreGrid').innerHTML = `
-    <div class="score-card"><div class="score-num" style="color:${r.overall_score >= 70 ? 'var(--grn)' : r.overall_score >= 40 ? 'var(--ac)' : 'var(--red)'}">${r.overall_score}</div><div class="score-label">Overall Score</div></div>
-    <div class="score-card"><div class="score-num" style="color:${scoreColor(r.bio_score)}">${r.bio_score}</div><div class="score-label">Bio</div></div>
-    <div class="score-card"><div class="score-num" style="color:${scoreColor(r.content_score)}">${r.content_score}</div><div class="score-label">Content</div></div>
-    <div class="score-card"><div class="score-num" style="color:${scoreColor(r.engagement_score)}">${r.engagement_score}</div><div class="score-label">Engagement</div></div>
-    <div class="score-card"><div class="score-num" style="color:${scoreColor(r.consistency_score)}">${r.consistency_score}</div><div class="score-label">Consistency</div></div>
-    <div class="score-card"><div class="score-num" style="color:${scoreColor(r.hashtag_score)}">${r.hashtag_score}</div><div class="score-label">Hashtags</div></div>`;
+    <div class="score-card"><div class="score-num" style="color:${r.overall_score >= 70 ? 'var(--grn)' : r.overall_score >= 40 ? 'var(--ac)' : 'var(--red)'}">${r.overall_score}</div><div class="score-label" data-en="Overall Score" data-he="ציון כולל" data-es="Puntuación General">${t({en:'Overall Score', he:'ציון כולל', es:'Puntuación General'})}</div></div>
+    <div class="score-card"><div class="score-num" style="color:${scoreColor(r.bio_score)}">${r.bio_score}</div><div class="score-label" data-en="Bio" data-he="ביו" data-es="Biografía">${t({en:'Bio', he:'ביו', es:'Biografía'})}</div></div>
+    <div class="score-card"><div class="score-num" style="color:${scoreColor(r.content_score)}">${r.content_score}</div><div class="score-label" data-en="Content" data-he="תוכן" data-es="Contenido">${t({en:'Content', he:'תוכן', es:'Contenido'})}</div></div>
+    <div class="score-card"><div class="score-num" style="color:${scoreColor(r.engagement_score)}">${r.engagement_score}</div><div class="score-label" data-en="Engagement" data-he="מעורבות" data-es="Interacción">${t({en:'Engagement', he:'מעורבות', es:'Interacción'})}</div></div>
+    <div class="score-card"><div class="score-num" style="color:${scoreColor(r.consistency_score)}">${r.consistency_score}</div><div class="score-label" data-en="Consistency" data-he="עקביות" data-es="Consistencia">${t({en:'Consistency', he:'עקביות', es:'Consistencia'})}</div></div>
+    <div class="score-card"><div class="score-num" style="color:${scoreColor(r.hashtag_score)}">${r.hashtag_score}</div><div class="score-label" data-en="Hashtags" data-he="האשטאגים" data-es="Hashtags">${t({en:'Hashtags', he:'האשטאגים', es:'Hashtags'})}</div></div>`;
 
   // Content breakdown
   const bd = r.content_breakdown || {};
   const entries = Object.entries(bd).sort((a, b) => b[1] - a[1]);
   document.getElementById('breakdownSection').innerHTML = `
     <div class="card" style="margin-bottom:var(--space-2);">
-      <h3 class="results-section-title" data-en="Content Breakdown" data-he="פילוח תוכן">Content Breakdown</h3>
+      <h3 class="results-section-title" data-en="Content Breakdown" data-he="פילוח תוכן" data-es="Desglose de Contenido">${t({en:'Content Breakdown', he:'פילוח תוכן', es:'Desglose de Contenido'})}</h3>
       ${entries.map(([k, v]) => `
         <div class="breakdown-row">
           <span>${k.replace(/_/g, ' ')}</span>
@@ -337,10 +354,10 @@ function renderResults(r, pd) {
   document.getElementById('recsSection').innerHTML = `
     ${r.quick_wins?.length ? `
     <div class="card" style="margin-bottom:var(--space-2);">
-      <h3 class="results-section-title green" data-en="Quick Wins" data-he="ניצחונות מהירים">Quick Wins</h3>
+      <h3 class="results-section-title green" data-en="Quick Wins" data-he="ניצחונות מהירים" data-es="Victorias Rápidas">${t({en:'Quick Wins', he:'ניצחונות מהירים', es:'Victorias Rápidas'})}</h3>
       ${r.quick_wins.map(w => `<div class="quick-win-item">✅ ${w}</div>`).join('')}
     </div>` : ''}
-    <h3 class="results-section-title" style="margin-bottom:var(--space-1);" data-en="Recommendations" data-he="המלצות">Recommendations</h3>
+    <h3 class="results-section-title" style="margin-bottom:var(--space-1);" data-en="Recommendations" data-he="המלצות" data-es="Recomendaciones">${t({en:'Recommendations', he:'המלצות', es:'Recomendaciones'})}</h3>
     ${(r.recommendations || []).map(rec => `
       <div class="rec-card">
         <div style="display:flex;justify-content:space-between;align-items:center;">
