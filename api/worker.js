@@ -100,6 +100,9 @@ export default {
       if (path === '/api/ai/chat' && request.method === 'POST') {
         return corsResponse(env, await handleAIChat(request, env));
       }
+      if (path === '/api/video/analyze' && request.method === 'POST') {
+        return corsResponse(env, await handleVideoAnalyze(request, env));
+      }
       if (path === '/api/social/analyze' && request.method === 'POST') {
         return corsResponse(env, await handleSocialAnalyze(request, env));
       }
@@ -918,6 +921,52 @@ async function handleAIChat(request, env) {
   await logCreditUsage(updated.email, `chat:${model}`, lastMsg?.content?.substring(0, 50) || 'Chat', env);
 
   return json({ ok: true, result: aiResponse, model, credits: updated.credits });
+}
+
+async function handleVideoAnalyze(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  const user = await getUserByToken(token, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const body = await request.json();
+  const { frames, note, trade, pricebook } = body;
+
+  if (!frames || !Array.isArray(frames) || frames.length === 0) {
+    return json({ error: 'At least one frame is required' }, 400);
+  }
+
+  const CREDIT_COST = 2;
+  const updated = checkMonthlyReset(user);
+  if (updated.credits < CREDIT_COST) {
+    return json({ error: 'Not enough credits', credits: updated.credits, cost: CREDIT_COST }, 402);
+  }
+
+  const foremanPrompt = `You are an expert construction foreman and estimator. You are given still frames from a job-site walkthrough video plus an optional contractor note. Produce a clear work plan a crew can follow. The crew may speak Spanish — give crew instructions in BOTH English and plain Mexican-Spanish trade language. Also suggest upsell opportunities a smart contractor would offer the homeowner (things worth adding that raise the job value) with a short why. If a pricebook/note with prices is provided, give an estimated price range. Return STRICT MINIFIED JSON ONLY, no markdown, with this exact shape: {"summary":"","plan":[{"step":"","detail":""}],"crew_instructions":{"en":[""],"es":[""]},"upsells":[{"item":"","why":"","est_value":""}],"scope_notes":"","estimated_range":""}.` +
+    (note ? `\n\nContractor note: ${note}` : '') +
+    (trade ? `\n\nTrade: ${trade}` : '') +
+    (pricebook ? `\n\nPricebook: ${pricebook}` : '');
+
+  let rawText;
+  try {
+    rawText = await callGeminiWithModel(env, 'gemini-2.5-flash', foremanPrompt, frames);
+  } catch (err) {
+    return json({ error: `AI failed: ${err.message}` }, 502);
+  }
+
+  updated.credits -= CREDIT_COST;
+  updated.creditsUsedThisMonth = (updated.creditsUsedThisMonth || 0) + CREDIT_COST;
+  await env.BQ_USERS.put(`user:${updated.email}`, JSON.stringify(updated));
+  await logCreditUsage(updated.email, 'video:analyze', `${frames.length} frames`, env);
+
+  let result;
+  try {
+    const stripped = rawText.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
+    result = JSON.parse(stripped);
+  } catch (_) {
+    return json({ ok: true, raw: rawText, credits_left: updated.credits });
+  }
+
+  return json({ ok: true, result, credits_left: updated.credits });
 }
 
 async function callClaudeWithModel(env, model, prompt, images) {
