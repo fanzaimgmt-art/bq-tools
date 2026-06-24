@@ -187,36 +187,55 @@ body {
   background: #f4f3ef;
   border: 1px solid var(--acd);
   box-shadow: 0 30px 90px rgba(0,0,0,.55), var(--ac-glow);
-  transition: transform .35s var(--ease-out), box-shadow .35s var(--ease-out);
+  transition: transform .3s var(--ease-spring), box-shadow .3s var(--ease-out), border-color .3s var(--ease-out);
   animation: showcaseIn 1s var(--ease-out) both .15s;
+  will-change: transform;
 }
 .hero-video video { width: 100%; height: auto; display: block; }
 .hero-video:hover {
-  transform: translateY(-4px) scale(1.012);
-  box-shadow: 0 44px 120px rgba(0,0,0,.62), 0 0 60px rgba(232,197,71,.28);
+  transform: translateY(-10px) scale(1.035) rotate(-.3deg);
+  border-color: var(--ac);
+  box-shadow: 0 54px 140px rgba(0,0,0,.65), 0 0 80px rgba(232,197,71,.38);
 }
+.hero-video:active {
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: 0 26px 70px rgba(0,0,0,.6), 0 0 50px rgba(232,197,71,.3);
+  transition-duration: .08s;
+}
+.hero-video:hover .hero-video-cta { animation: none; }
 .hero-video:focus-visible { outline: 2px solid var(--ac); outline-offset: 3px; }
 /* CTA pill overlaid bottom-centre, reinforces "click to sign up" */
 .hero-video-cta {
   position: absolute;
-  left: 50%; bottom: 18px;
+  left: 50%; bottom: 22px;
   transform: translateX(-50%);
   z-index: 2;
   display: inline-flex;
   align-items: center;
-  padding: 11px 22px;
+  padding: 16px 34px;
   border-radius: 999px;
-  background: var(--ac);
+  background: linear-gradient(135deg, var(--ac-2) 0%, var(--ac) 60%, #c79a1f 100%);
   color: #1a1205;
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 15px;
-  letter-spacing: .01em;
+  font-size: 20px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
   line-height: 1;
-  box-shadow: 0 10px 30px rgba(0,0,0,.35), 0 0 0 4px rgba(232,197,71,.18);
-  transition: transform .25s var(--ease-out), background .25s var(--ease-out);
+  box-shadow: 0 14px 38px rgba(0,0,0,.4), 0 0 0 5px rgba(232,197,71,.16), inset 0 1px 0 rgba(255,255,255,.45);
+  transition: transform .25s var(--ease-spring), box-shadow .25s var(--ease-out), background .25s var(--ease-out);
+  animation: ctaPulse 2.4s ease-in-out infinite;
 }
-.hero-video-cta::before { content: '▶'; font-size: 10px; margin-right: 9px; }
+.hero-video-cta::before {
+  content: '▶';
+  font-size: 12px;
+  margin-right: 11px;
+  transform: translateY(1px);
+}
+@keyframes ctaPulse {
+  0%, 100% { box-shadow: 0 14px 38px rgba(0,0,0,.4), 0 0 0 5px rgba(232,197,71,.16), inset 0 1px 0 rgba(255,255,255,.45); }
+  50%      { box-shadow: 0 14px 44px rgba(0,0,0,.45), 0 0 0 9px rgba(232,197,71,.05), inset 0 1px 0 rgba(255,255,255,.45); }
+}
 .hero-video:hover .hero-video-cta {
   transform: translateX(-50%) scale(1.05);
   background: var(--ac-2);
