@@ -173,51 +173,58 @@ body {
   color: #fff; font-size: 14px; font-weight: 600; z-index: 2;
   text-shadow: 0 2px 8px rgba(0,0,0,.7); letter-spacing: 0.02em;
 }
-/* ── Top banner: logo animation behind the nav ── */
-.topbanner {
+/* ── Clickable hero video → sign up ── */
+.hero-video {
   position: relative;
-  width: 100%;
-  background: var(--bg);
-  overflow: hidden;
-}
-.topbanner-bg {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  background: var(--bg);
-}
-.topbanner-bg video {
-  max-width: min(720px, 92%);
-  max-height: 100%;
-  width: auto;
-  object-fit: contain;
   display: block;
+  width: 90%;
+  max-width: 640px;
+  margin: var(--space-4) auto 0;
+  border-radius: var(--r-xl);
+  overflow: hidden;
+  line-height: 0;
+  cursor: pointer;
+  background: #f4f3ef;
+  border: 1px solid var(--acd);
+  box-shadow: 0 30px 90px rgba(0,0,0,.55), var(--ac-glow);
+  transition: transform .35s var(--ease-out), box-shadow .35s var(--ease-out);
+  animation: showcaseIn 1s var(--ease-out) both .15s;
 }
-/* subtle scrim so nav stays legible over the lit logo, fade into site bg */
-.topbanner-bg::after {
-  content: '';
-  position: absolute; inset: 0;
-  background: linear-gradient(180deg,
-    rgba(8,8,13,.55) 0%,
-    rgba(8,8,13,.10) 38%,
-    transparent 62%,
-    var(--bg) 100%);
-  pointer-events: none;
+.hero-video video { width: 100%; height: auto; display: block; }
+.hero-video:hover {
+  transform: translateY(-4px) scale(1.012);
+  box-shadow: 0 44px 120px rgba(0,0,0,.62), 0 0 60px rgba(232,197,71,.28);
 }
-.topbanner .nav--over {
-  position: relative;
+.hero-video:focus-visible { outline: 2px solid var(--ac); outline-offset: 3px; }
+/* CTA pill overlaid bottom-centre, reinforces "click to sign up" */
+.hero-video-cta {
+  position: absolute;
+  left: 50%; bottom: 18px;
+  transform: translateX(-50%);
   z-index: 2;
-  background: transparent;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-  border-bottom: none;
+  display: inline-flex;
+  align-items: center;
+  padding: 11px 22px;
+  border-radius: 999px;
+  background: var(--ac);
+  color: #1a1205;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: .01em;
+  line-height: 1;
+  box-shadow: 0 10px 30px rgba(0,0,0,.35), 0 0 0 4px rgba(232,197,71,.18);
+  transition: transform .25s var(--ease-out), background .25s var(--ease-out);
 }
-/* banner height = compact strip: nav + the full logo, contained */
-.topbanner { min-height: clamp(108px, 13vw, 168px); }
+.hero-video-cta::before { content: '▶'; font-size: 10px; margin-right: 9px; }
+.hero-video:hover .hero-video-cta {
+  transform: translateX(-50%) scale(1.05);
+  background: var(--ac-2);
+}
+@keyframes showcaseIn {
+  from { opacity: 0; transform: translateY(26px) scale(.98); }
+  to   { opacity: 1; transform: none; }
+}
 
 /* ── Sections ── */
 .home-section {
@@ -586,11 +593,7 @@ body {
 <body>
 
 <!-- Nav -->
-<header class="topbanner">
-  <div class="topbanner-bg">
-    <video src="img/iso-edit-banner.mp4" autoplay muted loop playsinline></video>
-  </div>
-<nav class="nav nav--over" id="mainNav">
+<nav class="nav" id="mainNav">
   <a href="/" class="nav-logo">Obra</a>
   <div class="nav-right">
     <a href="#tools" class="nav-link" data-en="Tools" data-es="Herramientas" data-he="כלים">Tools</a>
@@ -603,7 +606,6 @@ body {
     </div>
   </div>
 </nav>
-</header>
 
 <main>
 
@@ -618,6 +620,10 @@ body {
   <div class="hero-cta">
     <a href="/auth.html" class="btn btn-primary btn-large" data-en="Start Free →" data-es="Empieza Gratis →" data-he="← התחל בחינם">Start Free →</a>
   </div>
+  <a href="/auth.html" class="hero-video" aria-label="Start free — sign up">
+    <video src="img/iso-edit.mp4" autoplay muted loop playsinline></video>
+    <span class="hero-video-cta" data-en="Start Free →" data-es="Empieza Gratis →" data-he="← התחל בחינם">Start Free →</span>
+  </a>
 </section>
 
 <!-- Video Brain Showcase -->
