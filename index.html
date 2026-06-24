@@ -150,14 +150,15 @@ body {
   width: 92%;
   max-width: 760px;
   margin: 0 auto;
-  border-radius: 18px;
+  border-radius: 28px;
   overflow: hidden;
   border: 1px solid rgba(255,255,255,0.07);
   box-shadow: 0 40px 100px rgba(0,0,0,.6), 0 0 0 1px rgba(232,197,71,.06);
   aspect-ratio: 16/9;
   position: relative;
 }
-.hero-image img {
+.hero-image img,
+.hero-image video {
   width: 100%; height: 100%; object-fit: cover; display: block;
 }
 .hero-image::after {
@@ -172,6 +173,17 @@ body {
   color: #fff; font-size: 14px; font-weight: 600; z-index: 2;
   text-shadow: 0 2px 8px rgba(0,0,0,.7); letter-spacing: 0.02em;
 }
+.brand-band {
+  width: 92%;
+  max-width: 980px;
+  margin: var(--space-4) auto;
+  border-radius: 24px;
+  overflow: hidden;
+  background: #f4f3ef;
+  border: 1px solid rgba(255,255,255,0.07);
+  box-shadow: 0 30px 80px rgba(0,0,0,.45);
+}
+.brand-band img { width: 100%; height: auto; display: block; }
 
 /* ── Sections ── */
 .home-section {
@@ -568,9 +580,13 @@ body {
     <a href="/auth.html" class="btn btn-primary btn-large" data-en="Start Free →" data-es="Empieza Gratis →" data-he="← התחל בחינם">Start Free →</a>
   </div>
   <div class="hero-image">
-    <img src="img/demos/hero-construction.jpg" alt="Construction professional on the job">
-    <div class="hero-image-caption" data-en="From job done → invoice sent → payment received" data-es="Del trabajo terminado → factura → pago" data-he="מעבודה שהסתיימה → חשבונית → תשלום">From job done → invoice sent → payment received</div>
+    <video src="img/iso-edit.mp4" autoplay muted loop playsinline poster="img/obra-wordmark-build.jpeg"></video>
   </div>
+</section>
+
+<!-- Brand band -->
+<section class="brand-band">
+  <img src="img/obra-wordmark-build.jpeg" alt="Obra — built for contractors" loading="lazy">
 </section>
 
 <!-- Video Brain Showcase -->
