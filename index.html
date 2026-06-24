@@ -173,22 +173,50 @@ body {
   color: #fff; font-size: 14px; font-weight: 600; z-index: 2;
   text-shadow: 0 2px 8px rgba(0,0,0,.7); letter-spacing: 0.02em;
 }
-.video-banner {
+/* ── Top banner: logo animation behind the nav ── */
+.topbanner {
+  position: relative;
   width: 100%;
+  background: var(--bg);
   overflow: hidden;
-  line-height: 0;
+}
+.topbanner-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
   background: #f4f3ef;
-  border-bottom: 1px solid rgba(255,255,255,0.07);
-  text-align: center;
 }
-.video-banner video {
+.topbanner-bg video {
   width: 100%;
-  max-width: 920px;
-  height: auto;
-  object-fit: contain;
+  height: 100%;
+  object-fit: cover;
   display: block;
-  margin: 0 auto;
 }
+/* scrim: darken the top so nav stays legible, fade into site bg at the bottom */
+.topbanner-bg::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg,
+    rgba(8,8,13,.72) 0%,
+    rgba(8,8,13,.28) 22%,
+    rgba(8,8,13,.10) 50%,
+    var(--bg) 100%);
+  pointer-events: none;
+}
+.topbanner .nav--over {
+  position: relative;
+  z-index: 2;
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border-bottom: none;
+}
+/* banner height = room to show the full logo animation under the nav */
+.topbanner { min-height: clamp(280px, 38vw, 460px); }
 
 /* ── Sections ── */
 .home-section {
@@ -557,7 +585,11 @@ body {
 <body>
 
 <!-- Nav -->
-<nav class="nav" id="mainNav">
+<header class="topbanner">
+  <div class="topbanner-bg">
+    <video src="img/iso-edit.mp4" autoplay muted loop playsinline></video>
+  </div>
+<nav class="nav nav--over" id="mainNav">
   <a href="/" class="nav-logo">Obra</a>
   <div class="nav-right">
     <a href="#tools" class="nav-link" data-en="Tools" data-es="Herramientas" data-he="כלים">Tools</a>
@@ -570,13 +602,9 @@ body {
     </div>
   </div>
 </nav>
+</header>
 
 <main>
-
-<!-- Full-width logo video banner -->
-<section class="video-banner">
-  <video src="img/iso-edit.mp4" autoplay muted loop playsinline></video>
-</section>
 
 <!-- Hero -->
 <section class="hero">
