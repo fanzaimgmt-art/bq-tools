@@ -179,12 +179,15 @@ body {
   line-height: 0;
   background: #f4f3ef;
   border-bottom: 1px solid rgba(255,255,255,0.07);
+  text-align: center;
 }
 .video-banner video {
   width: 100%;
-  height: clamp(140px, 24vw, 340px);
-  object-fit: cover;
+  max-width: 920px;
+  height: auto;
+  object-fit: contain;
   display: block;
+  margin: 0 auto;
 }
 
 /* ── Sections ── */
