@@ -173,17 +173,19 @@ body {
   color: #fff; font-size: 14px; font-weight: 600; z-index: 2;
   text-shadow: 0 2px 8px rgba(0,0,0,.7); letter-spacing: 0.02em;
 }
-.brand-band {
-  width: 92%;
-  max-width: 980px;
-  margin: var(--space-4) auto;
-  border-radius: 24px;
+.video-banner {
+  width: 100%;
   overflow: hidden;
+  line-height: 0;
   background: #f4f3ef;
-  border: 1px solid rgba(255,255,255,0.07);
-  box-shadow: 0 30px 80px rgba(0,0,0,.45);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
 }
-.brand-band img { width: 100%; height: auto; display: block; }
+.video-banner video {
+  width: 100%;
+  height: clamp(140px, 24vw, 340px);
+  object-fit: cover;
+  display: block;
+}
 
 /* ── Sections ── */
 .home-section {
@@ -568,6 +570,11 @@ body {
 
 <main>
 
+<!-- Full-width logo video banner -->
+<section class="video-banner">
+  <video src="img/iso-edit.mp4" autoplay muted loop playsinline></video>
+</section>
+
 <!-- Hero -->
 <section class="hero">
   <p class="hero-eyebrow" data-en="For contractors" data-es="Para contratistas" data-he="לקבלנים">For contractors</p>
@@ -580,13 +587,8 @@ body {
     <a href="/auth.html" class="btn btn-primary btn-large" data-en="Start Free →" data-es="Empieza Gratis →" data-he="← התחל בחינם">Start Free →</a>
   </div>
   <div class="hero-image">
-    <video src="img/iso-edit.mp4" autoplay muted loop playsinline poster="img/obra-wordmark-build.jpeg"></video>
+    <img src="img/obra-wordmark-build.jpeg" alt="Obra — built for contractors">
   </div>
-</section>
-
-<!-- Brand band -->
-<section class="brand-band">
-  <img src="img/obra-wordmark-build.jpeg" alt="Obra — built for contractors" loading="lazy">
 </section>
 
 <!-- Video Brain Showcase -->
