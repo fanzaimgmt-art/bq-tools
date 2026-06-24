@@ -188,22 +188,23 @@ body {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background: #f4f3ef;
+  background: var(--bg);
 }
 .topbanner-bg video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  max-width: min(720px, 92%);
+  max-height: 100%;
+  width: auto;
+  object-fit: contain;
   display: block;
 }
-/* scrim: darken the top so nav stays legible, fade into site bg at the bottom */
+/* subtle scrim so nav stays legible over the lit logo, fade into site bg */
 .topbanner-bg::after {
   content: '';
   position: absolute; inset: 0;
   background: linear-gradient(180deg,
-    rgba(8,8,13,.72) 0%,
-    rgba(8,8,13,.28) 22%,
-    rgba(8,8,13,.10) 50%,
+    rgba(8,8,13,.55) 0%,
+    rgba(8,8,13,.10) 38%,
+    transparent 62%,
     var(--bg) 100%);
   pointer-events: none;
 }
@@ -215,8 +216,8 @@ body {
   backdrop-filter: none;
   border-bottom: none;
 }
-/* banner height = compact strip: nav + a slice of the logo animation */
-.topbanner { min-height: clamp(140px, 20vw, 240px); }
+/* banner height = compact strip: nav + the full logo, contained */
+.topbanner { min-height: clamp(108px, 13vw, 168px); }
 
 /* ── Sections ── */
 .home-section {
@@ -587,7 +588,7 @@ body {
 <!-- Nav -->
 <header class="topbanner">
   <div class="topbanner-bg">
-    <video src="img/iso-edit.mp4" autoplay muted loop playsinline></video>
+    <video src="img/iso-edit-banner.mp4" autoplay muted loop playsinline></video>
   </div>
 <nav class="nav nav--over" id="mainNav">
   <a href="/" class="nav-logo">Obra</a>
