@@ -142,6 +142,12 @@ export default {
       if (path === '/api/admin/toggle-pro' && request.method === 'POST') {
         return corsResponse(env, await handleAdminTogglePro(request, env));
       }
+      if (path === '/api/admin/beta-tag' && request.method === 'POST') {
+        return corsResponse(env, await handleAdminBetaTag(request, env));
+      }
+      if (path === '/api/admin/beta-funnel' && request.method === 'GET') {
+        return corsResponse(env, await handleAdminBetaFunnel(request, env));
+      }
       if (path === '/api/error-report' && request.method === 'POST') {
         return corsResponse(env, await handleErrorReport(request, env));
       }
@@ -543,7 +549,7 @@ async function handleRegister(request, env) {
 }
 
 async function handleVerify(request, env) {
-  const { email, code, referredBy } = await request.json();
+  const { email, code, referredBy, betaCohort, betaSource } = await request.json();
   if (!email || !code) return json({ error: 'Email and code required' }, 400);
 
   const emailLower = email.toLowerCase().trim();
@@ -596,7 +602,13 @@ async function handleVerify(request, env) {
       lastLogin: new Date().toISOString(),
       isNew: true,
       referredBy: hasReferral ? refEmail : '',
-      referralSource: (referredBy === 'bqprod') ? 'bqprod' : ''
+      referralSource: (referredBy === 'bqprod') ? 'bqprod' : '',
+      // Beta cohort tracking (activation funnel)
+      betaCohort: (betaCohort || '').toString().slice(0, 60),
+      betaSource: (betaSource || '').toString().slice(0, 60),
+      firstUploadAt: null,
+      activatedAt: null,
+      feedbackCount: 0
     };
 
     // Track referral for the referrer
@@ -634,6 +646,20 @@ async function handleGoogleAuth(request, env) {
     payload = await res.json();
   } catch {
     return json({ error: 'Invalid Google credential' }, 401);
+  }
+
+  // Security: tokeninfo only confirms Google signed the token — NOT that it was
+  // minted for THIS app. Without these checks any Google ID token (from any
+  // OAuth client) carrying a victim's email = account takeover.
+  const CLIENT_ID = env.GOOGLE_CLIENT_ID || '704767034441-ljp9b1a874bdi9rqpodr8p4l5rmvbtdj.apps.googleusercontent.com';
+  if (payload.aud !== CLIENT_ID) {
+    return json({ error: 'Invalid Google credential' }, 401);
+  }
+  if (payload.iss !== 'accounts.google.com' && payload.iss !== 'https://accounts.google.com') {
+    return json({ error: 'Invalid Google credential' }, 401);
+  }
+  if (payload.email_verified !== true && payload.email_verified !== 'true') {
+    return json({ error: 'Email not verified' }, 403);
   }
 
   const email = (payload.email || '').toLowerCase().trim();
@@ -676,7 +702,13 @@ async function handleGoogleAuth(request, env) {
       language: 'en',
       lastLogin: new Date().toISOString(),
       isNew: true,
-      authMethod: 'google'
+      authMethod: 'google',
+      // Beta cohort tracking (activation funnel)
+      betaCohort: '',
+      betaSource: '',
+      firstUploadAt: null,
+      activatedAt: null,
+      feedbackCount: 0
     };
   }
 
@@ -977,6 +1009,10 @@ TODAY: ${today}` +
 
   updated.credits -= CREDIT_COST;
   updated.creditsUsedThisMonth = (updated.creditsUsedThisMonth || 0) + CREDIT_COST;
+  // Activation tracking: AI returned a result for a real upload = the aha moment.
+  const nowIso = new Date().toISOString();
+  if (!updated.firstUploadAt) updated.firstUploadAt = nowIso;
+  if (!updated.activatedAt) updated.activatedAt = nowIso;
   await env.BQ_USERS.put(`user:${updated.email}`, JSON.stringify(updated));
   await logCreditUsage(updated.email, 'video:analyze', hasVideo ? 'video upload' : `${frames.length} frames`, env);
 
@@ -1401,6 +1437,75 @@ async function handleAdminTogglePro(request, env) {
 
   await env.BQ_USERS.put(`user:${emailLower}`, JSON.stringify(user));
   return json({ ok: true, isPro: user.isPro, credits: user.credits });
+}
+
+// ── Beta cohort / activation funnel ──
+
+// Tag a user into a beta cohort. POST { email, betaCohort, betaSource, grantProCredits? }
+async function handleAdminBetaTag(request, env) {
+  if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
+
+  const { email, betaCohort, betaSource, grantProCredits } = await request.json();
+  if (!email) return json({ error: 'email required' }, 400);
+
+  const emailLower = email.toLowerCase().trim();
+  const raw = await env.BQ_USERS.get(`user:${emailLower}`);
+  if (!raw) return json({ error: 'User not found' }, 404);
+
+  const user = JSON.parse(raw);
+  if (betaCohort !== undefined) user.betaCohort = (betaCohort || '').toString().slice(0, 60);
+  if (betaSource !== undefined) user.betaSource = (betaSource || '').toString().slice(0, 60);
+
+  // Optionally remove the credit ceiling for the beta window so testing is never blocked.
+  if (grantProCredits) {
+    user.isPro = true;
+    user.credits = Math.max(user.credits || 0, 50);
+    user.creditsUsedThisMonth = 0;
+    const next = new Date();
+    next.setMonth(next.getMonth() + 1);
+    user.resetDate = next.toISOString();
+  }
+
+  await env.BQ_USERS.put(`user:${emailLower}`, JSON.stringify(user));
+  return json({ ok: true, email: emailLower, betaCohort: user.betaCohort, betaSource: user.betaSource, isPro: user.isPro, credits: user.credits });
+}
+
+// Beta funnel: counts + per-tester rows. GET ?cohort=<optional filter>
+async function handleAdminBetaFunnel(request, env) {
+  if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
+
+  const url = new URL(request.url);
+  const cohortFilter = (url.searchParams.get('cohort') || '').trim();
+
+  const list = await env.BQ_USERS.list({ prefix: 'user:' });
+  const testers = [];
+  for (const key of list.keys) {
+    const raw = await env.BQ_USERS.get(key.name);
+    if (!raw) continue;
+    const u = JSON.parse(raw);
+    if (!u.betaCohort) continue;
+    if (cohortFilter && u.betaCohort !== cohortFilter) continue;
+    testers.push({
+      email: u.email,
+      betaCohort: u.betaCohort,
+      betaSource: u.betaSource || '',
+      businessName: u.businessName || '',
+      createdAt: u.createdAt || null,
+      firstUploadAt: u.firstUploadAt || null,
+      activatedAt: u.activatedAt || null,
+      feedbackCount: u.feedbackCount || 0,
+      isPro: !!u.isPro
+    });
+  }
+
+  const funnel = {
+    joined: testers.length,
+    uploaded: testers.filter(t => t.firstUploadAt).length,
+    activated: testers.filter(t => t.activatedAt).length,
+    gaveFeedback: testers.filter(t => t.feedbackCount > 0).length
+  };
+
+  return json({ ok: true, funnel, testers, count: testers.length });
 }
 
 // ── Projects ──
@@ -2229,16 +2334,23 @@ async function handleDirectoryClaim(request, env) {
   const freshListing = JSON.parse(freshRaw);
   if (freshListing.claimed) return json({ error: 'Already claimed' }, 409);
 
-  // Domain match check (if listing has a website)
-  if (listing.website) {
+  // Ownership verification (fail closed): only allow self-claim when the
+  // claimer's business-email domain matches the listing's website domain.
+  // Seeded listings with no website / unparseable URL, free-mail users, or a
+  // domain mismatch cannot self-claim — they must verify via support/admin,
+  // otherwise anyone could hijack a scraped business identity + free Pro.
+  const userDomain = (user.email.split('@')[1] || '').toLowerCase();
+  const FREE_MAIL = ['gmail.com','yahoo.com','hotmail.com','outlook.com','icloud.com','aol.com','proton.me','protonmail.com','live.com','msn.com'];
+  let domainVerified = false;
+  if (listing.website && userDomain && !FREE_MAIL.includes(userDomain)) {
     try {
       const siteUrl = listing.website.startsWith('http') ? listing.website : 'https://' + listing.website;
-      const websiteDomain = new URL(siteUrl).hostname.replace(/^www\./, '');
-      const userDomain = user.email.split('@')[1];
-      if (websiteDomain && userDomain && websiteDomain !== userDomain) {
-        return json({ error: `Your email domain (${userDomain}) must match the business website (${websiteDomain}) to claim this listing.` }, 403);
-      }
-    } catch (_) { /* skip domain check if URL parse fails */ }
+      const websiteDomain = new URL(siteUrl).hostname.replace(/^www\./, '').toLowerCase();
+      if (websiteDomain && websiteDomain === userDomain) domainVerified = true;
+    } catch (_) { /* unparseable URL → not verified */ }
+  }
+  if (!domainVerified) {
+    return json({ error: 'This listing needs ownership verification before it can be claimed. Contact support to verify your business.' }, 403);
   }
 
   // Prevent double-listing
