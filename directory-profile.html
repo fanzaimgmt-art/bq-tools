@@ -272,10 +272,10 @@ function renderProfile(l) {
     const items = [];
     if (l.phone) items.push(`<div class="contact-item">📞 <a href="tel:${l.phone}">${escHtml(l.phone)}</a></div>`);
     if (l.contactEmail) items.push(`<div class="contact-item">✉️ <a href="mailto:${l.contactEmail}">${escHtml(l.contactEmail)}</a></div>`);
-    if (l.website) items.push(`<div class="contact-item">🌐 <a href="${escAttr(l.website)}" target="_blank" rel="noopener">${escHtml(l.website.replace(/^https?:\/\//, ''))}</a></div>`);
-    if (l.instagram) items.push(`<div class="contact-item">📸 <a href="${escAttr(l.instagram)}" target="_blank" rel="noopener">Instagram</a></div>`);
-    if (l.facebook) items.push(`<div class="contact-item">📘 <a href="${escAttr(l.facebook)}" target="_blank" rel="noopener">Facebook</a></div>`);
-    if (l.youtube) items.push(`<div class="contact-item">▶️ <a href="${escAttr(l.youtube)}" target="_blank" rel="noopener">YouTube</a></div>`);
+    if (l.website) items.push(`<div class="contact-item">🌐 <a href="${escAttr(safeUrl(l.website))}" target="_blank" rel="noopener">${escHtml(l.website.replace(/^https?:\/\//, ''))}</a></div>`);
+    if (l.instagram) items.push(`<div class="contact-item">📸 <a href="${escAttr(safeUrl(l.instagram))}" target="_blank" rel="noopener">Instagram</a></div>`);
+    if (l.facebook) items.push(`<div class="contact-item">📘 <a href="${escAttr(safeUrl(l.facebook))}" target="_blank" rel="noopener">Facebook</a></div>`);
+    if (l.youtube) items.push(`<div class="contact-item">▶️ <a href="${escAttr(safeUrl(l.youtube))}" target="_blank" rel="noopener">YouTube</a></div>`);
     if (items.length) {
       contactHTML = `<div class="contact-card">${items.join('')}</div>`;
     }
@@ -304,7 +304,7 @@ function renderProfile(l) {
   // WhatsApp: featured listing, pro viewer or owner
   let whatsappHTML = '';
   if (canSeeMarketing && l.whatsappGroup) {
-    whatsappHTML = `<a href="${escAttr(l.whatsappGroup)}" target="_blank" class="whatsapp-btn">💬 Join WhatsApp Group</a>`;
+    whatsappHTML = `<a href="${escAttr(safeUrl(l.whatsappGroup))}" target="_blank" class="whatsapp-btn">💬 Join WhatsApp Group</a>`;
   }
 
   // Description (featured marketing)
@@ -449,6 +449,11 @@ function escHtml(s) {
 function escAttr(s) {
   return String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+// URL-safe: block javascript:/data:/vbscript: schemes in href (escAttr alone doesn't)
+function safeUrl(u) {
+  const s = String(u || '').trim();
+  return /^(https?:|mailto:|tel:)/i.test(s) ? s : '#';
 }
 </script>
 </body>
