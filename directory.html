@@ -285,7 +285,7 @@ function renderListings(listings) {
     const isPro = l.tier === 'pro';
     const isSeeded = l.seeded === true;
     const logoHTML = l.logo
-      ? `<img src="${l.logo}" class="dir-card-logo" alt="">`
+      ? `<img src="${escAttr(l.logo)}" class="dir-card-logo" alt="">`
       : `<div class="dir-card-logo-placeholder">${(l.businessName || '?')[0].toUpperCase()}</div>`;
     const badge = isSeeded
       ? `<span class="dir-card-badge badge-claim" data-idx="${i}" onclick="handleClaimClick(event,this)">🏷️ Claim this listing</span>`
@@ -341,7 +341,7 @@ async function loadMapMarkers() {
         // Create custom icon with profile initial
         const icon = L.divIcon({
           className: 'custom-marker',
-          html: `<div style="width:36px;height:36px;border-radius:50%;background:${l.tier === 'featured' ? 'var(--ac)' : 'var(--blu)'};border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:${l.tier === 'featured' ? '#0a0a0c' : '#fff'};font-family:Inter,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.4);">${l.logo ? `<img src="${l.logo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">` : (l.businessName || '?')[0].toUpperCase()}</div>`,
+          html: `<div style="width:36px;height:36px;border-radius:50%;background:${l.tier === 'featured' ? 'var(--ac)' : 'var(--blu)'};border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:${l.tier === 'featured' ? '#0a0a0c' : '#fff'};font-family:Inter,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.4);">${l.logo ? `<img src="${escAttr(l.logo)}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">` : (l.businessName || '?')[0].toUpperCase()}</div>`,
           iconSize: [36, 36],
           iconAnchor: [18, 18]
         });
@@ -426,6 +426,11 @@ function escHtml(s) {
   const d = document.createElement('div');
   d.textContent = s || '';
   return d.innerHTML;
+}
+// Attribute-safe escaping (escHtml does NOT escape quotes — unsafe inside attrs)
+function escAttr(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 // Show add-location section for Pro+ users
