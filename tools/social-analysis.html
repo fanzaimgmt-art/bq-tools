@@ -195,7 +195,6 @@
 
 <script src="../js/ai.js"></script>
 <script src="../js/auth.js"></script>
-<script src="../js/crypto.js"></script>
 <script src="../js/common.js"></script>
 <script src="../js/assistant.js"></script>
 <script>
@@ -389,7 +388,7 @@ function exportAnalysis() {
     <div class="score">${lastResult.overall_score}/100</div>
     <h2>Recommendations</h2>
     ${(lastResult.recommendations||[]).map(r=>`<p><b>${r.title}</b> (${r.priority}): ${r.description}</p>`).join('')}
-    <div class="footer">Powered by Obra — bqtools.dev</div><script src="/js/motion-engine.js" defer></script>
+    <div class="footer">Powered by Obra — obra.build</div><script src="/js/motion-engine.js" defer></script>
 <script src="/js/cmdk-palette.js" defer></script>
 <script src="/js/brain-assistant.js" defer></script>
 </body></html>`);

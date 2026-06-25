@@ -493,7 +493,6 @@ body { display:flex; flex-direction:column; height:100vh; overflow:hidden; -webk
 
 <script src="js/ai.js"></script>
 <script src="js/auth.js"></script>
-<script src="js/crypto.js"></script>
 <script src="js/common.js"></script>
 <script>
 if (!isLoggedIn()) window.location.replace('/auth.html');
@@ -550,7 +549,6 @@ ACCOUNT:
 - Free: 5 credits one-time
 - Pro: $14.99/mo = 50 credits/month
 - Credit packs: $4.99=25, $9.99=60, $19.99=150
-- Crypto: 35% discount on everything
 - Referral: share link, friend gets 5 bonus credits, you get 10% off
 - Gift codes: enter code to get free credits
 - Affiliate: earn 20% commission for 6 months on referrals
@@ -1176,7 +1174,7 @@ function exportChat() {
       ${m.model ? `<div class="model">${MODELS[m.model]?.label || m.model}</div>` : ''}
       ${m.content.replace(/\n/g, '<br>')}
     </div>`).join('')}
-    <div class="footer">Powered by Obra — bqtools.dev</div></body></html>`);
+    <div class="footer">Powered by Obra — obra.build</div></body></html>`);
   w.document.close();
   setTimeout(() => w.print(), 500);
 }

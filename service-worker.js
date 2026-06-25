@@ -1,7 +1,7 @@
 // BQ Tools — Service Worker
 // Caches app shell for offline use; network-first for API calls.
 
-const VERSION = 'bq-v5';
+const VERSION = 'bq-v6';
 const STATIC_CACHE = `${VERSION}-static`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 
@@ -14,7 +14,6 @@ const APP_SHELL = [
   '/js/common.js',
   '/js/ai.js',
   '/js/auth.js',
-  '/js/crypto.js',
   '/js/business.js',
   '/manifest.json',
   '/img/icon-192.png',

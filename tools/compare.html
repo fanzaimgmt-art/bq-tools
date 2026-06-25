@@ -283,7 +283,6 @@
 
 <script src="../js/ai.js"></script>
 <script src="../js/auth.js"></script>
-<script src="../js/crypto.js"></script>
 <script src="../js/common.js"></script>
 <script src="../js/assistant.js"></script>
 <script>
@@ -491,7 +490,7 @@ function exportImage() {
   const wmFs = Math.max(11, Math.round(w * 0.014));
   ctx.font = `900 ${wmFs}px Inter, sans-serif`;
   ctx.fillStyle = 'rgba(232,197,71,0.45)';
-  const wmText = 'Powered by Obra | bqtools.dev';
+  const wmText = 'Powered by Obra | obra.build';
   ctx.fillText(wmText, w - ctx.measureText(wmText).width - pad, h - pad);
 
   const link = document.createElement('a');

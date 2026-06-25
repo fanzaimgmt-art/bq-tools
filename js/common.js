@@ -887,9 +887,6 @@ function _paypalTierCard(tier, meta, isPopular, isBest, cryptoPrice) {
         style="width:100%;font-size:12px;margin-bottom:6px;">PayPal</button>
       <a href="mailto:fanzai.mgmt@gmail.com?subject=Card%20Payment%20Request" class="btn btn-sm stripe-card-btn" data-tier="${tier}"
         style="width:100%;font-size:11px;margin-bottom:6px;text-decoration:none;display:block;text-align:center;">&#x1F4B3; Pay by Card — contact us</a>
-      <button onclick="openCryptoModal();this.closest('.modal-overlay').remove();"
-        class="btn btn-sm"
-        style="width:100%;font-size:11px;border-color:rgba(81,207,102,.3);color:var(--grn);">Crypto ${cryptoPrice}<br><span style="font-size:10px;">35% OFF</span></button>
     </div>`;
 }
 
@@ -1055,7 +1052,6 @@ function showProModal() {
         <button onclick="this.closest('.modal-overlay').remove();openBuyCreditsModal('pro_monthly')" class="btn btn-primary" style="width:100%;font-size:15px;margin-bottom:8px;">${t({ en: '💳 Upgrade to Pro — $14.99/month', he: '💳 שדרג ל-Pro — $14.99/חודש', es: '💳 Hazte Pro — $14.99/mes' })}</button>
         <a href="mailto:fanzai.mgmt@gmail.com?subject=Card%20Payment%20Request" class="btn stripe-card-btn" data-tier="pro_monthly"
           style="width:100%;font-size:13px;margin-bottom:8px;text-decoration:none;display:block;text-align:center;">&#x1F4B3; Pay by Card — contact us</a>
-        <button onclick="openCryptoModal();this.closest('.modal-overlay').remove();" class="btn" style="width:100%;font-size:13px;border-color:rgba(81,207,102,.3);color:var(--grn);">${t({ en: 'Crypto — 35% OFF ($9.74/mo)', he: 'קריפטו — 35% הנחה ($9.74 לחודש)', es: 'Cripto — 35% OFF ($9.74/mes)' })}</button>
       </div>
 
       <p style="font-size:12px;color:var(--txd);margin-bottom:14px;">${t({ en: 'Submit your PayPal Transaction ID — Pro activates within 12 hours.', he: 'הגש את מזהה העסקה שלך ב-PayPal — Pro יופעל תוך 12 שעות.', es: 'Envía tu ID de transacción de PayPal — Pro se activa en 12 horas.' })}</p>

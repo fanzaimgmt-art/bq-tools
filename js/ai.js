@@ -274,27 +274,26 @@ function showNoCreditModal() {
         <div style="background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:14px;display:flex;justify-content:space-between;align-items:center;">
           <div style="text-align:left;">
             <div style="font-weight:700;">25 credits</div>
-            <div style="font-size:12px;color:var(--txd);">$4.99 / Crypto: $3.24</div>
+            <div style="font-size:12px;color:var(--txd);">$4.99</div>
           </div>
           <a href="https://www.paypal.com/ncp/payment/2Z5X5PPL26R2L" target="_blank" class="btn btn-sm" style="font-size:13px;">Buy</a>
         </div>
         <div style="background:var(--bg);border:1px solid var(--ac);border-radius:10px;padding:14px;display:flex;justify-content:space-between;align-items:center;">
           <div style="text-align:left;">
             <div style="font-weight:700;color:var(--ac);">60 credits</div>
-            <div style="font-size:12px;color:var(--txd);">$9.99 / Crypto: $6.49</div>
+            <div style="font-size:12px;color:var(--txd);">$9.99</div>
           </div>
           <a href="https://www.paypal.com/ncp/payment/65YNKHNBL9V3G" target="_blank" class="btn btn-primary btn-sm" style="font-size:13px;">Buy</a>
         </div>
         <div style="background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:14px;display:flex;justify-content:space-between;align-items:center;">
           <div style="text-align:left;">
             <div style="font-weight:700;">150 credits</div>
-            <div style="font-size:12px;color:var(--txd);">$19.99 / Crypto: $12.99</div>
+            <div style="font-size:12px;color:var(--txd);">$19.99</div>
           </div>
           <a href="https://www.paypal.com/ncp/payment/WKVG2RPF7JEDE" target="_blank" class="btn btn-sm" style="font-size:13px;">Buy</a>
         </div>
       </div>
 
-      <button onclick="openCryptoModal();this.closest('.modal-overlay').remove();" class="btn" style="width:100%;margin-bottom:8px;border-color:rgba(81,207,102,.3);color:var(--grn);" data-en="Pay with Crypto — 35% OFF" data-he="שלם בקריפטו — 35% הנחה">${lang === 'he' ? 'שלם בקריפטו — 35% הנחה' : 'Pay with Crypto — 35% OFF'}</button>
       <button onclick="this.closest('.modal-overlay').remove()" style="background:none;border:none;color:var(--txd);cursor:pointer;font-size:14px;font-family:inherit;min-height:48px;padding:8px;" data-en="Maybe later" data-he="אולי אחר כך">${lang === 'he' ? 'אולי אחר כך' : 'Maybe later'}</button>
     </div>`;
   document.body.appendChild(m);

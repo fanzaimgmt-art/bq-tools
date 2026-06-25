@@ -135,7 +135,6 @@
 </footer>
 
 <script src="../js/auth.js"></script>
-<script src="../js/crypto.js"></script>
 <script src="../js/ai.js"></script>
 <script src="../js/common.js"></script>
 <script src="../js/assistant.js"></script>
@@ -238,7 +237,7 @@ Respond JSON only:
       ${Array.isArray(r.materials_noted) && r.materials_noted.length ? `<div class="report-section"><h3>Materials</h3><ul>${r.materials_noted.map(m => '<li>' + m + '</li>').join('')}</ul></div>` : ''}
       <div class="report-section"><h3>AI Quality Assessment</h3><div class="report-score">${r.quality_score}/10</div><p>${r.quality_notes}</p></div>
       ${r.recommendations ? `<div class="report-section"><h3>Recommendations</h3><p>${r.recommendations}</p></div>` : ''}
-      <div class="report-footer">Powered by Obra — bqtools.dev</div>`;
+      <div class="report-footer">Powered by Obra — obra.build</div>`;
 
     document.getElementById('exportRow').style.display = 'block';
     showToast(lang === 'he' ? 'הדוח מוכן!' : 'Report ready!', 'ok');
