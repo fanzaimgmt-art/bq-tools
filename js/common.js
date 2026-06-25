@@ -1254,6 +1254,7 @@ function isIOS() {
 }
 
 function showInstallBanner() {
+  return; // PWA install banner disabled per request — do not show "Install Obra" prompt
   if (isStandalone()) return;
   if (document.getElementById('pwaBanner')) return;
 
