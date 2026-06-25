@@ -19,7 +19,7 @@
   const CDN = {
     gsap:         'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js',
     scrollTrig:   'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js',
-    lenis:        'https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.45/bundled/lenis.min.js',
+    lenis:        'https://cdn.jsdelivr.net/npm/lenis@1.0.45/dist/lenis.min.js',
   };
 
   function loadScript(src) {
