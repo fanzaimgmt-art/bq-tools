@@ -202,7 +202,7 @@ async function submitTxId(e) {
   btn.textContent = 'Submitting…';
 
   try {
-    const res = await fetch('/api/payments/paypal/submit', {
+    const res = await fetch('https://bq-tools-api.fanzai-mgmt.workers.dev/api/payments/paypal/submit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

@@ -868,7 +868,7 @@ const _TIER_META = {
   pro_monthly:  { label: 'Pro (1 month)',   amount: 14.99, display: '$14.99', paypalBtn: 'G7EG5WBG8VSDG' },
 };
 
-function _paypalTierCard(tier, meta, isPopular, isBest, cryptoPrice) {
+function _paypalTierCard(tier, meta, isPopular, isBest) {
   const popularBadge = isPopular
     ? `<div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--ac);color:var(--bg);font-size:10px;font-weight:700;padding:2px 10px;border-radius:6px;">POPULAR</div>` : '';
   const bestBadge = isBest
@@ -906,9 +906,9 @@ function showBuyCreditsModal(preselectedTier) {
         <p style="font-size:14px;color:var(--txd);margin-bottom:16px;">${youHave} <b style="color:var(--ac);">${credits}</b> ${creditsWord}</p>
 
         <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
-          ${_paypalTierCard('credits_25',  _TIER_META.credits_25,  false, false, '$3.24')}
-          ${_paypalTierCard('credits_60',  _TIER_META.credits_60,  true,  false, '$6.49')}
-          ${_paypalTierCard('credits_150', _TIER_META.credits_150, false, true,  '$12.99')}
+          ${_paypalTierCard('credits_25',  _TIER_META.credits_25,  false, false)}
+          ${_paypalTierCard('credits_60',  _TIER_META.credits_60,  true,  false)}
+          ${_paypalTierCard('credits_150', _TIER_META.credits_150, false, true)}
         </div>
 
         <p style="font-size:12px;color:var(--txd);margin-bottom:14px;line-height:1.5;">1 credit = 1 AI Analysis, Report, Estimate, Social Post, or Assistant message</p>
@@ -1006,7 +1006,7 @@ async function _bcmSubmit(modalEl) {
   submitBtn.disabled = true;
   submitBtn.textContent = 'Submitting…';
   try {
-    const res = await fetch('/api/payments/paypal/submit', {
+    const res = await fetch('https://bq-tools-api.fanzai-mgmt.workers.dev/api/payments/paypal/submit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ tier, amount: _TIER_META[tier].amount, transactionId: txId, userEmail: email })
@@ -1402,7 +1402,7 @@ async function _stripeCheckout(tier, modalEl) {
   const token = localStorage.getItem('bq_token') || '';
   if (!token) { showToast('Please log in to pay with card', 'err'); return; }
   try {
-    const res = await fetch('/api/payments/stripe/create-session', {
+    const res = await fetch('https://bq-tools-api.fanzai-mgmt.workers.dev/api/payments/stripe/create-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
       body: JSON.stringify({ tier }),
