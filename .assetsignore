@@ -1,0 +1,15 @@
+# Files NOT to serve as public static assets (deployed via `wrangler deploy`, assets dir = ".")
+.git
+.github
+node_modules
+.wrangler
+api
+ops
+*.md
+.gitignore
+.assetsignore
+wrangler.jsonc
+.DS_Store
+**/.DS_Store
+.dev.vars
+.env

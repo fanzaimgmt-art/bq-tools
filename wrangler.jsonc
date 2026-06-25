@@ -1,0 +1,7 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "bq-tools",
+  "compatibility_date": "2025-06-01",
+  "assets": { "directory": "." },
+  "observability": { "enabled": true }
+}
