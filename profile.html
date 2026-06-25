@@ -248,16 +248,16 @@ function loadProfile() {
   // Avatar
   const av = document.getElementById('profileAvatar');
   if (user.picture) {
-    av.innerHTML = `<img src="${user.picture}" alt="">`;
+    av.innerHTML = `<img src="${escAttr(user.picture)}" alt="">`;
   } else if (user.logo) {
-    av.innerHTML = `<img src="${user.logo}" alt="">`;
+    av.innerHTML = `<img src="${escAttr(user.logo)}" alt="">`;
   } else {
     av.textContent = (user.businessName || user.email || '?')[0].toUpperCase();
   }
 
   // Logo preview
   if (user.logo) {
-    document.getElementById('logoPreview').innerHTML = `<img src="${user.logo}" alt="">`;
+    document.getElementById('logoPreview').innerHTML = `<img src="${escAttr(user.logo)}" alt="">`;
   }
 
   // Language

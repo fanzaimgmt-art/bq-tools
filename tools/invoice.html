@@ -486,7 +486,7 @@ function renderPreview(inv) {
   document.getElementById('preview').innerHTML = `
     <div class="ip-header">
       <div class="ip-business">
-        ${user.logo ? `<img src="${user.logo}" class="biz-logo" alt="">` : ''}
+        ${user.logo ? `<img src="${escAttr(user.logo)}" class="biz-logo" alt="">` : ''}
         <h2>${escHtml(user.businessName || 'Your Business')}</h2>
         <p>${user.phone ? '📞 ' + escHtml(user.phone) + '<br>' : ''}📧 ${escHtml(user.email || '')}</p>
       </div>

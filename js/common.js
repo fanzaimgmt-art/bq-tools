@@ -3,6 +3,12 @@
 let lang = localStorage.getItem('bq_lang') || 'en';
 let theme = localStorage.getItem('bq_theme') || 'dark';
 
+// ── Security: attribute-safe escaping (use inside src/href/alt; escapes quotes) ──
+function escAttr(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 // ── Theme Toggle (Day/Night) ──
 function setTheme(t) {
   theme = t;

@@ -297,7 +297,7 @@ function renderPreview(q) {
   preview.innerHTML = `
     <div class="qp-header">
       <div class="qp-business">
-        ${user.logo ? `<img src="${user.logo}" class="biz-logo" alt="">` : ''}
+        ${user.logo ? `<img src="${escAttr(user.logo)}" class="biz-logo" alt="">` : ''}
         <h2>${escHtml(user.businessName || 'Your Business')}</h2>
         <p>
           ${user.phone ? '📞 ' + escHtml(user.phone) + '<br>' : ''}

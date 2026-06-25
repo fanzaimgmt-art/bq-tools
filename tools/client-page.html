@@ -189,7 +189,7 @@ function createPage() {
     <h2>${escHtml(page.name)}</h2>
     <div class="cp-meta">${escHtml(page.date)}${biz ? ' — ' + escHtml(biz) : ''}</div>
     <div class="cp-desc">${escHtml(page.desc)}</div>
-    <div class="cp-photos">${page.photos.map(s => `<img src="${s}">`).join('')}</div>
+    <div class="cp-photos">${page.photos.map(s => `<img src="${escAttr(s)}">`).join('')}</div>
     ${biz || phone || email ? `<div class="cp-contact"><strong>${escHtml(biz)}</strong>${phone ? '<br>' + escHtml(phone) : ''}${email ? '<br>' + escHtml(email) : ''}</div>` : ''}
     <div class="cp-footer">Powered by <a href="https://bq-tools.fanzai-mgmt.workers.dev">Obra</a> — Get yours free</div>`;
 
@@ -220,7 +220,7 @@ if (window.location.hash.startsWith('#view=')) {
         <h2>${escHtml(page.name)}</h2>
         <div class="cp-meta">${escHtml(page.date)}${page.biz ? ' — ' + escHtml(page.biz) : ''}</div>
         <div class="cp-desc">${escHtml(page.desc)}</div>
-        <div class="cp-photos">${page.photos.map(s => `<img src="${s}">`).join('')}</div>
+        <div class="cp-photos">${page.photos.map(s => `<img src="${escAttr(s)}">`).join('')}</div>
         ${page.biz || page.phone || page.email ? `<div class="cp-contact"><strong>${escHtml(page.biz)}</strong>${page.phone ? '<br>' + escHtml(page.phone) : ''}${page.email ? '<br>' + escHtml(page.email) : ''}</div>` : ''}
         <div class="cp-footer">Powered by <a href="https://bq-tools.fanzai-mgmt.workers.dev">Obra</a> — Get yours free</div>`;
     });
