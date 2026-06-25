@@ -226,7 +226,7 @@ function renderProfile(l) {
   document.title = `${l.businessName || 'Contractor'} — Obra Directory`;
 
   const logoHTML = l.logo
-    ? `<img src="${l.logo}" class="profile-logo" alt="${escHtml(l.businessName)}">`
+    ? `<img src="${escAttr(l.logo)}" class="profile-logo" alt="${escAttr(l.businessName)}">`
     : `<div class="profile-logo-placeholder">${(l.businessName || '?')[0].toUpperCase()}</div>`;
 
   const badge = isFeatured
@@ -272,10 +272,10 @@ function renderProfile(l) {
     const items = [];
     if (l.phone) items.push(`<div class="contact-item">📞 <a href="tel:${l.phone}">${escHtml(l.phone)}</a></div>`);
     if (l.contactEmail) items.push(`<div class="contact-item">✉️ <a href="mailto:${l.contactEmail}">${escHtml(l.contactEmail)}</a></div>`);
-    if (l.website) items.push(`<div class="contact-item">🌐 <a href="${escHtml(l.website)}" target="_blank" rel="noopener">${escHtml(l.website.replace(/^https?:\/\//, ''))}</a></div>`);
-    if (l.instagram) items.push(`<div class="contact-item">📸 <a href="${escHtml(l.instagram)}" target="_blank" rel="noopener">Instagram</a></div>`);
-    if (l.facebook) items.push(`<div class="contact-item">📘 <a href="${escHtml(l.facebook)}" target="_blank" rel="noopener">Facebook</a></div>`);
-    if (l.youtube) items.push(`<div class="contact-item">▶️ <a href="${escHtml(l.youtube)}" target="_blank" rel="noopener">YouTube</a></div>`);
+    if (l.website) items.push(`<div class="contact-item">🌐 <a href="${escAttr(l.website)}" target="_blank" rel="noopener">${escHtml(l.website.replace(/^https?:\/\//, ''))}</a></div>`);
+    if (l.instagram) items.push(`<div class="contact-item">📸 <a href="${escAttr(l.instagram)}" target="_blank" rel="noopener">Instagram</a></div>`);
+    if (l.facebook) items.push(`<div class="contact-item">📘 <a href="${escAttr(l.facebook)}" target="_blank" rel="noopener">Facebook</a></div>`);
+    if (l.youtube) items.push(`<div class="contact-item">▶️ <a href="${escAttr(l.youtube)}" target="_blank" rel="noopener">YouTube</a></div>`);
     if (items.length) {
       contactHTML = `<div class="contact-card">${items.join('')}</div>`;
     }
@@ -304,7 +304,7 @@ function renderProfile(l) {
   // WhatsApp: featured listing, pro viewer or owner
   let whatsappHTML = '';
   if (canSeeMarketing && l.whatsappGroup) {
-    whatsappHTML = `<a href="${escHtml(l.whatsappGroup)}" target="_blank" class="whatsapp-btn">💬 Join WhatsApp Group</a>`;
+    whatsappHTML = `<a href="${escAttr(l.whatsappGroup)}" target="_blank" class="whatsapp-btn">💬 Join WhatsApp Group</a>`;
   }
 
   // Description (featured marketing)
@@ -324,7 +324,7 @@ function renderProfile(l) {
       <div class="photos-section">
         <h3 data-en="Work Photos" data-he="תמונות עבודה">Work Photos</h3>
         <div class="photos-grid">
-          ${l.photos.map(p => `<img src="${escHtml(p)}" alt="Work photo" onclick="openLightbox(this.src)">`).join('')}
+          ${l.photos.map(p => `<img src="${escAttr(p)}" alt="Work photo" onclick="openLightbox(this.src)">`).join('')}
         </div>
       </div>`;
   }
@@ -337,7 +337,7 @@ function renderProfile(l) {
         <h3 data-en="Customer Reviews" data-he="ביקורות לקוחות">Customer Reviews</h3>
         ${l.reviews.map(r => `
           <div class="review-card">
-            ${r.image ? `<img src="${escHtml(r.image)}" alt="Review">` : ''}
+            ${r.image ? `<img src="${escAttr(r.image)}" alt="Review">` : ''}
             ${r.text ? `<div class="review-text">${escHtml(r.text)}</div>` : ''}
           </div>
         `).join('')}
@@ -444,6 +444,11 @@ function escHtml(s) {
   const d = document.createElement('div');
   d.textContent = s || '';
   return d.innerHTML;
+}
+// Attribute-safe escaping — escHtml does NOT escape quotes, unsafe inside src/href/alt
+function escAttr(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 </script>
 </body>
