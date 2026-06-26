@@ -47,6 +47,14 @@ type = "ratelimit"
 namespace_id = "2001"
 simple = { limit = 5, period = 60 }
 
+# Global per-IP gate used by securityGate (security.js) — atomic, so it replaces the old per-request KV
+# write that exhausted the free 1000/day KV cap and took the whole API down. 60 req / 10s per IP.
+[[unsafe.bindings]]
+name = "GLOBAL_LIMITER"
+type = "ratelimit"
+namespace_id = "2002"
+simple = { limit = 60, period = 10 }
+
 [triggers]
 # 8am PT = 16:00 UTC. Runs: news refresh + scrape 20 new contractors + re-engagement + analytics digest.
 crons = ["0 16 * * *"]

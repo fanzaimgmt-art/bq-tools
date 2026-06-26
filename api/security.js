@@ -61,78 +61,62 @@ const TOOL_ALLOWLIST = new Set([
 ]);
 
 export async function securityGate(request, env, ctx) {
- try {
   const url = new URL(request.url);
   const path = url.pathname;
   const ip = request.headers.get("CF-Connecting-IP") || "0.0.0.0";
   const ua = request.headers.get("User-Agent") || "";
   const method = request.method;
 
-  // 1. Permanent ban check
-  const banKey = `sec:ban:${ip}`;
-  const banUntil = await env.BQ_USERS.get(banKey);
-  if (banUntil) {
-    return _deny(env, ip, ua, path, "ip_banned", 403, ctx, request, { banUntil });
-  }
-
-  // 2. Probe-path scanner — instant severe ban
+  // ── SYNCHRONOUS checks — no KV, ALWAYS enforced (a KV error must never let these be bypassed) ──
+  // Probe-path scanner — instant severe ban. The deny ALWAYS happens; the ban-write is best-effort.
   for (const probe of PROBE_PATHS) {
     if (path.toLowerCase().startsWith(probe)) {
-      await _ban(env, ip, SEVERE_BAN_DURATION_SECONDS);
-      const denied = await _deny(env, ip, ua, path, "probe_path", 403, ctx, request, { matched: probe });
-      // Telegram alert on severe probes
-      if (ctx) ctx.waitUntil(_alertTelegram(env, "🚨 Probe attack blocked", `IP ${ip} hit ${probe}\nUA: ${ua.slice(0, 80)}\nBanned 24h.`));
-      return denied;
+      try { await _ban(env, ip, SEVERE_BAN_DURATION_SECONDS); } catch (_) {}
+      if (ctx) ctx.waitUntil(_alertTelegram(env, "🚨 Probe attack blocked", `IP ${ip} hit ${probe}\nUA: ${ua.slice(0, 80)}\nBanned 24h.`).catch(() => {}));
+      return _deny(env, ip, ua, path, "probe_path", 403, ctx, request, { matched: probe });
     }
   }
-
-  // 3. Pentest-tool UA screen — instant 24h ban + alert
+  // Pentest-tool UA screen — instant 24h ban + alert
   if (ua) {
     for (const bad of BAD_UA_PATTERNS) {
       if (bad.test(ua)) {
-        await _ban(env, ip, SEVERE_BAN_DURATION_SECONDS);
-        if (ctx) ctx.waitUntil(_alertTelegram(env, "🚨 Pentest tool detected", `IP ${ip} UA=${ua.slice(0, 80)}\nPath: ${path}\nBanned 24h.`));
+        try { await _ban(env, ip, SEVERE_BAN_DURATION_SECONDS); } catch (_) {}
+        if (ctx) ctx.waitUntil(_alertTelegram(env, "🚨 Pentest tool detected", `IP ${ip} UA=${ua.slice(0, 80)}\nPath: ${path}\nBanned 24h.`).catch(() => {}));
         return _deny(env, ip, ua, path, "pentest_tool", 403, ctx, request, { ua: ua.slice(0, 80) });
       }
     }
   }
 
-  // 4. Rate limit (skip OPTIONS preflights)
-  if (method !== "OPTIONS") {
-    const rateKey = `sec:rate:${ip}:${Math.floor(Date.now() / 1000 / RATE_LIMIT_WINDOW)}`;
-    const cur = parseInt((await env.BQ_USERS.get(rateKey)) || "0", 10);
-    if (cur >= RATE_LIMIT_BURST) {
-      // After 3 rate-limit hits in a row, auto-ban for 1h
-      const violKey = `sec:rateviol:${ip}`;
-      const viols = parseInt((await env.BQ_USERS.get(violKey)) || "0", 10) + 1;
-      await env.BQ_USERS.put(violKey, String(viols), { expirationTtl: 600 });
-      if (viols >= 3) {
-        await _ban(env, ip, BAN_DURATION_SECONDS);
-        if (ctx) ctx.waitUntil(_alertTelegram(env, "⚠️ Rate-limit abuse → auto-ban", `IP ${ip} hit rate-limit ${viols}× in 10min\nPath: ${path}\nBanned 1h.`));
+  // ── KV/limiter-dependent checks — guarded so quota/transient errors degrade gracefully (fail-open ONLY
+  //    these counter/ban-record reads, NOT the synchronous bans above). Root cause of the prior total
+  //    outage: a per-request KV *write* for the rate counter exhausted the free 1000/day cap and threw
+  //    uncaught → 1101 everywhere. Rate-limiting now uses the atomic ratelimit binding (zero KV writes). ──
+  try {
+    // Permanent ban check (KV read — high daily cap)
+    const banUntil = await env.BQ_USERS.get(`sec:ban:${ip}`);
+    if (banUntil) return _deny(env, ip, ua, path, "ip_banned", 403, ctx, request, { banUntil });
+
+    // Rate limit via the atomic ratelimit binding — no per-request KV write.
+    if (method !== "OPTIONS" && env.GLOBAL_LIMITER) {
+      const { success } = await env.GLOBAL_LIMITER.limit({ key: ip });
+      if (!success) {
+        // Repeat offenders → auto-ban (rare write, only on actual rate-limit hits).
+        const violKey = `sec:rateviol:${ip}`;
+        const viols = parseInt((await env.BQ_USERS.get(violKey)) || "0", 10) + 1;
+        await env.BQ_USERS.put(violKey, String(viols), { expirationTtl: 600 });
+        if (viols >= 3) {
+          await _ban(env, ip, BAN_DURATION_SECONDS);
+          if (ctx) ctx.waitUntil(_alertTelegram(env, "⚠️ Rate-limit abuse → auto-ban", `IP ${ip}\nPath: ${path}\nBanned 1h.`).catch(() => {}));
+        }
+        return _deny(env, ip, ua, path, "rate_limit", 429, ctx, request, {});
       }
-      return _deny(env, ip, ua, path, "rate_limit", 429, ctx, request, { count: cur, burst: RATE_LIMIT_BURST });
     }
-    await env.BQ_USERS.put(rateKey, String(cur + 1), { expirationTtl: 60 });
+  } catch (e) {
+    // Only the KV-read ban-check + ratelimit binding are in here. A transient/quota error leaves no signal
+    // to deny on, so fail open for THESE — but the synchronous probe/UA bans above already ran (fail-closed).
+    console.error("[securityGate] counter/ban-read degraded (fail-open on these only):", e && e.message);
   }
-
-  // 5. Daily counter (for stats)
-  if (ctx) {
-    const dayKey = `sec:day:${new Date().toISOString().slice(0, 10)}`;
-    ctx.waitUntil((async () => {
-      const cur = parseInt((await env.BQ_USERS.get(dayKey)) || "0", 10);
-      await env.BQ_USERS.put(dayKey, String(cur + 1), { expirationTtl: 60 * 60 * 48 });
-    })());
-  }
-
-  // Pass — return null
   return null;
- } catch (e) {
-  // Security gate is best-effort. A KV write-limit (free-tier 1000/day cap) or transient KV error must NEVER
-  // crash the whole API — it was throwing UNCAUGHT here → Cloudflare 1101 on EVERY request (total outage).
-  // Fail OPEN: log and allow the request through so the API stays up even when the gate can't record state.
-  console.error("[securityGate] fail-open (KV/other error):", e && e.message);
-  return null;
- }
 }
 
 async function _ban(env, ip, ttlSeconds) {
