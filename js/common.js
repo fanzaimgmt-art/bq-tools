@@ -1104,7 +1104,7 @@ function _normPath() {
 }
 const _SKIP_PAGES = ['/admin', '/auth', '/onboarding'];
 const _LANDING_PAGES = ['/'];
-const _APP_PAGES = ['/home', '/profile', '/dashboard', '/gallery', '/directory', '/directory-profile', '/chat', '/affiliate', '/memories', '/news', '/training', '/business', '/learn'];
+const _APP_PAGES = ['/home', '/profile', '/dashboard', '/gallery', '/directory', '/directory-profile', '/chat', '/affiliate', '/memories', '/news', '/training', '/business', '/learn', '/crm'];
 const _BUSINESS_PAGES = ['/business/receipts', '/business/clients', '/business/expenses', '/business/projects', '/business/suppliers', '/business/equipment', '/business/time', '/business/compliance'];
 
 function _isAppPage() {
@@ -1147,6 +1147,7 @@ function buildAppNav() {
   // Build nav links (clean URLs — avoid the .html→clean 307 redirect hop)
   const links = [
     { href: '/home', en: 'Tools', he: 'כלים', es: 'Herramientas', match: ['/home'] },
+    { href: '/crm', en: 'Pipeline', he: 'צינור', es: 'Embudo', match: ['/crm'] },
     { href: '/#pricing', en: 'Pricing', he: 'מחירים', es: 'Precios', match: [] },
   ];
 
