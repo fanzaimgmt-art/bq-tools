@@ -18,8 +18,9 @@ function setTheme(t) {
   } else {
     document.documentElement.removeAttribute('data-theme');
   }
-  // Update all theme toggle buttons
-  document.querySelectorAll('.theme-toggle').forEach(btn => {
+  // Update theme toggle buttons ONLY — NOT the language button, which shares the .theme-toggle class for
+  // styling but must keep its 🌐 icon (this loop was overwriting it with ☀️/🌙 → two suns, one opening langs).
+  document.querySelectorAll('.theme-toggle:not([onclick*="openLangPicker"])').forEach(btn => {
     btn.textContent = t === 'light' ? '🌙' : '☀️';
     btn.title = t === 'light' ? 'Switch to dark mode' : 'Switch to light mode';
   });
