@@ -88,8 +88,9 @@ function _esc(s) {
 }
 
 function _avatarHTML(user) {
-  if (user.picture) return `<img src="${user.picture}" alt="" style="width:100%;height:100%;object-fit:cover;">`;
-  if (user.logo) return `<img src="${user.logo}" alt="" style="width:100%;height:100%;object-fit:cover;">`;
+  // escAttr — these are user-set (logo) / server-set (picture) and land in innerHTML on every app nav.
+  if (user.picture) return `<img src="${escAttr(user.picture)}" alt="" style="width:100%;height:100%;object-fit:cover;">`;
+  if (user.logo) return `<img src="${escAttr(user.logo)}" alt="" style="width:100%;height:100%;object-fit:cover;">`;
   return (user.businessName || user.email || '?')[0].toUpperCase();
 }
 
@@ -367,10 +368,13 @@ async function doRedeem() {
   btn.disabled = true; btn.textContent = '...';
   try {
     const data = await apiCall('/api/credits/redeem', { method: 'POST', body: { code } });
-    result.innerHTML = `<span style="color:var(--grn);">✓ ${data.credits} credits added!</span>`;
+    // textContent for dynamic values — err.message can echo the user-submitted code (HTML-injection sink)
+    result.innerHTML = '<span style="color:var(--grn);"></span>';
+    result.firstChild.textContent = `✓ ${Number(data.credits) || 0} credits added!`;
     if (typeof fetchUser === 'function') fetchUser().catch(() => {});
   } catch (err) {
-    result.innerHTML = `<span style="color:var(--red);">✗ ${err.message}</span>`;
+    result.innerHTML = '<span style="color:var(--red);"></span>';
+    result.firstChild.textContent = `✗ ${err.message}`;
   }
   btn.disabled = false; btn.textContent = lang === 'he' ? 'הפעל קוד' : 'Redeem';
 }

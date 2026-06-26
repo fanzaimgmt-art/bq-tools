@@ -211,7 +211,7 @@ async function openDeal(id) {
     <h2>${escapeHtml(deal.title)}</h2>
     <div class="crm-row2">
       <div class="crm-field"><label data-en="Stage" data-he="שלב">Stage</label><select onchange="moveStage(${id},this.value)">${stageOpts}</select></div>
-      <div class="crm-field"><label data-en="Value ($)" data-he="ערך ($)">Value ($)</label><input type="number" value="${deal.value}" onchange="updateValue(${id},this.value)"></div>
+      <div class="crm-field"><label data-en="Value ($)" data-he="ערך ($)">Value ($)</label><input type="number" value="${Number(deal.value) || 0}" onchange="updateValue(${id},this.value)"></div>
     </div>
     ${deal.contact_name ? `<div class="crm-field"><label data-en="Contact" data-he="איש קשר">Contact</label><div>👤 ${escapeHtml(deal.contact_name)}${deal.contact_phone?` · <a href="tel:${escapeHtml(deal.contact_phone)}">${escapeHtml(deal.contact_phone)}</a>`:''}${deal.contact_email?` · <a href="mailto:${escapeHtml(deal.contact_email)}">${escapeHtml(deal.contact_email)}</a>`:''}</div></div>` : ''}
     <div class="crm-field"><label data-en="Follow-ups" data-he="מעקבים" data-es="Seguimientos">Follow-ups</label>
@@ -227,15 +227,24 @@ async function openDeal(id) {
   document.getElementById('dealOverlay').classList.add('open');
   if (typeof setLang === 'function') setLang(localStorage.getItem('bq_lang') || 'en');
 }
-async function moveStage(id, stage) { await fetch(`${CRM_API}/api/crm/deal`, { method:'PATCH', headers:_H(), body: JSON.stringify({id, stage}) }); loadPipeline(); }
-async function updateValue(id, value) { await fetch(`${CRM_API}/api/crm/deal`, { method:'PATCH', headers:_H(), body: JSON.stringify({id, value}) }); loadPipeline(); }
-async function addActivity(id) { const b=document.getElementById('newActBody').value.trim(); if(!b)return; await fetch(`${CRM_API}/api/crm/activity`,{method:'POST',headers:_H(),body:JSON.stringify({deal_id:id,body:b,type:'note'})}); openDeal(id); }
-async function addTask(id) { const tt=document.getElementById('newTaskTitle').value.trim(); if(!tt)return; const due=document.getElementById('newTaskDue').value; await fetch(`${CRM_API}/api/crm/task`,{method:'POST',headers:_H(),body:JSON.stringify({deal_id:id,title:tt,due_at:due||null})}); openDeal(id); }
-async function toggleTask(tid, done, dealId) { await fetch(`${CRM_API}/api/crm/task`,{method:'PATCH',headers:_H(),body:JSON.stringify({id:tid,done})}); }
+// Centralized write: surface failures instead of silently no-opping. On 401 → re-auth; on any other
+// failure → alert + return null so callers can revert optimistic UI (e.g. a toggled checkbox).
+async function _crmWrite(url, opts) {
+  let r;
+  try { r = await fetch(url, opts); }
+  catch (_) { alert(L({en:'Network error — please retry.',he:'תקלת רשת — נסה שוב.',es:'Error de red — reintenta.'})); return null; }
+  if (r.status === 401) { location.replace('/auth?next=/crm'); return null; }
+  if (!r.ok) { alert(L({en:'Could not save — please retry.',he:'השמירה נכשלה — נסה שוב.',es:'No se pudo guardar — reintenta.'})); return null; }
+  return r;
+}
+async function moveStage(id, stage) { if (await _crmWrite(`${CRM_API}/api/crm/deal`, { method:'PATCH', headers:_H(), body: JSON.stringify({id, stage}) })) loadPipeline(); else loadPipeline(); }
+async function updateValue(id, value) { if (await _crmWrite(`${CRM_API}/api/crm/deal`, { method:'PATCH', headers:_H(), body: JSON.stringify({id, value}) })) loadPipeline(); }
+async function addActivity(id) { const b=document.getElementById('newActBody').value.trim(); if(!b)return; if (await _crmWrite(`${CRM_API}/api/crm/activity`,{method:'POST',headers:_H(),body:JSON.stringify({deal_id:id,body:b,type:'note'})})) openDeal(id); }
+async function addTask(id) { const tt=document.getElementById('newTaskTitle').value.trim(); if(!tt)return; const due=document.getElementById('newTaskDue').value; if (await _crmWrite(`${CRM_API}/api/crm/task`,{method:'POST',headers:_H(),body:JSON.stringify({deal_id:id,title:tt,due_at:due||null})})) openDeal(id); }
+async function toggleTask(tid, done, dealId) { if (!(await _crmWrite(`${CRM_API}/api/crm/task`,{method:'PATCH',headers:_H(),body:JSON.stringify({id:tid,done})}))) openDeal(dealId); } // revert checkbox on failure
 async function deleteDeal(id) {
   if (!confirm(L({en:'Delete this deal?',he:'למחוק את העסקה?',es:'¿Eliminar este trato?'}))) return;
-  await fetch(`${CRM_API}/api/crm/deal?id=${id}`, { method:'DELETE', headers:_H() });
-  closeOverlay('dealOverlay'); loadPipeline();
+  if (await _crmWrite(`${CRM_API}/api/crm/deal?id=${id}`, { method:'DELETE', headers:_H() })) { closeOverlay('dealOverlay'); loadPipeline(); }
 }
 
 document.addEventListener('DOMContentLoaded', () => { if (_tok()) loadPipeline(); });

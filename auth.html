@@ -235,11 +235,15 @@
 <script src="js/common.js"></script>
 <script>
 let currentEmail = '';
+// Escape user-controlled values before innerHTML (businessName/email are user/account data).
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 // Return validated next URL (must be relative, starting with '/') or null.
 function _getNextUrl() {
   const raw = new URLSearchParams(window.location.search).get('next');
-  if (raw && raw.startsWith('/') && !raw.startsWith('//')) return raw;
+  // Must be a same-origin relative path. Reject protocol-relative ('//host') AND backslash variants
+  // ('/\host', '/\/host') — browsers normalize '\'→'/' on assignment, so those become open redirects.
+  if (raw && /^\/[^/\\]/.test(raw)) return raw;
   return null;
 }
 
@@ -263,6 +267,7 @@ async function handleGoogleCallback(response) {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Google sign-in failed');
+    if (!data.userToken) throw new Error('Sign-in failed — no token returned');
 
     // Save token + user data
     localStorage.setItem('bq_token', data.userToken);
@@ -362,6 +367,8 @@ async function doVerify() {
       setTimeout(() => { _postLoginRedirect(); }, 500);
       return;
     }
+    // {ok:false} at HTTP 200 (e.g. wrong/expired code) — previously fell through with no feedback
+    showMsg(data.error || (lang === 'he' ? 'קוד שגוי או שפג תוקפו' : 'Invalid or expired code'), 'err');
   } catch (err) {
     showMsg(err.message, 'err');
   }
@@ -393,9 +400,9 @@ function renderProfile() {
   // Profile info
   const info = document.getElementById('profileInfo');
   info.innerHTML = `
-    <div class="profile-row"><span class="label">Email</span><span class="value">${user.email}</span></div>
-    <div class="profile-row"><span class="label">${lang === 'he' ? 'קרדיטים' : 'Credits'}</span><span class="value">⚡ ${user.credits}</span></div>
-    <div class="profile-row"><span class="label">${lang === 'he' ? 'שם עסק' : 'Business'}</span><span class="value">${user.businessName || '—'}</span></div>
+    <div class="profile-row"><span class="label">Email</span><span class="value">${esc(user.email)}</span></div>
+    <div class="profile-row"><span class="label">${lang === 'he' ? 'קרדיטים' : 'Credits'}</span><span class="value">⚡ ${Number(user.credits) || 0}</span></div>
+    <div class="profile-row"><span class="label">${lang === 'he' ? 'שם עסק' : 'Business'}</span><span class="value">${esc(user.businessName) || '—'}</span></div>
     <div class="profile-row"><span class="label">${lang === 'he' ? 'נוצר' : 'Created'}</span><span class="value">${(user.createdAt || '').split('T')[0]}</span></div>
   `;
 }
