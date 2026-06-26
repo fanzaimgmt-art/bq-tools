@@ -366,7 +366,7 @@ body { display:flex; flex-direction:column; height:100vh; overflow:hidden; -webk
     </button>
     <div class="sidebar-search">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" style="opacity:.5;flex-shrink:0"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
-      <input type="text" placeholder="Search chats…" id="sessionSearch" oninput="filterSessions(this.value)">
+      <input type="text" placeholder="Search chats…" data-en-placeholder="Search chats…" data-he-placeholder="חיפוש שיחות…" data-es-placeholder="Buscar chats…" id="sessionSearch" oninput="filterSessions(this.value)">
     </div>
     <div class="chat-sessions" id="chatSessions"></div>
     <div class="sidebar-footer">
@@ -470,7 +470,7 @@ body { display:flex; flex-direction:column; height:100vh; overflow:hidden; -webk
       </div>
       <div class="chat-btn" id="voiceBtn" onclick="toggleVoice()" title="Voice input">🎤</div>
       <div class="composer-box">
-        <textarea class="chat-textarea" id="chatInput" placeholder="Ask anything — bids, permits, client messages…" rows="1" oninput="autoGrow(this)"></textarea>
+        <textarea class="chat-textarea" id="chatInput" placeholder="Ask anything — bids, permits, client messages…" data-en-placeholder="Ask anything — bids, permits, client messages…" data-he-placeholder="שאל כל דבר — הצעות מחיר, היתרים, הודעות ללקוחות…" data-es-placeholder="Pregunta lo que sea — presupuestos, permisos, mensajes a clientes…" rows="1" oninput="autoGrow(this)"></textarea>
         <div class="composer-footer">
           <div class="composer-left"></div>
           <span class="composer-hint-text">⏎ send · ⇧⏎ new line</span>
