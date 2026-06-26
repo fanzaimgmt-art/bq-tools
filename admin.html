@@ -243,6 +243,10 @@ async function loadAdminData() {
   }
 }
 
+// Escape ALL interpolated server data — admin data (email/businessName/error reports)
+// is attacker-controllable and rendered into innerHTML (was stored-XSS → admin takeover).
+function escHtml(s){return String(s ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
 function renderUsers(users) {
   const tbody = document.getElementById('userTableBody');
   if (users.length === 0) {
@@ -252,13 +256,13 @@ function renderUsers(users) {
 
   tbody.innerHTML = users.map(u => `
     <tr>
-      <td style="font-size:12px;">${u.email}</td>
-      <td style="font-weight:700;">⚡ ${u.credits}</td>
+      <td style="font-size:12px;">${escHtml(u.email)}</td>
+      <td style="font-weight:700;">⚡ ${escHtml(u.credits)}</td>
       <td><span class="${u.isPro ? 'pro-badge' : 'free-badge'}">${u.isPro ? 'PRO' : 'Free'}</span></td>
-      <td style="font-size:12px;">${u.businessName || '—'}</td>
-      <td>${u.creditsUsedThisMonth || 0}</td>
+      <td style="font-size:12px;">${escHtml(u.businessName || '—')}</td>
+      <td>${escHtml(u.creditsUsedThisMonth || 0)}</td>
       <td>
-        <button class="btn btn-sm" style="font-size:11px;min-height:32px;padding:4px 8px;" onclick="togglePro('${u.email}')">${u.isPro ? 'Remove Pro' : 'Make Pro'}</button>
+        <button class="btn btn-sm" style="font-size:11px;min-height:32px;padding:4px 8px;" onclick="togglePro('${escHtml(u.email)}')">${u.isPro ? 'Remove Pro' : 'Make Pro'}</button>
       </td>
     </tr>
   `).join('');
@@ -318,8 +322,8 @@ async function loadErrors() {
     list.innerHTML = data.errors.slice(0, 50).map(e => `
       <div class="error-item">
         <span class="error-date">${new Date(e.timestamp).toLocaleString()}</span>
-        <span class="error-page">${e.page || ''}</span>
-        <div class="error-msg">${e.error || ''}</div>
+        <span class="error-page">${escHtml(e.page || '')}</span>
+        <div class="error-msg">${escHtml(e.error || '')}</div>
       </div>
     `).join('');
   } catch {

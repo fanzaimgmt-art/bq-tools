@@ -512,7 +512,7 @@ function timingSafeEq(a, b) {
 }
 
 // Admin auth check — no fallback; returns false if ADMIN_PASSWORD is unset
-function isAdmin(request, env, ctx) {
+async function isAdmin(request, env, ctx) {
   const secret = env.ADMIN_PASSWORD;
   if (!secret) {
     console.error('[isAdmin] ADMIN_PASSWORD not configured in worker env');
@@ -522,8 +522,9 @@ function isAdmin(request, env, ctx) {
   const password = auth.replace('Bearer ', '');
   if (!timingSafeEq(password, secret)) {
     console.error('[isAdmin] password mismatch');
-    // Track brute-force attempts (auto-ban after 5 fails/min)
-    if (ctx) ctx.waitUntil(trackFailedAdminAuth(request, env, ctx));
+    // Track brute-force attempts (auto-ban after 5 fails/min). Awaited directly so it
+    // runs even when no ctx is passed (was dead: all call sites call isAdmin without ctx).
+    await trackFailedAdminAuth(request, env, ctx);
     return false;
   }
   return true;
@@ -825,13 +826,19 @@ async function handleUpdateUser(request, env) {
 
   // Only allow updating these fields
   const allowed = ['businessName', 'phone', 'logo', 'businessType', 'language'];
+  const maxLen = { businessName: 120, phone: 40, businessType: 60, language: 8 };
   for (const key of allowed) {
     if (updates[key] !== undefined) {
       // Logo size check
       if (key === 'logo' && updates[key] && updates[key].length > 70000) {
         return json({ error: 'Logo too large. Max 50KB.' }, 400);
       }
-      user[key] = updates[key];
+      // Text fields: coerce to string + length-cap (defense-in-depth vs stored-XSS payloads)
+      if (key !== 'logo') {
+        user[key] = String(updates[key] ?? '').slice(0, maxLen[key] || 120);
+      } else {
+        user[key] = updates[key];
+      }
     }
   }
 
@@ -1384,7 +1391,7 @@ async function logCreditUsage(email, tool, projectTitle, env) {
 // ── Credits ──
 
 async function handleAddCredits(request, env) {
-  if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
+  if (!await isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
 
   const { email, amount, makePro } = await request.json();
   if (!email || !amount) return json({ error: 'email and amount required' }, 400);
@@ -1412,7 +1419,7 @@ async function handleAddCredits(request, env) {
 // ── Admin ──
 
 async function handleAdminUsers(request, env) {
-  if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
+  if (!await isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
 
   // List all users from KV (prefix scan)
   const list = await env.BQ_USERS.list({ prefix: 'user:' });
@@ -1438,7 +1445,7 @@ async function handleAdminUsers(request, env) {
 }
 
 async function handleAdminGetUser(request, env) {
-  if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
+  if (!await isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
 
   const url = new URL(request.url);
   const email = url.searchParams.get('email');
@@ -1461,7 +1468,7 @@ async function handleAdminGetUser(request, env) {
 }
 
 async function handleAdminTogglePro(request, env) {
-  if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
+  if (!await isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
 
   const { email } = await request.json();
   if (!email) return json({ error: 'email required' }, 400);
@@ -1489,7 +1496,7 @@ async function handleAdminTogglePro(request, env) {
 
 // Tag a user into a beta cohort. POST { email, betaCohort, betaSource, grantProCredits? }
 async function handleAdminBetaTag(request, env) {
-  if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
+  if (!await isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
 
   const { email, betaCohort, betaSource, grantProCredits } = await request.json();
   if (!email) return json({ error: 'email required' }, 400);
@@ -1518,7 +1525,7 @@ async function handleAdminBetaTag(request, env) {
 
 // Beta funnel: counts + per-tester rows. GET ?cohort=<optional filter>
 async function handleAdminBetaFunnel(request, env) {
-  if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
+  if (!await isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
 
   const url = new URL(request.url);
   const cohortFilter = (url.searchParams.get('cohort') || '').trim();
@@ -1679,9 +1686,13 @@ async function handleErrorReport(request, env) {
   // Size cap: reject payloads over 10 KB
   if (JSON.stringify(body).length > 10000) return json({ error: 'Report too large' }, 413);
 
+  // Whitelist + coerce + length-cap. NEVER spread {...body}: it stored attacker-controlled
+  // keys verbatim that admin.html rendered into innerHTML (stored XSS → admin takeover).
   const key = `error:${Date.now()}`;
   await env.BQ_USERS.put(key, JSON.stringify({
-    ...body,
+    page: String(body.page || '').slice(0, 300),
+    error: String(body.error || '').slice(0, 1000),
+    userAgent: String(body.userAgent || '').slice(0, 300),
     timestamp: new Date().toISOString()
   }), { expirationTtl: 2592000 }); // 30 days
 
@@ -1689,7 +1700,7 @@ async function handleErrorReport(request, env) {
 }
 
 async function handleAdminErrors(request, env) {
-  if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
+  if (!await isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
 
   const list = await env.BQ_USERS.list({ prefix: 'error:' });
   const errors = [];
@@ -1963,7 +1974,7 @@ async function handleDirectoryLocation(request, env) {
 }
 
 async function handleAdminDirectoryTier(request, env) {
-  if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
+  if (!await isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
 
   const { email, tier } = await request.json();
   if (!email || !['free', 'pro', 'featured'].includes(tier)) {
@@ -2184,7 +2195,7 @@ Provide a detailed analysis. Respond JSON only:
 // ── Google Maps Directory Scraper (Admin only) ──
 
 async function handleAdminScrapeDirectory(request, env) {
-  if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
+  if (!await isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
 
   const apifyToken = env.APIFY_TOKEN;
   if (!apifyToken) return json({ error: 'APIFY_TOKEN secret not set' }, 500);
@@ -2226,7 +2237,7 @@ async function apifyGet(path, apifyToken) {
 }
 
 async function handleAdminScrapeStatus(request, env) {
-  if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
+  if (!await isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
   const apifyToken = env.APIFY_TOKEN;
   if (!apifyToken) return json({ error: 'APIFY_TOKEN not set' }, 500);
 
@@ -2249,7 +2260,7 @@ async function handleAdminScrapeStatus(request, env) {
 }
 
 async function handleAdminImportResults(request, env) {
-  if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
+  if (!await isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
   const apifyToken = env.APIFY_TOKEN;
   if (!apifyToken) return json({ error: 'APIFY_TOKEN not set' }, 500);
 
@@ -2617,7 +2628,7 @@ async function handleRedeemCode(request, env) {
 }
 
 async function handleAdminCreateGiftCode(request, env) {
-  if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
+  if (!await isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
 
   const { credits, note } = await request.json();
   if (!credits || credits < 1) return json({ error: 'credits required (min 1)' }, 400);
@@ -3058,7 +3069,7 @@ async function handleNewsArchive(request, env) {
 }
 
 async function handleAdminNewsRefresh(request, env) {
-  if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
+  if (!await isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
   await refreshNews(env, true); // force refresh
   return json({ ok: true, message: 'News refreshed' });
 }
@@ -4445,7 +4456,7 @@ async function handleTTSGenerate(request, env) {
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 async function handleAdminSaveClientAd(request, env) {
-  if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 401);
+  if (!await isAdmin(request, env)) return json({ error: 'Unauthorized' }, 401);
 
   const { clientEmail, adUrl, description, template, tagline, voiceover } = await request.json();
   if (!clientEmail || !adUrl) return json({ error: 'clientEmail and adUrl required' }, 400);
@@ -4476,7 +4487,7 @@ async function handleAdminSaveClientAd(request, env) {
 // ── Admin: Notify client that their video is ready ──
 
 async function handleAdminNotifyClient(request, env) {
-  if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 401);
+  if (!await isAdmin(request, env)) return json({ error: 'Unauthorized' }, 401);
 
   const { clientEmail, type = 'video_ready', adUrl } = await request.json();
   if (!clientEmail) return json({ error: 'clientEmail required' }, 400);
@@ -4838,15 +4849,17 @@ async function _pushAdminAlert(entry, env) {
 }
 
 async function handlePaypalSubmit(request, env) {
+  // Require a session: derive the email from the token, never trust a body email
+  // (was unauth — anyone could file forged pending_payment rows for any address).
+  const user = await getUserByToken(request.headers.get('Authorization')?.replace('Bearer ', ''), env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
   let body;
   try { body = await request.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
 
-  const { tier, amount, transactionId, userEmail } = body;
+  const { tier, amount, transactionId } = body;
+  const userEmail = user.email;
 
   if (!TIER_AMOUNTS[tier]) return json({ error: 'Invalid tier' }, 400);
-  if (typeof userEmail !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userEmail)) {
-    return json({ error: 'Invalid email' }, 400);
-  }
   if (typeof transactionId !== 'string' || !/^[a-zA-Z0-9]{10,40}$/.test(transactionId)) {
     return json({ error: 'Transaction ID must be 10-40 alphanumeric characters' }, 400);
   }
@@ -4870,6 +4883,11 @@ async function handlePaypalSubmit(request, env) {
 }
 
 async function handleCryptoSubmit(request, env) {
+  // Crypto payments removed from the product — endpoint retired (no longer accepts claims).
+  return json({ error: 'Crypto payments are no longer supported.' }, 410);
+}
+
+async function _handleCryptoSubmit_RETIRED(request, env) {
   let body;
   try { body = await request.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
 
@@ -4905,7 +4923,7 @@ async function handleCryptoSubmit(request, env) {
 // ── Admin Payment Handlers ──
 
 async function handleAdminPaymentsList(request, env) {
-  if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 401);
+  if (!await isAdmin(request, env)) return json({ error: 'Unauthorized' }, 401);
 
   const url = new URL(request.url);
   const statusFilter = url.searchParams.get('status') || 'pending';
@@ -4927,7 +4945,7 @@ async function handleAdminPaymentsList(request, env) {
 }
 
 async function handleAdminPaymentsVerify(request, env) {
-  if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 401);
+  if (!await isAdmin(request, env)) return json({ error: 'Unauthorized' }, 401);
 
   let body;
   try { body = await request.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
@@ -4973,7 +4991,7 @@ async function handleAdminPaymentsVerify(request, env) {
 }
 
 async function handleAdminAlerts(request, env) {
-  if (!isAdmin(request, env)) return json({ error: 'Unauthorized' }, 401);
+  if (!await isAdmin(request, env)) return json({ error: 'Unauthorized' }, 401);
 
   const raw = await env.BQ_USERS.get('admin_alerts');
   const alerts = raw ? JSON.parse(raw) : [];

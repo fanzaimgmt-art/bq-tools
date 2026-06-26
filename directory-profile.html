@@ -267,8 +267,8 @@ function renderProfile(l) {
   let contactUpgradeCta = '';
   if (canSeeContact) {
     const items = [];
-    if (l.phone) items.push(`<div class="contact-item">📞 <a href="tel:${l.phone}">${escHtml(l.phone)}</a></div>`);
-    if (l.contactEmail) items.push(`<div class="contact-item">✉️ <a href="mailto:${l.contactEmail}">${escHtml(l.contactEmail)}</a></div>`);
+    if (l.phone) items.push(`<div class="contact-item">📞 <a href="tel:${escAttr(l.phone)}">${escHtml(l.phone)}</a></div>`);
+    if (l.contactEmail) items.push(`<div class="contact-item">✉️ <a href="mailto:${escAttr(l.contactEmail)}">${escHtml(l.contactEmail)}</a></div>`);
     if (l.website) items.push(`<div class="contact-item">🌐 <a href="${escAttr(safeUrl(l.website))}" target="_blank" rel="noopener">${escHtml(l.website.replace(/^https?:\/\//, ''))}</a></div>`);
     if (l.instagram) items.push(`<div class="contact-item">📸 <a href="${escAttr(safeUrl(l.instagram))}" target="_blank" rel="noopener">Instagram</a></div>`);
     if (l.facebook) items.push(`<div class="contact-item">📘 <a href="${escAttr(safeUrl(l.facebook))}" target="_blank" rel="noopener">Facebook</a></div>`);
@@ -357,8 +357,8 @@ function renderProfile(l) {
   // Mailto CTA
   let contactBtnHTML = '';
   if (canSeeContact && l.contactEmail) {
-    const mailto = `mailto:${l.contactEmail}?subject=Inquiry from Obra Directory`;
-    contactBtnHTML = `<a href="${mailto}" class="btn btn-primary btn-large contact-btn" data-en="📩 Contact This Contractor" data-he="📩 צור קשר עם הקבלן">📩 Contact This Contractor</a>`;
+    const mailto = `mailto:${encodeURIComponent(l.contactEmail)}?subject=Inquiry from Obra Directory`;
+    contactBtnHTML = `<a href="${escAttr(mailto)}" class="btn btn-primary btn-large contact-btn" data-en="📩 Contact This Contractor" data-he="📩 צור קשר עם הקבלן">📩 Contact This Contractor</a>`;
   }
 
   document.getElementById('profileContent').innerHTML = `
@@ -413,7 +413,7 @@ function initProfileMap(l) {
 
     const popup = `
       <div style="font-family:Inter,sans-serif;">
-        ${loc.thumbnail ? `<img src="${loc.thumbnail}" style="width:120px;border-radius:6px;margin-bottom:6px;">` : ''}
+        ${loc.thumbnail ? `<img src="${escAttr(safeUrl(loc.thumbnail))}" style="width:120px;border-radius:6px;margin-bottom:6px;">` : ''}
         ${loc.projectTitle ? `<strong>${escHtml(loc.projectTitle)}</strong><br>` : ''}
         <span style="color:var(--txd);font-size:12px;">${escHtml(loc.address)}</span>
       </div>`;
