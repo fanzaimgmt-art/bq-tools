@@ -995,7 +995,7 @@ async function handleVerify(request, env) {
     const baseFree = parseInt(env.FREE_CREDITS || '5');
     // Referral bonus: 10 credits instead of 5 — but ONLY from a real existing account. Without the
     // existence check, anyone self-grants +5 by passing any "@"-containing string as referredBy.
-    const refEmail = (referredBy || '').toLowerCase().trim();
+    const refEmail = normalizeEmail(referredBy || '');
     const hasReferral = refEmail && refEmail.includes('@') && refEmail !== emailLower
       && !!(await env.BQ_USERS.get(`user:${refEmail}`));
     const freeCredits = hasReferral ? baseFree + 5 : baseFree;
@@ -1076,7 +1076,9 @@ async function handleGoogleAuth(request, env) {
     return json({ error: 'Email not verified' }, 403);
   }
 
-  const email = (payload.email || '').toLowerCase().trim();
+  // Normalize identically to email-code signup so Google login and email signup resolve to the SAME
+  // account (and one inbox can't farm dot/+tag variants).
+  const email = normalizeEmail(payload.email);
   if (!email) return json({ error: 'No email in Google token' }, 400);
 
   // Check if user exists
@@ -1818,7 +1820,7 @@ async function handleAdminGetUser(request, env) {
   const email = url.searchParams.get('email');
   if (!email) return json({ error: 'email param required' }, 400);
 
-  const raw = await env.BQ_USERS.get(`user:${email.toLowerCase().trim()}`);
+  const raw = await env.BQ_USERS.get(`user:${normalizeEmail(email)}`);
   if (!raw) return json({ error: 'User not found' }, 404);
 
   const user = JSON.parse(raw);
@@ -4817,7 +4819,7 @@ async function handleAdminSaveClientAd(request, env) {
   if (!EMAIL_RE.test(clientEmail) || clientEmail.length > 254) return json({ error: 'Invalid email' }, 400);
   if (!adUrl.startsWith('https://')) return json({ error: 'adUrl must be an https URL' }, 400);
 
-  const userRaw = await env.BQ_USERS.get(`user:${clientEmail.toLowerCase()}`);
+  const userRaw = await env.BQ_USERS.get(`user:${normalizeEmail(clientEmail)}`);
   if (!userRaw) return json({ error: 'Client not found' }, 404);
   const user = JSON.parse(userRaw);
 
@@ -4848,7 +4850,7 @@ async function handleAdminNotifyClient(request, env) {
   if (!EMAIL_RE.test(clientEmail) || clientEmail.length > 254) return json({ error: 'Invalid email' }, 400);
   const safeAdUrl = (adUrl && adUrl.startsWith('https://')) ? adUrl : null;
 
-  const userRaw = await env.BQ_USERS.get(`user:${clientEmail.toLowerCase()}`);
+  const userRaw = await env.BQ_USERS.get(`user:${normalizeEmail(clientEmail)}`);
   if (!userRaw) return json({ error: 'Client not found' }, 404);
   const user = JSON.parse(userRaw);
 
