@@ -90,15 +90,15 @@
   <div class="crm-modal">
     <button class="crm-close" onclick="closeOverlay('newDealOverlay')">&times;</button>
     <h2 data-en="New Deal" data-he="עסקה חדשה" data-es="Nuevo Trato">New Deal</h2>
-    <div class="crm-field"><label data-en="Title" data-he="כותרת" data-es="Título">Title</label><input id="nd_title" maxlength="200" placeholder="Kitchen remodel — Smith"></div>
+    <div class="crm-field"><label for="nd_title" data-en="Title" data-he="כותרת" data-es="Título">Title</label><input id="nd_title" maxlength="200" placeholder="Kitchen remodel — Smith"></div>
     <div class="crm-row2">
-      <div class="crm-field"><label data-en="Value ($)" data-he="ערך ($)" data-es="Valor ($)">Value ($)</label><input id="nd_value" type="number" inputmode="decimal" placeholder="12000"></div>
-      <div class="crm-field"><label data-en="Stage" data-he="שלב" data-es="Etapa">Stage</label><select id="nd_stage"><option value="new">New</option><option value="quoted">Quoted</option><option value="won">Won</option><option value="lost">Lost</option></select></div>
+      <div class="crm-field"><label for="nd_value" data-en="Value ($)" data-he="ערך ($)" data-es="Valor ($)">Value ($)</label><input id="nd_value" type="number" inputmode="decimal" placeholder="12000"></div>
+      <div class="crm-field"><label for="nd_stage" data-en="Stage" data-he="שלב" data-es="Etapa">Stage</label><select id="nd_stage"><option value="new">New</option><option value="quoted">Quoted</option><option value="won">Won</option><option value="lost">Lost</option></select></div>
     </div>
-    <div class="crm-field"><label data-en="Contact name" data-he="שם איש קשר" data-es="Nombre">Contact name</label><input id="nd_name" maxlength="100" placeholder="John Smith"></div>
+    <div class="crm-field"><label for="nd_name" data-en="Contact name" data-he="שם איש קשר" data-es="Nombre">Contact name</label><input id="nd_name" maxlength="100" placeholder="John Smith"></div>
     <div class="crm-row2">
-      <div class="crm-field"><label data-en="Phone" data-he="טלפון" data-es="Teléfono">Phone</label><input id="nd_phone" maxlength="40"></div>
-      <div class="crm-field"><label data-en="Company" data-he="חברה" data-es="Empresa">Company</label><input id="nd_company" maxlength="120"></div>
+      <div class="crm-field"><label for="nd_phone" data-en="Phone" data-he="טלפון" data-es="Teléfono">Phone</label><input id="nd_phone" maxlength="40"></div>
+      <div class="crm-field"><label for="nd_company" data-en="Company" data-he="חברה" data-es="Empresa">Company</label><input id="nd_company" maxlength="120"></div>
     </div>
     <button class="btn btn-primary" style="width:100%;" onclick="createDeal()" id="nd_btn" data-en="Create" data-he="צור" data-es="Crear">Create</button>
     <div id="nd_err" style="color:var(--red);font-size:13px;margin-top:8px;text-align:center;"></div>
