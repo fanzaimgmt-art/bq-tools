@@ -167,9 +167,10 @@ function colDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('dra
 function colDragLeave(e) { e.currentTarget.classList.remove('dragover'); }
 async function colDrop(e, stage) {
   e.preventDefault(); e.currentTarget.classList.remove('dragover');
-  if (!_dragId) return;
-  await fetch(`${CRM_API}/api/crm/deal`, { method: 'PATCH', headers: _H(), body: JSON.stringify({ id: _dragId, stage }) });
-  _dragId = null; loadPipeline();
+  const id = _dragId; _dragId = null; // reset now so a failed drop can't move the wrong deal next time
+  if (!id) return;
+  await _crmWrite(`${CRM_API}/api/crm/deal`, { method: 'PATCH', headers: _H(), body: JSON.stringify({ id, stage }) });
+  loadPipeline(); // always re-sync from server (shows the move, or reverts a failed one)
 }
 
 async function importClients() {
@@ -192,10 +193,16 @@ async function createDeal() {
     name: document.getElementById('nd_name').value.trim(), phone: document.getElementById('nd_phone').value.trim(),
     company: document.getElementById('nd_company').value.trim(), source: 'manual'
   };
-  const r = await fetch(`${CRM_API}/api/crm/deal`, { method: 'POST', headers: _H(), body: JSON.stringify(payload) });
-  btn.disabled = false;
-  if (r.ok) { ['nd_title','nd_value','nd_name','nd_phone','nd_company'].forEach(i=>document.getElementById(i).value=''); closeOverlay('newDealOverlay'); loadPipeline(); }
-  else { document.getElementById('nd_err').textContent = (await r.json()).error || 'Error'; }
+  try {
+    const r = await fetch(`${CRM_API}/api/crm/deal`, { method: 'POST', headers: _H(), body: JSON.stringify(payload) });
+    if (r.status === 401) { location.replace('/auth?next=/crm'); return; }
+    if (r.ok) { ['nd_title','nd_value','nd_name','nd_phone','nd_company'].forEach(i=>document.getElementById(i).value=''); closeOverlay('newDealOverlay'); loadPipeline(); }
+    else { let m = 'Error'; try { m = (await r.json()).error || m; } catch (_) {} document.getElementById('nd_err').textContent = m; }
+  } catch (_) {
+    document.getElementById('nd_err').textContent = L({en:'Network error — please retry.',he:'תקלת רשת — נסה שוב.',es:'Error de red — reintenta.'});
+  } finally {
+    btn.disabled = false; // always re-enable, even if fetch threw (was stuck-disabled on network error)
+  }
 }
 
 // Deal detail
