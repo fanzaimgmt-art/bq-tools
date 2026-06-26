@@ -549,6 +549,12 @@ async function handleRegister(request, env) {
 
   const emailLower = email.toLowerCase().trim();
 
+  // Burst-proof limiter (native, atomic) — blocks rapid bursts the hourly KV counter misses.
+  if (env.AUTH_LIMITER) {
+    const { success } = await env.AUTH_LIMITER.limit({ key: `register:${emailLower}` });
+    if (!success) return json({ error: 'Too many requests. Slow down.' }, 429);
+  }
+
   // Throttle code requests: 5/hour per email (anti email-bomb + slows enumeration)
   const regKey = `reg:${emailLower}`;
   const regCount = parseInt(await env.BQ_USERS.get(regKey) || '0');
@@ -575,6 +581,13 @@ async function handleVerify(request, env) {
   if (!email || !code || typeof email !== 'string' || typeof code !== 'string') return json({ error: 'Email and code required' }, 400);
 
   const emailLower = email.toLowerCase().trim();
+
+  // Burst-proof limiter (Cloudflare native rate-limit binding — atomic, unlike the
+  // eventually-consistent KV counter below which can undercount rapid bursts).
+  if (env.AUTH_LIMITER) {
+    const { success } = await env.AUTH_LIMITER.limit({ key: `verify:${emailLower}` });
+    if (!success) return json({ error: 'Too many attempts. Slow down.' }, 429);
+  }
 
   // Brute-force lockout: max 5 wrong codes per email (10-min window = code lifetime)
   const failKey = `verifyfail:${emailLower}`;

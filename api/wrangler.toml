@@ -16,6 +16,14 @@ MOSHE_CHAT_ID = "369310707"
 binding = "BQ_USERS"
 id = "e75722f0f0f44c1994c95bc98b4386a9"
 
+# Native rate-limit binding — atomic/burst-proof (unlike eventually-consistent KV counters).
+# 5 requests / 60s per key. Used for verify + register brute-force protection.
+[[unsafe.bindings]]
+name = "AUTH_LIMITER"
+type = "ratelimit"
+namespace_id = "2001"
+simple = { limit = 5, period = 60 }
+
 [triggers]
 # 8am PT = 16:00 UTC. Runs: news refresh + scrape 20 new contractors + re-engagement + analytics digest.
 crons = ["0 16 * * *"]
