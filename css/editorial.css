@@ -34,7 +34,7 @@ html.editorial body {
   cursor: auto;
 }
 html.editorial body[lang="he"], html.editorial [lang="he"], html.editorial body[dir="rtl"] {
-  font-family: 'Rubik', 'Inter', system-ui, sans-serif !important;
+  font-family: 'Heebo', 'Inter', system-ui, sans-serif !important;
 }
 @media (max-width: 900px), (pointer: coarse) {
   html.editorial body { cursor: auto; font-size: 16px; }

@@ -1,4 +1,4 @@
-/* Premium typography stack — Inter (EN/ES), Rubik (HE), Space Grotesk (display), JetBrains Mono (code) */
+/* Premium typography stack — Inter (EN/ES), Heebo (HE), Space Grotesk (display), JetBrains Mono (code) */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=Heebo:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
 :root {
@@ -104,7 +104,7 @@ body.with-mesh:not([data-theme="light"]) {
   font-feature-settings: 'ss01', 'tnum';
 }
 
-/* Hebrew pages use Rubik */
+/* Hebrew pages use Heebo */
 body[lang="he"], [lang="he"] { font-family: var(--font-he); }
 
 /* ── Typography Hierarchy ── */
