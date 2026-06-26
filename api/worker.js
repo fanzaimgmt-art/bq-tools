@@ -415,6 +415,10 @@ export default {
       return corsResponse(env, json({ error: 'Not found' }, 404));
     } catch (err) {
       console.error('Worker error:', err);
+      // Malformed/empty JSON body throws SyntaxError → that's a client error, not a 500
+      if (err instanceof SyntaxError) {
+        return corsResponse(env, json({ error: 'Invalid request body' }, 400));
+      }
       return corsResponse(env, json({ error: 'Internal error' }, 500));
     }
   }
@@ -539,7 +543,7 @@ function handleAdminCheckAuth(request, env) {
 
 async function handleRegister(request, env) {
   const { email } = await request.json();
-  if (!email || !email.includes('@')) {
+  if (!email || typeof email !== 'string' || !email.includes('@') || email.length > 254) {
     return json({ error: 'Valid email required' }, 400);
   }
 
@@ -568,7 +572,7 @@ async function handleRegister(request, env) {
 
 async function handleVerify(request, env) {
   const { email, code, referredBy, betaCohort, betaSource } = await request.json();
-  if (!email || !code) return json({ error: 'Email and code required' }, 400);
+  if (!email || !code || typeof email !== 'string' || typeof code !== 'string') return json({ error: 'Email and code required' }, 400);
 
   const emailLower = email.toLowerCase().trim();
 
