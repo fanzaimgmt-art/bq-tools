@@ -88,6 +88,9 @@ export default {
       if (path === '/api/auth/google' && request.method === 'POST') {
         return corsResponse(env, await handleGoogleAuth(request, env));
       }
+      if (path === '/api/auth/logout' && request.method === 'POST') {
+        return corsResponse(env, await handleLogout(request, env));
+      }
       if (path === '/api/user' && request.method === 'GET') {
         return corsResponse(env, await handleGetUser(request, env));
       }
@@ -440,11 +443,19 @@ function corsResponse(env, response) {
 }
 
 function generateCode() {
-  return String(Math.floor(100000 + Math.random() * 900000));
+  // CSPRNG (not Math.random) — verify codes gate account access
+  return String(crypto.getRandomValues(new Uint32Array(1))[0] % 900000 + 100000);
 }
 
 function generateToken() {
   return crypto.randomUUID();
+}
+
+// Logout — revoke the current session token
+async function handleLogout(request, env) {
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  if (token) await env.BQ_USERS.delete(`token:${token}`);
+  return json({ ok: true });
 }
 
 // Get user from token
@@ -533,6 +544,13 @@ async function handleRegister(request, env) {
   }
 
   const emailLower = email.toLowerCase().trim();
+
+  // Throttle code requests: 5/hour per email (anti email-bomb + slows enumeration)
+  const regKey = `reg:${emailLower}`;
+  const regCount = parseInt(await env.BQ_USERS.get(regKey) || '0');
+  if (regCount >= 5) return json({ error: 'Too many requests. Try again later.' }, 429);
+  await env.BQ_USERS.put(regKey, String(regCount + 1), { expirationTtl: 3600 });
+
   const code = generateCode();
 
   // Store verification code (expires in 10 min)
@@ -553,14 +571,25 @@ async function handleVerify(request, env) {
   if (!email || !code) return json({ error: 'Email and code required' }, 400);
 
   const emailLower = email.toLowerCase().trim();
+
+  // Brute-force lockout: max 5 wrong codes per email (10-min window = code lifetime)
+  const failKey = `verifyfail:${emailLower}`;
+  const fails = parseInt(await env.BQ_USERS.get(failKey) || '0');
+  if (fails >= 5) {
+    await env.BQ_USERS.delete(`verify:${emailLower}`); // burn the code, force re-request
+    return json({ error: 'Too many attempts. Request a new code.' }, 429);
+  }
+
   const stored = await env.BQ_USERS.get(`verify:${emailLower}`);
 
   if (!stored || stored !== code.trim()) {
+    await env.BQ_USERS.put(failKey, String(fails + 1), { expirationTtl: 600 });
     return json({ error: 'Invalid or expired code' }, 401);
   }
 
-  // Delete used code
+  // Delete used code + reset the fail counter
   await env.BQ_USERS.delete(`verify:${emailLower}`);
+  await env.BQ_USERS.delete(failKey);
 
   // Check if user exists
   let user = null;
@@ -623,7 +652,7 @@ async function handleVerify(request, env) {
 
   // Save user + token mapping
   await env.BQ_USERS.put(`user:${emailLower}`, JSON.stringify(user));
-  await env.BQ_USERS.put(`token:${user.userToken}`, emailLower);
+  await env.BQ_USERS.put(`token:${user.userToken}`, emailLower, { expirationTtl: 2592000 });
 
   return json({
     ok: true,
@@ -713,7 +742,7 @@ async function handleGoogleAuth(request, env) {
   }
 
   await env.BQ_USERS.put(`user:${email}`, JSON.stringify(user));
-  await env.BQ_USERS.put(`token:${user.userToken}`, email);
+  await env.BQ_USERS.put(`token:${user.userToken}`, email, { expirationTtl: 2592000 });
 
   return json({
     ok: true,
@@ -4013,6 +4042,7 @@ async function handleKinoviCreate(request, env) {
   const token = request.headers.get('Authorization')?.replace('Bearer ', '');
   const user = await getUserByToken(token, env);
   if (!user) return json({ error: 'Unauthorized' }, 401);
+  if (!await checkRateLimit(user.email, env)) return json({ error: 'Too many requests. Slow down.' }, 429);
 
   const kinoviKey = env.KINOVI_API_KEY;
   if (!kinoviKey) return json({ error: 'KINOVI_API_KEY not configured' }, 500);
@@ -4061,6 +4091,7 @@ async function handleNanoBananaGenerate(request, env) {
   const token = request.headers.get('Authorization')?.replace('Bearer ', '');
   const user = await getUserByToken(token, env);
   if (!user) return json({ error: 'Unauthorized' }, 401);
+  if (!await checkRateLimit(user.email, env)) return json({ error: 'Too many requests. Slow down.' }, 429);
 
   const piApiKey = env.PIAPI_KEY;
   if (!piApiKey) return json({ error: 'PIAPI_KEY not configured. Set secret in Cloudflare dashboard.' }, 500);
