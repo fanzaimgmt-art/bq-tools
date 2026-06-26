@@ -12,6 +12,7 @@ export default {
   },
 
   async fetch(request, env, ctx) {
+   try {
     // CORS preflight (do not gate)
     if (request.method === 'OPTIONS') {
       return corsResponse(env, new Response(null, { status: 204 }));
@@ -24,8 +25,8 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
-    try {
-      // ── Security admin routes ──
+      // ── Security admin routes ── (whole fetch wrapped in try at the top so NO path can emit a raw
+      //    Cloudflare 1101 — securityGate/OPTIONS/addSecurityHeaders/URL-parse are now covered too)
       if (path === '/api/admin/security/log' && request.method === 'GET') {
         return addSecurityHeaders(await handleSecurityLog(request, env), request);
       }
