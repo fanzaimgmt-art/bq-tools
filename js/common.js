@@ -1,7 +1,9 @@
 // ── BQ Tools — Shared Common JS ──
 
 let lang = localStorage.getItem('bq_lang') || 'en';
-let theme = localStorage.getItem('bq_theme') || 'dark';
+// Dark-first brand. Light mode was never fully themed (hardcoded dark backgrounds across pages → broken
+// half-light), so the toggle is removed and dark is forced (ignores any stale 'light' preference).
+let theme = 'dark';
 
 // ── Security: attribute-safe escaping (use inside src/href/alt; escapes quotes) ──
 function escAttr(s) {
@@ -1185,7 +1187,6 @@ function buildAppNav() {
       ${linksHtml}
       ${creditPill}
       <button class="theme-toggle" onclick="openLangPicker()" title="Language" aria-label="Choose language">🌐</button>
-      ${themeToggle}
       ${authHtml}
     </div>`;
 
