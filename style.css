@@ -1,5 +1,5 @@
 /* Premium typography stack — Inter (EN/ES), Rubik (HE), Space Grotesk (display), JetBrains Mono (code) */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Rubik:wght@400;500;600;700;800&family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=Heebo:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
 :root {
   /* Dark theme (default) — construction psychology: gold (trust/value), deep black (stability), amber accents */
@@ -39,8 +39,9 @@
           radial-gradient(at 85% 90%, rgba(232,197,71,0.06) 0%, transparent 50%);
   /* Typography */
   --font-en: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-he: 'Rubik', 'Inter', system-ui, sans-serif;
-  --font-display: 'Manrope', 'Inter', sans-serif;
+  --font-he: 'Heebo', 'Inter', system-ui, sans-serif;
+  /* Latin headings → Space Grotesk; Hebrew headings auto-fall through to Heebo (Space Grotesk has no Hebrew glyphs) */
+  --font-display: 'Space Grotesk', 'Heebo', 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Consolas, monospace;
   /* Easing curves — varied, not single-use */
   --transition: .2s cubic-bezier(.4,0,.2,1);
