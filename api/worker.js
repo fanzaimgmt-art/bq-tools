@@ -3252,21 +3252,13 @@ async function nightlyReengagement(env) {
       const lastReeng = user.lastReengagementAt ? new Date(user.lastReengagementAt).getTime() : 0;
       if (lastReeng > Date.now() - 14 * 24 * 60 * 60 * 1000) continue;
 
-      const mailRes = await fetch('https://api.mailchannels.net/tx/v1/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          personalizations: [{ to: [{ email: user.email, name: user.name || user.email }] }],
-          from: { email: 'hello@bq-tools.com', name: 'Obra' },
-          subject: 'Your Obra account is waiting for you 👋',
-          content: [{
-            type: 'text/plain',
-            value: `Hi ${user.name || 'there'},\n\nWe noticed you haven't logged in to Obra for a while. Your Pro account has ${user.credits || 0} credits ready to use!\n\nLog in at https://bq-tools.fanzai-mgmt.workers.dev\n\nObra Team`
-          }]
-        })
+      const reengSent = await sendEmail(env, {
+        to: user.email,
+        subject: 'Your Obra account is waiting for you 👋',
+        text: `Hi ${user.name || 'there'},\n\nWe noticed you haven't logged in to Obra for a while. Your Pro account has ${user.credits || 0} credits ready to use!\n\nLog in at https://bq-tools.fanzai-mgmt.workers.dev\n\nObra Team`
       });
 
-      if (mailRes.ok || mailRes.status === 202) {
+      if (reengSent) {
         user.lastReengagementAt = new Date().toISOString();
         await env.BQ_USERS.put(key.name, JSON.stringify(user));
         sent++;
@@ -3317,18 +3309,13 @@ async function nightlyAnalyticsDigest(env, taskResults) {
     'Obra Cron'
   ].join('\n');
 
-  await fetch('https://api.mailchannels.net/tx/v1/send', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      personalizations: [{ to: [{ email: adminEmail }] }],
-      from: { email: 'cron@bq-tools.com', name: 'Obra Cron' },
-      subject: `📊 Obra Digest — ${date}`,
-      content: [{ type: 'text/plain', value: body }]
-    })
+  const digestSent = await sendEmail(env, {
+    to: adminEmail,
+    subject: `📊 Obra Digest — ${date}`,
+    text: body
   });
 
-  return `digest sent to ${adminEmail}`;
+  return digestSent ? `digest sent to ${adminEmail}` : 'digest NOT sent (email not configured)';
 }
 
 async function refreshNews(env, force = false) {
@@ -4825,31 +4812,18 @@ async function handleAdminNotifyClient(request, env) {
   if (!userRaw) return json({ error: 'Client not found' }, 404);
   const user = JSON.parse(userRaw);
 
-  // If MailChannels (free Cloudflare email relay) is available, send an email
   const emailBody = type === 'video_ready'
     ? `Hi ${user.name || 'there'},\n\nYour AI video is ready!\n\nView and download it here:\n${safeAdUrl || 'Log in to your Obra account to see it.'}\n\nObra Team`
     : `Hi ${user.name || 'there'},\n\nYou have a new notification from Obra.\n\nObra Team`;
 
-  try {
-    const mailRes = await fetch('https://api.mailchannels.net/tx/v1/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        personalizations: [{ to: [{ email: user.email, name: user.name || user.email }] }],
-        from: { email: 'noreply@bq-tools.com', name: 'Obra' },
-        subject: type === 'video_ready' ? '🎬 Your AI Video is Ready!' : '📬 Obra Notification',
-        content: [{ type: 'text/plain', value: emailBody }]
-      })
-    });
-
-    if (mailRes.ok || mailRes.status === 202) {
-      return json({ ok: true, sent: true, email: user.email });
-    }
-    // MailChannels not available — inform admin (do NOT silently return ok)
-    return json({ ok: false, sent: false, reason: 'Email relay unavailable', email: user.email }, 502);
-  } catch (_) {
-    return json({ ok: false, sent: false, reason: 'Email relay error', email: user.email }, 502);
-  }
+  const sent = await sendEmail(env, {
+    to: user.email,
+    subject: type === 'video_ready' ? '🎬 Your AI Video is Ready!' : '📬 Obra Notification',
+    text: emailBody
+  });
+  // Don't silently claim success — surface unconfigured email so it's never a silent no-op.
+  if (sent) return json({ ok: true, sent: true, email: user.email });
+  return json({ ok: false, sent: false, reason: 'Email not configured', email: user.email }, 502);
 }
 
 // ────────────────────────────────────────────────────────
