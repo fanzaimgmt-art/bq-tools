@@ -455,8 +455,7 @@ body {
   box-shadow: 0 0 32px rgba(232,197,71,0.12);
   position: relative;
 }
-.price-card.recommended::before {
-  content: 'RECOMMENDED';
+.price-badge {
   position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
   background: var(--ac); color: var(--bg);
   font-size: 9px; font-weight: 800; padding: 2px 12px;
@@ -777,6 +776,7 @@ body {
 
     <!-- PRO -->
     <div class="price-card recommended">
+      <div class="price-badge" data-en="RECOMMENDED" data-es="RECOMENDADO" data-he="מומלץ" data-hy="ԽՈՐՀՈՒՐԴ" data-fa="پیشنهادی" data-ar="موصى به">RECOMMENDED</div>
       <div class="price-name">Pro</div>
       <div class="price-amount">$14.99<span>/mo</span></div>
       <p class="price-desc" data-en="All tools. More credits. Pay tracker." data-es="Todas las herramientas. Más créditos." data-he="כל הכלים. יותר קרדיטים.">All tools. More credits. Pay tracker.</p>
