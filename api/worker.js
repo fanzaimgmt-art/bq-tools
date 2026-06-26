@@ -532,7 +532,7 @@ async function handleCrmPipeline(request, env) {
   const { results } = await env.CRM_DB.prepare(
     `SELECT d.id, d.title, d.value, d.stage, d.source, d.expected_close, d.created_at,
             c.name AS contact_name, c.company AS contact_company, c.phone AS contact_phone
-       FROM deals d LEFT JOIN contacts c ON c.id = d.contact_id
+       FROM deals d LEFT JOIN contacts c ON c.id = d.contact_id AND c.owner_email = d.owner_email
       WHERE d.owner_email = ? ORDER BY d.updated_at DESC`
   ).bind(user.email).all();
   const deals = {}, totals = {};
@@ -609,7 +609,7 @@ async function handleCrmDealGet(request, env) {
   const id = parseInt(new URL(request.url).searchParams.get('id')); if (!id) return json({ error: 'id required' }, 400);
   const deal = await env.CRM_DB.prepare(
     `SELECT d.*, c.name AS contact_name, c.company AS contact_company, c.email AS contact_email, c.phone AS contact_phone
-       FROM deals d LEFT JOIN contacts c ON c.id=d.contact_id WHERE d.id=? AND d.owner_email=?`
+       FROM deals d LEFT JOIN contacts c ON c.id=d.contact_id AND c.owner_email=d.owner_email WHERE d.id=? AND d.owner_email=?`
   ).bind(id, user.email).first();
   if (!deal) return json({ error: 'Not found' }, 404);
   const activities = (await env.CRM_DB.prepare(`SELECT * FROM activities WHERE deal_id=? AND owner_email=? ORDER BY created_at DESC`).bind(id, user.email).all()).results;
@@ -638,6 +638,11 @@ async function handleCrmTaskCreate(request, env) {
   let b; try { b = await request.json(); } catch { return json({ error: 'Invalid request' }, 400); }
   const title = String(b.title || '').slice(0, 200).trim(); if (!title) return json({ error: 'title required' }, 400);
   const dealId = b.deal_id ? parseInt(b.deal_id) : null;
+  // IDOR guard: a task may only attach to a deal the caller owns
+  if (dealId) {
+    const own = await env.CRM_DB.prepare(`SELECT id FROM deals WHERE id=? AND owner_email=?`).bind(dealId, user.email).first();
+    if (!own) return json({ error: 'Deal not found' }, 404);
+  }
   const dueAt = b.due_at ? String(b.due_at).slice(0, 30) : null;
   await env.CRM_DB.prepare(`INSERT INTO tasks (owner_email,deal_id,title,due_at) VALUES (?,?,?,?)`).bind(user.email, dealId, title, dueAt).run();
   return json({ ok: true });
@@ -658,7 +663,8 @@ async function handleCrmTasks(request, env) {
   if (!user) return json({ error: 'Unauthorized' }, 401);
   if (!env.CRM_DB) return json({ error: 'CRM not configured' }, 503);
   const { results } = await env.CRM_DB.prepare(
-    `SELECT t.*, d.title AS deal_title FROM tasks t LEFT JOIN deals d ON d.id=t.deal_id
+    // join constrained to the SAME owner so a stale/foreign deal_id can never leak a deal title
+    `SELECT t.*, d.title AS deal_title FROM tasks t LEFT JOIN deals d ON d.id=t.deal_id AND d.owner_email=t.owner_email
       WHERE t.owner_email=? AND t.done=0 ORDER BY (t.due_at IS NULL), t.due_at`
   ).bind(user.email).all();
   return json({ ok: true, tasks: results });
