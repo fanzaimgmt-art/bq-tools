@@ -32,6 +32,9 @@
   .j-card:hover { border-color: var(--ac); transform: translateY(-2px); }
   .j-card.featured { border-color: var(--ac); background: linear-gradient(135deg, var(--sf), var(--acd)); }
   .j-card.featured::before { content: '⭐ FEATURED'; position: absolute; top: -8px; right: 12px; background: var(--ac); color: var(--bg); font-size: 10px; font-weight: 800; padding: 2px 10px; border-radius: 6px; letter-spacing: .5px; }
+  /* CSS ::before text isn't reachable by setLang — translate via lang-scoped content */
+  [lang="he"] .j-card.featured::before { content: '⭐ מומלץ'; }
+  [lang="es"] .j-card.featured::before { content: '⭐ DESTACADO'; }
   .j-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
   .j-meta { font-size: 12px; color: var(--txd); margin-bottom: 8px; }
   .j-rate { color: var(--grn); font-weight: 700; }

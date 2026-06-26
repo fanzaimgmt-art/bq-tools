@@ -302,6 +302,9 @@ button { font-family: inherit; cursor: pointer; border: 0; background: none; col
   font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 600;
   padding: 3px 10px; border-radius: 100px; letter-spacing: 0.1em;
 }
+/* CSS ::before text isn't reachable by setLang — translate via lang-scoped content */
+[lang="he"] .tg-card::before { content: 'תצוגה חיה'; }
+[lang="es"] .tg-card::before { content: 'VISTA EN VIVO'; }
 .tg-head {
   display: flex; align-items: center; gap: 14px;
   padding-bottom: 14px; margin-bottom: 14px;
