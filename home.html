@@ -295,11 +295,7 @@
     <a href="/#pricing" data-en="Pricing" data-he="מחירים" data-es="Precios">Pricing</a>
   </div>
   <div style="display:flex;align-items:center;gap:12px;justify-self:end;">
-    <div class="lang-toggle" style="display:flex;gap:1px;background:rgba(245,241,232,0.06);border-radius:7px;padding:2px;">
-      <button class="lang-btn" data-lang="en" onclick="setLang('en')" style="padding:6px 10px;border:0;background:transparent;color:var(--ed-paper-dim);font-family:var(--font-en);font-size:12px;font-weight:600;cursor:pointer;border-radius:5px;">EN</button>
-      <button class="lang-btn" data-lang="he" onclick="setLang('he')" style="padding:6px 10px;border:0;background:transparent;color:var(--ed-paper-dim);font-family:var(--font-en);font-size:13px;font-weight:600;cursor:pointer;border-radius:5px;">עב</button>
-      <button class="lang-btn" data-lang="es" onclick="setLang('es')" style="padding:6px 10px;border:0;background:transparent;color:var(--ed-paper-dim);font-family:var(--font-en);font-size:12px;font-weight:600;cursor:pointer;border-radius:5px;">ES</button>
-    </div>
+    <button class="ed-topnav-cta" onclick="openLangPicker()" title="Language" aria-label="Choose language" style="cursor:pointer;border:0;background:transparent;font-size:18px;">🌐</button>
     <a class="ed-topnav-cta cmdk-trigger"><span data-en="Search" data-he="חיפוש" data-es="Buscar">Search</span> · <kbd>⌘K</kbd></a>
   </div>
 </nav>
@@ -593,6 +589,7 @@ document.querySelectorAll('.filter-chip').forEach(chip => {
 document.getElementById('toolCount').textContent = all.length;
 </script>
 
+<script src="/js/common.js" defer></script>
 <script src="/js/editorial.js" defer></script>
 <script src="/js/cmdk-palette.js" defer></script>
 <script src="/js/brain-assistant.js" defer></script>
