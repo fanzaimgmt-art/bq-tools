@@ -820,9 +820,11 @@ function handleAdminCheckAuth(request, env) {
 // ── Auth Routes ──
 
 // Provider-agnostic transactional email. Returns true if a provider accepted the message.
-// Preferred: Resend (set RESEND_API_KEY secret + EMAIL_FROM to a verified-domain sender like
-// "Obra <noreply@obra.build>"; free tier 3k/mo). Falls back to MailChannels, whose free keyless
-// Cloudflare relay was discontinued Aug 2024 — so without RESEND_API_KEY this usually returns false.
+// Set EITHER (whichever Moshe picks; both free):
+//   • RESEND_API_KEY + EMAIL_FROM ("Obra <noreply@obra.build>") — needs a verified DOMAIN (obra.build), 3k/mo.
+//   • BREVO_API_KEY + EMAIL_FROM_ADDR (a single verified sender email) — NO domain needed, 300/day. Fastest path.
+// Falls back to MailChannels, whose free keyless relay was discontinued Aug 2024 — so with neither key set,
+// this returns false (and the signup flow stays honest via emailSent:false).
 async function sendEmail(env, { to, subject, text }) {
   if (env.RESEND_API_KEY) {
     try {
@@ -830,6 +832,19 @@ async function sendEmail(env, { to, subject, text }) {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ from: env.EMAIL_FROM || 'Obra <onboarding@resend.dev>', to: [to], subject, text })
+      });
+      if (r.ok) return true;
+    } catch (_) {}
+  }
+  if (env.BREVO_API_KEY) {
+    try {
+      const r = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: { 'api-key': env.BREVO_API_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sender: { email: env.EMAIL_FROM_ADDR || 'noreply@obra.build', name: 'Obra' },
+          to: [{ email: to }], subject, textContent: text
+        })
       });
       if (r.ok) return true;
     } catch (_) {}

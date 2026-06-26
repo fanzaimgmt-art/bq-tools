@@ -16,10 +16,16 @@ MOSHE_CHAT_ID = "369310707"
 LEAD_OWNER_EMAIL = "mosaeee@gmail.com"
 
 # ── Transactional email (verification codes, client notifications) ──
-# To turn on REAL self-serve signup email (currently MailChannels is dead → no email sends):
-#   1. Free Resend account → verify a sending domain (needs obra.build) → get an API key.
-#   2. `wrangler secret put RESEND_API_KEY` (the key).
-#   3. Uncomment EMAIL_FROM below with the verified-domain sender. Then email "just works" (code already wired).
+# Currently MailChannels is dead → no email sends. Pick EITHER provider (both free, code already wired):
+# OPTION A — Brevo (FASTEST, no domain needed; good before obra.build is bought; 300/day):
+#   1. Free Brevo account → verify ONE sender email (e.g. mosaeee@gmail.com) → get an API key (SMTP & API → API keys).
+#   2. `wrangler secret put BREVO_API_KEY`
+#   3. Uncomment EMAIL_FROM_ADDR below = the verified sender email. Redeploy. Done.
+# OPTION B — Resend (needs a verified DOMAIN = obra.build; cleaner branding; 3k/mo):
+#   1. Free Resend account → verify obra.build → get API key.
+#   2. `wrangler secret put RESEND_API_KEY`
+#   3. Uncomment EMAIL_FROM below. Redeploy. Done.
+# EMAIL_FROM_ADDR = "mosaeee@gmail.com"
 # EMAIL_FROM = "Obra <noreply@obra.build>"
 
 [[kv_namespaces]]
