@@ -104,6 +104,7 @@ export default {
       if (path === '/api/crm/task' && request.method === 'POST') return corsResponse(env, await handleCrmTaskCreate(request, env));
       if (path === '/api/crm/task' && request.method === 'PATCH') return corsResponse(env, await handleCrmTaskDone(request, env));
       if (path === '/api/crm/tasks' && request.method === 'GET') return corsResponse(env, await handleCrmTasks(request, env));
+      if (path === '/api/crm/import-clients' && request.method === 'POST') return corsResponse(env, await handleCrmImportClients(request, env));
       if (path === '/api/user' && request.method === 'GET') {
         return corsResponse(env, await handleGetUser(request, env));
       }
@@ -648,6 +649,38 @@ async function handleCrmDealDelete(request, env) {
   await env.CRM_DB.prepare(`DELETE FROM tasks WHERE deal_id=? AND owner_email=?`).bind(id, user.email).run();
   await env.CRM_DB.prepare(`DELETE FROM deals WHERE id=? AND owner_email=?`).bind(id, user.email).run();
   return json({ ok: true });
+}
+
+// Import existing business clients (KV `clients:email`) into the CRM as contacts + deals.
+// Deduped (contact upsert by email/phone/name); skips a client that already has a deal.
+async function handleCrmImportClients(request, env) {
+  const user = await _crmUser(request, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+  if (!env.CRM_DB) return json({ error: 'CRM not configured' }, 503);
+  let clients = [];
+  try { clients = JSON.parse(await env.BQ_USERS.get(`clients:${user.email}`) || '[]'); } catch (_) {}
+  if (!Array.isArray(clients) || !clients.length) return json({ ok: true, imported: 0 });
+  let imported = 0;
+  for (const cl of clients) {
+    const name = String(cl.name || '').slice(0, 100).trim();
+    if (!name) continue;
+    const email = String(cl.email || '').slice(0, 254).trim();
+    const phone = String(cl.phone || '').slice(0, 40).trim();
+    const dedupe = (email || phone || name).toLowerCase();
+    await env.CRM_DB.prepare(
+      `INSERT INTO contacts (owner_email,name,company,email,phone,notes,dedupe_key) VALUES (?,?,?,?,?,?,?)
+       ON CONFLICT(owner_email,dedupe_key) DO UPDATE SET name=excluded.name, phone=excluded.phone`
+    ).bind(user.email, name, String(cl.city || ''), email, phone, String(cl.notes || ''), dedupe).run();
+    const c = await env.CRM_DB.prepare(`SELECT id FROM contacts WHERE owner_email=? AND dedupe_key=?`).bind(user.email, dedupe).first();
+    if (!c) continue;
+    const dupe = await env.CRM_DB.prepare(`SELECT id FROM deals WHERE owner_email=? AND contact_id=?`).bind(user.email, c.id).first();
+    if (dupe) continue; // already has a deal — don't duplicate on re-import
+    const spent = Number(cl.totalSpent) || 0;
+    await env.CRM_DB.prepare(`INSERT INTO deals (owner_email,contact_id,title,value,stage,source) VALUES (?,?,?,?,?,?)`)
+      .bind(user.email, c.id, name, spent, spent > 0 ? 'won' : 'new', 'import').run();
+    imported++;
+  }
+  return json({ ok: true, imported });
 }
 
 async function handleCrmActivity(request, env) {

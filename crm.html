@@ -79,6 +79,7 @@
     <div class="crm-stat"><div class="l" data-en="Pipeline" data-he="בצינור" data-es="En embudo">Pipeline</div><div class="v" id="statPipe">$0</div></div>
     <div class="crm-stat"><div class="l" data-en="Forecast" data-he="תחזית" data-es="Pronóstico">Forecast</div><div class="v" id="statForecast">$0</div></div>
     <div class="crm-spacer"></div>
+    <button class="btn btn-sm" onclick="importClients()" data-en="↓ Import clients" data-he="↓ ייבוא לקוחות" data-es="↓ Importar clientes" title="Pull your existing clients into the pipeline">↓ Import clients</button>
     <button class="btn btn-primary" onclick="openNewDeal()" data-en="+ New Deal" data-he="+ עסקה חדשה" data-es="+ Nuevo Trato">+ New Deal</button>
   </div>
   <div class="crm-board" id="board"></div>
@@ -169,6 +170,14 @@ async function colDrop(e, stage) {
   if (!_dragId) return;
   await fetch(`${CRM_API}/api/crm/deal`, { method: 'PATCH', headers: _H(), body: JSON.stringify({ id: _dragId, stage }) });
   _dragId = null; loadPipeline();
+}
+
+async function importClients() {
+  if (!confirm(L({en:'Import your existing clients into the pipeline?',he:'לייבא את הלקוחות הקיימים שלך לפייפליין?',es:'¿Importar tus clientes existentes al embudo?'}))) return;
+  const r = await fetch(`${CRM_API}/api/crm/import-clients`, { method:'POST', headers:_H() });
+  const d = await r.json();
+  alert(L({en:`Imported ${d.imported||0} client(s).`,he:`יובאו ${d.imported||0} לקוחות.`,es:`Importados ${d.imported||0} cliente(s).`}));
+  loadPipeline();
 }
 
 // New deal
