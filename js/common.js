@@ -1158,6 +1158,7 @@ function buildAppNav() {
     <div class="nav-right">
       ${linksHtml}
       ${creditPill}
+      <button class="theme-toggle" onclick="openLangPicker()" title="Language" aria-label="Choose language">🌐</button>
       ${themeToggle}
       ${authHtml}
     </div>`;

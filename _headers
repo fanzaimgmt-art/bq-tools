@@ -20,6 +20,10 @@
 /.env
   X-Robots-Tag: none
 
+# Service worker — never cache, so SW updates always reach users immediately
+/service-worker.js
+  Cache-Control: no-cache, no-store, must-revalidate
+
 # HTML documents — always revalidate (prevents stale pages after deploy)
 /*.html
   Cache-Control: no-cache
