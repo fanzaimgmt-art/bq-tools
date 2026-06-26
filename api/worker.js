@@ -660,6 +660,9 @@ async function handleCrmImportClients(request, env) {
   let clients = [];
   try { clients = JSON.parse(await env.BQ_USERS.get(`clients:${user.email}`) || '[]'); } catch (_) {}
   if (!Array.isArray(clients) || !clients.length) return json({ ok: true, imported: 0 });
+  // Bound the per-request work (each client = several D1 writes) to avoid timeout/limits.
+  const truncated = clients.length > 500;
+  if (truncated) clients = clients.slice(0, 500);
   let imported = 0;
   for (const cl of clients) {
     const name = String(cl.name || '').slice(0, 100).trim();
@@ -680,7 +683,7 @@ async function handleCrmImportClients(request, env) {
       .bind(user.email, c.id, name, spent, spent > 0 ? 'won' : 'new', 'import').run();
     imported++;
   }
-  return json({ ok: true, imported });
+  return json({ ok: true, imported, truncated });
 }
 
 async function handleCrmActivity(request, env) {
