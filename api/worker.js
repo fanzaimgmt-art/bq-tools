@@ -819,6 +819,34 @@ function handleAdminCheckAuth(request, env) {
 
 // ── Auth Routes ──
 
+// Provider-agnostic transactional email. Returns true if a provider accepted the message.
+// Preferred: Resend (set RESEND_API_KEY secret + EMAIL_FROM to a verified-domain sender like
+// "Obra <noreply@obra.build>"; free tier 3k/mo). Falls back to MailChannels, whose free keyless
+// Cloudflare relay was discontinued Aug 2024 — so without RESEND_API_KEY this usually returns false.
+async function sendEmail(env, { to, subject, text }) {
+  if (env.RESEND_API_KEY) {
+    try {
+      const r = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from: env.EMAIL_FROM || 'Obra <onboarding@resend.dev>', to: [to], subject, text })
+      });
+      if (r.ok) return true;
+    } catch (_) {}
+  }
+  try {
+    const r = await fetch('https://api.mailchannels.net/tx/v1/send', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        personalizations: [{ to: [{ email: to }] }],
+        from: { email: 'noreply@bq-tools.com', name: 'Obra' },
+        subject, content: [{ type: 'text/plain', value: text }]
+      })
+    });
+    return r.ok || r.status === 202;
+  } catch (_) { return false; }
+}
+
 async function handleRegister(request, env) {
   const { email } = await request.json();
   if (!email || typeof email !== 'string' || !email.includes('@') || email.length > 254) {
@@ -848,20 +876,12 @@ async function handleRegister(request, env) {
   const existing = await env.BQ_USERS.get(`user:${emailLower}`);
 
   // Deliver the code. Previously this function sent NOTHING while claiming "code sent" — no one could sign up.
-  // 1) Email via MailChannels — works once a verified sending domain/provider is configured (see note below).
-  let emailSent = false;
-  try {
-    const mailRes = await fetch('https://api.mailchannels.net/tx/v1/send', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        personalizations: [{ to: [{ email: emailLower }] }],
-        from: { email: 'noreply@bq-tools.com', name: 'Obra' },
-        subject: 'Your Obra verification code',
-        content: [{ type: 'text/plain', value: `Your Obra verification code is: ${code}\n\nIt expires in 10 minutes.\n\n— Obra` }]
-      })
-    });
-    emailSent = mailRes.ok || mailRes.status === 202;
-  } catch (_) {}
+  // 1) Email via the provider-agnostic sender (Resend once RESEND_API_KEY + verified-domain EMAIL_FROM are set).
+  const emailSent = await sendEmail(env, {
+    to: emailLower,
+    subject: 'Your Obra verification code',
+    text: `Your Obra verification code is: ${code}\n\nIt expires in 10 minutes.\n\n— Obra`
+  });
 
   // 2) PRE-LAUNCH TEST AID: MailChannels' free keyless relay was discontinued (Aug 2024), so email likely fails
   // until a real provider (Resend/Brevo) + verified domain are set up.

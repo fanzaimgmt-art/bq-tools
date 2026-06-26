@@ -15,6 +15,13 @@ MOSHE_CHAT_ID = "369310707"
 # Set to Moshe's Obra LOGIN email so they show up at /crm. Leave blank to disable.
 LEAD_OWNER_EMAIL = "mosaeee@gmail.com"
 
+# ── Transactional email (verification codes, client notifications) ──
+# To turn on REAL self-serve signup email (currently MailChannels is dead → no email sends):
+#   1. Free Resend account → verify a sending domain (needs obra.build) → get an API key.
+#   2. `wrangler secret put RESEND_API_KEY` (the key).
+#   3. Uncomment EMAIL_FROM below with the verified-domain sender. Then email "just works" (code already wired).
+# EMAIL_FROM = "Obra <noreply@obra.build>"
+
 [[kv_namespaces]]
 binding = "BQ_USERS"
 id = "e75722f0f0f44c1994c95bc98b4386a9"
