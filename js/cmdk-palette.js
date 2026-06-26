@@ -77,17 +77,23 @@
     .cmdk-chips {
       display: flex; gap: 6px; padding: 10px 16px; overflow-x: auto;
       border-bottom: 1px solid rgba(255,255,255,0.06);
+      scrollbar-width: none; -ms-overflow-style: none;   /* hide the ugly OS scrollbar */
     }
+    .cmdk-chips::-webkit-scrollbar { display: none; height: 0; }
     .cmdk-chip {
       padding: 5px 12px; font-size: 12px; cursor: pointer; white-space: nowrap;
       background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 100px; color: #aaa; transition: all .2s;
+      border-radius: 100px; color: #aaa; transition: all .2s; flex-shrink: 0;
     }
     .cmdk-chip:hover { color: #e8c547; border-color: rgba(232,197,71,0.3); }
     .cmdk-chip.active { background: rgba(232,197,71,0.15); border-color: rgba(232,197,71,0.4); color: #e8c547; }
     .cmdk-list {
       flex: 1; overflow-y: auto; padding: 8px 6px;
+      scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent;
     }
+    .cmdk-list::-webkit-scrollbar { width: 8px; }
+    .cmdk-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
+    .cmdk-list::-webkit-scrollbar-track { background: transparent; }
     .cmdk-item {
       display: flex; align-items: center; gap: 12px; padding: 10px 14px;
       border-radius: 10px; cursor: pointer; transition: background .12s;
