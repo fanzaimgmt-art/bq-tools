@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BQ Compare — Before/After AI Analysis</title>
+<title>Obra Compare — Before/After AI Analysis</title>
 <link rel="stylesheet" href="../style.css">
 <style>
   body { display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
@@ -267,7 +267,7 @@
   <div class="mdc upgrade-box">
     <h3 data-en="Upgrade to Pro" data-he="שדרג ל-Pro">Upgrade to Pro</h3>
     <div class="price">$14<span>.99/mo</span></div>
-    <p data-en="AI-powered analysis with Gemini + Claude, export with BQ watermark, and more." data-he="ניתוח AI עם Gemini + Claude, ייצוא עם ווטרמרק BQ, ועוד.">AI-powered analysis with Gemini + Claude, export with BQ watermark, and more.</p>
+    <p data-en="AI-powered analysis with Gemini + Claude, export with Obra watermark, and more." data-he="ניתוח AI עם Gemini + Claude, ייצוא עם ווטרמרק Obra, ועוד.">AI-powered analysis with Gemini + Claude, export with Obra watermark, and more.</p>
     <div class="steps">
       <b>1.</b> <span data-en="Pay via PayPal" data-he="שלם דרך PayPal">Pay via PayPal</span><br>
       <b>2.</b> <span data-en="Receive your Pro code by email" data-he="קבל את קוד ה-Pro במייל">Receive your Pro code by email</span><br>
@@ -525,7 +525,7 @@ function reset() {
   ap.innerHTML = ''; ap.classList.remove('on');
 }
 
-// ── Export with BQ watermark ──
+// ── Export with Obra watermark ──
 function exportImg() {
   if (!bD || !aD) return;
   const canvas = document.getElementById('exportCanvas');
@@ -591,11 +591,11 @@ function exportImg() {
   ctx.fillStyle = '#51cf66';
   ctx.fillText(aTxt, w - am.width - 8 - pad, pad + 17);
 
-  // BQ watermark (bottom right)
+  // Obra watermark (bottom right)
   const wmSize = Math.round(w * 0.022);
   ctx.font = `900 ${wmSize}px Inter, sans-serif`;
   ctx.fillStyle = 'rgba(232,197,71,0.5)';
-  ctx.fillText('BQ Compare', w - ctx.measureText('BQ Compare').width - pad, h - pad);
+  ctx.fillText('Obra Compare', w - ctx.measureText('Obra Compare').width - pad, h - pad);
 
   // Download
   const link = document.createElement('a');

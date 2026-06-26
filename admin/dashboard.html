@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BQ Admin — Dashboard</title>
+<title>Obra Admin — Dashboard</title>
 <link rel="stylesheet" href="../style.css">
 <style>
   body { display: flex; flex-direction: column; min-height: 100vh; background: var(--bg); }
@@ -322,7 +322,7 @@ function handleNewAlerts(alerts) {
   if (Notification.permission === 'granted' && alerts.length) {
     const first = alerts[0];
     const email = first.email || first.userEmail || 'unknown';
-    new Notification('BQ Admin', {
+    new Notification('Obra Admin', {
       body: '💰 New payment from ' + email,
       icon: '/favicon.ico'
     });
