@@ -819,6 +819,20 @@ function handleAdminCheckAuth(request, env) {
 
 // ── Auth Routes ──
 
+// Normalize an email for account keying — collapses +tag subaddressing (same inbox on Gmail/Outlook/etc.)
+// and Gmail dots, so one real inbox can't mint many distinct free-credit accounts (Sybil/credit farming).
+// MUST be used identically wherever an email is keyed (register + verify) or codes won't match.
+function normalizeEmail(email) {
+  let e = String(email || '').toLowerCase().trim();
+  const at = e.lastIndexOf('@');
+  if (at < 1) return e;
+  let local = e.slice(0, at), domain = e.slice(at + 1);
+  local = local.split('+')[0]; // strip +tag
+  if (domain === 'googlemail.com') domain = 'gmail.com';
+  if (domain === 'gmail.com') local = local.replace(/\./g, ''); // Gmail ignores dots
+  return `${local}@${domain}`;
+}
+
 // Provider-agnostic transactional email. Returns true if a provider accepted the message.
 // Set EITHER (whichever Moshe picks; both free):
 //   • RESEND_API_KEY + EMAIL_FROM ("Obra <noreply@obra.build>") — needs a verified DOMAIN (obra.build), 3k/mo.
@@ -868,7 +882,7 @@ async function handleRegister(request, env) {
     return json({ error: 'Valid email required' }, 400);
   }
 
-  const emailLower = email.toLowerCase().trim();
+  const emailLower = normalizeEmail(email);
 
   // Burst-proof limiter (native, atomic) — blocks rapid bursts the hourly KV counter misses.
   if (env.AUTH_LIMITER) {
@@ -923,7 +937,7 @@ async function handleVerify(request, env) {
   const { email, code, referredBy, betaCohort, betaSource } = await request.json();
   if (!email || !code || typeof email !== 'string' || typeof code !== 'string') return json({ error: 'Email and code required' }, 400);
 
-  const emailLower = email.toLowerCase().trim();
+  const emailLower = normalizeEmail(email);
 
   // Burst-proof limiter (Cloudflare native rate-limit binding — atomic, unlike the
   // eventually-consistent KV counter below which can undercount rapid bursts).
@@ -932,27 +946,33 @@ async function handleVerify(request, env) {
     if (!success) return json({ error: 'Too many attempts. Slow down.' }, 429);
   }
 
-  // Brute-force lockout: max 5 wrong codes per (email, IP). Keyed by IP too so a remote attacker can't
-  // lock a victim out of their own account by spamming wrong codes for the victim's email (targeted-DoS
-  // fix). We also do NOT delete the victim's pending code on lockout — a legitimate holder of the real
-  // code is never collateral. Global per-email rate is capped separately by AUTH_LIMITER above.
+  // Two-tier brute-force backstop (AUTH_LIMITER above caps request rate per email):
+  //  • per-(email,IP)=5 — stops single-host hammering AND a remote attacker can't lock a victim out of
+  //    their OWN account (one IP can't reach the global cap), which fixes the targeted-lockout DoS.
+  //  • per-email=20 — hard ceiling on total guesses per code regardless of IP rotation (20/900k ≈ 0).
+  // On either cap we 429 but NEVER delete the victim's pending code — it self-expires (≤10min) and the
+  // legitimate holder simply re-requests; an attacker can't burn it out from under them.
   const ip = request.headers.get('CF-Connecting-IP') || 'noip';
-  const failKey = `verifyfail:${emailLower}:${ip}`;
-  const fails = parseInt(await env.BQ_USERS.get(failKey) || '0');
-  if (fails >= 5) {
+  const ipFailKey = `verifyfail:${emailLower}:${ip}`;
+  const emailFailKey = `verifyfail:${emailLower}`;
+  const ipFails = parseInt(await env.BQ_USERS.get(ipFailKey) || '0');
+  const emailFails = parseInt(await env.BQ_USERS.get(emailFailKey) || '0');
+  if (ipFails >= 5 || emailFails >= 20) {
     return json({ error: 'Too many attempts. Request a new code.' }, 429);
   }
 
   const stored = await env.BQ_USERS.get(`verify:${emailLower}`);
 
   if (!stored || stored !== code.trim()) {
-    await env.BQ_USERS.put(failKey, String(fails + 1), { expirationTtl: 600 });
+    await env.BQ_USERS.put(ipFailKey, String(ipFails + 1), { expirationTtl: 600 });
+    await env.BQ_USERS.put(emailFailKey, String(emailFails + 1), { expirationTtl: 600 });
     return json({ error: 'Invalid or expired code' }, 401);
   }
 
-  // Delete used code + reset the fail counter
+  // Delete used code + reset both fail counters
   await env.BQ_USERS.delete(`verify:${emailLower}`);
-  await env.BQ_USERS.delete(failKey);
+  await env.BQ_USERS.delete(ipFailKey);
+  await env.BQ_USERS.delete(emailFailKey);
 
   // Check if user exists
   let user = null;
