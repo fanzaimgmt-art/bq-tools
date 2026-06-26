@@ -61,6 +61,7 @@ const TOOL_ALLOWLIST = new Set([
 ]);
 
 export async function securityGate(request, env, ctx) {
+ try {
   const url = new URL(request.url);
   const path = url.pathname;
   const ip = request.headers.get("CF-Connecting-IP") || "0.0.0.0";
@@ -125,6 +126,13 @@ export async function securityGate(request, env, ctx) {
 
   // Pass — return null
   return null;
+ } catch (e) {
+  // Security gate is best-effort. A KV write-limit (free-tier 1000/day cap) or transient KV error must NEVER
+  // crash the whole API — it was throwing UNCAUGHT here → Cloudflare 1101 on EVERY request (total outage).
+  // Fail OPEN: log and allow the request through so the API stays up even when the gate can't record state.
+  console.error("[securityGate] fail-open (KV/other error):", e && e.message);
+  return null;
+ }
 }
 
 async function _ban(env, ip, ttlSeconds) {
