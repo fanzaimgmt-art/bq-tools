@@ -863,14 +863,16 @@ async function handleRegister(request, env) {
     emailSent = mailRes.ok || mailRes.status === 202;
   } catch (_) {}
 
-  // 2) PRE-LAUNCH CRUTCH: MailChannels' free keyless relay was discontinued (Aug 2024), so email likely fails
-  // until a real provider (Resend/Brevo) + verified domain are set up. Until then, relay the code to the owner's
-  // Telegram so the signup flow is testable end-to-end and codes are never silently lost.
-  // ⚠️ SECURITY: this lets the owner see every registrant's code — REMOVE once real email delivery is live.
-  if (env.TELEGRAM_BOT_TOKEN && env.MOSHE_CHAT_ID) {
+  // 2) PRE-LAUNCH TEST AID: MailChannels' free keyless relay was discontinued (Aug 2024), so email likely fails
+  // until a real provider (Resend/Brevo) + verified domain are set up.
+  // ⚠️ SECURITY (review CRITICAL): NEVER relay arbitrary users' codes to an operator inbox — that's account
+  // takeover. Relay ONLY the owner's OWN test signup (allowlisted to LEAD_OWNER_EMAIL) so Moshe can verify the
+  // flow; every other registrant's code stays inside the system. Remove this block once real email is live.
+  const ownerEmail = (env.LEAD_OWNER_EMAIL || '').toLowerCase();
+  if (!emailSent && ownerEmail && emailLower === ownerEmail && env.TELEGRAM_BOT_TOKEN && env.MOSHE_CHAT_ID) {
     await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: env.MOSHE_CHAT_ID, text: `🔑 Obra verify code for ${emailLower}: ${code} (email ${emailSent ? 'sent' : 'FAILED — relay only'})` })
+      body: JSON.stringify({ chat_id: env.MOSHE_CHAT_ID, text: `🔑 Obra verify code (your test signup): ${code}` })
     }).catch(() => {});
   }
 
