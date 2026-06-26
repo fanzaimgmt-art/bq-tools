@@ -94,6 +94,15 @@ export default {
       if (path === '/api/contact' && request.method === 'POST') {
         return corsResponse(env, await handleContact(request, env));
       }
+      // ── CRM (D1) ──
+      if (path === '/api/crm/pipeline' && request.method === 'GET') return corsResponse(env, await handleCrmPipeline(request, env));
+      if (path === '/api/crm/deal' && request.method === 'POST') return corsResponse(env, await handleCrmDealCreate(request, env));
+      if (path === '/api/crm/deal' && request.method === 'PATCH') return corsResponse(env, await handleCrmDealUpdate(request, env));
+      if (path === '/api/crm/deal' && request.method === 'GET') return corsResponse(env, await handleCrmDealGet(request, env));
+      if (path === '/api/crm/activity' && request.method === 'POST') return corsResponse(env, await handleCrmActivity(request, env));
+      if (path === '/api/crm/task' && request.method === 'POST') return corsResponse(env, await handleCrmTaskCreate(request, env));
+      if (path === '/api/crm/task' && request.method === 'PATCH') return corsResponse(env, await handleCrmTaskDone(request, env));
+      if (path === '/api/crm/tasks' && request.method === 'GET') return corsResponse(env, await handleCrmTasks(request, env));
       if (path === '/api/user' && request.method === 'GET') {
         return corsResponse(env, await handleGetUser(request, env));
       }
@@ -504,6 +513,155 @@ async function handleContact(request, env) {
   }), { expirationTtl: 7776000 });
 
   return json({ ok: true });
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// CRM (D1) — thin pipeline. All endpoints are token-scoped (owner_email = user.email).
+// ────────────────────────────────────────────────────────────────────────────
+const CRM_STAGES = ['new', 'quoted', 'won', 'lost'];
+const CRM_PROB = { new: 0.2, quoted: 0.5, won: 1, lost: 0 }; // weighted-forecast probabilities
+
+async function _crmUser(request, env) {
+  return await getUserByToken(request.headers.get('Authorization')?.replace('Bearer ', ''), env);
+}
+
+async function handleCrmPipeline(request, env) {
+  const user = await _crmUser(request, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+  if (!env.CRM_DB) return json({ error: 'CRM not configured' }, 503);
+  const { results } = await env.CRM_DB.prepare(
+    `SELECT d.id, d.title, d.value, d.stage, d.source, d.expected_close, d.created_at,
+            c.name AS contact_name, c.company AS contact_company, c.phone AS contact_phone
+       FROM deals d LEFT JOIN contacts c ON c.id = d.contact_id
+      WHERE d.owner_email = ? ORDER BY d.updated_at DESC`
+  ).bind(user.email).all();
+  const deals = {}, totals = {};
+  for (const s of CRM_STAGES) { deals[s] = []; totals[s] = 0; }
+  let forecast = 0;
+  for (const d of results) {
+    (deals[d.stage] || (deals[d.stage] = [])).push(d);
+    totals[d.stage] = (totals[d.stage] || 0) + (d.value || 0);
+    forecast += (d.value || 0) * (CRM_PROB[d.stage] ?? 0);
+  }
+  return json({ ok: true, stages: CRM_STAGES, deals, totals, forecast, count: results.length });
+}
+
+async function handleCrmDealCreate(request, env) {
+  const user = await _crmUser(request, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+  if (!env.CRM_DB) return json({ error: 'CRM not configured' }, 503);
+  let b; try { b = await request.json(); } catch { return json({ error: 'Invalid request' }, 400); }
+  const title = String(b.title || '').slice(0, 200).trim();
+  if (!title) return json({ error: 'Title required' }, 400);
+  const value = Number(b.value) || 0;
+  const stage = CRM_STAGES.includes(b.stage) ? b.stage : 'new';
+  const name = String(b.name || '').slice(0, 100).trim();
+  const email = String(b.email || '').slice(0, 254).trim();
+  const phone = String(b.phone || '').slice(0, 40).trim();
+  const company = String(b.company || '').slice(0, 120).trim();
+  // Upsert contact (dedupe by email||phone||name) to avoid duplicates
+  let contactId = null;
+  if (name || email || phone) {
+    const dedupe = (email || phone || name).toLowerCase();
+    await env.CRM_DB.prepare(
+      `INSERT INTO contacts (owner_email,name,company,email,phone,dedupe_key) VALUES (?,?,?,?,?,?)
+       ON CONFLICT(owner_email,dedupe_key) DO UPDATE SET name=excluded.name, company=excluded.company, phone=excluded.phone`
+    ).bind(user.email, name || email || phone, company, email, phone, dedupe).run();
+    const c = await env.CRM_DB.prepare(`SELECT id FROM contacts WHERE owner_email=? AND dedupe_key=?`).bind(user.email, dedupe).first();
+    contactId = c?.id || null;
+  }
+  const r = await env.CRM_DB.prepare(
+    `INSERT INTO deals (owner_email,contact_id,title,value,stage,source) VALUES (?,?,?,?,?,?)`
+  ).bind(user.email, contactId, title, value, stage, String(b.source || 'manual').slice(0, 40)).run();
+  const dealId = r.meta?.last_row_id;
+  await env.CRM_DB.prepare(`INSERT INTO activities (owner_email,deal_id,type,body) VALUES (?,?,?,?)`)
+    .bind(user.email, dealId, 'note', 'Deal created').run();
+  return json({ ok: true, id: dealId });
+}
+
+async function handleCrmDealUpdate(request, env) {
+  const user = await _crmUser(request, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+  if (!env.CRM_DB) return json({ error: 'CRM not configured' }, 503);
+  let b; try { b = await request.json(); } catch { return json({ error: 'Invalid request' }, 400); }
+  const id = parseInt(b.id); if (!id) return json({ error: 'id required' }, 400);
+  const deal = await env.CRM_DB.prepare(`SELECT * FROM deals WHERE id=? AND owner_email=?`).bind(id, user.email).first();
+  if (!deal) return json({ error: 'Not found' }, 404);
+  const fields = [], vals = [];
+  if (b.stage && CRM_STAGES.includes(b.stage) && b.stage !== deal.stage) {
+    fields.push('stage=?'); vals.push(b.stage);
+    await env.CRM_DB.prepare(`INSERT INTO activities (owner_email,deal_id,type,body) VALUES (?,?,?,?)`)
+      .bind(user.email, id, 'stage_change', `${deal.stage} → ${b.stage}`).run();
+  }
+  if (b.value !== undefined) { fields.push('value=?'); vals.push(Number(b.value) || 0); }
+  if (b.title !== undefined) { fields.push('title=?'); vals.push(String(b.title).slice(0, 200)); }
+  if (!fields.length) return json({ ok: true });
+  fields.push("updated_at=datetime('now')");
+  vals.push(id, user.email);
+  await env.CRM_DB.prepare(`UPDATE deals SET ${fields.join(',')} WHERE id=? AND owner_email=?`).bind(...vals).run();
+  return json({ ok: true });
+}
+
+async function handleCrmDealGet(request, env) {
+  const user = await _crmUser(request, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+  if (!env.CRM_DB) return json({ error: 'CRM not configured' }, 503);
+  const id = parseInt(new URL(request.url).searchParams.get('id')); if (!id) return json({ error: 'id required' }, 400);
+  const deal = await env.CRM_DB.prepare(
+    `SELECT d.*, c.name AS contact_name, c.company AS contact_company, c.email AS contact_email, c.phone AS contact_phone
+       FROM deals d LEFT JOIN contacts c ON c.id=d.contact_id WHERE d.id=? AND d.owner_email=?`
+  ).bind(id, user.email).first();
+  if (!deal) return json({ error: 'Not found' }, 404);
+  const activities = (await env.CRM_DB.prepare(`SELECT * FROM activities WHERE deal_id=? AND owner_email=? ORDER BY created_at DESC`).bind(id, user.email).all()).results;
+  const tasks = (await env.CRM_DB.prepare(`SELECT * FROM tasks WHERE deal_id=? AND owner_email=? ORDER BY (due_at IS NULL), due_at`).bind(id, user.email).all()).results;
+  return json({ ok: true, deal, activities, tasks });
+}
+
+async function handleCrmActivity(request, env) {
+  const user = await _crmUser(request, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+  if (!env.CRM_DB) return json({ error: 'CRM not configured' }, 503);
+  let b; try { b = await request.json(); } catch { return json({ error: 'Invalid request' }, 400); }
+  const dealId = parseInt(b.deal_id); const body = String(b.body || '').slice(0, 2000).trim();
+  if (!dealId || !body) return json({ error: 'deal_id and body required' }, 400);
+  const deal = await env.CRM_DB.prepare(`SELECT id FROM deals WHERE id=? AND owner_email=?`).bind(dealId, user.email).first();
+  if (!deal) return json({ error: 'Not found' }, 404);
+  const type = ['note', 'call', 'email', 'sms'].includes(b.type) ? b.type : 'note';
+  await env.CRM_DB.prepare(`INSERT INTO activities (owner_email,deal_id,type,body) VALUES (?,?,?,?)`).bind(user.email, dealId, type, body).run();
+  return json({ ok: true });
+}
+
+async function handleCrmTaskCreate(request, env) {
+  const user = await _crmUser(request, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+  if (!env.CRM_DB) return json({ error: 'CRM not configured' }, 503);
+  let b; try { b = await request.json(); } catch { return json({ error: 'Invalid request' }, 400); }
+  const title = String(b.title || '').slice(0, 200).trim(); if (!title) return json({ error: 'title required' }, 400);
+  const dealId = b.deal_id ? parseInt(b.deal_id) : null;
+  const dueAt = b.due_at ? String(b.due_at).slice(0, 30) : null;
+  await env.CRM_DB.prepare(`INSERT INTO tasks (owner_email,deal_id,title,due_at) VALUES (?,?,?,?)`).bind(user.email, dealId, title, dueAt).run();
+  return json({ ok: true });
+}
+
+async function handleCrmTaskDone(request, env) {
+  const user = await _crmUser(request, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+  if (!env.CRM_DB) return json({ error: 'CRM not configured' }, 503);
+  let b; try { b = await request.json(); } catch { return json({ error: 'Invalid request' }, 400); }
+  const id = parseInt(b.id); if (!id) return json({ error: 'id required' }, 400);
+  await env.CRM_DB.prepare(`UPDATE tasks SET done=? WHERE id=? AND owner_email=?`).bind(b.done ? 1 : 0, id, user.email).run();
+  return json({ ok: true });
+}
+
+async function handleCrmTasks(request, env) {
+  const user = await _crmUser(request, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+  if (!env.CRM_DB) return json({ error: 'CRM not configured' }, 503);
+  const { results } = await env.CRM_DB.prepare(
+    `SELECT t.*, d.title AS deal_title FROM tasks t LEFT JOIN deals d ON d.id=t.deal_id
+      WHERE t.owner_email=? AND t.done=0 ORDER BY (t.due_at IS NULL), t.due_at`
+  ).bind(user.email).all();
+  return json({ ok: true, tasks: results });
 }
 
 // Get user from token
