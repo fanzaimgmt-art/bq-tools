@@ -26,12 +26,12 @@
 /
   Cache-Control: no-cache
 
-# JS files — long cache
+# JS/CSS — revalidate so they never go stale vs the (no-cache) HTML that references them.
+# Cloudflare serves cheap 304s via ETag when unchanged, so this isn't a re-download every time.
 /js/*
-  Cache-Control: public, max-age=3600
+  Cache-Control: no-cache
   X-Content-Type-Options: nosniff
 
-# CSS files — long cache
 /*.css
-  Cache-Control: public, max-age=3600
+  Cache-Control: no-cache
   X-Content-Type-Options: nosniff
