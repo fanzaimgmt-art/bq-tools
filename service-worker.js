@@ -1,7 +1,7 @@
 // BQ Tools — Service Worker
 // Caches app shell for offline use; network-first for API calls.
 
-const VERSION = 'bq-v6';
+const VERSION = 'bq-v8';
 const STATIC_CACHE = `${VERSION}-static`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 
@@ -77,22 +77,34 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Static assets (JS/CSS/images): cache-first
+  // JS/CSS: NETWORK-FIRST so code updates always reach users (cache-first here was
+  // serving stale JS — e.g. an old common.js without the language picker — until a
+  // version bump). Fall back to cache only when offline.
+  if (req.destination === 'script' || req.destination === 'style' || /\.(js|css)$/.test(url.pathname)) {
+    event.respondWith(
+      fetch(req).then(res => {
+        if (res && res.status === 200 && req.method === 'GET') {
+          const copy = res.clone();
+          caches.open(RUNTIME_CACHE).then(c => c.put(req, copy)).catch(() => {});
+        }
+        return res;
+      }).catch(() => caches.match(req))
+    );
+    return;
+  }
+
+  // Images + other static: cache-first (rarely change, big)
   event.respondWith(
     caches.match(req).then(cached => {
       if (cached) return cached;
       return fetch(req).then(res => {
-        // Cache successful same-origin GET responses
         if (res && res.status === 200 && req.method === 'GET') {
           const copy = res.clone();
           caches.open(RUNTIME_CACHE).then(c => c.put(req, copy)).catch(() => {});
         }
         return res;
       }).catch(() => {
-        // Fallback for images
-        if (req.destination === 'image') {
-          return caches.match('/img/icon-192.png');
-        }
+        if (req.destination === 'image') return caches.match('/img/icon-192.png');
         throw new Error('Offline');
       });
     })
