@@ -538,7 +538,7 @@ function exportCSV() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `bq-usage-${new Date().toISOString().split('T')[0]}.csv`;
+  a.download = `obra-usage-${new Date().toISOString().split('T')[0]}.csv`;
   a.click();
   URL.revokeObjectURL(url);
   showToast(lang === 'he' ? 'CSV יוצא!' : 'CSV exported!', 'ok');

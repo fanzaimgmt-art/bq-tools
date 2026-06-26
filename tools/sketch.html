@@ -291,7 +291,7 @@ Respond JSON only:
 
 function exportSketch() {
   const link = document.createElement('a');
-  link.download = 'bq-sketch.png';
+  link.download = 'obra-sketch.png';
   link.href = uploadedSketch || canvas.toDataURL('image/png');
   link.click();
   showToast(lang === 'he' ? 'סקיצה יוצאה!' : 'Sketch exported!', 'ok');

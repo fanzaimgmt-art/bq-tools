@@ -275,7 +275,8 @@ function fmtDate(ts) {
 
 function fmtMethod(method) {
   if (!method) return '—';
-  return method.toLowerCase() === 'paypal' ? '💳 PayPal' : '⛓ Crypto';
+  const m = method.toLowerCase();
+  return m === 'paypal' ? '💳 PayPal' : m === 'stripe' ? '💳 Card' : '💳 ' + method;
 }
 
 function statusPill(status) {

@@ -386,7 +386,7 @@ function exportData() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `bq-profile-${user.email.split('@')[0]}.json`;
+  a.download = `obra-profile-${user.email.split('@')[0]}.json`;
   a.click();
   URL.revokeObjectURL(url);
   showToast(lang === 'he' ? 'פרופיל יוצא!' : 'Profile exported!', 'ok');
