@@ -615,14 +615,11 @@ body {
 <nav class="nav" id="mainNav">
   <a href="/" class="nav-logo">Obra</a>
   <div class="nav-right">
-    <a href="#tools" class="nav-link" data-en="Tools" data-es="Herramientas" data-he="כלים">Tools</a>
-    <a href="#pricing" class="nav-link" data-en="Pricing" data-es="Precios" data-he="מחירים">Pricing</a>
-    <a href="/auth.html" class="btn btn-sm" id="navProBtn" data-en="Sign in" data-es="Iniciar sesión" data-he="כניסה">Sign in</a>
+    <a href="#tools" class="nav-link" data-en="Tools" data-es="Herramientas" data-he="כלים" data-ar="الأدوات" data-fa="ابزارها" data-hy="Գործիքներ">Tools</a>
+    <a href="#pricing" class="nav-link" data-en="Pricing" data-es="Precios" data-he="מחירים" data-ar="الأسعار" data-fa="قیمت‌گذاری" data-hy="Գներ">Pricing</a>
+    <a href="/auth.html" class="btn btn-sm" id="navProBtn" data-en="Sign in" data-es="Iniciar sesión" data-he="כניסה" data-ar="تسجيل الدخول" data-fa="ورود" data-hy="Մուտք">Sign in</a>
     <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">☀️</button>
-    <div class="lang-toggle">
-      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
-      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
-    </div>
+    <button class="theme-toggle" onclick="openLangPicker()" title="Language" aria-label="Choose language">🌐</button>
   </div>
 </nav>
 
@@ -630,18 +627,18 @@ body {
 
 <!-- Hero -->
 <section class="hero">
-  <p class="hero-eyebrow" data-en="For contractors" data-es="Para contratistas" data-he="לקבלנים">For contractors</p>
+  <p class="hero-eyebrow" data-en="For contractors" data-es="Para contratistas" data-he="לקבלנים" data-ar="للمقاولين" data-fa="برای پیمانکاران" data-hy="Կապալառուների համար">For contractors</p>
   <h1>
-    <span data-en="GET PAID" data-es="COBRA" data-he="קבל תשלום">GET PAID</span><br>
-    <span class="accent" data-en="FASTER" data-es="MÁS RÁPIDO" data-he="מהר יותר">FASTER</span>
+    <span data-en="GET PAID" data-es="COBRA" data-he="קבל תשלום" data-ar="احصل على أموالك" data-fa="پول بگیرید" data-hy="ՎՃԱՐՎԵՔ">GET PAID</span><br>
+    <span class="accent" data-en="FASTER" data-es="MÁS RÁPIDO" data-he="מהר יותר" data-ar="أسرع" data-fa="سریع‌تر" data-hy="ԱՎԵԼԻ ԱՐԱԳ">FASTER</span>
   </h1>
-  <p class="hero-sub" data-en="Walk the job on video — Obra writes the estimate, briefs your crew in Spanish, and sends the invoice. Get paid faster." data-es="Graba la obra en video — Obra escribe el estimado, instruye a tu cuadrilla en español y envía la factura. Cobra más rápido." data-he="צלם את העבודה בוידאו — Obra כותב הערכה, מסביר לצוות שלך בספרדית, ושולח חשבונית. קבל תשלום מהר יותר.">Walk the job on video — Obra writes the estimate, briefs your crew in Spanish, and sends the invoice. Get paid faster.</p>
+  <p class="hero-sub" data-en="Walk the job on video — Obra writes the estimate, briefs your crew in Spanish, and sends the invoice. Get paid faster." data-es="Graba la obra en video — Obra escribe el estimado, instruye a tu cuadrilla en español y envía la factura. Cobra más rápido." data-he="צלם את העבודה בוידאו — Obra כותב הערכה, מסביר לצוות שלך בספרדית, ושולח חשבונית. קבל תשלום מהר יותר." data-ar="صوّر العمل بالفيديو — يكتب Obra التقدير، ويشرح لطاقمك بالإسبانية، ويرسل الفاتورة. احصل على أموالك أسرع." data-fa="کار را با ویدیو ضبط کنید — Obra برآورد را می‌نویسد، به تیم شما به اسپانیایی توضیح می‌دهد و فاکتور را می‌فرستد. سریع‌تر پول بگیرید." data-hy="Նկարահանեք աշխատանքը տեսանյութով — Obra-ն կազմում է գնահատականը, հանձնարարում թիմին իսպաներեն և ուղարկում հաշիվը։ Ստացեք վճարը ավելի արագ։">Walk the job on video — Obra writes the estimate, briefs your crew in Spanish, and sends the invoice. Get paid faster.</p>
   <div class="hero-cta">
-    <a href="/auth.html" class="btn btn-primary btn-large" data-en="Start Free →" data-es="Empieza Gratis →" data-he="← התחל בחינם">Start Free →</a>
+    <a href="/auth.html" class="btn btn-primary btn-large" data-en="Start Free →" data-es="Empieza Gratis →" data-he="← התחל בחינם" data-ar="ابدأ مجانًا →" data-fa="شروع رایگان →" data-hy="Սկսեք անվճար →">Start Free →</a>
   </div>
   <a href="/auth.html" class="hero-video" aria-label="Start free — sign up">
     <video src="img/iso-edit.mp4" autoplay muted loop playsinline></video>
-    <span class="hero-video-cta" data-en="Start Free →" data-es="Empieza Gratis →" data-he="← התחל בחינם">Start Free →</span>
+    <span class="hero-video-cta" data-en="Start Free →" data-es="Empieza Gratis →" data-he="← התחל בחינם" data-hy="Սկսեք անվճար →">Start Free →</span>
   </a>
 </section>
 
@@ -685,7 +682,7 @@ body {
 <!-- Money Suite -->
 <section class="home-section" id="tools">
   <p class="section-eyebrow" data-en="Money Suite" data-es="Suite Financiera" data-he="כלים פיננסיים">Money Suite</p>
-  <h2 class="section-heading" data-en="Every tool to get paid." data-es="Todo para cobrar." data-he="כל הכלים לקבל תשלום.">Every tool to get paid.</h2>
+  <h2 class="section-heading" data-en="Every tool to get paid." data-es="Todo para cobrar." data-he="כל הכלים לקבל תשלום." data-ar="كل الأدوات لتحصيل أموالك." data-fa="همه ابزارها برای دریافت پول." data-hy="Բոլոր գործիքները՝ վճարվելու համար։">Every tool to get paid.</h2>
   <p class="section-sub" data-en="Quotes, estimates, contracts, invoices, and payment tracking — in one place." data-es="Cotizaciones, estimados, contratos, facturas y seguimiento — en un lugar." data-he="הצעות מחיר, הערכות, חוזים, חשבוניות ומעקב — במקום אחד.">Quotes, estimates, contracts, invoices, and payment tracking — in one place.</p>
 
   <div class="tools-grid">
@@ -745,7 +742,7 @@ body {
 
 <!-- Pricing -->
 <section class="home-section" id="pricing">
-  <p class="section-eyebrow" data-en="Pricing" data-es="Precios" data-he="מחירים">Pricing</p>
+  <p class="section-eyebrow" data-en="Pricing" data-es="Precios" data-he="מחירים" data-hy="Գներ">Pricing</p>
   <h2 class="section-heading" data-en="Start free. Upgrade when ready." data-es="Empieza gratis. Actualiza cuando estés listo." data-he="התחל בחינם. שדרג כשאתה מוכן.">Start free. Upgrade when ready.</h2>
 
   <div class="pricing-grid">
@@ -811,7 +808,7 @@ body {
       <p class="mf-desc" data-en="The money &amp; paperwork layer for contractors. Get paid faster." data-es="La capa financiera para contratistas." data-he="הכלים הפיננסיים לקבלנים. קבל תשלום מהר יותר.">The money &amp; paperwork layer for contractors. Get paid faster.</p>
     </div>
     <div class="mf-col">
-      <h4 data-en="Tools" data-es="Herramientas" data-he="כלים">Tools</h4>
+      <h4 data-en="Tools" data-es="Herramientas" data-he="כלים" data-hy="Գործիքներ">Tools</h4>
       <a href="/tools/video-brain.html" data-en="Video Brain" data-es="Video Brain" data-he="Video Brain">Video Brain</a>
       <a href="/tools/estimate.html" data-en="Smart Estimate" data-es="Estimado Inteligente" data-he="הערכת עלות">Smart Estimate</a>
       <a href="/tools/invoice.html" data-en="Invoice" data-es="Factura" data-he="חשבונית">Invoice</a>
@@ -821,7 +818,7 @@ body {
     </div>
     <div class="mf-col">
       <h4 data-en="Obra" data-es="Obra" data-he="Obra">Obra</h4>
-      <a href="#pricing" data-en="Pricing" data-es="Precios" data-he="מחירים">Pricing</a>
+      <a href="#pricing" data-en="Pricing" data-es="Precios" data-he="מחירים" data-hy="Գներ">Pricing</a>
       <a href="/directory.html" data-en="Directory" data-es="Directorio" data-he="ספר עסקים">Directory</a>
       <a href="/home.html" data-en="All Tools" data-es="Todas las Herramientas" data-he="כל הכלים">All Tools</a>
     </div>

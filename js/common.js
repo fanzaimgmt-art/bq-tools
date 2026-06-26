@@ -41,17 +41,17 @@ function t(strings) {
 // ── Language Toggle ──
 // Supported: 'en' (English), 'he' (Hebrew, RTL), 'es' (Spanish, Mexican-American)
 function setLang(l) {
-  if (!['en', 'he', 'es'].includes(l)) l = 'en';
+  if (!['en', 'he', 'es', 'hy', 'fa', 'ar'].includes(l)) l = 'en';
   lang = l;
   localStorage.setItem('bq_lang', l);
-  document.documentElement.dir = l === 'he' ? 'rtl' : 'ltr';
+  document.documentElement.dir = ['he', 'fa', 'ar'].includes(l) ? 'rtl' : 'ltr';
   document.documentElement.lang = l;
   if (document.body) document.body.setAttribute('lang', l);
   document.querySelectorAll('.lang-btn').forEach(btn => {
     btn.classList.toggle('on', btn.dataset.lang === l);
   });
   // Apply translations — elements with any of data-en/he/es
-  document.querySelectorAll('[data-en],[data-he],[data-es]').forEach(el => {
+  document.querySelectorAll('[data-en],[data-he],[data-es],[data-hy],[data-fa],[data-ar]').forEach(el => {
     const t = el.getAttribute('data-' + l);
     if (!t) return;
     if (t.includes('<')) {
@@ -1341,11 +1341,44 @@ function maybeShowIOSInstallBanner() {
 }
 
 // ── Init on load ──
+// ── First-visit language picker (shows once, before any other UI, logged-out too) ──
+const LANG_OPTIONS = [
+  { code: 'en', label: 'English',  flag: '🇺🇸' },
+  { code: 'es', label: 'Español',  flag: '🇲🇽' },
+  { code: 'hy', label: 'Հայերեն',  flag: '🇦🇲' },
+  { code: 'he', label: 'עברית',    flag: '🇮🇱' },
+  { code: 'fa', label: 'فارسی',    flag: '🇮🇷' },
+  { code: 'ar', label: 'العربية',  flag: '🇸🇦' },
+];
+function maybeFirstVisitLangPicker() {
+  if (localStorage.getItem('bq_lang')) return;          // already chose / returning visitor
+  openLangPicker();
+}
+function openLangPicker() {
+  if (document.getElementById('langPicker')) return;
+  const m = document.createElement('div');
+  m.id = 'langPicker';
+  m.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(6,6,10,.92);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:24px;';
+  m.innerHTML = `
+    <div style="background:var(--sf,#141418);border:1px solid var(--ac,#e8c547);border-radius:20px;padding:28px 24px;max-width:380px;width:100%;text-align:center;box-shadow:0 30px 90px rgba(0,0,0,.6);">
+      <div style="font-family:var(--font-display,sans-serif);font-weight:900;font-size:24px;letter-spacing:2px;color:var(--ac,#e8c547);margin-bottom:6px;">Obra</div>
+      <div style="color:var(--txd,#888);font-size:14px;margin-bottom:20px;">Choose your language · Elige tu idioma · Ընտրեք լեզուն · בחר שפה</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        ${LANG_OPTIONS.map(o => `<button data-pick="${o.code}" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border-radius:12px;border:1px solid var(--bd,#2a2a30);background:var(--bg,#08080d);color:var(--tx,#f0f0f0);font-size:16px;font-weight:700;cursor:pointer;min-height:54px;font-family:inherit;">${o.flag} ${o.label}</button>`).join('')}
+      </div>
+    </div>`;
+  document.body.appendChild(m);
+  m.querySelectorAll('[data-pick]').forEach(btn => {
+    btn.onclick = () => { setLang(btn.dataset.pick); m.remove(); };
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   // Routing check — may redirect and stop execution
   if (_routingCheck()) return;
 
   setLang(lang);
+  maybeFirstVisitLangPicker();
 
   const p = window.location.pathname;
   const skip = _SKIP_PAGES.includes(p);
