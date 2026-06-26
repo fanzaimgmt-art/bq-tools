@@ -847,9 +847,37 @@ async function handleRegister(request, env) {
   // Check if user already exists
   const existing = await env.BQ_USERS.get(`user:${emailLower}`);
 
+  // Deliver the code. Previously this function sent NOTHING while claiming "code sent" — no one could sign up.
+  // 1) Email via MailChannels — works once a verified sending domain/provider is configured (see note below).
+  let emailSent = false;
+  try {
+    const mailRes = await fetch('https://api.mailchannels.net/tx/v1/send', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        personalizations: [{ to: [{ email: emailLower }] }],
+        from: { email: 'noreply@bq-tools.com', name: 'Obra' },
+        subject: 'Your Obra verification code',
+        content: [{ type: 'text/plain', value: `Your Obra verification code is: ${code}\n\nIt expires in 10 minutes.\n\n— Obra` }]
+      })
+    });
+    emailSent = mailRes.ok || mailRes.status === 202;
+  } catch (_) {}
+
+  // 2) PRE-LAUNCH CRUTCH: MailChannels' free keyless relay was discontinued (Aug 2024), so email likely fails
+  // until a real provider (Resend/Brevo) + verified domain are set up. Until then, relay the code to the owner's
+  // Telegram so the signup flow is testable end-to-end and codes are never silently lost.
+  // ⚠️ SECURITY: this lets the owner see every registrant's code — REMOVE once real email delivery is live.
+  if (env.TELEGRAM_BOT_TOKEN && env.MOSHE_CHAT_ID) {
+    await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: env.MOSHE_CHAT_ID, text: `🔑 Obra verify code for ${emailLower}: ${code} (email ${emailSent ? 'sent' : 'FAILED — relay only'})` })
+    }).catch(() => {});
+  }
+
   return json({
     ok: true,
     isNew: !existing,
+    emailSent,
     message: `Verification code sent to ${email}`
   });
 }
