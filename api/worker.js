@@ -91,6 +91,9 @@ export default {
       if (path === '/api/auth/logout' && request.method === 'POST') {
         return corsResponse(env, await handleLogout(request, env));
       }
+      if (path === '/api/contact' && request.method === 'POST') {
+        return corsResponse(env, await handleContact(request, env));
+      }
       if (path === '/api/user' && request.method === 'GET') {
         return corsResponse(env, await handleGetUser(request, env));
       }
@@ -459,6 +462,47 @@ function generateToken() {
 async function handleLogout(request, env) {
   const token = request.headers.get('Authorization')?.replace('Bearer ', '');
   if (token) await env.BQ_USERS.delete(`token:${token}`);
+  return json({ ok: true });
+}
+
+// Contact / lead form → Telegram ping to Moshe + stored. Spam-resistant: honeypot + IP rate-limit.
+async function handleContact(request, env) {
+  let body;
+  try { body = await request.json(); } catch { return json({ error: 'Invalid request' }, 400); }
+
+  // Honeypot: a hidden field bots fill but humans never see. If set, silently drop (fake success).
+  if (body.website || body.url) return json({ ok: true });
+
+  const name = String(body.name || '').slice(0, 100).trim();
+  const email = String(body.email || '').slice(0, 254).trim();
+  const company = String(body.company || '').slice(0, 120).trim();
+  const phone = String(body.phone || '').slice(0, 40).trim();
+  const message = String(body.message || '').slice(0, 2000).trim();
+
+  if (!name || !email.includes('@') || message.length < 5) {
+    return json({ error: 'Please add your name, a valid email, and a short note.' }, 400);
+  }
+
+  // Anti-spam: per-IP rate limit (10/min via the shared limiter)
+  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+  if (!(await checkRateLimit(`contact:${ip}`, env))) {
+    return json({ error: 'Too many requests. Try again in a minute.' }, 429);
+  }
+
+  // Notify Moshe on Telegram (best-effort)
+  if (env.TELEGRAM_BOT_TOKEN && env.MOSHE_CHAT_ID) {
+    const text = `🎯 New Obra lead (Done-For-You)\n👤 ${name}\n🏢 ${company || '—'}\n✉️ ${email}\n📞 ${phone || '—'}\n\n${message}`;
+    await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: env.MOSHE_CHAT_ID, text })
+    }).catch(() => {});
+  }
+
+  // Store the lead so nothing is lost (90-day TTL)
+  await env.BQ_USERS.put(`lead:${Date.now()}:${email}`, JSON.stringify({
+    name, email, company, phone, message, at: new Date().toISOString()
+  }), { expirationTtl: 7776000 });
+
   return json({ ok: true });
 }
 

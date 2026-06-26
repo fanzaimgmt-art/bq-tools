@@ -26,6 +26,14 @@
     background: var(--acd); border-radius: 10px; padding: 14px; text-align: center;
     font-size: 13px; color: var(--ac); margin-top: 16px;
   }
+  .lf-field { margin-bottom: 14px; }
+  .lf-field label { display: block; font-size: 12px; color: var(--txd); font-weight: 700; margin-bottom: 6px; }
+  .lf-field input, .lf-field textarea {
+    width: 100%; padding: 12px 14px; border: 1px solid var(--bd); border-radius: 10px;
+    background: var(--bg); color: var(--tx); font-family: var(--font-en); font-size: 16px;
+    box-sizing: border-box; resize: vertical;
+  }
+  .lf-field input:focus, .lf-field textarea:focus { outline: none; border-color: var(--ac); }
 </style>
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#e8c547">
@@ -47,51 +55,27 @@
 </nav>
 
 <div class="contact-wrap">
-  <h1 data-en="Contact Us" data-he="צור קשר">Contact Us</h1>
-  <p class="sub" data-en="Questions, feedback, or partnership inquiries? We'd love to hear from you." data-he="שאלות, משוב, או הצעות שיתוף פעולה? נשמח לשמוע.">Questions, feedback, or partnership inquiries? We'd love to hear from you.</p>
+  <h1 data-en="Book a Strategy Call" data-he="קבע שיחת ייעוץ" data-es="Agenda una llamada">Book a Strategy Call</h1>
+  <p class="sub" data-en="Tell us about your business. We'll set up a quick Google Meet — no obligation." data-he="ספר לנו על העסק שלך. נקבע שיחת Google Meet קצרה — ללא התחייבות." data-es="Cuéntanos sobre tu negocio. Coordinamos un Google Meet rápido — sin compromiso.">Tell us about your business. We'll set up a quick Google Meet — no obligation.</p>
 
-  <div class="contact-card">
-    <div class="contact-row">
-      <span class="icon">🏢</span>
-      <div>
-        <div class="label" data-en="Company" data-he="חברה">Company</div>
-        <strong>BQ Production LLC</strong>
-      </div>
-    </div>
-    <div class="contact-row">
-      <span class="icon">📍</span>
-      <div>
-        <div class="label" data-en="Location" data-es="Ubicación" data-he="מיקום">Location</div>
-        Los Angeles, California
-      </div>
-    </div>
-    <div class="contact-row">
-      <span class="icon">📧</span>
-      <div>
-        <div class="label">Email</div>
-        <a href="mailto:fanzai.mgmt@gmail.com">fanzai.mgmt@gmail.com</a>
-      </div>
-    </div>
-  </div>
+  <form class="contact-card" id="leadForm" onsubmit="return submitLead(event)">
+    <!-- honeypot: hidden from humans, bots fill it → silently dropped -->
+    <input type="text" name="website" id="lf_website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" aria-hidden="true">
+    <div class="lf-field"><label data-en="Your name" data-he="השם שלך" data-es="Tu nombre">Your name</label>
+      <input type="text" id="lf_name" required maxlength="100" placeholder="John Smith"></div>
+    <div class="lf-field"><label data-en="Company" data-he="חברה" data-es="Empresa">Company</label>
+      <input type="text" id="lf_company" maxlength="120" placeholder="Smith Construction"></div>
+    <div class="lf-field"><label data-en="Email (for the Meet invite)" data-he="אימייל (להזמנה ל-Meet)" data-es="Email (para la invitación)">Email (for the Meet invite)</label>
+      <input type="email" id="lf_email" required maxlength="254" placeholder="you@company.com"></div>
+    <div class="lf-field"><label data-en="Phone (optional)" data-he="טלפון (לא חובה)" data-es="Teléfono (opcional)">Phone (optional)</label>
+      <input type="tel" id="lf_phone" maxlength="40" placeholder="(747) 267-9912"></div>
+    <div class="lf-field"><label data-en="What do you need help with?" data-he="במה נוכל לעזור?" data-es="¿En qué necesitas ayuda?">What do you need help with?</label>
+      <textarea id="lf_message" required maxlength="2000" rows="3" placeholder="We're losing track of invoices and payments..."></textarea></div>
+    <button type="submit" class="btn btn-primary" id="lf_btn" style="width:100%;" data-en="Request a Meeting" data-he="בקש פגישה" data-es="Solicitar una reunión">Request a Meeting</button>
+    <div id="lf_result" style="margin-top:12px;font-size:14px;text-align:center;"></div>
+  </form>
 
-  <div class="contact-card">
-    <div class="contact-row">
-      <span class="icon">🔒</span>
-      <div>
-        <div class="label" data-en="Privacy & Data Requests" data-he="פרטיות ובקשות מידע">Privacy & Data Requests</div>
-        <span data-en="Email us with subject 'Privacy Request'" data-he="שלח מייל עם הנושא 'Privacy Request'">Email us with subject "Privacy Request"</span>
-      </div>
-    </div>
-    <div class="contact-row">
-      <span class="icon">©️</span>
-      <div>
-        <div class="label" data-en="DMCA / Copyright" data-he="DMCA / זכויות יוצרים">DMCA / Copyright</div>
-        <a href="mailto:fanzai.mgmt@gmail.com">fanzai.mgmt@gmail.com</a>
-      </div>
-    </div>
-  </div>
-
-  <div class="contact-hours" data-en="We typically respond within 24-48 hours" data-he="אנחנו בדרך כלל מגיבים תוך 24-48 שעות">We typically respond within 24-48 hours</div>
+  <div class="contact-hours" data-en="Prefer email? fanzai.mgmt@gmail.com · We reply within 24-48h" data-he="מעדיף מייל? fanzai.mgmt@gmail.com · נחזור תוך 24-48 שעות">Prefer email? fanzai.mgmt@gmail.com · We reply within 24-48h</div>
 </div>
 
 <footer class="footer" style="width:100%;">
@@ -104,5 +88,49 @@
 
 <script src="/js/i18n-dict.js"></script>
 <script src="js/common.js"></script>
+<script>
+const LEAD_API = 'https://bq-tools-api.fanzai-mgmt.workers.dev';
+async function submitLead(e) {
+  e.preventDefault();
+  const btn = document.getElementById('lf_btn');
+  const result = document.getElementById('lf_result');
+  const payload = {
+    website: document.getElementById('lf_website').value, // honeypot
+    name: document.getElementById('lf_name').value.trim(),
+    company: document.getElementById('lf_company').value.trim(),
+    email: document.getElementById('lf_email').value.trim(),
+    phone: document.getElementById('lf_phone').value.trim(),
+    message: document.getElementById('lf_message').value.trim()
+  };
+  btn.disabled = true;
+  const sending = (typeof t === 'function') ? t({ en: 'Sending…', he: 'שולח…', es: 'Enviando…' }) : 'Sending…';
+  btn.textContent = sending;
+  result.textContent = '';
+  try {
+    const res = await fetch(`${LEAD_API}/api/contact`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (res.ok && data.ok) {
+      document.getElementById('leadForm').innerHTML =
+        `<div style="text-align:center;padding:20px;">
+           <div style="font-size:40px;margin-bottom:10px;">✅</div>
+           <strong style="font-size:18px;">${(typeof t==='function')?t({en:"Got it — talk soon!",he:"קיבלנו — נדבר בקרוב!",es:"¡Recibido — hablamos pronto!"}):"Got it — talk soon!"}</strong>
+           <p style="color:var(--txd);margin-top:8px;font-size:14px;">${(typeof t==='function')?t({en:"Moshe will email you a Google Meet link to schedule.",he:"משה ישלח לך קישור Google Meet לתיאום.",es:"Moshe te enviará un enlace de Google Meet."}):"Moshe will email you a Google Meet link to schedule."}</p>
+         </div>`;
+    } else {
+      result.style.color = 'var(--red)';
+      result.textContent = data.error || 'Something went wrong. Please try again.';
+      btn.disabled = false; btn.textContent = (typeof t==='function')?t({en:'Request a Meeting',he:'בקש פגישה',es:'Solicitar una reunión'}):'Request a Meeting';
+    }
+  } catch {
+    result.style.color = 'var(--red)';
+    result.textContent = 'Network error. Please try again.';
+    btn.disabled = false; btn.textContent = 'Request a Meeting';
+  }
+  return false;
+}
+</script>
 </body>
 </html>
