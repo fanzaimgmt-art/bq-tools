@@ -143,7 +143,7 @@ function renderBoard(d) {
     const deals = d.deals[s] || [];
     const cards = deals.length ? deals.map(dealCard).join('') : `<div class="crm-empty" data-en="Drop here" data-he="גרור לכאן" data-es="Arrastra aquí">Drop here</div>`;
     return `<div class="crm-col" data-stage="${s}" ondragover="colDragOver(event)" ondragleave="colDragLeave(event)" ondrop="colDrop(event,'${s}')">
-      <div class="crm-col-head"><span class="name">${L(STAGE_LABELS[s])}</span><span class="meta">${deals.length} · ${fmt$(d.totals[s])}</span></div>
+      <div class="crm-col-head"><span class="name" data-en="${STAGE_LABELS[s].en}" data-he="${STAGE_LABELS[s].he}" data-es="${STAGE_LABELS[s].es}">${L(STAGE_LABELS[s])}</span><span class="meta">${deals.length} · ${fmt$(d.totals[s])}</span></div>
       ${cards}
     </div>`;
   }).join('');
