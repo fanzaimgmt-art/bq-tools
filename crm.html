@@ -213,7 +213,8 @@ async function openDeal(id) {
     <div class="crm-field"><label data-en="Activity" data-he="פעילות" data-es="Actividad">Activity</label>
       <div class="crm-timeline">${acts}</div>
       <div class="crm-row2" style="margin-top:6px;"><input id="newActBody" placeholder="${L({en:'Log a call, note…',he:'תעד שיחה, הערה…',es:'Registra una llamada…'})}"><button class="btn btn-sm" onclick="addActivity(${id})" data-en="Log" data-he="תעד" data-es="Registrar">Log</button></div>
-    </div>`;
+    </div>
+    <button onclick="deleteDeal(${id})" style="background:none;border:none;color:var(--red);font-size:13px;cursor:pointer;margin-top:8px;" data-en="🗑 Delete deal" data-he="🗑 מחק עסקה" data-es="🗑 Eliminar trato">🗑 Delete deal</button>`;
   document.getElementById('dealOverlay').classList.add('open');
   if (typeof setLang === 'function') setLang(localStorage.getItem('bq_lang') || 'en');
 }
@@ -222,6 +223,11 @@ async function updateValue(id, value) { await fetch(`${CRM_API}/api/crm/deal`, {
 async function addActivity(id) { const b=document.getElementById('newActBody').value.trim(); if(!b)return; await fetch(`${CRM_API}/api/crm/activity`,{method:'POST',headers:_H(),body:JSON.stringify({deal_id:id,body:b,type:'note'})}); openDeal(id); }
 async function addTask(id) { const tt=document.getElementById('newTaskTitle').value.trim(); if(!tt)return; const due=document.getElementById('newTaskDue').value; await fetch(`${CRM_API}/api/crm/task`,{method:'POST',headers:_H(),body:JSON.stringify({deal_id:id,title:tt,due_at:due||null})}); openDeal(id); }
 async function toggleTask(tid, done, dealId) { await fetch(`${CRM_API}/api/crm/task`,{method:'PATCH',headers:_H(),body:JSON.stringify({id:tid,done})}); }
+async function deleteDeal(id) {
+  if (!confirm(L({en:'Delete this deal?',he:'למחוק את העסקה?',es:'¿Eliminar este trato?'}))) return;
+  await fetch(`${CRM_API}/api/crm/deal?id=${id}`, { method:'DELETE', headers:_H() });
+  closeOverlay('dealOverlay'); loadPipeline();
+}
 
 document.addEventListener('DOMContentLoaded', () => { if (_tok()) loadPipeline(); });
 </script>

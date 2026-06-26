@@ -99,6 +99,7 @@ export default {
       if (path === '/api/crm/deal' && request.method === 'POST') return corsResponse(env, await handleCrmDealCreate(request, env));
       if (path === '/api/crm/deal' && request.method === 'PATCH') return corsResponse(env, await handleCrmDealUpdate(request, env));
       if (path === '/api/crm/deal' && request.method === 'GET') return corsResponse(env, await handleCrmDealGet(request, env));
+      if (path === '/api/crm/deal' && request.method === 'DELETE') return corsResponse(env, await handleCrmDealDelete(request, env));
       if (path === '/api/crm/activity' && request.method === 'POST') return corsResponse(env, await handleCrmActivity(request, env));
       if (path === '/api/crm/task' && request.method === 'POST') return corsResponse(env, await handleCrmTaskCreate(request, env));
       if (path === '/api/crm/task' && request.method === 'PATCH') return corsResponse(env, await handleCrmTaskDone(request, env));
@@ -634,6 +635,19 @@ async function handleCrmDealGet(request, env) {
   const activities = (await env.CRM_DB.prepare(`SELECT * FROM activities WHERE deal_id=? AND owner_email=? ORDER BY created_at DESC`).bind(id, user.email).all()).results;
   const tasks = (await env.CRM_DB.prepare(`SELECT * FROM tasks WHERE deal_id=? AND owner_email=? ORDER BY (due_at IS NULL), due_at`).bind(id, user.email).all()).results;
   return json({ ok: true, deal, activities, tasks });
+}
+
+async function handleCrmDealDelete(request, env) {
+  const user = await _crmUser(request, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+  if (!env.CRM_DB) return json({ error: 'CRM not configured' }, 503);
+  const id = parseInt(new URL(request.url).searchParams.get('id')); if (!id) return json({ error: 'id required' }, 400);
+  const deal = await env.CRM_DB.prepare(`SELECT id FROM deals WHERE id=? AND owner_email=?`).bind(id, user.email).first();
+  if (!deal) return json({ error: 'Not found' }, 404);
+  await env.CRM_DB.prepare(`DELETE FROM activities WHERE deal_id=? AND owner_email=?`).bind(id, user.email).run();
+  await env.CRM_DB.prepare(`DELETE FROM tasks WHERE deal_id=? AND owner_email=?`).bind(id, user.email).run();
+  await env.CRM_DB.prepare(`DELETE FROM deals WHERE id=? AND owner_email=?`).bind(id, user.email).run();
+  return json({ ok: true });
 }
 
 async function handleCrmActivity(request, env) {
