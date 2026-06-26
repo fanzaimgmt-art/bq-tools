@@ -932,11 +932,14 @@ async function handleVerify(request, env) {
     if (!success) return json({ error: 'Too many attempts. Slow down.' }, 429);
   }
 
-  // Brute-force lockout: max 5 wrong codes per email (10-min window = code lifetime)
-  const failKey = `verifyfail:${emailLower}`;
+  // Brute-force lockout: max 5 wrong codes per (email, IP). Keyed by IP too so a remote attacker can't
+  // lock a victim out of their own account by spamming wrong codes for the victim's email (targeted-DoS
+  // fix). We also do NOT delete the victim's pending code on lockout — a legitimate holder of the real
+  // code is never collateral. Global per-email rate is capped separately by AUTH_LIMITER above.
+  const ip = request.headers.get('CF-Connecting-IP') || 'noip';
+  const failKey = `verifyfail:${emailLower}:${ip}`;
   const fails = parseInt(await env.BQ_USERS.get(failKey) || '0');
   if (fails >= 5) {
-    await env.BQ_USERS.delete(`verify:${emailLower}`); // burn the code, force re-request
     return json({ error: 'Too many attempts. Request a new code.' }, 429);
   }
 
@@ -970,9 +973,11 @@ async function handleVerify(request, env) {
     // New user
     const token = generateToken();
     const baseFree = parseInt(env.FREE_CREDITS || '5');
-    // Referral bonus: 10 credits instead of 5
+    // Referral bonus: 10 credits instead of 5 — but ONLY from a real existing account. Without the
+    // existence check, anyone self-grants +5 by passing any "@"-containing string as referredBy.
     const refEmail = (referredBy || '').toLowerCase().trim();
-    const hasReferral = refEmail && refEmail.includes('@') && refEmail !== emailLower;
+    const hasReferral = refEmail && refEmail.includes('@') && refEmail !== emailLower
+      && !!(await env.BQ_USERS.get(`user:${refEmail}`));
     const freeCredits = hasReferral ? baseFree + 5 : baseFree;
 
     user = {
@@ -5186,6 +5191,14 @@ async function handlePaypalSubmit(request, env) {
   const allowed = await _paymentRateLimit(userEmail, env);
   if (!allowed) return json({ error: 'Too many submissions. Try again in an hour.' }, 429);
 
+  // Reject a transaction ID already submitted (by anyone) — stops one PayPal payment being claimed for
+  // multiple accounts or replayed. The admin still manually verifies; this is the code-side backstop.
+  const txnKey = `paypal_txn:${transactionId}`;
+  if (await env.BQ_USERS.get(txnKey)) {
+    return json({ error: 'This transaction ID has already been submitted.' }, 409);
+  }
+  await env.BQ_USERS.put(txnKey, userEmail, { expirationTtl: 7776000 }); // 90-day uniqueness window
+
   const ts = Date.now();
   const kvKey = `pending_payment:${ts}:${userEmail}`;
   await env.BQ_USERS.put(kvKey, JSON.stringify({
@@ -5203,38 +5216,6 @@ async function handleCryptoSubmit(request, env) {
   return json({ error: 'Crypto payments are no longer supported.' }, 410);
 }
 
-async function _handleCryptoSubmit_RETIRED(request, env) {
-  let body;
-  try { body = await request.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
-
-  const { tier, amount, transactionId, userEmail } = body;
-
-  if (!TIER_AMOUNTS[tier]) return json({ error: 'Invalid tier' }, 400);
-  if (typeof userEmail !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userEmail)) {
-    return json({ error: 'Invalid email' }, 400);
-  }
-  // Crypto tx hashes are longer and may include hex chars; allow 20-100 alphanumeric/hex
-  if (typeof transactionId !== 'string' || !/^[a-zA-Z0-9]{20,100}$/.test(transactionId)) {
-    return json({ error: 'Transaction hash must be 20-100 alphanumeric characters' }, 400);
-  }
-  if (typeof amount !== 'number' || amount <= 0) {
-    return json({ error: 'Invalid amount' }, 400);
-  }
-
-  const allowed = await _paymentRateLimit(userEmail, env);
-  if (!allowed) return json({ error: 'Too many submissions. Try again in an hour.' }, 429);
-
-  const ts = Date.now();
-  const kvKey = `pending_payment:${ts}:${userEmail}`;
-  await env.BQ_USERS.put(kvKey, JSON.stringify({
-    status: 'pending', method: 'crypto', tier, amount, transactionId,
-    userEmail, submittedAt: new Date(ts).toISOString()
-  }));
-
-  await _pushAdminAlert({ type: 'payment_submitted', email: userEmail, tier, amount, ts }, env);
-
-  return json({ ok: true, message: 'Thanks! Credits will be added within 12 hours. Check your email for confirmation.' });
-}
 
 // ── Admin Payment Handlers ──
 
