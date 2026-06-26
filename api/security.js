@@ -218,7 +218,7 @@ export function addSecurityHeaders(response, request) {
   if (ctype.startsWith("text/html")) {
     headers.set("Content-Security-Policy",
       "default-src 'self' https://bq-tools.fanzai-mgmt.workers.dev https://bq-tools-api.fanzai-mgmt.workers.dev; " +
-      "script-src 'self' 'unsafe-inline' https://accounts.google.com https://js.stripe.com https://cdn.tailwindcss.com https://cdnjs.cloudflare.com https://unpkg.com; " +
+      "script-src 'self' 'unsafe-inline' https://accounts.google.com https://js.stripe.com https://cdn.tailwindcss.com https://unpkg.com; " +
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com; " +
       "font-src 'self' data: https://fonts.gstatic.com; " +
       "img-src 'self' data: https: blob:; " +
