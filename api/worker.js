@@ -512,6 +512,25 @@ async function handleContact(request, env) {
     name, email, company, phone, message, at: new Date().toISOString()
   }), { expirationTtl: 7776000 });
 
+  // Auto-flow the lead into the CRM pipeline (owned by LEAD_OWNER_EMAIL — Moshe's Obra login).
+  // Graceful: skipped if not configured. Dedupes the contact by email.
+  if (env.CRM_DB && env.LEAD_OWNER_EMAIL) {
+    try {
+      const owner = env.LEAD_OWNER_EMAIL;
+      const dedupe = (email || phone || name).toLowerCase();
+      await env.CRM_DB.prepare(
+        `INSERT INTO contacts (owner_email,name,company,email,phone,notes,dedupe_key) VALUES (?,?,?,?,?,?,?)
+         ON CONFLICT(owner_email,dedupe_key) DO UPDATE SET name=excluded.name, company=excluded.company, phone=excluded.phone`
+      ).bind(owner, name, company, email, phone, message, dedupe).run();
+      const c = await env.CRM_DB.prepare(`SELECT id FROM contacts WHERE owner_email=? AND dedupe_key=?`).bind(owner, dedupe).first();
+      const dl = await env.CRM_DB.prepare(
+        `INSERT INTO deals (owner_email,contact_id,title,stage,source) VALUES (?,?,?,?,?)`
+      ).bind(owner, c?.id || null, `Lead: ${name}`, 'new', 'contact_form').run();
+      await env.CRM_DB.prepare(`INSERT INTO activities (owner_email,deal_id,type,body) VALUES (?,?,?,?)`)
+        .bind(owner, dl.meta?.last_row_id, 'note', message).run();
+    } catch (_) { /* lead is already stored + Telegram-pinged; CRM auto-flow is best-effort */ }
+  }
+
   return json({ ok: true });
 }
 
