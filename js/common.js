@@ -152,8 +152,11 @@ function _ddHTML(user) {
     <div class="nav-dd-divider"></div>
     <div class="nav-dd-lang">
       <button class="nav-dd-lang-btn${lang === 'en' ? ' on' : ''}" onclick="setLang('en');_rebuildDropdown()">🇺🇸 EN</button>
-      <button class="nav-dd-lang-btn${lang === 'he' ? ' on' : ''}" onclick="setLang('he');_rebuildDropdown()">🇮🇱 עב</button>
       <button class="nav-dd-lang-btn${lang === 'es' ? ' on' : ''}" onclick="setLang('es');_rebuildDropdown()">🇲🇽 ES</button>
+      <button class="nav-dd-lang-btn${lang === 'hy' ? ' on' : ''}" onclick="setLang('hy');_rebuildDropdown()">🇦🇲 ՀՅ</button>
+      <button class="nav-dd-lang-btn${lang === 'he' ? ' on' : ''}" onclick="setLang('he');_rebuildDropdown()">🇮🇱 עב</button>
+      <button class="nav-dd-lang-btn${lang === 'fa' ? ' on' : ''}" onclick="setLang('fa');_rebuildDropdown()">🇮🇷 فا</button>
+      <button class="nav-dd-lang-btn${lang === 'ar' ? ' on' : ''}" onclick="setLang('ar');_rebuildDropdown()">🇸🇦 ع</button>
     </div>
     <button class="nav-dd-item" onclick="showReferralLink()"><span class="dd-icon">🎁</span>${t({ en: 'Refer a Friend', he: 'הזמן חבר', es: 'Recomienda a un Amigo' })}</button>
     <button class="nav-dd-item" onclick="showRedeemCode()"><span class="dd-icon">🎟️</span>${t({ en: 'Redeem Code', he: 'הזן קוד', es: 'Canjear Código' })}</button>

@@ -349,10 +349,7 @@ body { display:flex; flex-direction:column; height:100vh; overflow:hidden; -webk
   <a href="/home.html" class="nav-logo">Obra</a>
   <div class="nav-right">
     <a href="/home.html" class="nav-link" data-en="Tools" data-es="Herramientas" data-he="כלים">Tools</a>
-    <div class="lang-toggle">
-      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
-      <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
-    </div>
+    <button class="theme-toggle" onclick="openLangPicker()" title="Language" aria-label="Choose language">🌐</button>
   </div>
 </nav>
 
@@ -445,11 +442,7 @@ body { display:flex; flex-direction:column; height:100vh; overflow:hidden; -webk
 
       <!-- Right side -->
       <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
-        <div class="lang-toggle">
-          <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
-          <button class="lang-btn" data-lang="he" onclick="setLang('he')">עב</button>
-          <button class="lang-btn" data-lang="es" onclick="setLang('es')">ES</button>
-        </div>
+        <button class="theme-toggle" onclick="openLangPicker()" title="Language" aria-label="Choose language">🌐</button>
         <button class="pill-btn" id="themeToggleBtn" onclick="toggleChatTheme()" title="Toggle theme">🌙</button>
         <button class="pill-btn credits-btn" title="Credits">
           ⚡ <span id="creditsBadge">—</span>

@@ -42,7 +42,7 @@
     {
       "name": "AI Chat",
       "short_name": "Chat",
-      "description": "Chat with BQ Assistant",
+      "description": "Chat with Obra Assistant",
       "url": "/chat.html",
       "icons": [{ "src": "/img/icon-192.png", "sizes": "192x192" }]
     }
