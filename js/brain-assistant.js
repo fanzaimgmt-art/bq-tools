@@ -227,7 +227,7 @@
   const overlay = document.createElement('div');
   overlay.className = 'bq-brain-overlay';
   overlay.innerHTML = `
-    <div class="bq-brain-modal" role="dialog" aria-modal="true">
+    <div class="bq-brain-modal" role="dialog" aria-modal="true" aria-label="Obra Assistant">
       <div class="bq-brain-header">
         <span class="em">🧠</span>
         <div class="title">Obra Assistant<small>${escapeHtml(t.tip)}</small></div>
