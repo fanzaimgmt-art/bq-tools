@@ -16,10 +16,12 @@
   window.__bqMotionMounted = true;
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
+  // Self-hosted (was jsdelivr/cdnjs) — removes 3rd-party CDN runtime deps + the blocked-sourcemap console
+  // error, and lets connect-src stay tight. Sourcemap comments stripped from the vendored copies.
   const CDN = {
-    gsap:         'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js',
-    scrollTrig:   'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js',
-    lenis:        'https://cdn.jsdelivr.net/npm/lenis@1.0.45/dist/lenis.min.js',
+    gsap:         '/js/vendor/gsap.min.js',
+    scrollTrig:   '/js/vendor/ScrollTrigger.min.js',
+    lenis:        '/js/vendor/lenis.min.js',
   };
 
   function loadScript(src) {
