@@ -1,15 +1,15 @@
 // BQ Tools — Service Worker
 // Caches app shell for offline use; network-first for API calls.
 
-const VERSION = 'bq-v10';
+const VERSION = 'bq-v11';
 const STATIC_CACHE = `${VERSION}-static`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 
 // Core files cached on install (app shell)
 const APP_SHELL = [
   '/',
-  '/index.html',
-  '/home.html',
+  '/',
+  '/home',
   '/style.css',
   '/js/common.js',
   '/js/ai.js',
@@ -69,7 +69,7 @@ self.addEventListener('fetch', event => {
           caches.open(RUNTIME_CACHE).then(c => c.put(req, copy)).catch(() => {});
           return res;
         })
-        .catch(() => caches.match(req).then(cached => cached || caches.match('/home.html')))
+        .catch(() => caches.match(req).then(cached => cached || caches.match('/home')))
     );
     return;
   }

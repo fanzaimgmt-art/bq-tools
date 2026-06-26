@@ -202,7 +202,7 @@ function injectProfileAvatar() {
   if (!loggedIn) {
     if (langToggle) langToggle.style.display = '';
     const signIn = document.createElement('a');
-    signIn.href = '/auth.html';
+    signIn.href = '/auth';
     signIn.className = 'btn btn-sm';
     signIn.id = 'navSignInBtn';
     signIn.textContent = t({ en: 'Sign In', he: 'התחבר', es: 'Iniciar Sesión' });
@@ -533,7 +533,7 @@ function runTutorial() {
       text: t({ en: 'Let me show you around — it only takes a minute', he: 'בוא אראה לך את הכל בקצרה', es: 'Te muestro todo — solo toma un minuto' })
     },
     {
-      target: '.nav-link[href="/home.html"]', pos: 'bottom',
+      target: '.nav-link[href="/home"]', pos: 'bottom',
       title: t({ en: 'Your AI Tools', he: 'הכלים שלך', es: 'Tus Herramientas IA' }),
       text: t({ en: 'Compare photos, create reports, get estimates — all powered by AI.', he: 'השווה תמונות, צור דוחות, קבל הצעות מחיר — הכל עם AI', es: 'Compara fotos, crea reportes, obtén estimados — todo con IA.' })
     },
@@ -551,7 +551,7 @@ function runTutorial() {
       target: null, pos: 'center',
       title: t({ en: "You're ready!", he: 'מוכן!', es: '¡Listo!' }),
       text: t({ en: 'Start by comparing your first before/after photos.', he: 'התחל בהשוואת תמונות לפני/אחרי', es: 'Empieza comparando tus primeras fotos de antes/después.' }),
-      cta: { text: t({ en: 'Explore Tools →', he: 'גלה כלים →', es: 'Explorar Herramientas →' }), href: '/home.html' }
+      cta: { text: t({ en: 'Explore Tools →', he: 'גלה כלים →', es: 'Explorar Herramientas →' }), href: '/home' }
     },
   ];
 
@@ -1039,11 +1039,11 @@ async function _bcmSubmit(modalEl) {
 }
 
 // ── Pro Upgrade Modal ──
-// Shows a Pro upgrade modal for logged-in users; sends guests to /auth.html.
+// Shows a Pro upgrade modal for logged-in users; sends guests to /auth.
 function showProModal() {
   _closeDropdown();
   if (typeof isLoggedIn === 'function' && !isLoggedIn()) {
-    window.location.href = '/auth.html?next=' + encodeURIComponent(window.location.pathname);
+    window.location.href = '/auth?next=' + encodeURIComponent(window.location.pathname);
     return;
   }
   const h = lang === 'he';
@@ -1082,27 +1082,35 @@ function requireOnline() {
 }
 
 // ── Routing ──
-const _SKIP_PAGES = ['/admin.html', '/auth.html', '/onboarding.html'];
-const _LANDING_PAGES = ['/', '/index.html'];
-const _APP_PAGES = ['/home.html', '/profile.html', '/dashboard.html', '/gallery.html', '/directory.html', '/directory-profile.html', '/chat.html', '/affiliate.html', '/memories.html', '/news.html', '/training.html', '/business.html', '/learn.html'];
-const _BUSINESS_PAGES = ['/business/receipts.html', '/business/clients.html', '/business/expenses.html', '/business/projects.html', '/business/suppliers.html', '/business/equipment.html', '/business/time.html', '/business/compliance.html'];
+// Cloudflare serves pages at extensionless clean URLs (307-redirects *.html → /foo),
+// so window.location.pathname is ALWAYS the clean form at runtime. These lists + all
+// routing comparisons MUST use clean paths, or they silently never match.
+function _normPath() {
+  let p = window.location.pathname.replace(/\.html$/, '');
+  if (p === '/index') p = '/';
+  return p || '/';
+}
+const _SKIP_PAGES = ['/admin', '/auth', '/onboarding'];
+const _LANDING_PAGES = ['/'];
+const _APP_PAGES = ['/home', '/profile', '/dashboard', '/gallery', '/directory', '/directory-profile', '/chat', '/affiliate', '/memories', '/news', '/training', '/business', '/learn'];
+const _BUSINESS_PAGES = ['/business/receipts', '/business/clients', '/business/expenses', '/business/projects', '/business/suppliers', '/business/equipment', '/business/time', '/business/compliance'];
 
 function _isAppPage() {
-  const p = window.location.pathname;
+  const p = _normPath();
   return p.startsWith('/tools/') || p.startsWith('/business/') || _APP_PAGES.includes(p);
 }
 
 function _routingCheck() {
-  const p = window.location.pathname;
+  const p = _normPath();
   const loggedIn = typeof isLoggedIn === 'function' && isLoggedIn();
 
   // Landing page: no redirect — logged-in users can still see pricing
   // But show "Go to App" button via nav injection
 
   // Not logged in hits tool page → go to auth
-  // Exception: compare.html slider is free without login
-  if (!loggedIn && p.startsWith('/tools/') && !p.includes('compare.html')) {
-    window.location.replace('/auth.html?next=' + encodeURIComponent(p));
+  // Exception: the compare slider is free without login (clean URL is /tools/compare)
+  if (!loggedIn && p.startsWith('/tools/') && p !== '/tools/compare') {
+    window.location.replace('/auth?next=' + encodeURIComponent(p));
     return true;
   }
 
@@ -1122,16 +1130,16 @@ function buildAppNav() {
   const loggedIn = typeof isLoggedIn === 'function' && isLoggedIn();
   const user = typeof getCachedUser === 'function' ? getCachedUser() : null;
   const credits = user ? (user.credits || 0) : 0;
-  const p = window.location.pathname;
+  const p = _normPath();
 
-  // Build nav links
+  // Build nav links (clean URLs — avoid the .html→clean 307 redirect hop)
   const links = [
-    { href: '/home.html', en: 'Tools', he: 'כלים', es: 'Herramientas', match: ['/home.html'] },
+    { href: '/home', en: 'Tools', he: 'כלים', es: 'Herramientas', match: ['/home'] },
     { href: '/#pricing', en: 'Pricing', he: 'מחירים', es: 'Precios', match: [] },
   ];
 
   const linksHtml = links.map(l => {
-    const active = l.match.some(m => p === m) || (p.startsWith('/tools/') && l.href === '/home.html');
+    const active = l.match.some(m => p === m) || (p.startsWith('/tools/') && l.href === '/home');
     return `<a href="${l.href}" class="nav-link${active ? ' nav-active' : ''}" data-en="${l.en}" data-he="${l.he}" data-es="${l.es}">${t(l)}</a>`;
   }).join('');
 
@@ -1150,11 +1158,11 @@ function buildAppNav() {
   if (loggedIn && user) {
     authHtml = `<div class="nav-avatar-wrap" id="navAvatarWrap"></div>`;
   } else {
-    authHtml = `<a href="/auth.html" class="btn btn-sm" data-en="Sign In" data-he="התחבר" data-es="Iniciar Sesión">${t({ en: 'Sign In', he: 'התחבר', es: 'Iniciar Sesión' })}</a>`;
+    authHtml = `<a href="/auth" class="btn btn-sm" data-en="Sign In" data-he="התחבר" data-es="Iniciar Sesión">${t({ en: 'Sign In', he: 'התחבר', es: 'Iniciar Sesión' })}</a>`;
   }
 
   oldNav.innerHTML = `
-    <a href="${loggedIn ? '/home.html' : '/'}" class="nav-logo">Obra</a>
+    <a href="${loggedIn ? '/home' : '/'}" class="nav-logo">Obra</a>
     <div class="nav-right">
       ${linksHtml}
       ${creditPill}
@@ -1385,7 +1393,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setLang(lang);
   maybeFirstVisitLangPicker();
 
-  const p = window.location.pathname;
+  const p = _normPath();
   const skip = _SKIP_PAGES.includes(p);
   const isLanding = _LANDING_PAGES.includes(p);
 
