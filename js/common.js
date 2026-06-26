@@ -50,9 +50,17 @@ function setLang(l) {
   document.querySelectorAll('.lang-btn').forEach(btn => {
     btn.classList.toggle('on', btn.dataset.lang === l);
   });
-  // Apply translations — elements with any of data-en/he/es
+  // Apply translations — elements with any of data-en/he/es/hy/fa/ar.
+  // If the inline data-<lang> attr is absent, fall back to the global glossary
+  // (window.I18N from js/i18n-dict.js) keyed by the element's English text — this
+  // is what gives every page all 6 languages without per-page translation.
+  const DICT = (typeof window !== 'undefined' && window.I18N) || null;
   document.querySelectorAll('[data-en],[data-he],[data-es],[data-hy],[data-fa],[data-ar]').forEach(el => {
-    const t = el.getAttribute('data-' + l);
+    let t = el.getAttribute('data-' + l);
+    if (!t && l !== 'en' && DICT) {
+      const en = el.getAttribute('data-en');
+      if (en && DICT[en]) t = DICT[en][l];
+    }
     if (!t) return;
     if (t.includes('<')) {
       el.innerHTML = t;
@@ -60,9 +68,13 @@ function setLang(l) {
       el.textContent = t;
     }
   });
-  // Apply placeholder translations — elements with data-{lang}-placeholder
+  // Apply placeholder translations — data-{lang}-placeholder, with the same dict fallback
   document.querySelectorAll('[data-en-placeholder],[data-he-placeholder],[data-es-placeholder]').forEach(el => {
-    const p = el.getAttribute('data-' + l + '-placeholder');
+    let p = el.getAttribute('data-' + l + '-placeholder');
+    if (p == null && l !== 'en' && DICT) {
+      const en = el.getAttribute('data-en-placeholder');
+      if (en && DICT[en]) p = DICT[en][l];
+    }
     if (p != null) el.placeholder = p;
   });
 }
