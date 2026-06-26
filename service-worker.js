@@ -1,7 +1,7 @@
 // BQ Tools — Service Worker
 // Caches app shell for offline use; network-first for API calls.
 
-const VERSION = 'bq-v8';
+const VERSION = 'bq-v9';
 const STATIC_CACHE = `${VERSION}-static`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 
@@ -43,13 +43,10 @@ self.addEventListener('fetch', event => {
   const req = event.request;
   const url = new URL(req.url);
 
-  // Never cache cross-origin AI APIs or admin calls
+  // Cross-origin (CDN assets like Leaflet/unpkg, fonts, AI APIs): DO NOT intercept —
+  // let the browser fetch natively. Substituting a 503 JSON here broke cross-origin
+  // <script>/<link> (e.g. Leaflet → "L is not defined", map + listings failed to render).
   if (url.origin !== location.origin) {
-    // External: network only, fall back to offline response
-    event.respondWith(fetch(req).catch(() => new Response(
-      JSON.stringify({ error: 'Offline' }),
-      { status: 503, headers: { 'Content-Type': 'application/json' } }
-    )));
     return;
   }
 
