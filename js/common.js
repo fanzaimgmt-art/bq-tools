@@ -1351,7 +1351,8 @@ const LANG_OPTIONS = [
   { code: 'ar', label: 'العربية',  flag: '🇸🇦' },
 ];
 function maybeFirstVisitLangPicker() {
-  if (localStorage.getItem('bq_lang')) return;          // already chose / returning visitor
+  // NOTE: setLang() writes bq_lang on every load, so gate on a separate "user chose" flag
+  if (localStorage.getItem('bq_lang_picked')) return;   // already chose
   openLangPicker();
 }
 function openLangPicker() {
@@ -1369,7 +1370,7 @@ function openLangPicker() {
     </div>`;
   document.body.appendChild(m);
   m.querySelectorAll('[data-pick]').forEach(btn => {
-    btn.onclick = () => { setLang(btn.dataset.pick); m.remove(); };
+    btn.onclick = () => { setLang(btn.dataset.pick); localStorage.setItem('bq_lang_picked', '1'); m.remove(); };
   });
 }
 
