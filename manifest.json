@@ -2,7 +2,7 @@
   "name": "Obra — AI for Contractors",
   "short_name": "Obra",
   "description": "AI-powered tools for contractors and remodelers: photo compare, reports, estimates, quotes, receipt scanner, and more.",
-  "start_url": "/home.html",
+  "start_url": "/home",
   "scope": "/",
   "display": "standalone",
   "background_color": "#0a0a0c",
@@ -22,28 +22,28 @@
       "name": "Compare Photos",
       "short_name": "Compare",
       "description": "Before/after photo comparison",
-      "url": "/tools/compare.html",
+      "url": "/tools/compare",
       "icons": [{ "src": "/img/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Receipt Scanner",
       "short_name": "Receipts",
       "description": "Scan receipts with AI",
-      "url": "/business/receipts.html",
+      "url": "/business/receipts",
       "icons": [{ "src": "/img/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Quote Generator",
       "short_name": "Quote",
       "description": "Generate professional quotes",
-      "url": "/tools/quote.html",
+      "url": "/tools/quote",
       "icons": [{ "src": "/img/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "AI Chat",
       "short_name": "Chat",
       "description": "Chat with Obra Assistant",
-      "url": "/chat.html",
+      "url": "/chat",
       "icons": [{ "src": "/img/icon-192.png", "sizes": "192x192" }]
     }
   ]
