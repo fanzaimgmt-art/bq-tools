@@ -55,6 +55,13 @@ type = "ratelimit"
 namespace_id = "2002"
 simple = { limit = 60, period = 10 }
 
+# Public brain-chat (brain.js) per-IP limit — atomic, so the chatbot on every page makes no KV writes.
+[[unsafe.bindings]]
+name = "BRAIN_LIMITER"
+type = "ratelimit"
+namespace_id = "2003"
+simple = { limit = 10, period = 60 }
+
 [triggers]
 # 8am PT = 16:00 UTC. Runs: news refresh + scrape 20 new contractors + re-engagement + analytics digest.
 crons = ["0 16 * * *"]

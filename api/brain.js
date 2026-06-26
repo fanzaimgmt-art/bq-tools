@@ -119,14 +119,15 @@ ${TOOLS_KNOWLEDGE}`;
     { role: "user", content: question },
   ];
 
-  // Rate limit per IP (loose) — track in KV with 60s TTL
-  try {
-    const ip = request.headers.get("CF-Connecting-IP") || "unknown";
-    const key = `brain:rate:${ip}`;
-    const cur = parseInt((await env.BQ_USERS.get(key)) || "0", 10);
-    if (cur >= 10) return json({ answer: lang === "he" ? "יותר מדי שאלות בדקה. רגע ונסה שוב." : "Too many questions in a minute. Try again soon." });
-    await env.BQ_USERS.put(key, String(cur + 1), { expirationTtl: 60 });
-  } catch {}
+  // Rate limit per IP via the atomic ratelimit binding (10/60s) — NO KV write, so the public chatbot
+  // (rendered on every page) doesn't contribute to the KV daily write cap. Fail-open if absent/errors.
+  if (env.BRAIN_LIMITER) {
+    try {
+      const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+      const { success } = await env.BRAIN_LIMITER.limit({ key: ip });
+      if (!success) return json({ answer: lang === "he" ? "יותר מדי שאלות בדקה. רגע ונסה שוב." : "Too many questions in a minute. Try again soon." });
+    } catch {}
+  }
 
   // Call Groq
   try {
