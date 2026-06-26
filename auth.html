@@ -188,12 +188,6 @@
       <h2 data-en="Enter Code" data-es="Ingresa el Código" data-he="הכנס קוד">Enter Code</h2>
       <p class="sub" id="codeSub" data-en="We sent a 6-digit code to your email." data-es="Enviamos un código de 6 dígitos a tu email." data-he="שלחנו קוד בן 6 ספרות למייל שלך.">We sent a 6-digit code to your email.</p>
 
-      <!-- MVP: Show code on screen -->
-      <div class="code-display" id="codeDisplay">
-        <div class="code-label" data-en="Your verification code (MVP — will be emailed later):" data-es="Tu código de verificación (MVP — se enviará por email después):" data-he="קוד האימות שלך (MVP — ישלח במייל בהמשך):">Your verification code (MVP — will be emailed later):</div>
-        <div class="code-num" id="displayedCode"></div>
-      </div>
-
       <input type="text" class="auth-input" id="codeInput" placeholder="123456" maxlength="6" inputmode="numeric" autocomplete="one-time-code" style="letter-spacing:8px;font-family:monospace;font-size:24px;">
       <button class="btn btn-primary" style="width:100%;font-size:16px;" onclick="doVerify()" id="verifyBtn" data-en="Verify" data-es="Verificar" data-he="אמת">Verify</button>
       <button onclick="showStep('stepEmail')" style="margin-top:12px;background:none;border:none;color:var(--txd);cursor:pointer;font-size:14px;font-family:inherit;min-height:48px;padding:8px 16px;" data-en="← Back to email" data-es="← Volver a email" data-he="חזור למייל →">← Back to email</button>
@@ -329,13 +323,11 @@ async function doRegister() {
     const data = await registerEmail(email);
     currentEmail = email;
 
-    // MVP: Show code on screen
-    if (data.code) {
-      document.getElementById('displayedCode').textContent = data.code;
-      document.getElementById('codeDisplay').classList.add('show');
-    }
-
     showStep('stepCode');
+    // Email delivery may not be configured yet (no real provider) — be honest, don't dead-end.
+    if (data.emailSent === false) {
+      showMsg(lang === 'he' ? 'אם קוד לא הגיע — שליחת המיילים עדיין בהקמה. פנה אלינו ב-/contact.' : "If no code arrives, email delivery is still being set up — reach us at /contact.", 'err');
+    }
   } catch (err) {
     showMsg(err.message, 'err');
   }
