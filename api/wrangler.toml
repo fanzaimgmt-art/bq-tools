@@ -16,6 +16,13 @@ MOSHE_CHAT_ID = "369310707"
 binding = "BQ_USERS"
 id = "e75722f0f0f44c1994c95bc98b4386a9"
 
+# CRM relational store (SQLite). Pipeline/deals/tasks/activities need real SQL
+# (SUM pipe value, deals-by-stage, tasks-due) — KV can't do those.
+[[d1_databases]]
+binding = "CRM_DB"
+database_name = "obra-crm"
+database_id = "8d2c54b6-0767-45df-a1eb-332ce2c3fc7e"
+
 # Native rate-limit binding — atomic/burst-proof (unlike eventually-consistent KV counters).
 # 5 requests / 60s per key. Used for verify + register brute-force protection.
 [[unsafe.bindings]]
