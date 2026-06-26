@@ -1245,7 +1245,7 @@ function showCookieConsent() {
   banner.innerHTML = `
     <p style="font-size:13px;color:var(--txd);line-height:1.5;margin:0;max-width:500px;">
       ${t({ en: 'We use localStorage to save your preferences. No tracking cookies.', he: 'אנחנו משתמשים ב-localStorage כדי לשמור את ההעדפות שלך. אין עוגיות מעקב.', es: 'Usamos localStorage para guardar tus preferencias. Sin cookies de rastreo.' })}
-      <a href="/privacy.html" style="color:var(--ac);margin-inline-start:4px;">${t({ en: 'Privacy Policy', he: 'מדיניות פרטיות', es: 'Política de Privacidad' })}</a>
+      <a href="/privacy.html" style="color:var(--ac);margin-inline-start:4px;text-decoration:underline;">${t({ en: 'Privacy Policy', he: 'מדיניות פרטיות', es: 'Política de Privacidad' })}</a>
     </p>
     <button onclick="localStorage.setItem('bq_cookie_consent','1');this.parentElement.remove();" style="padding:8px 20px;border:none;border-radius:8px;background:var(--ac);color:var(--bg);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;min-height:40px;white-space:nowrap;">${t({ en: 'Got it', he: 'מאשר', es: 'Entendido' })}</button>`;
   document.body.appendChild(banner);

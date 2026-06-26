@@ -493,7 +493,7 @@ a:hover, a:active { opacity: .8; }
 .footer-brand {
   font-size: 12px;
   color: var(--txd);
-  opacity: .4;
+  opacity: .8;
   margin-bottom: 8px;
 }
 .footer-links {
@@ -505,7 +505,7 @@ a:hover, a:active { opacity: .8; }
 .footer-links a {
   font-size: 12px;
   color: var(--txd);
-  opacity: .35;
+  opacity: .8;
   text-decoration: none;
   display: flex;
   align-items: center;
@@ -518,10 +518,10 @@ a:hover, a:active { opacity: .8; }
   gap: 8px; margin-top: 8px;
 }
 .footer-legal a {
-  font-size: 11px; color: var(--txd); opacity: .4; text-decoration: none; transition: opacity .2s;
+  font-size: 11px; color: var(--txd); opacity: .8; text-decoration: none; transition: opacity .2s;
 }
-.footer-legal a:hover { opacity: .8; color: var(--ac); }
-.footer-legal span { font-size: 11px; color: var(--txd); opacity: .3; }
+.footer-legal a:hover { opacity: 1; color: var(--ac); }
+.footer-legal span { font-size: 11px; color: var(--txd); opacity: .7; }
 
 /* ── RTL Support ── */
 [dir="rtl"] .price-features,
