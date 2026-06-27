@@ -25,6 +25,8 @@ CREATE TABLE IF NOT EXISTS deals (
   stage          TEXT NOT NULL DEFAULT 'new',   -- new | quoted | won | lost  (hard-coded enum)
   source         TEXT,                          -- e.g. 'contact_form', 'manual', 'client', 'job'
   expected_close TEXT,
+  next_follow_up TEXT,                          -- Phase 2: follow-up reminder date (YYYY-MM-DD)
+  close_reason   TEXT,                          -- Phase 2: why the deal was won/lost
   created_at     TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at     TEXT NOT NULL DEFAULT (datetime('now')),
   FOREIGN KEY (contact_id) REFERENCES contacts(id)
