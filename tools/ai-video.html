@@ -200,11 +200,42 @@
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
 
+  /* ── Premium studio panel ── */
+  .studio { background: var(--sf); border: 1px solid var(--bd); border-radius: 18px; padding: 18px; margin-bottom: 10px; box-shadow: 0 10px 44px rgba(0,0,0,.4); }
+  .studio .prompt-wrap textarea { min-height: 92px; }
+  .ref-row { display: flex; gap: 8px; margin-top: 12px; }
+  .ref-row.hot .ref-btn { border-color: rgba(232,197,71,.45); background: var(--acd); }
+  .ref-btn { flex: 1; display: flex; align-items: center; gap: 8px; justify-content: center; padding: 11px 10px; border: 1.5px dashed var(--bd); border-radius: 11px; background: var(--bg); color: var(--txd); cursor: pointer; transition: all .15s; font-family: var(--font-en); font-size: 13px; font-weight: 600; }
+  .ref-btn:hover { border-color: var(--ac); color: var(--tx); background: var(--acd); }
+  .ref-ic { font-size: 16px; }
+  .ref-ct { font-size: 11px; color: var(--txd); }
+  .ref-thumbs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ref-thumbs:empty { display: none; }
+  .ref-thumb { position: relative; width: 58px; height: 58px; border-radius: 9px; overflow: hidden; border: 1px solid var(--bd); background: var(--bg); display: flex; align-items: center; justify-content: center; }
+  .ref-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .ref-thumb .rt-ic { font-size: 24px; }
+  .ref-thumb .rt-tag { position: absolute; bottom: 2px; inset-inline-start: 3px; font-size: 9px; font-weight: 700; background: rgba(0,0,0,.72); color: var(--ac); padding: 0 4px; border-radius: 4px; }
+  .ref-thumb .rt-x { position: absolute; top: 2px; inset-inline-end: 2px; width: 16px; height: 16px; border: none; border-radius: 50%; background: rgba(0,0,0,.72); color: #fff; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; }
+  .pill-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .pill { display: flex; align-items: center; gap: 3px; background: var(--bg); border: 1px solid var(--bd); border-radius: 999px; padding: 3px 8px 3px 11px; }
+  .pill-ic { font-size: 13px; opacity: .75; }
+  .pill select { border: none; background: transparent; color: var(--tx); font-family: var(--font-en); font-size: 13px; font-weight: 600; cursor: pointer; appearance: none; padding: 4px 2px; outline: none; }
+  .studio-foot { display: flex; align-items: center; gap: 10px; margin-top: 16px; }
+  .model-pick { display: flex; align-items: center; gap: 6px; background: var(--bg); border: 1px solid var(--bd); border-radius: 11px; padding: 7px 10px; flex: 0 0 auto; }
+  .model-pick select { border: none; background: transparent; color: var(--tx); font-family: var(--font-en); font-size: 13.5px; font-weight: 700; cursor: pointer; appearance: none; outline: none; max-width: 150px; }
+  .mp-ic { font-size: 15px; }
+  .studio-foot .gen-btn { flex: 1; margin: 0; padding: 14px; border-radius: 12px; }
+  .gen-cost { font-weight: 800; opacity: .82; }
+  .est-line { text-align: center; font-size: 12px; color: var(--txd); margin-bottom: 18px; }
+
   @media (max-width: 600px) {
     .settings-grid { grid-template-columns: 1fr; }
     .dur-field { grid-column: 1; }
     .img-row { flex-direction: column; }
     .history-grid { grid-template-columns: repeat(2, 1fr); }
+    .studio-foot { flex-direction: column; }
+    .model-pick { width: 100%; }
+    .model-pick select { max-width: none; flex: 1; }
   }
 </style>
   <link rel="manifest" href="/manifest.json">
@@ -231,120 +262,135 @@
 
   <!-- Header -->
   <div class="page-header">
-    <h1>🎬 <span data-en="AI Video" data-he="וידאו AI" data-es="Video IA">AI Video</span> <span class="badge">Seedance 2</span></h1>
-    <p data-en="Text-to-video &amp; image-to-video powered by Seedance 2.0" data-he="טקסט לוידאו ותמונה לוידאו בכוח Seedance 2.0" data-es="Texto a video e imagen a video impulsado por Seedance 2.0">Text-to-video &amp; image-to-video powered by Seedance 2.0</p>
+    <h1>🎬 <span data-en="AI Video" data-he="וידאו AI" data-es="Video IA">AI Video</span> <span class="badge" id="modelBadge">Seedance 2.5</span></h1>
+    <p data-en="Cinematic AI video — text, image, or multi-reference. Seedance 2.5, Kling 3.0 &amp; more." data-he="וידאו AI קולנועי — טקסט, תמונה, או רפרנסים. Seedance 2.5, Kling 3.0 ועוד." data-es="Video AI cinematográfico — texto, imagen o referencias. Seedance 2.5, Kling 3.0 y más.">Cinematic AI video — text, image, or multi-reference. Seedance 2.5, Kling 3.0 &amp; more.</p>
   </div>
 
   <!-- Mode Tabs -->
   <div class="mode-tabs">
-    <button class="mode-tab on" id="tabT2V" onclick="setMode('t2v')" data-en="✍️ Text to Video" data-he="✍️ טקסט לוידאו" data-es="✍️ Texto a Video">✍️ Text to Video</button>
-    <button class="mode-tab" id="tabI2V" onclick="setMode('i2v')" data-en="🖼️ Image to Video" data-he="🖼️ תמונה לוידאו" data-es="🖼️ Imagen a Video">🖼️ Image to Video</button>
+    <button class="mode-tab on" id="tabT2V" onclick="setMode('t2v')" data-en="✍️ Text" data-he="✍️ טקסט" data-es="✍️ Texto">✍️ Text</button>
+    <button class="mode-tab" id="tabI2V" onclick="setMode('i2v')" data-en="🖼️ First / Last Frame" data-he="🖼️ פריים ראשון/אחרון" data-es="🖼️ Primer/Último">🖼️ First / Last Frame</button>
+    <button class="mode-tab" id="tabEl" onclick="setMode('elements')" data-en="🧩 Elements" data-he="🧩 אלמנטים" data-es="🧩 Elementos">🧩 Elements</button>
   </div>
 
-  <!-- Prompt Card -->
-  <div class="card">
-    <div class="card-title" data-en="Prompt" data-he="תיאור" data-es="Descripción">Prompt</div>
+  <!-- Unified Studio Panel -->
+  <div class="studio">
+
+    <!-- Prompt -->
     <div class="prompt-wrap">
       <textarea id="promptInput"
-        placeholder="Describe the video you want to generate...&#10;e.g. A contractor power-washing a driveway, cinematic, golden hour lighting, slow motion"
-        data-en-placeholder="Describe the video you want to generate...&#10;e.g. A contractor power-washing a driveway, cinematic, golden hour lighting, slow motion"
-        data-he-placeholder="תאר את הוידאו שתרצה ליצור...&#10;לדוגמה: קבלן שטיפת לחץ לשביל, קולנועי, תאורת שעת הזהב, מהירות איטית"
-        data-es-placeholder="Describe el video que quieres generar...&#10;ej. Un contratista lavando a presión una entrada, cinematográfico, iluminación de hora dorada, cámara lenta"
+        placeholder="Describe the video you want to create…  Use @ to reference your assets."
+        data-en-placeholder="Describe the video you want to create…  Use @ to reference your assets."
+        data-he-placeholder="תאר את הוידאו שתרצה ליצור…  השתמש ב-@ כדי להפנות לרפרנסים."
+        data-es-placeholder="Describe el video que quieres crear…  Usa @ para referenciar tus recursos."
         maxlength="4000" oninput="updateCharCount()"></textarea>
       <span class="char-count"><span id="charCount">0</span>/4000</span>
     </div>
-  </div>
 
-  <!-- Image Upload (I2V only) -->
-  <div class="card" id="imgCard" style="display:none;">
-    <div class="card-title" data-en="Reference Images" data-he="תמונות התייחסות" data-es="Imágenes de referencia">Reference Images</div>
-    <div class="img-row">
-      <div>
-        <div class="img-drop" id="dropFirst">
-          <span class="di">🖼️</span>
-          <span class="dl" data-en="First Frame" data-he="פריים ראשון" data-es="Primer fotograma">First Frame</span>
-          <span class="ds" data-en="Starting image" data-he="תמונת פתיחה" data-es="Imagen inicial">Starting image</span>
-          <img class="preview-img" id="previewFirst" style="display:none;" alt="First frame">
-          <button class="clear-btn" onclick="clearImg('first')" title="Remove">×</button>
-          <input type="file" id="inputFirst" accept="image/*" onchange="loadImg('first', this)">
+    <!-- First / Last frame (I2V) -->
+    <div id="imgCard" style="display:none;">
+      <div class="img-row">
+        <div>
+          <div class="img-drop" id="dropFirst">
+            <span class="di">🖼️</span>
+            <span class="dl" data-en="First Frame" data-he="פריים ראשון" data-es="Primer fotograma">First Frame</span>
+            <span class="ds" data-en="Starting image" data-he="תמונת פתיחה" data-es="Imagen inicial">Starting image</span>
+            <img class="preview-img" id="previewFirst" style="display:none;" alt="First frame">
+            <button class="clear-btn" onclick="clearImg('first')" title="Remove">×</button>
+            <input type="file" id="inputFirst" accept="image/*" onchange="loadImg('first', this)">
+          </div>
         </div>
-        <div class="img-label" data-en="First Frame" data-he="פריים ראשון" data-es="Primer fotograma">First Frame</div>
-      </div>
-      <div>
-        <div class="img-drop" id="dropLast">
-          <span class="di">🖼️</span>
-          <span class="dl" data-en="Last Frame" data-he="פריים אחרון" data-es="Último fotograma">Last Frame</span>
-          <span class="ds" data-en="Optional ending" data-he="סיום אופציונלי" data-es="Cierre opcional">Optional ending</span>
-          <img class="preview-img" id="previewLast" style="display:none;" alt="Last frame">
-          <button class="clear-btn" onclick="clearImg('last')" title="Remove">×</button>
-          <input type="file" id="inputLast" accept="image/*" onchange="loadImg('last', this)">
+        <div>
+          <div class="img-drop" id="dropLast">
+            <span class="di">🖼️</span>
+            <span class="dl" data-en="Last Frame" data-he="פריים אחרון" data-es="Último fotograma">Last Frame</span>
+            <span class="ds" data-en="Optional" data-he="אופציונלי" data-es="Opcional">Optional</span>
+            <img class="preview-img" id="previewLast" style="display:none;" alt="Last frame">
+            <button class="clear-btn" onclick="clearImg('last')" title="Remove">×</button>
+            <input type="file" id="inputLast" accept="image/*" onchange="loadImg('last', this)">
+          </div>
         </div>
-        <div class="img-label" data-en="Last Frame (optional)" data-he="פריים אחרון (אופציונלי)" data-es="Último fotograma (opcional)">Last Frame (optional)</div>
       </div>
     </div>
-  </div>
 
-  <!-- Settings Card -->
-  <div class="card">
-    <div class="card-title" data-en="Settings" data-he="הגדרות" data-es="Configuración">Settings</div>
-    <div class="settings-grid">
-      <div class="setting-field">
-        <label data-en="Model" data-he="מודל" data-es="Modelo">Model</label>
-        <select id="modelSel" onchange="updateEstimate()">
-          <option value="seedance2-fast" data-en="⚡ Fast (28 cr/sec)" data-he="⚡ מהיר (28 קר׳/שנייה)" data-es="⚡ Rápido (28 cr/seg)">⚡ Fast (28 cr/sec)</option>
-          <option value="seedance-20" selected data-en="🎯 Seedance 2.0 Pro (40 cr/sec)" data-he="🎯 Seedance 2.0 Pro (40 קר׳/שנייה)" data-es="🎯 Seedance 2.0 Pro (40 cr/seg)">🎯 Seedance 2.0 Pro (40 cr/sec)</option>
-          <option value="seedance2-5" data-en="🔥 Seedance 2.5 — newest (40 cr/sec)" data-he="🔥 Seedance 2.5 — החדש (40 קר׳/שנייה)" data-es="🔥 Seedance 2.5 — nuevo (40 cr/seg)">🔥 Seedance 2.5 — newest (40 cr/sec)</option>
-          <option value="kling3" data-en="🎬 Kling 3.0 (22 cr/sec)" data-he="🎬 Kling 3.0 (22 קר׳/שנייה)" data-es="🎬 Kling 3.0 (22 cr/seg)">🎬 Kling 3.0 (22 cr/sec)</option>
+    <!-- Reference assets (image / video / audio) -->
+    <div class="ref-row" id="refRow">
+      <button type="button" class="ref-btn" onclick="document.getElementById('refImgInput').click()">
+        <span class="ref-ic">🖼️</span>
+        <span class="ref-tx"><span data-en="Add Image" data-he="הוסף תמונה" data-es="Añadir imagen">Add Image</span> <span class="ref-ct" id="ctImg">0/9</span></span>
+        <input type="file" id="refImgInput" accept="image/*" multiple hidden onchange="addRefs('img', this)">
+      </button>
+      <button type="button" class="ref-btn" onclick="document.getElementById('refVidInput').click()">
+        <span class="ref-ic">🎬</span>
+        <span class="ref-tx"><span data-en="Add Video" data-he="הוסף וידאו" data-es="Añadir video">Add Video</span> <span class="ref-ct" id="ctVid">0/3</span></span>
+        <input type="file" id="refVidInput" accept="video/*" multiple hidden onchange="addRefs('vid', this)">
+      </button>
+      <button type="button" class="ref-btn" onclick="document.getElementById('refAudInput').click()">
+        <span class="ref-ic">🎵</span>
+        <span class="ref-tx"><span data-en="Add Audio" data-he="הוסף אודיו" data-es="Añadir audio">Add Audio</span> <span class="ref-ct" id="ctAud">0/3</span></span>
+        <input type="file" id="refAudInput" accept="audio/*" multiple hidden onchange="addRefs('aud', this)">
+      </button>
+    </div>
+    <div class="ref-thumbs" id="refThumbs"></div>
+
+    <!-- Inline setting pills -->
+    <div class="pill-bar">
+      <div class="pill">
+        <span class="pill-ic">⏱</span>
+        <select id="durSelPill" onchange="syncDur(this.value)">
+          <option value="4">4s</option><option value="5" selected>5s</option><option value="6">6s</option>
+          <option value="8">8s</option><option value="10">10s</option>
         </select>
       </div>
-      <div class="setting-field">
-        <label data-en="Aspect Ratio" data-he="יחס גובה-רוחב" data-es="Relación de aspecto">Aspect Ratio</label>
-        <select id="aspectSel">
-          <option value="16:9" selected data-en="16:9 — Landscape" data-he="16:9 — רוחבי" data-es="16:9 — Horizontal">16:9 — Landscape</option>
-          <option value="9:16" data-en="9:16 — Portrait" data-he="9:16 — אנכי" data-es="9:16 — Vertical">9:16 — Portrait</option>
-          <option value="1:1" data-en="1:1 — Square" data-he="1:1 — ריבוע" data-es="1:1 — Cuadrado">1:1 — Square</option>
-          <option value="4:3" data-en="4:3 — Classic" data-he="4:3 — קלאסי" data-es="4:3 — Clásico">4:3 — Classic</option>
-          <option value="21:9" data-en="21:9 — Cinematic" data-he="21:9 — קולנועי" data-es="21:9 — Cinemático">21:9 — Cinematic</option>
+      <div class="pill">
+        <span class="pill-ic">▭</span>
+        <select id="aspectSel" onchange="updateEstimate()">
+          <option value="16:9" selected>16:9</option><option value="9:16">9:16</option>
+          <option value="1:1">1:1</option><option value="4:3">4:3</option><option value="21:9">21:9</option>
         </select>
       </div>
-      <div class="setting-field">
-        <label data-en="Resolution" data-he="רזולוציה" data-es="Resolución">Resolution</label>
+      <div class="pill">
+        <span class="pill-ic">🎞</span>
         <select id="resSel" onchange="updateEstimate()">
-          <option value="720p" selected data-en="720p — Standard" data-he="720p — סטנדרטי" data-es="720p — Estándar">720p — Standard</option>
-          <option value="480p" data-en="480p — Half price" data-he="480p — מחיר חצי" data-es="480p — Mitad de precio">480p — Half price</option>
+          <option value="480p">480p</option><option value="720p" selected>720p</option><option value="1080p">1080p</option>
         </select>
       </div>
-      <div class="setting-field">
-        <label data-en="Upscale" data-he="שדרוג רזולוציה" data-es="Escalado">Upscale</label>
+      <div class="pill">
+        <span class="pill-ic">✨</span>
         <select id="upscaleSel" onchange="updateEstimate()">
-          <option value="" selected data-en="No upscale" data-he="ללא שדרוג" data-es="Sin escalado">No upscale</option>
-          <option value="4k" data-en="4K (+28 cr/sec)" data-he="4K (+28 קר׳/שנייה)" data-es="4K (+28 cr/seg)">4K (+28 cr/sec)</option>
+          <option value="" selected data-en="No upscale" data-he="ללא 4K" data-es="Sin 4K">No 4K</option>
+          <option value="4k">4K</option>
         </select>
-      </div>
-      <div class="setting-field dur-field">
-        <label data-en="Duration" data-he="משך" data-es="Duración">Duration</label>
-        <div class="dur-row">
-          <input type="range" id="durSlider" min="4" max="15" value="5" oninput="updateEstimate()">
-          <span class="dur-val" id="durVal">5s</span>
-        </div>
       </div>
     </div>
+
+    <!-- Model + generate footer -->
+    <div class="studio-foot">
+      <div class="model-pick">
+        <span class="mp-ic">🎥</span>
+        <select id="modelSel" onchange="updateEstimate();syncBadge()">
+          <option value="seedance2-5" data-en="Seedance 2.5 — newest" data-he="Seedance 2.5 — החדש" data-es="Seedance 2.5 — nuevo">Seedance 2.5 — newest</option>
+          <option value="seedance-21" data-en="Seedance 2.1" data-he="Seedance 2.1" data-es="Seedance 2.1">Seedance 2.1</option>
+          <option value="seedance-20" selected data-en="Seedance 2.0 Pro" data-he="Seedance 2.0 Pro" data-es="Seedance 2.0 Pro">Seedance 2.0 Pro</option>
+          <option value="seedance2-fast" data-en="Seedance 2.0 Fast" data-he="Seedance 2.0 מהיר" data-es="Seedance 2.0 Rápido">Seedance 2.0 Fast</option>
+          <option value="kling3" data-en="Kling 3.0" data-he="Kling 3.0" data-es="Kling 3.0">Kling 3.0</option>
+          <option value="happyhorse1.0" data-en="HappyHorse 1.0" data-he="HappyHorse 1.0" data-es="HappyHorse 1.0">HappyHorse 1.0</option>
+        </select>
+      </div>
+      <button class="gen-btn" id="genBtn" onclick="generate()">
+        <span id="genBtnText" data-en="Generate" data-he="צור" data-es="Generar">Generate</span>
+        <span class="gen-cost">⚡<span id="estCredits">200</span></span>
+      </button>
+    </div>
+
+    <!-- hidden range kept for legacy JS + estimate math -->
+    <input type="range" id="durSlider" min="4" max="10" value="5" oninput="updateEstimate()" style="display:none;">
+    <span id="durVal" style="display:none;"></span>
+    <span id="estUsd" style="display:none;"></span>
+    <span id="cps" style="display:none;"></span>
   </div>
 
-  <!-- Credit Estimate -->
-  <div class="credit-est">
-    <span>⚡</span>
-    <span class="ci-label" data-en="Estimated cost:" data-he="עלות משוערת:" data-es="Costo estimado:">Estimated cost:</span>
-    <span class="ci-val" id="estCredits">200 credits</span>
-    <span class="ci-usd" id="estUsd">≈ $1.00</span>
-    <span style="flex:1;"></span>
-    <span style="font-size:11px;color:var(--txd);"><span data-en="Credits/sec:" data-he="קרדיטים/שנ':" data-es="Créditos/seg:">Credits/sec:</span> <span id="cps">40</span></span>
-  </div>
-
-  <!-- Generate Button -->
-  <button class="gen-btn" id="genBtn" onclick="generate()">
-    <span id="genBtnText" data-en="🎬 Generate Video" data-he="🎬 יצור וידאו" data-es="🎬 Generar Video">🎬 Generate Video</span>
-  </button>
+  <div class="est-line"><span data-en="Estimated cost" data-he="עלות משוערת" data-es="Costo estimado">Estimated cost</span>: <b id="estCredits2">200</b> <span data-en="credits" data-he="קרדיטים" data-es="créditos">credits</span> <span id="estUsd2" class="muted"></span></div>
 
   <!-- Status / Result -->
   <div class="result-area" id="resultArea"></div>
@@ -379,7 +425,10 @@
     currentMode = mode;
     document.getElementById('tabT2V').classList.toggle('on', mode === 't2v');
     document.getElementById('tabI2V').classList.toggle('on', mode === 'i2v');
+    const el = document.getElementById('tabEl'); if (el) el.classList.toggle('on', mode === 'elements');
     document.getElementById('imgCard').style.display = mode === 'i2v' ? '' : 'none';
+    // Highlight the reference row in Elements mode (it stays usable in every mode).
+    const rr = document.getElementById('refRow'); if (rr) rr.classList.toggle('hot', mode === 'elements');
   }
 
   // ── Image handling ──
@@ -421,22 +470,53 @@
   // ── Estimate ──
   function updateEstimate() {
     const model = document.getElementById('modelSel').value;
-    const dur = parseInt(document.getElementById('durSlider').value);
+    const dur = parseInt(document.getElementById('durSlider').value) || 5;
     const res = document.getElementById('resSel').value;
     const upscale = document.getElementById('upscaleSel').value;
-    document.getElementById('durVal').textContent = dur + 's';
-
-    const CPS = { 'seedance2-fast': 28, 'seedance-20': 40, 'seedance2-5': 40, 'kling3': 22 };
+    const CPS = { 'seedance2-fast': 28, 'seedance-20': 40, 'seedance-21': 40, 'seedance2-5': 45, 'kling3': 22, 'happyhorse1.0': 30 };
     let cps = CPS[model] || 40;
     if (res === '480p') cps = Math.ceil(cps / 2);
+    if (res === '1080p') cps = Math.ceil(cps * 1.6);
     if (upscale === '4k') cps += 28;
-
     const total = cps * dur;
     const usd = (total * 0.005).toFixed(2); // ~$0.005 per credit
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    set('estCredits', total); set('estCredits2', total);
+    set('estUsd2', '≈ $' + usd); set('cps', cps);
+  }
+  function syncDur(v) { const s = document.getElementById('durSlider'); if (s) s.value = v; updateEstimate(); }
+  function syncBadge() {
+    const L = { 'seedance2-5':'Seedance 2.5','seedance-21':'Seedance 2.1','seedance-20':'Seedance 2.0','seedance2-fast':'Seedance Fast','kling3':'Kling 3.0','happyhorse1.0':'HappyHorse' };
+    const b = document.getElementById('modelBadge'); if (b) b.textContent = L[document.getElementById('modelSel').value] || 'AI';
+  }
 
-    document.getElementById('estCredits').textContent = total + ' ' + t({en:'credits',he:'קרדיטים',es:'créditos'});
-    document.getElementById('estUsd').textContent = '≈ $' + usd;
-    document.getElementById('cps').textContent = cps;
+  // ── Reference assets (image / video / audio) ──
+  let refs = { img: [], vid: [], aud: [] };
+  const REF_MAX = { img: 9, vid: 3, aud: 3 };
+  function addRefs(type, input) {
+    for (const f of [...input.files]) {
+      if (refs[type].length >= REF_MAX[type]) { showToast(t({en:'Max references reached',he:'הגעת למקסימום רפרנסים',es:'Máximo de referencias'}), 'err'); break; }
+      const reader = new FileReader();
+      reader.onload = e => { refs[type].push({ name: f.name, data: e.target.result }); renderRefs(); };
+      reader.readAsDataURL(f);
+    }
+    input.value = '';
+  }
+  function removeRef(type, i) { refs[type].splice(i, 1); renderRefs(); }
+  function renderRefs() {
+    document.getElementById('ctImg').textContent = refs.img.length + '/9';
+    document.getElementById('ctVid').textContent = refs.vid.length + '/3';
+    document.getElementById('ctAud').textContent = refs.aud.length + '/3';
+    const icons = { img: '🖼️', vid: '🎬', aud: '🎵' };
+    let n = 0, html = '';
+    for (const type of ['img', 'vid', 'aud']) {
+      refs[type].forEach((r, i) => {
+        n++;
+        const thumb = type === 'img' ? `<img src="${r.data}" alt="">` : `<span class="rt-ic">${icons[type]}</span>`;
+        html += `<div class="ref-thumb">${thumb}<span class="rt-tag">@${n}</span><button class="rt-x" onclick="removeRef('${type}',${i})" title="Remove">×</button></div>`;
+      });
+    }
+    document.getElementById('refThumbs').innerHTML = html;
   }
 
   function updateCharCount() {
@@ -471,6 +551,10 @@
       if (imgDataFirst) inputs.firstFrame = imgDataFirst;
       if (imgDataLast) inputs.lastFrame = imgDataLast;
     }
+    // Multimodal references (@1, @2… in the prompt). Kinovi: imageUrls/videoUrls/audioUrls.
+    if (refs.img.length) inputs.imageUrls = refs.img.map(r => r.data);
+    if (refs.vid.length) inputs.videoUrls = refs.vid.map(r => r.data);
+    if (refs.aud.length) inputs.audioUrls = refs.aud.map(r => r.data);
 
     try {
       const data = await apiCall('/api/kinovi/create', {

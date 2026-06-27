@@ -4493,8 +4493,14 @@ async function handleKinoviCreate(request, env) {
   if (resolution) inputs.resolution = String(resolution).slice(0, 8);
   if (inp.upscaleResolution) inputs.upscaleResolution = String(inp.upscaleResolution).slice(0, 8);
   if (inp.mode) inputs.mode = inp.mode === 'reference' ? 'reference' : 'keyframe';
-  const frames = [inp.firstFrame, inp.lastFrame].filter(Boolean);   // image-to-video keyframes
-  if (frames.length) inputs.imageUrls = frames;
+  // Image-to-video keyframes + multimodal reference assets (@1, @2… in the prompt). Kinovi caps:
+  // 9 images / 3 videos / 3 audio. (Large video/audio base64 may hit request-size limits — for
+  // production these should be uploaded to object storage and passed as URLs.)
+  const arr = v => Array.isArray(v) ? v.filter(Boolean) : [];
+  const imgs = [inp.firstFrame, inp.lastFrame, ...arr(inp.imageUrls)].filter(Boolean).slice(0, 9);
+  if (imgs.length) inputs.imageUrls = imgs;
+  if (arr(inp.videoUrls).length) inputs.videoUrls = arr(inp.videoUrls).slice(0, 3);
+  if (arr(inp.audioUrls).length) inputs.audioUrls = arr(inp.audioUrls).slice(0, 3);
   if (!inputs.prompt && !inputs.imageUrls) return json({ error: 'prompt required' }, 400);
 
   const res = await fetch('https://kinovi.ai/api/v1/jobs/createTask', {
