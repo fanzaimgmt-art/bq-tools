@@ -1332,7 +1332,7 @@ const MODEL_MAP = {
   'claude-opus': { type: 'claude', model: 'claude-opus-4-8', cost: 15 },
   // Gemini
   'gemini-flash': { type: 'gemini', model: 'gemini-3.5-flash', cost: 1 },
-  'gemini-pro': { type: 'gemini', model: 'gemini-3.1-pro', cost: 3 },
+  'gemini-pro': { type: 'gemini', model: 'gemini-pro-latest', cost: 3 },
   // OpenAI
   'gpt-4o-mini': { type: 'openai', model: 'gpt-5.4-mini', cost: 1 },
   'gpt-4o': { type: 'openai', model: 'gpt-5.5', cost: 3 },
@@ -1645,7 +1645,8 @@ async function callOpenAIWithModel(env, model, prompt, images) {
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-    body: JSON.stringify({ model, messages, max_tokens: 2000 })
+    // GPT-5 series requires max_completion_tokens (max_tokens is rejected).
+    body: JSON.stringify({ model, messages, max_completion_tokens: 2000 })
   });
   const data = await res.json();
   if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
