@@ -421,6 +421,7 @@
   // ── Init ──
   function init() {
     updateEstimate();
+    syncBadge();   // badge must reflect the actually-selected default model, not the HTML placeholder
     renderHistory();
   }
 
