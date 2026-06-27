@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Obra — Bid Render</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  .upload-area {
+    border: 2px dashed var(--bd); border-radius: 12px; padding: 30px 20px;
+    text-align: center; cursor: pointer; transition: all .2s;
+    position: relative; background: var(--sf); margin-bottom: 18px; min-height: 120px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .upload-area:hover { border-color: var(--ac); }
+  .upload-area input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .upload-area img { max-height: 240px; border-radius: 10px; }
+  .upload-hint { color: var(--txd); font-size: 14px; }
+
+  .chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 18px; }
+  .chip {
+    padding: 9px 15px; border: 1px solid var(--bd); border-radius: 999px;
+    background: var(--sf); color: var(--txd); font-size: 14px; cursor: pointer;
+    transition: all .15s; min-height: 42px; font-family: var(--font-en);
+  }
+  .chip:hover { border-color: var(--ac); }
+  .chip.on { border-color: var(--ac); color: var(--ac); background: var(--acd); font-weight: 600; }
+
+  .ba-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+  @media (max-width: 640px) { .ba-grid { grid-template-columns: 1fr; } }
+  .ba-card { background: var(--sf); border: 1px solid var(--bd); border-radius: 12px; overflow: hidden; }
+  .ba-card .ba-label { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 8px 12px; color: var(--txd); }
+  .ba-card.after .ba-label { color: var(--ac); }
+  .ba-card img { width: 100%; display: block; }
+  .ba-empty { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; color: var(--txd); font-size: 13px; padding: 20px; text-align: center; }
+</style>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#e8c547">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Obra">
+  <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png">
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo">Obra</a>
+  <div class="nav-right">
+    <a href="/home" class="nav-link" data-en="← Back" data-es="← Atrás" data-he="חזור →">← Back</a>
+    <button class="theme-toggle" onclick="openLangPicker()" title="Language" aria-label="Choose language">🌐</button>
+  </div>
+</nav>
+
+<div class="page">
+  <a href="/home" class="page-back" data-en="← All Tools" data-es="← Todas las Herramientas" data-he="כל הכלים →">← All Tools</a>
+  <h1 class="page-title" data-en="🏡 Bid Render" data-he="🏡 רינדור הצעה" data-es="🏡 Render de Oferta">🏡 Bid Render</h1>
+  <p class="page-sub"
+     data-en="Photo of the room → see it remodeled. Show the client their finished space before they sign. Win the job."
+     data-he="צילום של החדר → ראה אותו משופץ. תראה ללקוח את התוצאה הסופית לפני שהוא חותם. תסגור את העבודה."
+     data-es="Foto del cuarto → míralo remodelado. Muéstrale al cliente el resultado final antes de firmar. Gana el trabajo.">
+     Photo of the room → see it remodeled. Show the client their finished space before they sign. Win the job.</p>
+
+  <!-- 1. Upload -->
+  <label class="input-label" data-en="1. Photo of the room (as it is now)" data-he="1. צילום של החדר (כמו שהוא עכשיו)" data-es="1. Foto del cuarto (como está ahora)">1. Photo of the room (as it is now)</label>
+  <div class="upload-area" id="uploadArea">
+    <span class="upload-hint" data-en="📷 Tap to upload a photo" data-he="📷 הקש להעלאת תמונה" data-es="📷 Toca para subir una foto">📷 Tap to upload a photo</span>
+    <input type="file" accept="image/*" id="roomInput">
+  </div>
+
+  <!-- 2. Room type -->
+  <label class="input-label" data-en="2. What room is it?" data-he="2. איזה חדר זה?" data-es="2. ¿Qué cuarto es?">2. What room is it?</label>
+  <div class="chip-row" id="roomChips">
+    <button type="button" class="chip on" data-val="kitchen" data-en="Kitchen" data-he="מטבח" data-es="Cocina">Kitchen</button>
+    <button type="button" class="chip" data-val="bathroom" data-en="Bathroom" data-he="אמבטיה" data-es="Baño">Bathroom</button>
+    <button type="button" class="chip" data-val="living room" data-en="Living Room" data-he="סלון" data-es="Sala">Living Room</button>
+    <button type="button" class="chip" data-val="bedroom" data-en="Bedroom" data-he="חדר שינה" data-es="Dormitorio">Bedroom</button>
+    <button type="button" class="chip" data-val="backyard" data-en="Backyard" data-he="חצר" data-es="Patio">Backyard</button>
+    <button type="button" class="chip" data-val="exterior" data-en="Exterior" data-he="חזית" data-es="Exterior">Exterior</button>
+  </div>
+
+  <!-- 3. Style -->
+  <label class="input-label" data-en="3. Remodel style" data-he="3. סגנון השיפוץ" data-es="3. Estilo de remodelación">3. Remodel style</label>
+  <div class="chip-row" id="styleChips">
+    <button type="button" class="chip on" data-val="modern" data-en="Modern" data-he="מודרני" data-es="Moderno">Modern</button>
+    <button type="button" class="chip" data-val="luxury high-end" data-en="Luxury" data-he="יוקרתי" data-es="Lujo">Luxury</button>
+    <button type="button" class="chip" data-val="farmhouse" data-en="Farmhouse" data-he="כפרי" data-es="Rústico">Farmhouse</button>
+    <button type="button" class="chip" data-val="minimalist" data-en="Minimalist" data-he="מינימליסטי" data-es="Minimalista">Minimalist</button>
+    <button type="button" class="chip" data-val="contemporary warm" data-en="Contemporary" data-he="עכשווי" data-es="Contemporáneo">Contemporary</button>
+  </div>
+
+  <!-- 4. Details -->
+  <label class="input-label" data-en="4. Details (optional)" data-he="4. פרטים (אופציונלי)" data-es="4. Detalles (opcional)">4. Details (optional)</label>
+  <input class="input" id="detailsInput" style="margin-bottom:18px;"
+     placeholder="white shaker cabinets, quartz counters, gold fixtures, hardwood floor"
+     data-en-ph="white shaker cabinets, quartz counters, gold fixtures, hardwood floor"
+     data-he-ph="ארונות לבנים, משטח קוורץ, ברזים זהב, רצפת עץ"
+     data-es-ph="gabinetes blancos, cubierta de cuarzo, herrajes dorados, piso de madera">
+
+  <button class="btn btn-primary btn-large" style="width:100%;" onclick="generateRender()" id="genBtn"
+     data-en="✨ Generate Render (5 credits)" data-he="✨ צור רינדור (5 קרדיטים)" data-es="✨ Generar Render (5 créditos)">✨ Generate Render (5 credits)</button>
+
+  <!-- Result -->
+  <div class="ba-grid" id="baGrid" style="display:none;">
+    <div class="ba-card">
+      <div class="ba-label" data-en="Before" data-he="לפני" data-es="Antes">Before</div>
+      <img id="beforeImg" alt="Before">
+    </div>
+    <div class="ba-card after">
+      <div class="ba-label" data-en="After — Obra render" data-he="אחרי — רינדור Obra" data-es="Después — render Obra">After — Obra render</div>
+      <div class="ba-empty" id="afterEmpty" data-en="Rendering…" data-he="מרנדר…" data-es="Renderizando…">Rendering…</div>
+      <img id="afterImg" alt="After" style="display:none;">
+    </div>
+  </div>
+
+  <div id="resultActions" style="display:none;gap:10px;margin-top:14px;flex-wrap:wrap;">
+    <a id="dlBtn" class="btn" download="obra-bid-render.png" data-en="⬇️ Download" data-he="⬇️ הורד" data-es="⬇️ Descargar">⬇️ Download</a>
+    <a href="/tools/quote.html" class="btn btn-primary" data-en="→ Attach to a Quote" data-he="→ צרף להצעת מחיר" data-es="→ Adjuntar a una Oferta">→ Attach to a Quote</a>
+  </div>
+</div>
+
+<footer class="footer"><div class="footer-brand">Powered by Obra — BQ Production LLC</div></footer>
+
+<script src="../js/auth.js"></script>
+<script src="../js/ai.js"></script>
+<script src="/js/i18n-dict.js" defer></script>
+<script src="../js/common.js"></script>
+<script>
+let roomImgData = null;       // full dataURL for the "before" preview
+let nbTaskId = null, nbPoll = null;
+
+// chip single-select
+function wireChips(id) {
+  document.querySelectorAll('#' + id + ' .chip').forEach(c => c.addEventListener('click', () => {
+    document.querySelectorAll('#' + id + ' .chip').forEach(x => x.classList.remove('on'));
+    c.classList.add('on');
+  }));
+}
+wireChips('roomChips'); wireChips('styleChips');
+function chipVal(id) { return document.querySelector('#' + id + ' .chip.on')?.dataset.val || ''; }
+
+// upload
+function handleUpload(e) {
+  const f = e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    roomImgData = ev.target.result;
+    document.getElementById('uploadArea').innerHTML =
+      `<img src="${roomImgData}" alt="room"><input type="file" accept="image/*" id="roomInput">`;
+    document.getElementById('roomInput').addEventListener('change', handleUpload);
+  };
+  r.readAsDataURL(f);
+}
+document.getElementById('roomInput').addEventListener('change', handleUpload);
+
+function buildPrompt() {
+  const room = chipVal('roomChips') || 'room';
+  const style = chipVal('styleChips') || 'modern';
+  const details = document.getElementById('detailsInput').value.trim();
+  const outdoor = (room === 'backyard' || room === 'exterior');
+  const shot = outdoor ? 'real-estate exterior photograph' : 'real-estate interior photograph';
+  return `Professional ${shot} of this exact same ${room} after a complete ${style} remodel.`
+    + (details ? ` ${details}.` : '')
+    + ` Photorealistic, magazine quality, bright natural daylight, ultra-detailed high-end finishes,`
+    + ` keep the original ${room}'s layout, windows and proportions. No people, no text, no watermark.`;
+}
+
+async function generateRender() {
+  if (typeof requirePro === 'function' && !requirePro()) return;
+  if (!roomImgData) { showToast(lang === 'he' ? 'העלה תמונה של החדר קודם' : 'Upload a room photo first', 'err'); return; }
+
+  const ok = await confirmCredit('bid-render', lang === 'he' ? 'רינדור הצעה' : 'Bid Render', 5);
+  if (!ok) return;
+
+  const btn = document.getElementById('genBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ ' + (lang === 'he' ? 'מרנדר…' : 'Rendering…');
+
+  // before/after panels
+  document.getElementById('beforeImg').src = roomImgData;
+  document.getElementById('afterImg').style.display = 'none';
+  document.getElementById('afterEmpty').style.display = 'flex';
+  document.getElementById('baGrid').style.display = 'grid';
+  document.getElementById('resultActions').style.display = 'none';
+
+  try {
+    const resized = await resizeForAPI(roomImgData);
+    const ref = resized.includes(',') ? resized.split(',')[1] : resized;
+    const data = await apiCall('/api/nanobanana/generate', {
+      method: 'POST',
+      body: { prompt: buildPrompt(), referenceImage: ref, strength: 0.6, width: 1024, height: 1024 }
+    });
+    nbTaskId = data.taskId;
+    nbPoll = setInterval(pollRender, 4000);
+  } catch (err) {
+    showToast('Error: ' + err.message, 'err');
+    resetBtn();
+  }
+}
+
+async function pollRender() {
+  if (!nbTaskId) return;
+  try {
+    const data = await apiCall('/api/nanobanana/status?taskId=' + nbTaskId);
+    if (data.status === 'completed' && data.imageUrl) {
+      clearInterval(nbPoll);
+      const after = document.getElementById('afterImg');
+      after.src = data.imageUrl; after.style.display = 'block';
+      document.getElementById('afterEmpty').style.display = 'none';
+      document.getElementById('dlBtn').href = data.imageUrl;
+      document.getElementById('resultActions').style.display = 'flex';
+      resetBtn();
+      showToast(lang === 'he' ? 'הרינדור מוכן! 🎉' : 'Render ready! 🎉', 'ok');
+    } else if (data.status === 'failed') {
+      clearInterval(nbPoll);
+      showToast(lang === 'he' ? 'הרינדור נכשל — נסה שוב' : 'Render failed — try again', 'err');
+      document.getElementById('afterEmpty').textContent = '✕';
+      resetBtn();
+    }
+  } catch (err) {
+    clearInterval(nbPoll);
+    showToast('Poll error: ' + err.message, 'err');
+    resetBtn();
+  }
+}
+
+function resetBtn() {
+  const btn = document.getElementById('genBtn');
+  btn.disabled = false;
+  btn.textContent = lang === 'he' ? '✨ צור רינדור (5 קרדיטים)' : (lang === 'es' ? '✨ Generar Render (5 créditos)' : '✨ Generate Render (5 credits)');
+}
+</script>
+<script src="/js/motion-engine.js" defer></script>
+<script src="/js/cmdk-palette.js" defer></script>
+<script src="/js/brain-assistant.js" defer></script>
+</body>
+</html>

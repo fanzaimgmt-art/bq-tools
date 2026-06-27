@@ -406,7 +406,7 @@ body { display:flex; flex-direction:column; height:100vh; overflow:hidden; -webk
       <!-- Custom model picker -->
       <div class="model-picker-btn" id="modelPickerBtn" onclick="toggleModelDropdown(event)">
         <div class="mpb-dot" id="modelDot" style="background:var(--model-haiku)"></div>
-        <span class="mpb-name" id="modelPickerName">Claude Haiku</span>
+        <span class="mpb-name" id="modelPickerName">Claude Haiku 4.5</span>
         <span class="mpb-vendor" id="modelPickerVendor">/ anthropic</span>
         <span class="mpb-caret">▾</span>
         <div class="model-dropdown-menu" id="modelDropdown"></div>
@@ -415,21 +415,21 @@ body { display:flex; flex-direction:column; height:100vh; overflow:hidden; -webk
       <!-- Hidden select kept for JS compatibility -->
       <select class="model-select" id="modelSelect" onchange="syncModelPicker();updateCost()">
         <optgroup label="OPENAI">
-          <option value="gpt-4o-mini">GPT-4o Mini</option>
-          <option value="gpt-4o">GPT-4o</option>
+          <option value="gpt-4o-mini">GPT-5.4 Mini</option>
+          <option value="gpt-4o">GPT-5.5</option>
         </optgroup>
         <optgroup label="CLAUDE">
-          <option value="claude-haiku" selected>Claude Haiku</option>
-          <option value="claude-sonnet">Claude Sonnet</option>
-          <option value="claude-opus">Claude Opus</option>
+          <option value="claude-haiku" selected>Claude Haiku 4.5</option>
+          <option value="claude-sonnet">Claude Sonnet 4.6</option>
+          <option value="claude-opus">Claude Opus 4.8</option>
         </optgroup>
         <optgroup label="GOOGLE">
-          <option value="gemini-flash">Gemini Flash</option>
-          <option value="gemini-pro">Gemini Pro</option>
+          <option value="gemini-flash">Gemini 3.5 Flash</option>
+          <option value="gemini-pro">Gemini 3.1 Pro</option>
         </optgroup>
         <optgroup label="GROQ">
           <option value="llama-3.3-70b">Llama 3.3 70B</option>
-          <option value="mixtral-8x7b">Mixtral 8x7B</option>
+          <option value="mixtral-8x7b">GPT-OSS 120B</option>
         </optgroup>
         <!-- MANUS optgroup removed — model disabled. Re-enable in MODELS object above. -->
       </select>
@@ -494,15 +494,15 @@ if (!isLoggedIn()) window.location.replace('/auth.html');
 // ── Model Config ──
 // To re-enable Manus: set enabled:true below AND verify MANUS_API_KEY is set in wrangler secrets
 const MODELS = {
-  'gpt-4o-mini':   { label:'GPT-4o Mini',  cost:1,  dotColor:'var(--model-gpt)',    vendor:'openai',     desc:'Fast and cheap' },
-  'gpt-4o':        { label:'GPT-4o',        cost:3,  dotColor:'var(--model-gpt)',    vendor:'openai',     desc:'Good for images & vision' },
-  'claude-haiku':  { label:'Claude Haiku',  cost:1,  dotColor:'var(--model-haiku)',  vendor:'anthropic',  desc:'Fastest, great for quick Qs' },
-  'claude-sonnet': { label:'Claude Sonnet', cost:3,  dotColor:'var(--model-sonnet)', vendor:'anthropic',  desc:'Balanced — best default' },
-  'claude-opus':   { label:'Claude Opus',   cost:15, dotColor:'var(--model-opus)',   vendor:'anthropic',  desc:'Heavy reasoning, contracts' },
-  'gemini-flash':  { label:'Gemini Flash',  cost:1,  dotColor:'var(--model-gemini)', vendor:'google',     desc:'Fast, long context' },
-  'gemini-pro':    { label:'Gemini Pro',    cost:3,  dotColor:'var(--model-gemini)', vendor:'google',     desc:'Long docs, plans, permits' },
-  'llama-3.3-70b': { label:'Llama 3.3 70B',cost:1,  dotColor:'var(--model-llama)',  vendor:'groq',       desc:'Open-source, private' },
-  'mixtral-8x7b':  { label:'Mixtral 8x7B', cost:1,  dotColor:'var(--model-llama)',  vendor:'groq',       desc:'Open-source, fast' },
+  'gpt-4o-mini':   { label:'GPT-5.4 Mini',     cost:1,  dotColor:'var(--model-gpt)',    vendor:'openai',     desc:'Fast and cheap' },
+  'gpt-4o':        { label:'GPT-5.5',          cost:3,  dotColor:'var(--model-gpt)',    vendor:'openai',     desc:'Flagship — reasoning & vision' },
+  'claude-haiku':  { label:'Claude Haiku 4.5', cost:1,  dotColor:'var(--model-haiku)',  vendor:'anthropic',  desc:'Fastest, great for quick Qs' },
+  'claude-sonnet': { label:'Claude Sonnet 4.6',cost:3,  dotColor:'var(--model-sonnet)', vendor:'anthropic',  desc:'Balanced — best default' },
+  'claude-opus':   { label:'Claude Opus 4.8',  cost:15, dotColor:'var(--model-opus)',   vendor:'anthropic',  desc:'Heavy reasoning, contracts' },
+  'gemini-flash':  { label:'Gemini 3.5 Flash', cost:1,  dotColor:'var(--model-gemini)', vendor:'google',     desc:'Fast, long context' },
+  'gemini-pro':    { label:'Gemini 3.1 Pro',   cost:3,  dotColor:'var(--model-gemini)', vendor:'google',     desc:'1M context — plans, permits' },
+  'llama-3.3-70b': { label:'Llama 3.3 70B',    cost:1,  dotColor:'var(--model-llama)',  vendor:'groq',       desc:'Open-source, private' },
+  'mixtral-8x7b':  { label:'GPT-OSS 120B',     cost:1,  dotColor:'var(--model-llama)',  vendor:'groq',       desc:'Open-weight, powerful' },
   'manus':         { label:'Manus Agent',   cost:5,  dotColor:'var(--model-manus)',  vendor:'manus',      desc:'Autonomous agent', enabled:false },
 };
 const MODEL_GROUPS = [

@@ -1319,23 +1319,26 @@ Use THESE rates whenever possible. If this project isn't covered by their histor
 
 // ── Multi-Model Chat ──
 
-// Claude models as of April 2026:
-// - claude-haiku-4-5-20251001 — fast, cheap (~$0.80/M input)
-// - claude-sonnet-4-6 — balanced
-// - claude-opus-4-7 — most capable
+// Newest models as of June 2026 (verified against each provider's live model list):
+// - Anthropic: Claude Opus 4.8 / Sonnet 4.6 / Haiku 4.5
+// - OpenAI: GPT-5.5 (flagship) / GPT-5.4 Mini
+// - Google: Gemini 3.5 Flash / Gemini 3.1 Pro (1M ctx) — 2.x is superseded
+// - Groq: Llama 3.3 70B (current) + GPT-OSS 120B (open-weight; Mixtral was retired)
+// Keys are stable internal IDs (don't rename — saved user prefs + UI <option> values depend on them).
 const MODEL_MAP = {
   // Claude
   'claude-haiku': { type: 'claude', model: 'claude-haiku-4-5-20251001', cost: 1 },
   'claude-sonnet': { type: 'claude', model: 'claude-sonnet-4-6', cost: 3 },
+  'claude-opus': { type: 'claude', model: 'claude-opus-4-8', cost: 15 },
   // Gemini
-  'gemini-flash': { type: 'gemini', model: 'gemini-2.5-flash', cost: 1 },
-  'gemini-pro': { type: 'gemini', model: 'gemini-2.0-flash', cost: 3 },
+  'gemini-flash': { type: 'gemini', model: 'gemini-3.5-flash', cost: 1 },
+  'gemini-pro': { type: 'gemini', model: 'gemini-3.1-pro', cost: 3 },
   // OpenAI
-  'gpt-4o-mini': { type: 'openai', model: 'gpt-4o-mini', cost: 1 },
-  'gpt-4o': { type: 'openai', model: 'gpt-4o', cost: 3 },
+  'gpt-4o-mini': { type: 'openai', model: 'gpt-5.4-mini', cost: 1 },
+  'gpt-4o': { type: 'openai', model: 'gpt-5.5', cost: 3 },
   // Groq
   'llama-3.3-70b': { type: 'groq', model: 'llama-3.3-70b-versatile', cost: 1 },
-  'mixtral-8x7b': { type: 'groq', model: 'mixtral-8x7b-32768', cost: 1 },
+  'mixtral-8x7b': { type: 'groq', model: 'openai/gpt-oss-120b', cost: 1 },
   // Manus
   'manus': { type: 'manus', model: 'manus', cost: 5 },
 };
@@ -4502,7 +4505,7 @@ async function handleNanoBananaGenerate(request, env) {
   const piApiKey = env.PIAPI_KEY;
   if (!piApiKey) return json({ error: 'PIAPI_KEY not configured. Set secret in Cloudflare dashboard.' }, 500);
 
-  const { prompt, referenceImage, width = 1024, height = 1024 } = await request.json();
+  const { prompt, referenceImage, width = 1024, height = 1024, strength } = await request.json();
   if (!prompt) return json({ error: 'prompt required' }, 400);
   if (!prompt.trim().length) return json({ error: 'prompt cannot be empty' }, 400);
 
@@ -4512,8 +4515,11 @@ async function handleNanoBananaGenerate(request, env) {
   if (updated.credits < 5) return json({ error: 'Not enough credits (need 5)' }, 402);
 
   const isImg2Img = !!referenceImage;
+  // Optional caller-set img2img strength (clamped). Lower = stay faithful to the input photo —
+  // Bid Render uses ~0.6 so the client still recognizes their own room; default 0.75 for other callers.
+  const imgStrength = Math.min(0.85, Math.max(0.3, Number(strength) || 0.75));
   const taskInput = isImg2Img
-    ? { prompt, image: referenceImage, strength: 0.75, width, height, guidance_scale: 3.5 }
+    ? { prompt, image: referenceImage, strength: imgStrength, width, height, guidance_scale: 3.5 }
     : { prompt, width, height, guidance_scale: 3.5, num_inference_steps: 28 };
 
   const model = isImg2Img ? 'Qubico/flux1-dev-img2img' : 'Qubico/flux1-dev';
