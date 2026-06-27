@@ -552,7 +552,7 @@ async function handleCrmPipeline(request, env) {
   if (!user) return json({ error: 'Unauthorized' }, 401);
   if (!env.CRM_DB) return json({ error: 'CRM not configured' }, 503);
   const { results } = await env.CRM_DB.prepare(
-    `SELECT d.id, d.title, d.value, d.stage, d.source, d.expected_close, d.created_at,
+    `SELECT d.id, d.title, d.value, d.stage, d.source, d.expected_close, d.next_follow_up, d.created_at, d.updated_at,
             c.name AS contact_name, c.company AS contact_company, c.phone AS contact_phone
        FROM deals d LEFT JOIN contacts c ON c.id = d.contact_id AND c.owner_email = d.owner_email
       WHERE d.owner_email = ? ORDER BY d.updated_at DESC`
@@ -560,12 +560,26 @@ async function handleCrmPipeline(request, env) {
   const deals = {}, totals = {};
   for (const s of CRM_STAGES) { deals[s] = []; totals[s] = 0; }
   let forecast = 0;
+  // Contractor reporting: win rate, won this month, follow-ups due — the stats contractors actually ask for.
+  const today = new Date().toISOString().slice(0, 10);
+  const monthPrefix = today.slice(0, 7);
+  let followupsDue = 0, wonCount = 0, wonValue = 0, lostCount = 0, wonThisMonthValue = 0;
   for (const d of results) {
     (deals[d.stage] || (deals[d.stage] = [])).push(d);
     totals[d.stage] = (totals[d.stage] || 0) + (d.value || 0);
     forecast += (d.value || 0) * (CRM_PROB[d.stage] ?? 0);
+    if (d.next_follow_up && d.next_follow_up <= today && (d.stage === 'new' || d.stage === 'quoted')) followupsDue++;
+    if (d.stage === 'won') { wonCount++; wonValue += (d.value || 0); if ((d.updated_at || '').startsWith(monthPrefix)) wonThisMonthValue += (d.value || 0); }
+    if (d.stage === 'lost') lostCount++;
   }
-  return json({ ok: true, stages: CRM_STAGES, deals, totals, forecast, count: results.length });
+  const closed = wonCount + lostCount;
+  const report = {
+    winRate: closed ? Math.round((wonCount / closed) * 100) : 0,
+    wonValue, wonThisMonthValue,
+    avgDeal: wonCount ? Math.round(wonValue / wonCount) : 0,
+    followupsDue,
+  };
+  return json({ ok: true, stages: CRM_STAGES, deals, totals, forecast, count: results.length, report });
 }
 
 async function handleCrmDealCreate(request, env) {
@@ -592,9 +606,10 @@ async function handleCrmDealCreate(request, env) {
     const c = await env.CRM_DB.prepare(`SELECT id FROM contacts WHERE owner_email=? AND dedupe_key=?`).bind(user.email, dedupe).first();
     contactId = c?.id || null;
   }
+  const followUp = (String(b.next_follow_up || '').slice(0, 10)) || null;
   const r = await env.CRM_DB.prepare(
-    `INSERT INTO deals (owner_email,contact_id,title,value,stage,source) VALUES (?,?,?,?,?,?)`
-  ).bind(user.email, contactId, title, value, stage, String(b.source || 'manual').slice(0, 40)).run();
+    `INSERT INTO deals (owner_email,contact_id,title,value,stage,source,next_follow_up) VALUES (?,?,?,?,?,?,?)`
+  ).bind(user.email, contactId, title, value, stage, String(b.source || 'manual').slice(0, 40), followUp).run();
   const dealId = r.meta?.last_row_id;
   await env.CRM_DB.prepare(`INSERT INTO activities (owner_email,deal_id,type,body) VALUES (?,?,?,?)`)
     .bind(user.email, dealId, 'note', 'Deal created').run();
@@ -617,6 +632,8 @@ async function handleCrmDealUpdate(request, env) {
   }
   if (b.value !== undefined) { fields.push('value=?'); vals.push(Number(b.value) || 0); }
   if (b.title !== undefined) { fields.push('title=?'); vals.push(String(b.title).slice(0, 200)); }
+  if (b.next_follow_up !== undefined) { fields.push('next_follow_up=?'); vals.push((String(b.next_follow_up || '').slice(0, 10)) || null); }
+  if (b.close_reason !== undefined) { fields.push('close_reason=?'); vals.push((String(b.close_reason || '').slice(0, 200)) || null); }
   if (!fields.length) return json({ ok: true });
   fields.push("updated_at=datetime('now')");
   vals.push(id, user.email);
