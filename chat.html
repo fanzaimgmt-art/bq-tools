@@ -160,6 +160,7 @@ body { display:flex; flex-direction:column; height:100vh; overflow:hidden; -webk
   .mdm-option .mdm-name { font-size:13px; font-weight:500; color:var(--tx); }
   .mdm-option .mdm-desc { font-size:11px; color:var(--txd); }
   .mdm-option .mdm-cost { font-family:var(--font-mono); font-size:10.5px; color:var(--ac); }
+  .mdm-pro { font-size:9px; font-weight:700; letter-spacing:.05em; color:var(--ac); background:var(--acd); border:1px solid var(--ac); border-radius:4px; padding:1px 5px; margin-inline-start:5px; vertical-align:middle; }
   /* Multi-model toggle */
   .multi-toggle {
     display:flex; align-items:center; gap:6px; font-size:13px; color:var(--txd);
@@ -405,9 +406,9 @@ body { display:flex; flex-direction:column; height:100vh; overflow:hidden; -webk
 
       <!-- Custom model picker -->
       <div class="model-picker-btn" id="modelPickerBtn" onclick="toggleModelDropdown(event)">
-        <div class="mpb-dot" id="modelDot" style="background:var(--model-haiku)"></div>
-        <span class="mpb-name" id="modelPickerName">Claude Haiku 4.5</span>
-        <span class="mpb-vendor" id="modelPickerVendor">/ anthropic</span>
+        <div class="mpb-dot" id="modelDot" style="background:var(--model-gemini)"></div>
+        <span class="mpb-name" id="modelPickerName">Gemini 3.5 Flash</span>
+        <span class="mpb-vendor" id="modelPickerVendor">/ google</span>
         <span class="mpb-caret">▾</span>
         <div class="model-dropdown-menu" id="modelDropdown"></div>
       </div>
@@ -419,12 +420,12 @@ body { display:flex; flex-direction:column; height:100vh; overflow:hidden; -webk
           <option value="gpt-4o">GPT-5.5</option>
         </optgroup>
         <optgroup label="CLAUDE">
-          <option value="claude-haiku" selected>Claude Haiku 4.5</option>
+          <option value="claude-haiku">Claude Haiku 4.5</option>
           <option value="claude-sonnet">Claude Sonnet 4.6</option>
           <option value="claude-opus">Claude Opus 4.8</option>
         </optgroup>
         <optgroup label="GOOGLE">
-          <option value="gemini-flash">Gemini 3.5 Flash</option>
+          <option value="gemini-flash" selected>Gemini 3.5 Flash</option>
           <option value="gemini-pro">Gemini 3 Pro</option>
         </optgroup>
         <optgroup label="GROQ">
@@ -494,13 +495,13 @@ if (!isLoggedIn()) window.location.replace('/auth.html');
 // ── Model Config ──
 // To re-enable Manus: set enabled:true below AND verify MANUS_API_KEY is set in wrangler secrets
 const MODELS = {
-  'gpt-4o-mini':   { label:'GPT-5.4 Mini',     cost:1,  dotColor:'var(--model-gpt)',    vendor:'openai',     desc:'Fast and cheap' },
-  'gpt-4o':        { label:'GPT-5.5',          cost:3,  dotColor:'var(--model-gpt)',    vendor:'openai',     desc:'Flagship — reasoning & vision' },
-  'claude-haiku':  { label:'Claude Haiku 4.5', cost:1,  dotColor:'var(--model-haiku)',  vendor:'anthropic',  desc:'Fastest, great for quick Qs' },
-  'claude-sonnet': { label:'Claude Sonnet 4.6',cost:3,  dotColor:'var(--model-sonnet)', vendor:'anthropic',  desc:'Balanced — best default' },
-  'claude-opus':   { label:'Claude Opus 4.8',  cost:15, dotColor:'var(--model-opus)',   vendor:'anthropic',  desc:'Heavy reasoning, contracts' },
+  'gpt-4o-mini':   { label:'GPT-5.4 Mini',     cost:1,  dotColor:'var(--model-gpt)',    vendor:'openai',     desc:'Fast and cheap', premium:true },
+  'gpt-4o':        { label:'GPT-5.5',          cost:3,  dotColor:'var(--model-gpt)',    vendor:'openai',     desc:'Flagship — reasoning & vision', premium:true },
+  'claude-haiku':  { label:'Claude Haiku 4.5', cost:1,  dotColor:'var(--model-haiku)',  vendor:'anthropic',  desc:'Fastest, great for quick Qs', premium:true },
+  'claude-sonnet': { label:'Claude Sonnet 4.6',cost:3,  dotColor:'var(--model-sonnet)', vendor:'anthropic',  desc:'Balanced — best default', premium:true },
+  'claude-opus':   { label:'Claude Opus 4.8',  cost:15, dotColor:'var(--model-opus)',   vendor:'anthropic',  desc:'Heavy reasoning, contracts', premium:true },
   'gemini-flash':  { label:'Gemini 3.5 Flash', cost:1,  dotColor:'var(--model-gemini)', vendor:'google',     desc:'Fast, long context' },
-  'gemini-pro':    { label:'Gemini 3 Pro',     cost:3,  dotColor:'var(--model-gemini)', vendor:'google',     desc:'1M context — plans, permits' },
+  'gemini-pro':    { label:'Gemini 3 Pro',     cost:3,  dotColor:'var(--model-gemini)', vendor:'google',     desc:'1M context — plans, permits', premium:true },
   'llama-3.3-70b': { label:'Llama 3.3 70B',    cost:1,  dotColor:'var(--model-llama)',  vendor:'groq',       desc:'Open-source, private' },
   'mixtral-8x7b':  { label:'GPT-OSS 120B',     cost:1,  dotColor:'var(--model-llama)',  vendor:'groq',       desc:'Open-weight, powerful' },
   'manus':         { label:'Manus Agent',   cost:5,  dotColor:'var(--model-manus)',  vendor:'manus',      desc:'Autonomous agent', enabled:false },
@@ -650,7 +651,7 @@ function loadSession(id) {
 }
 
 function buildWelcomeRow() {
-  const model = document.getElementById('modelSelect')?.value || 'claude-haiku';
+  const model = document.getElementById('modelSelect')?.value || 'gemini-flash';
   const dot = MODELS[model]?.dotColor || '#51cf66';
   const text = lang === 'he'
     ? 'היי! אני העוזר AI שלך לבנייה ושיפוצים. שאל אותי כל דבר — הצעות מחיר, היתרים, חומרים, חוזים או שיווק.'
@@ -1094,7 +1095,15 @@ async function sendMessage() {
       }
     } catch (err) {
       typingRow.remove();
-      addMsg('ai', '❌ ' + (err.message || 'Error'), selModel);
+      if (/premium|pro-only/i.test(err.message || '')) {
+        addMsg('ai', lang === 'he'
+          ? '🔒 המודל הזה זמין כרגע ל-Pro בלבד. החלפתי אותך ל-Gemini 3.5 Flash (חינם) — שלח שוב.'
+          : '🔒 This model is Pro-only for now. Switched you to free Gemini 3.5 Flash — send again.', 'gemini-flash');
+        document.getElementById('modelSelect').value = 'gemini-flash';
+        syncModelPicker();
+      } else {
+        addMsg('ai', '❌ ' + (err.message || 'Error'), selModel);
+      }
     }
   }
 
@@ -1206,7 +1215,7 @@ function buildModelDropdown() {
       const color = getComputedModelColor(k);
       html += `<div class="mdm-option${active}" onclick="selectModel('${k}',event)">
         <div class="mdm-dot" style="background:${m.dotColor};box-shadow:0 0 5px ${m.dotColor}40"></div>
-        <div class="mdm-info"><div class="mdm-name">${m.label}</div><div class="mdm-desc">${m.desc||''}</div></div>
+        <div class="mdm-info"><div class="mdm-name">${m.label}${m.premium ? ' <span class="mdm-pro">PRO</span>' : ''}</div><div class="mdm-desc">${m.desc||''}</div></div>
         <div class="mdm-cost">⚡${m.cost}</div>
       </div>`;
     });
@@ -1234,9 +1243,9 @@ function selectModel(key, e) {
 }
 function syncModelPicker() {
   let key = document.getElementById('modelSelect').value;
-  // Auto-fallback to claude-haiku if selected model is disabled
+  // Auto-fallback to a free, working model if the selected one is disabled
   if (MODELS[key]?.enabled === false) {
-    key = 'claude-haiku';
+    key = 'gemini-flash';
     document.getElementById('modelSelect').value = key;
   }
   const m = MODELS[key]; if (!m) return;

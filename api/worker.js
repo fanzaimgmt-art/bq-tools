@@ -1325,23 +1325,36 @@ Use THESE rates whenever possible. If this project isn't covered by their histor
 // - Google: Gemini 3.5 Flash / Gemini 3.1 Pro (1M ctx) — 2.x is superseded
 // - Groq: Llama 3.3 70B (current) + GPT-OSS 120B (open-weight; Mixtral was retired)
 // Keys are stable internal IDs (don't rename — saved user prefs + UI <option> values depend on them).
+// premium:true = costs real API money (Anthropic/OpenAI/Gemini-Pro). Gated until the first customer
+// payment unlocks them globally (see PREMIUM_UNLOCK_KEY) OR for individual Pro users. Free models
+// (Gemini Flash free-tier, Groq) stay open to everyone so the product works at $0 cost pre-revenue.
 const MODEL_MAP = {
-  // Claude
-  'claude-haiku': { type: 'claude', model: 'claude-haiku-4-5-20251001', cost: 1 },
-  'claude-sonnet': { type: 'claude', model: 'claude-sonnet-4-6', cost: 3 },
-  'claude-opus': { type: 'claude', model: 'claude-opus-4-8', cost: 15 },
+  // Claude (Anthropic — paid)
+  'claude-haiku': { type: 'claude', model: 'claude-haiku-4-5-20251001', cost: 1, premium: true },
+  'claude-sonnet': { type: 'claude', model: 'claude-sonnet-4-6', cost: 3, premium: true },
+  'claude-opus': { type: 'claude', model: 'claude-opus-4-8', cost: 15, premium: true },
   // Gemini
   'gemini-flash': { type: 'gemini', model: 'gemini-3.5-flash', cost: 1 },
-  'gemini-pro': { type: 'gemini', model: 'gemini-pro-latest', cost: 3 },
-  // OpenAI
-  'gpt-4o-mini': { type: 'openai', model: 'gpt-5.4-mini', cost: 1 },
-  'gpt-4o': { type: 'openai', model: 'gpt-5.5', cost: 3 },
-  // Groq
+  'gemini-pro': { type: 'gemini', model: 'gemini-pro-latest', cost: 3, premium: true },
+  // OpenAI (paid)
+  'gpt-4o-mini': { type: 'openai', model: 'gpt-5.4-mini', cost: 1, premium: true },
+  'gpt-4o': { type: 'openai', model: 'gpt-5.5', cost: 3, premium: true },
+  // Groq (free tier)
   'llama-3.3-70b': { type: 'groq', model: 'llama-3.3-70b-versatile', cost: 1 },
   'mixtral-8x7b': { type: 'groq', model: 'openai/gpt-oss-120b', cost: 1 },
   // Manus
   'manus': { type: 'manus', model: 'manus', cost: 5 },
 };
+// Global gate: flips to "true" on the first customer payment (set in the payment handlers).
+const PREMIUM_UNLOCK_KEY = 'config:premium_unlocked';
+async function isPremiumUnlocked(env) {
+  try { return (await env.BQ_USERS.get(PREMIUM_UNLOCK_KEY)) === 'true'; } catch { return false; }
+}
+// Called from the real-payment handlers (Stripe webhook, admin PayPal verify) — the first customer
+// payment flips this on, unlocking all premium models for everyone. Idempotent.
+async function unlockPremium(env) {
+  try { await env.BQ_USERS.put(PREMIUM_UNLOCK_KEY, 'true'); } catch {}
+}
 
 async function handleAIChat(request, env) {
   const token = request.headers.get('Authorization')?.replace('Bearer ', '');
@@ -1362,6 +1375,13 @@ async function handleAIChat(request, env) {
 
   const modelConf = MODEL_MAP[model];
   if (!modelConf) return json({ error: `Unknown model: ${model}` }, 400);
+
+  // Premium (paid-API) models are locked until the first customer payment unlocks them globally,
+  // or for an individual Pro user. Free models (Gemini Flash, Groq) stay open to everyone.
+  if (modelConf.premium && !updated.isPro && !(await isPremiumUnlocked(env))) {
+    // 403 (not 402) so the client doesn't mistake it for a credit shortage — it's an access gate.
+    return json({ error: 'premium_locked', message: 'This model is Pro-only for now. Free: Gemini Flash, Llama 3.3, GPT-OSS.' }, 403);
+  }
 
   if (updated.credits < modelConf.cost) {
     return json({ error: 'Not enough credits', credits: updated.credits, cost: modelConf.cost }, 402);
@@ -5330,6 +5350,7 @@ async function handleAdminPaymentsVerify(request, env) {
   }
 
   await env.BQ_USERS.put(`user:${rec.userEmail}`, JSON.stringify(userData));
+  await unlockPremium(env); // first verified customer payment unlocks all premium models
 
   rec.status = 'fulfilled';
   rec.fulfilledAt = new Date().toISOString();
@@ -5547,6 +5568,7 @@ async function handleStripeWebhook(request, env) {
   }
 
   await env.BQ_USERS.put(`user:${userEmail.toLowerCase()}`, JSON.stringify(userData));
+  await unlockPremium(env); // first real Stripe payment unlocks all premium models globally
   console.log(`[stripe] granted tier=${tier} to ${userEmail} (event ${event.id})`);
 
   return new Response('ok', { status: 200 });
