@@ -17,7 +17,7 @@
 <!-- Editorial Luxury type system: Instrument Serif (display) + Geist Mono (mono) + body Geist -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
 <style>
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -118,9 +118,9 @@ button { font-family: inherit; cursor: pointer; border: 0; background: none; col
   border-bottom: 1px solid var(--line);
 }
 .topnav .logo {
-  font-family: 'Instrument Serif', 'Times New Roman', serif;
+  font-family: 'Space Grotesk', 'Times New Roman', serif;
   font-size: 26px; font-weight: 400; letter-spacing: -0.02em;
-  font-style: italic;
+  font-style: normal;
 }
 .topnav .logo .gold { color: var(--gold); font-style: normal; font-family: 'DM Sans', sans-serif; font-weight: 500; font-size: 18px; letter-spacing: 0.02em; margin-left: 4px; }
 .topnav-links {
@@ -183,7 +183,7 @@ button { font-family: inherit; cursor: pointer; border: 0; background: none; col
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
 
 .hero h1 {
-  font-family: 'Instrument Serif', Georgia, serif;
+  font-family: 'Space Grotesk', Georgia, serif;
   font-size: clamp(56px, 10vw, 152px);
   font-weight: 400;
   line-height: 0.92;
@@ -193,7 +193,7 @@ button { font-family: inherit; cursor: pointer; border: 0; background: none; col
   margin: 0 auto;
 }
 .hero h1 em {
-  font-style: italic;
+  font-style: normal;
   color: var(--gold);
   position: relative;
 }
@@ -211,9 +211,9 @@ button { font-family: inherit; cursor: pointer; border: 0; background: none; col
 .hero h1 .word:nth-child(4) > span { animation-delay: .65s; }
 
 .hero-sub {
-  font-family: 'Instrument Serif', serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-size: clamp(18px, 2.2vw, 24px);
-  font-style: italic;
+  font-style: normal;
   color: var(--paper-dim);
   text-align: center;
   max-width: 32ch;
@@ -267,8 +267,8 @@ button { font-family: inherit; cursor: pointer; border: 0; background: none; col
   width: 1px; height: 60%; background: var(--line);
 }
 .hero-stats .num {
-  font-family: 'Instrument Serif', serif;
-  font-size: 56px; font-weight: 400; font-style: italic;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 56px; font-weight: 400; font-style: normal;
   background: linear-gradient(180deg, var(--paper), var(--paper-faint));
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   line-height: 1;
@@ -330,7 +330,7 @@ button { font-family: inherit; cursor: pointer; border: 0; background: none; col
 }
 .tg-msg .b { color: var(--gold); font-weight: 500; }
 .tg-msg .u { color: #6cb0ff; }
-.tg-msg em { color: var(--paper); font-style: italic; font-family: 'Instrument Serif', serif; font-size: 14.5px; }
+.tg-msg em { color: var(--paper); font-style: normal; font-family: 'Space Grotesk', sans-serif; font-size: 14.5px; }
 .tg-draft {
   margin-top: 14px; padding: 14px; border-radius: 12px;
   background: rgba(212,166,75,0.06); border: 1px solid rgba(212,166,75,0.18);
@@ -349,19 +349,19 @@ section { padding: 120px 0; position: relative; }
   margin-bottom: 24px;
   display: inline-flex; align-items: center; gap: 10px;
 }
-.eyebrow::before { content: '§'; font-family: 'Instrument Serif', serif; font-size: 16px; font-style: italic; color: var(--paper-dim); }
+.eyebrow::before { content: '§'; font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-style: normal; color: var(--paper-dim); }
 
 h2 {
-  font-family: 'Instrument Serif', serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-size: clamp(40px, 6vw, 96px);
   font-weight: 400; letter-spacing: -0.035em; line-height: 1.0;
 }
-h2 em { font-style: italic; color: var(--gold); }
+h2 em { font-style: normal; color: var(--gold); }
 
 .lede {
-  font-family: 'Instrument Serif', serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-size: clamp(20px, 2.4vw, 28px);
-  font-style: italic; line-height: 1.45;
+  font-style: normal; line-height: 1.45;
   color: var(--paper-dim);
   max-width: 36ch;
   margin-top: 28px;
@@ -376,9 +376,9 @@ h2 em { font-style: italic; color: var(--gold); }
 }
 @media (max-width: 900px) { .thesis { grid-template-columns: 1fr; gap: 40px; } }
 .thesis-num {
-  font-family: 'Instrument Serif', serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-size: clamp(120px, 16vw, 220px);
-  font-style: italic; color: var(--gold); line-height: 0.85;
+  font-style: normal; color: var(--gold); line-height: 0.85;
   letter-spacing: -0.05em;
 }
 .thesis-num small { font-size: 0.3em; color: var(--paper-faint); display: block; margin-top: 0.2em; font-style: normal; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em; }
@@ -389,8 +389,8 @@ h2 em { font-style: italic; color: var(--gold); }
 }
 .thesis-body p strong { color: var(--paper); font-weight: 500; }
 .thesis-body p:first-child::first-letter {
-  font-family: 'Instrument Serif', serif;
-  font-size: 64px; font-style: italic; color: var(--gold);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 64px; font-style: normal; color: var(--gold);
   float: left; line-height: 0.85; padding-right: 12px; padding-top: 6px;
 }
 
@@ -426,12 +426,12 @@ h2 em { font-style: italic; color: var(--gold); }
 }
 .cell .icon::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--gold); }
 .cell h3 {
-  font-family: 'Instrument Serif', serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-size: clamp(24px, 2.4vw, 32px);
   font-weight: 400; letter-spacing: -0.02em; line-height: 1.1;
   margin-bottom: 16px;
 }
-.cell h3 em { font-style: italic; color: var(--gold); }
+.cell h3 em { font-style: normal; color: var(--gold); }
 .cell p {
   font-size: 14px; color: var(--paper-dim); line-height: 1.6;
 }
@@ -456,12 +456,12 @@ h2 em { font-style: italic; color: var(--gold); }
 }
 .step-row:hover { padding-left: 12px; }
 .step-row .n {
-  font-family: 'Instrument Serif', serif;
-  font-style: italic; font-size: 56px; line-height: 1;
+  font-family: 'Space Grotesk', sans-serif;
+  font-style: normal; font-size: 56px; line-height: 1;
   color: var(--gold);
 }
 .step-row h3 {
-  font-family: 'Instrument Serif', serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 28px; font-weight: 400; letter-spacing: -0.015em; line-height: 1.15;
   margin-bottom: 8px;
 }
@@ -510,10 +510,10 @@ h2 em { font-style: italic; color: var(--gold); }
 .price-row {
   display: flex; align-items: baseline; gap: 14px; margin: 28px 0 16px;
 }
-.price-strike { font-size: 22px; color: var(--paper-faint); text-decoration: line-through; font-family: 'Instrument Serif', serif; font-style: italic; }
+.price-strike { font-size: 22px; color: var(--paper-faint); text-decoration: line-through; font-family: 'Space Grotesk', sans-serif; font-style: normal; }
 .price-num {
-  font-family: 'Instrument Serif', serif;
-  font-size: 96px; font-weight: 400; font-style: italic;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 96px; font-weight: 400; font-style: normal;
   color: var(--gold);
   line-height: 1;
 }
@@ -536,7 +536,7 @@ h2 em { font-style: italic; color: var(--gold); }
 .faq-q {
   display: flex; justify-content: space-between; align-items: baseline;
   cursor: pointer; transition: opacity .2s;
-  font-family: 'Instrument Serif', serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-size: clamp(24px, 2.6vw, 32px);
   font-weight: 400; letter-spacing: -0.015em; line-height: 1.2;
   gap: 24px;
@@ -568,8 +568,8 @@ footer {
   gap: 32px; align-items: center;
 }
 .foot-brand {
-  font-family: 'Instrument Serif', serif;
-  font-size: 32px; font-style: italic; letter-spacing: -0.02em;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 32px; font-style: normal; letter-spacing: -0.02em;
 }
 .foot-brand span { color: var(--gold); }
 .foot-meta {
@@ -583,8 +583,8 @@ footer {
 /* Big foot mark */
 footer::before {
   content: 'Obra'; position: absolute; left: 50%; bottom: -20px; transform: translateX(-50%);
-  font-family: 'Instrument Serif', serif;
-  font-size: clamp(180px, 22vw, 320px); font-style: italic;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(180px, 22vw, 320px); font-style: normal;
   color: rgba(245,241,232,0.025); pointer-events: none; line-height: 1; z-index: -1;
 }
 
