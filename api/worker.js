@@ -867,7 +867,9 @@ async function sendEmail(env, { to, subject, text }) {
         body: JSON.stringify({ from: env.EMAIL_FROM || 'Obra <onboarding@resend.dev>', to: [to], subject, text })
       });
       if (r.ok) return true;
-    } catch (_) {}
+      // Log the real API error so a failed key/sender is visible in `wrangler tail` (else it's a silent emailSent:false).
+      console.error('[email] resend failed', r.status, (await r.text()).slice(0, 300));
+    } catch (e) { console.error('[email] resend threw', e.message); }
   }
   if (env.BREVO_API_KEY) {
     try {
@@ -880,7 +882,8 @@ async function sendEmail(env, { to, subject, text }) {
         })
       });
       if (r.ok) return true;
-    } catch (_) {}
+      console.error('[email] brevo failed', r.status, (await r.text()).slice(0, 300));
+    } catch (e) { console.error('[email] brevo threw', e.message); }
   }
   try {
     const r = await fetch('https://api.mailchannels.net/tx/v1/send', {
