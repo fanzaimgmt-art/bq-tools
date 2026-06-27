@@ -292,7 +292,9 @@
         <label data-en="Model" data-he="מודל" data-es="Modelo">Model</label>
         <select id="modelSel" onchange="updateEstimate()">
           <option value="seedance2-fast" data-en="⚡ Fast (28 cr/sec)" data-he="⚡ מהיר (28 קר׳/שנייה)" data-es="⚡ Rápido (28 cr/seg)">⚡ Fast (28 cr/sec)</option>
-          <option value="seedance-20" selected data-en="🎯 Pro (40 cr/sec)" data-he="🎯 Pro (40 קר׳/שנייה)" data-es="🎯 Pro (40 cr/seg)">🎯 Pro (40 cr/sec)</option>
+          <option value="seedance-20" selected data-en="🎯 Seedance 2.0 Pro (40 cr/sec)" data-he="🎯 Seedance 2.0 Pro (40 קר׳/שנייה)" data-es="🎯 Seedance 2.0 Pro (40 cr/seg)">🎯 Seedance 2.0 Pro (40 cr/sec)</option>
+          <option value="seedance2-5" data-en="🔥 Seedance 2.5 — newest (40 cr/sec)" data-he="🔥 Seedance 2.5 — החדש (40 קר׳/שנייה)" data-es="🔥 Seedance 2.5 — nuevo (40 cr/seg)">🔥 Seedance 2.5 — newest (40 cr/sec)</option>
+          <option value="kling3" data-en="🎬 Kling 3.0 (22 cr/sec)" data-he="🎬 Kling 3.0 (22 קר׳/שנייה)" data-es="🎬 Kling 3.0 (22 cr/seg)">🎬 Kling 3.0 (22 cr/sec)</option>
         </select>
       </div>
       <div class="setting-field">
@@ -424,7 +426,8 @@
     const upscale = document.getElementById('upscaleSel').value;
     document.getElementById('durVal').textContent = dur + 's';
 
-    let cps = model === 'seedance-20' ? 40 : 28;
+    const CPS = { 'seedance2-fast': 28, 'seedance-20': 40, 'seedance2-5': 40, 'kling3': 22 };
+    let cps = CPS[model] || 40;
     if (res === '480p') cps = Math.ceil(cps / 2);
     if (upscale === '4k') cps += 28;
 

@@ -4478,17 +4478,32 @@ async function handleKinoviCreate(request, env) {
   if (!kinoviKey) return json({ error: 'KINOVI_API_KEY not configured' }, 500);
 
   const body = await request.json();
-  // Allowlist: only forward known safe fields; cap duration to prevent abuse
-  const { prompt, style, imageUrl } = body;
-  const duration = Math.min(Number(body.duration) || 5, 10);
-  const safeBody = { prompt, style, duration, imageUrl };
+  // Kinovi expects { model, inputs:{...} }. The previous code read flat body.prompt/duration (which
+  // live under body.inputs) and dropped `model` entirely → empty prompt + default model sent. Fixed.
+  const ALLOWED_MODELS = new Set(['seedance2-fast', 'seedance-20', 'seedance-21', 'seedance2-5', 'kling3', 'happyhorse1.0']);
+  const model = ALLOWED_MODELS.has(body.model) ? body.model : 'seedance-20';
+  const inp = (body.inputs && typeof body.inputs === 'object') ? body.inputs : {};
+  const ASPECTS = ['16:9', '9:16', '1:1', '4:3', '21:9'];
+  const inputs = {
+    prompt: String(inp.prompt || '').slice(0, 4000),
+    duration: Math.min(Number(inp.duration) || 5, 10),
+    aspectRatio: ASPECTS.includes(inp.aspectRatio) ? inp.aspectRatio : '16:9',
+  };
+  const resolution = inp.outputResolution || inp.resolution;
+  if (resolution) inputs.resolution = String(resolution).slice(0, 8);
+  if (inp.upscaleResolution) inputs.upscaleResolution = String(inp.upscaleResolution).slice(0, 8);
+  if (inp.mode) inputs.mode = inp.mode === 'reference' ? 'reference' : 'keyframe';
+  const frames = [inp.firstFrame, inp.lastFrame].filter(Boolean);   // image-to-video keyframes
+  if (frames.length) inputs.imageUrls = frames;
+  if (!inputs.prompt && !inputs.imageUrls) return json({ error: 'prompt required' }, 400);
+
   const res = await fetch('https://kinovi.ai/api/v1/jobs/createTask', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${kinoviKey}`,
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify(safeBody)
+    body: JSON.stringify({ model, inputs })
   });
   const data = await res.json();
   return json(data, res.status);
