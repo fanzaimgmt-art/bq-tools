@@ -607,6 +607,7 @@ async function handleCrmDealCreate(request, env) {
     contactId = c?.id || null;
   }
   const followUp = (String(b.next_follow_up || '').slice(0, 10)) || null;
+  if (followUp && !/^\d{4}-\d{2}-\d{2}$/.test(followUp)) return json({ error: 'Invalid follow-up date' }, 400);
   const r = await env.CRM_DB.prepare(
     `INSERT INTO deals (owner_email,contact_id,title,value,stage,source,next_follow_up) VALUES (?,?,?,?,?,?,?)`
   ).bind(user.email, contactId, title, value, stage, String(b.source || 'manual').slice(0, 40), followUp).run();
@@ -632,7 +633,7 @@ async function handleCrmDealUpdate(request, env) {
   }
   if (b.value !== undefined) { fields.push('value=?'); vals.push(Number(b.value) || 0); }
   if (b.title !== undefined) { fields.push('title=?'); vals.push(String(b.title).slice(0, 200)); }
-  if (b.next_follow_up !== undefined) { fields.push('next_follow_up=?'); vals.push((String(b.next_follow_up || '').slice(0, 10)) || null); }
+  if (b.next_follow_up !== undefined) { const fu = (String(b.next_follow_up || '').slice(0, 10)) || null; if (fu && !/^\d{4}-\d{2}-\d{2}$/.test(fu)) return json({ error: 'Invalid follow-up date' }, 400); fields.push('next_follow_up=?'); vals.push(fu); }
   if (b.close_reason !== undefined) { fields.push('close_reason=?'); vals.push((String(b.close_reason || '').slice(0, 200)) || null); }
   if (!fields.length) return json({ ok: true });
   fields.push("updated_at=datetime('now')");

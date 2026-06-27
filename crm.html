@@ -181,7 +181,7 @@ function dealCard(dl) {
   if (dl.next_follow_up && (dl.stage === 'new' || dl.stage === 'quoted')) {
     const today = new Date().toISOString().slice(0, 10);
     const cls = dl.next_follow_up < today ? 'fu-over' : (dl.next_follow_up === today ? 'fu-today' : 'fu-soon');
-    const lbl = dl.next_follow_up < today ? L({en:'Overdue',he:'באיחור',es:'Atrasado'}) : (dl.next_follow_up === today ? L({en:'Today',he:'היום',es:'Hoy'}) : fmtDate(dl.next_follow_up));
+    const lbl = dl.next_follow_up < today ? L({en:'Overdue',he:'באיחור',es:'Atrasado'}) : (dl.next_follow_up === today ? L({en:'Today',he:'היום',es:'Hoy'}) : escapeHtml(fmtDate(dl.next_follow_up)));
     fu = `<div class="fu ${cls}">⏰ ${L({en:'Follow up',he:'מעקב',es:'Seguir'})}: ${lbl}</div>`;
   }
   const age = dl.created_at ? Math.floor((Date.now() - new Date(dl.created_at + 'Z').getTime()) / 86400000) : 0;
@@ -257,7 +257,7 @@ async function openDeal(id) {
       <div class="crm-field"><label data-en="Value ($)" data-he="ערך ($)">Value ($)</label><input type="number" value="${Number(deal.value) || 0}" onchange="updateValue(${id},this.value)"></div>
     </div>
     <div class="crm-row2">
-      <div class="crm-field"><label data-en="⏰ Next follow-up" data-he="⏰ מעקב הבא" data-es="⏰ Próximo seguimiento">⏰ Next follow-up</label><input type="date" value="${deal.next_follow_up || ''}" onchange="updateFollowUp(${id},this.value)"></div>
+      <div class="crm-field"><label data-en="⏰ Next follow-up" data-he="⏰ מעקב הבא" data-es="⏰ Próximo seguimiento">⏰ Next follow-up</label><input type="date" value="${escapeHtml(deal.next_follow_up || '')}" onchange="updateFollowUp(${id},this.value)"></div>
       ${(deal.stage==='won'||deal.stage==='lost') ? `<div class="crm-field"><label data-en="Reason" data-he="סיבה" data-es="Razón">Reason</label><input value="${escapeHtml(deal.close_reason||'')}" maxlength="200" placeholder="${L({en:'Why won/lost?',he:'למה נסגר/אבד?',es:'¿Por qué?'})}" onchange="updateReason(${id},this.value)"></div>` : ''}
     </div>
     ${deal.contact_name ? `<div class="crm-field"><label data-en="Contact" data-he="איש קשר">Contact</label><div>👤 ${escapeHtml(deal.contact_name)}${deal.contact_phone?`<br><a href="tel:${_phoneDigits(deal.contact_phone)}" class="contact-act">📞 ${escapeHtml(deal.contact_phone)}</a> <a href="sms:${_phoneDigits(deal.contact_phone)}" class="contact-act sms">💬 ${L({en:'Text',he:'SMS',es:'SMS'})}</a>`:''}${deal.contact_email?`<br><a href="mailto:${escapeHtml(deal.contact_email)}" class="contact-act">✉️ ${escapeHtml(deal.contact_email)}</a>`:''}</div></div>` : ''}
