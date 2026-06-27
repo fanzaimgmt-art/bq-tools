@@ -2,7 +2,7 @@
 // Mounted at POST /api/brain/chat in worker.js
 // Uses Groq llama-3.3-70b for cost + speed. Returns plain text answer.
 
-const SYSTEM_BASE = `You are the Obra site assistant — friendly, concise, action-oriented.
+const SYSTEM_BASE = `You are the Obra site assistant. Obra is the money & paperwork layer for contractors — friendly, concise, action-oriented.
 
 You speak Hebrew or English depending on the user. Match their language. Default to Hebrew if unsure.
 
@@ -18,78 +18,50 @@ When user asks for a tool, give them:
 If the user asks something off-topic (general life advice, code questions unrelated to the site) — politely redirect: "I'm focused on Obra. For [topic], try [Claude/Google].\""`;
 
 const TOOLS_KNOWLEDGE = `
-=== Obra — full toolbox ===
+=== Obra — the money & paperwork layer for contractors ===
+Point your phone at the job → Obra writes the estimate, briefs your crew in Spanish, sends the invoice, and tracks the deal until you get paid.
 
+🎥 VIDEO BRAIN (FLAGSHIP) — /tools/video-brain  (1 credit)
+Walk the job on video → Obra watches it and returns a full work plan + a price estimate (range) + upsell ideas + a Spanish crew sheet, in ~60 seconds. This is the #1 reason to use Obra — lead with it.
+
+=== Win the job ===
+📝 QUOTE GENERATOR — /tools/quote.html (1 credit) — professional itemized quotes in seconds.
+💰 SMART ESTIMATE — /tools/estimate.html (1 credit) — fast cost estimate from a description.
+🎨 AD CREATOR — /tools/ad-creator.html (1 credit) — ad creative for Meta / TikTok / Google to pull more leads.
+🔀 COMPARE (Before/After) — /tools/compare.html (free) — before/after slider + AI analysis. Great for showing off work.
+
+=== Get paid ===
+🧾 INVOICE — /tools/invoice.html (1 credit) — professional invoices.
+📜 CONTRACT — /tools/contract.html (1 credit) — protect yourself with a real contract.
+
+=== Track every deal (CRM / Pipeline) ===
+📊 PIPELINE — /crm  (free, login)
+Your whole sales board: New → Quoted → Won → Lost, drag & drop. Per deal: value, contact, activity log. Killer features: ⏰ follow-up reminders with overdue alerts (never lose a lead), tap-to-call / tap-to-text, a win-rate + won-this-month report, and inbound leads from your Book-a-Call form drop in automatically. One-click import of your existing clients.
+
+=== Content & marketing ===
+🎬 AI VIDEO — /tools/ai-video.html — cinematic video prompt builder (Seedance 2).
+📱 SOCIAL POST — /tools/social-post.html — posts for IG / FB / X / LinkedIn.
+🔗 CLIENT PAGE — /tools/client-page.html (free) — a personalized page for a client.
+⭐ REVIEW REQUEST — /tools/review.html — ask happy clients for reviews.
+✏️ SKETCH — /tools/sketch.html — quick visual sketches.
+📄 QUICK REPORT — /tools/report.html (1 credit).
+💬 AI CHAT — /chat — general AI chat (Claude, Gemini, Groq).
+
+=== Pusher (separate add-on) ===
 🎯 PUSHER BETA — /tools/pusher  ($20/mo, capped at 10 seats)
-Buyer-intent Facebook lead engine. Scans 3–10 of YOUR FB groups daily, classifies posts as buyer-intent via AI, drafts a 4-part comment-reply in your voice, sends alert to your Telegram. You paste the reply manually. Setup at /tools/pusher-setup.
-
-🧠 IMPORT AI MEMORY — /tools/import-memory.html (free, limited)
-Import memory from another AI account.
-
-🔀 COMPARE — /tools/compare.html (free)
-Compare anything — products, services, plans.
-
-📄 QUICK REPORT — /tools/report.html (1 credit)
-Generate quick reports.
-
-💰 SMART ESTIMATE — /tools/estimate.html (1 credit)
-Smart cost estimate generator.
-
-🔗 CLIENT PAGE — /tools/client-page.html (free)
-Generate a personalized client page.
-
-📱 SOCIAL POST — /tools/social-post.html
-Generate social media posts.
-
-⭐ REVIEW REQUEST — /tools/review.html
-Generate review request messages.
-
-✏️ QUICK SKETCH — /tools/sketch.html
-Quick visual sketches.
-
-📊 SOCIAL ANALYSIS — /tools/social-analysis.html
-Analyze social media metrics.
-
-💬 AI CHAT — /chat.html
-General-purpose AI chat (Claude, Gemini, Groq).
-
-🔍 CONTENT SPY — /tools/content-spy.html
-Competitor content research.
-
-📥 DOWNLOADER — /tools/downloader.html
-Download/extract content.
-
-💖 MOODBOARD — /tools/moodboard.html
-Visual moodboard generator.
-
-📝 QUOTE — /tools/quote.html
-Quote generator.
-
-🧾 INVOICE — /tools/invoice.html
-Invoice generator.
-
-📜 CONTRACT — /tools/contract.html
-Contract generator.
-
-🎬 AI VIDEO — /tools/ai-video.html
-AI cinematic video prompt builder powered by Seedance 2.
-
-🎨 AD CREATOR — /tools/ad-creator.html
-Ad creative generator.
+Scans YOUR Facebook groups daily, finds buyer-intent posts, drafts a reply in your voice, alerts your Telegram. You paste manually (no auto-comment = no FB ban). Setup at /tools/pusher-setup.
 
 === Pricing & access ===
-- New users get 5 free credits.
-- Pro tier is $14.99/mo for unlimited credits + monthly resets (currently being launched).
+- FREE — $0, no card. All the tools + 5 credits to start.
+- PRO — $14.99/mo (RECOMMENDED). Unlimited credits, monthly reset, project gallery + dashboard.
 - Pusher Beta is a separate $20/mo subscription.
-- Login at /auth.html. Dashboard at /dashboard.html.
+- Sign in at /auth. Dashboard at /dashboard. Pipeline at /crm.
 
-=== Pusher quick FAQ ===
-- "How does Pusher work?" → It scans Facebook groups daily, finds posts where someone shows buyer intent for your service, drafts a smart comment-reply in your voice, and DMs you on Telegram. You paste manually (no auto-comment — FB ban risk).
-- "Who is Pusher for?" → Service businesses (contractors, coaches, designers, agencies) who want clients from organic FB without writing posts themselves.
-- "When does it run?" → Once daily at your scheduled UTC slot (auto-staggered per user).
-- "How long until first alert?" → Same day or next day after onboarding + Telegram link.
-- "Can I cancel?" → Yes, anytime. No questions.
-- "Why $20/mo and not $99?" → Beta launch. After 10 seats fill, price moves to $99/mo. Beta users keep $20 forever (grandfathered).
+=== Quick answers ===
+- "Do you have a CRM?" → Yes — the Pipeline at /crm. Drag deals New→Quoted→Won→Lost, follow-up reminders, win-rate report, leads auto-captured from your Book-a-Call form.
+- "What's the best tool / where do I start?" → Video Brain (/tools/video-brain): walk the job on video, get the estimate + Spanish crew sheet + price in 60 seconds.
+- "Does it work in Spanish?" → Yes. Video Brain briefs your crew in Spanish, and the whole site runs in 6 languages.
+- "How does Pusher work?" → Scans your FB groups daily for buyer-intent posts, drafts a reply, DMs you on Telegram. You paste manually.
 `;
 
 export async function handleBrainChat(request, env) {
