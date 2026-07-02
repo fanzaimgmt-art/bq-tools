@@ -421,7 +421,14 @@ export default {
       }
       // ── Feature Flags (public) ──
       if (path === '/api/config/flags' && request.method === 'GET') {
-        return corsResponse(env, request, json({ stripeEnabled: env.STRIPE_ENABLED === 'true' }));
+        // Per-tier availability: a tier is instantly purchasable only when Stripe is on
+        // AND its price ID secret is set — the buy page renders buttons off this map.
+        const stripeOn = env.STRIPE_ENABLED === 'true';
+        const tierFlags = {};
+        for (const [tierKey, tconf] of Object.entries(STRIPE_TIER_CONFIG)) {
+          tierFlags[tierKey] = stripeOn && !!env[tconf.priceIdEnvKey];
+        }
+        return corsResponse(env, request, json({ stripeEnabled: stripeOn, tiers: tierFlags }));
       }
 
       // ── Admin Payment Routes ──
@@ -6332,7 +6339,8 @@ const STRIPE_TIER_CONFIG = {
   credit_25:   { priceIdEnvKey: 'STRIPE_PRICE_CREDITS_25',  mode: 'payment',      credits: 25,  isPro: false },
   credit_60:   { priceIdEnvKey: 'STRIPE_PRICE_CREDITS_60',  mode: 'payment',      credits: 60,  isPro: false },
   credit_150:  { priceIdEnvKey: 'STRIPE_PRICE_CREDITS_150', mode: 'payment',      credits: 150, isPro: false },
-  pro_monthly: { priceIdEnvKey: 'STRIPE_PRICE_PRO_MONTHLY', mode: 'subscription', credits: 0,   isPro: true  },
+  pro_monthly: { priceIdEnvKey: 'STRIPE_PRICE_PRO_MONTHLY', mode: 'subscription', credits: 0,   isPro: true, proDays: 30 },
+  pro_annual:  { priceIdEnvKey: 'STRIPE_PRICE_PRO_ANNUAL',  mode: 'subscription', credits: 0,   isPro: true, proDays: 368 },
   pusher_beta: { priceIdEnvKey: 'STRIPE_PRICE_PUSHER_BETA', mode: 'subscription', credits: 0,   isPro: false, pusherBeta: true, betaCap: 10 },
 };
 
@@ -6367,10 +6375,10 @@ async function handleStripeCreateSession(request, env) {
     'line_items[0][quantity]': '1',
     'success_url': tierConf.pusherBeta
       ? `${origin}/tools/pusher-setup.html?payment=success`
-      : `${origin}/home.html?payment=success`,
+      : `${origin}/buy.html?payment=success`,
     'cancel_url': tierConf.pusherBeta
       ? `${origin}/tools/pusher.html?payment=cancel`
-      : `${origin}/home.html?payment=cancel`,
+      : `${origin}/buy.html?payment=cancel`,
     'metadata[tier]': tier,
     'metadata[userEmail]': user.email,
   });
@@ -6502,7 +6510,7 @@ async function handleStripeWebhook(request, env) {
   }
   if (tierConf.isPro) {
     userData.isPro = true;
-    const expiry = Date.now() + 30 * 24 * 60 * 60 * 1000;
+    const expiry = Date.now() + (tierConf.proDays || 30) * 24 * 60 * 60 * 1000;
     userData.proExpires = Math.max(userData.proExpires || 0, expiry);
     if (!userData.resetDate) {
       const next = new Date();

@@ -294,7 +294,8 @@ function showNoCreditModal() {
         </div>
       </div>
 
-      <button onclick="this.closest('.modal-overlay').remove()" style="background:none;border:none;color:var(--txd);cursor:pointer;font-size:14px;font-family:inherit;min-height:48px;padding:8px;" data-en="Maybe later" data-he="אולי אחר כך">${lang === 'he' ? 'אולי אחר כך' : 'Maybe later'}</button>
+      <a href="/buy.html" class="btn btn-primary" style="display:block;margin-bottom:8px;">${lang === 'he' ? 'לכל האפשרויות — כולל Pro ללא הגבלה' : lang === 'es' ? 'Ver todas las opciones — incluye Pro ilimitado' : 'See all options — incl. unlimited Pro'}</a>
+      <button onclick="this.closest('.modal-overlay').remove()" style="background:none;border:none;color:var(--txd);cursor:pointer;font-size:14px;font-family:inherit;min-height:48px;padding:8px;" data-en="Maybe later" data-he="אולי אחר כך">${lang === 'he' ? 'אולי אחר כך' : lang === 'es' ? 'Quizás después' : 'Maybe later'}</button>
     </div>`;
   document.body.appendChild(m);
   requestAnimationFrame(() => m.classList.add('open'));
