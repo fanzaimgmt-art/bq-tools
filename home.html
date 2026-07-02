@@ -756,14 +756,16 @@ if (greetingEl) {
   greetingEl.textContent = g.en; // setLang will override if lang != 'en'
 }
 
-const rawName = (user.email || '').split('@')[0];
+// Personalized greeting — prefer the business name, fall back to the email handle. Only reveal the
+// greeting row when we actually have a logged-in name (avoids the "Good morning, there." placeholder
+// leaking to logged-out visitors). Titlecase the email handle so "goldremodeling" → "Goldremodeling".
+const rawName = (user.businessName || (user.email || '').split('@')[0] || '').trim();
 const nameEl = document.getElementById('userName');
-if (rawName) {
+if (rawName && user.email) {
+  const shown = user.businessName ? rawName : (rawName.charAt(0).toUpperCase() + rawName.slice(1));
   nameEl.removeAttribute('data-en'); nameEl.removeAttribute('data-he'); nameEl.removeAttribute('data-es');
-  nameEl.textContent = rawName;
-} else {
-  nameEl.setAttribute('data-en','there'); nameEl.setAttribute('data-he','שלום'); nameEl.setAttribute('data-es','amigo');
-  nameEl.textContent = (typeof t === 'function' ? t({en:'there',he:'שלום',es:'amigo'}) : 'there');
+  nameEl.textContent = shown;
+  const row = document.querySelector('.home-greeting-row'); if (row) row.style.display = '';
 }
 document.getElementById('userCredits').textContent = user.credits ?? '—';
 document.getElementById('userTier').textContent = user.isPro

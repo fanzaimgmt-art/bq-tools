@@ -1458,9 +1458,24 @@ const LANG_OPTIONS = [
   { code: 'ar', label: 'العربية',  flag: '🇸🇦' },
 ];
 function maybeFirstVisitLangPicker() {
-  // NOTE: setLang() writes bq_lang on every load, so gate on a separate "user chose" flag
+  // NOTE: setLang() writes bq_lang on every load, so gate on a separate "user chose" flag.
   if (localStorage.getItem('bq_lang_picked')) return;   // already chose
-  openLangPicker();
+  // The blocking auto-popup covered Sign In / the hero for 100% of new visitors and read as a stuck
+  // menu. Browser language is already auto-detected+applied (i18n-lite), so instead of force-opening
+  // the picker we show a small, self-dismissing nudge that points at the globe. Non-blocking.
+  try {
+    if (document.getElementById('langNudge')) return;
+    const globe = document.querySelector('.theme-toggle[onclick*="openLangPicker"]');
+    const n = document.createElement('div');
+    n.id = 'langNudge';
+    n.textContent = '🌐 English / עברית / Español →';
+    n.style.cssText = 'position:fixed;top:64px;right:16px;z-index:9990;background:var(--sf,#141418);color:var(--tx,#f5f1e8);border:1px solid var(--bd,#2a2a30);border-radius:10px;padding:8px 12px;font-size:12px;box-shadow:0 10px 30px rgba(0,0,0,.4);cursor:pointer;opacity:0;transition:opacity .3s;';
+    n.onclick = () => { n.remove(); try { openLangPicker(); } catch (e) {} };
+    document.body.appendChild(n);
+    requestAnimationFrame(() => { n.style.opacity = '1'; });
+    setTimeout(() => { if (n.parentNode) { n.style.opacity = '0'; setTimeout(() => n.remove(), 350); } }, 5000);
+    localStorage.setItem('bq_lang_picked', '1'); // don't nudge again
+  } catch (e) {}
 }
 function openLangPicker() {
   const existing = document.getElementById('langPicker');
