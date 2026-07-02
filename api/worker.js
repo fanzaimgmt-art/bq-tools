@@ -3249,7 +3249,7 @@ async function handleReferralLink(request, env) {
   const user = await getUserByToken(token, env);
   if (!user) return json({ error: 'Unauthorized' }, 401);
 
-  const origin = env.ALLOWED_ORIGIN || 'https://bq-tools.fanzai-mgmt.workers.dev';
+  const origin = env.ALLOWED_ORIGIN || 'https://obra.build';
   return json({
     ok: true,
     link: `${origin}/?ref=${encodeURIComponent(user.email)}`
@@ -4166,7 +4166,7 @@ async function nightlyReengagement(env) {
       const reengSent = await sendEmail(env, {
         to: user.email,
         subject: 'Your Obra account is waiting for you 👋',
-        text: `Hi ${user.name || 'there'},\n\nWe noticed you haven't logged in to Obra for a while. Your Pro account has ${user.credits || 0} credits ready to use!\n\nLog in at https://bq-tools.fanzai-mgmt.workers.dev\n\nObra Team`
+        text: `Hi ${user.name || 'there'},\n\nWe noticed you haven't logged in to Obra for a while. Your Pro account has ${user.credits || 0} credits ready to use!\n\nLog in at https://obra.build\n\nObra Team`
       });
 
       if (reengSent) {
