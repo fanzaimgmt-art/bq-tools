@@ -4,11 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Connections — Obra</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=Heebo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  :root{--bg:#0e0f12;--sf:#191b21;--line:rgba(255,255,255,.09);--line2:rgba(255,255,255,.16);--tx:#f3f3f0;--mut:#9a9da7;--ac:#d8b24c;--good:#36c47a;}
+  :root{--bg:#0e0f12;--sf:#191b21;--line:rgba(255,255,255,.09);--line2:rgba(255,255,255,.16);--tx:#f3f3f0;--mut:#9a9da7;--ac:#e8c547;--good:#36c47a;--font-body:'Inter',system-ui,sans-serif;--font-display:'Space Grotesk',system-ui,sans-serif;}
+  [dir="rtl"]{--font-body:'Heebo','Inter',system-ui,sans-serif;}
   *{box-sizing:border-box}html,body{margin:0}
-  body{background:var(--bg);color:var(--tx);font-family:'Space Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  body{background:var(--bg);color:var(--tx);font-family:var(--font-body);-webkit-font-smoothing:antialiased}
+  h1,h2,h3{font-family:var(--font-display)}
   .wrap{max-width:640px;margin:0 auto;padding:26px 16px 80px}
   .top a{color:var(--mut);text-decoration:none;font-size:14px}
   h1{font-size:26px;margin:8px 0 4px}.sub{color:var(--mut);font-size:14px;margin:0 0 22px;max-width:50ch}

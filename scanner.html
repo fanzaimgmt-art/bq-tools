@@ -5,13 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Contractor Quote Scanner — Obra</title>
 <meta name="description" content="Paste any contractor's quote — free AI scan flags what protections are missing before you sign.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=Heebo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{--bg:#0e0f12;--bg2:#15171c;--sf:#191b21;--line:rgba(255,255,255,.09);--line2:rgba(255,255,255,.16);
-    --tx:#f3f3f0;--mut:#9a9da7;--ac:#d8b24c;--ac2:#f0cf72;--good:#36c47a;--warn:#e0a83a;--bad:#e0664a;}
+    --tx:#f3f3f0;--mut:#9a9da7;--ac:#e8c547;--ac2:#f0cf72;--good:#36c47a;--warn:#e0a83a;--bad:#e0664a;--font-body:'Inter',system-ui,sans-serif;--font-display:'Space Grotesk',system-ui,sans-serif;}
+  [dir="rtl"]{--font-body:'Heebo','Inter',system-ui,sans-serif;}
   *{box-sizing:border-box}html,body{margin:0}
-  body{background:var(--bg);color:var(--tx);font-family:'Space Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.55}
+  body{background:var(--bg);color:var(--tx);font-family:var(--font-body);-webkit-font-smoothing:antialiased;line-height:1.55}
+  h1,h2,h3{font-family:var(--font-display)}
   .wrap{max-width:680px;margin:0 auto;padding:30px 18px 80px}
   .brand{font-weight:700;font-size:16px}.brand span{color:var(--ac)}
   .card{background:linear-gradient(180deg,var(--bg2),var(--sf));border:1px solid var(--line);border-radius:20px;padding:clamp(22px,5vw,38px);margin-top:24px}
