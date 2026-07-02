@@ -308,18 +308,67 @@
 </head>
 <body>
 
+<style>
+  /* Topnav v2 — logical groups, account state, primary CTA, mobile menu */
+  html.editorial .ed-topnav-links a { position: relative; padding: 4px 0; font-weight: 500; }
+  html.editorial .ed-topnav-links a.nav-active { color: var(--ed-gold); }
+  html.editorial .ed-topnav-links a.nav-active::after { content:""; position:absolute; left:0; right:0; bottom:-3px; height:2px; background:var(--ed-gold); border-radius:2px; }
+  .nav-right { display:flex; align-items:center; gap:10px; justify-self:end; }
+  .nav-icon { cursor:pointer; border:0; background:transparent; font-size:18px; line-height:1; padding:6px; border-radius:8px; color:var(--ed-paper-dim); transition:background .2s,color .2s; }
+  .nav-icon:hover { background:rgba(245,241,232,.06); color:var(--ed-paper); }
+  .nav-credits { display:none; align-items:center; gap:6px; font-family:var(--font-en); font-size:12px; font-weight:600; color:var(--ed-gold);
+    background:rgba(212,166,75,.12); border:1px solid rgba(212,166,75,.3); border-radius:100px; padding:6px 12px; text-decoration:none; }
+  .nav-credits:hover { background:rgba(212,166,75,.2); }
+  .nav-cta-primary { font-family:var(--font-en); font-size:12px; font-weight:600; padding:9px 18px; border-radius:100px;
+    background:var(--ed-gold); color:var(--ed-ink); border:0; cursor:pointer; text-decoration:none; transition:transform .15s,box-shadow .15s; white-space:nowrap; }
+  .nav-cta-primary:hover { transform:translateY(-1px); box-shadow:0 6px 18px rgba(212,166,75,.4); }
+  .nav-signin { font-family:var(--font-en); font-size:12px; color:var(--ed-paper-dim); text-decoration:none; padding:4px 6px; }
+  .nav-signin:hover { color:var(--ed-paper); }
+  .nav-burger { display:none; }
+  @media (max-width:820px){
+    html.editorial .ed-topnav-links { position:fixed; inset:60px 0 auto 0; flex-direction:column; gap:0; background:rgba(11,11,13,.98);
+      backdrop-filter:blur(16px); border-bottom:1px solid var(--ed-line); padding:8px 0; display:none; }
+    html.editorial .ed-topnav-links.open { display:flex; }
+    html.editorial .ed-topnav-links a { padding:14px 24px; width:100%; font-size:15px; }
+    .nav-burger { display:inline-flex; }
+    .nav-search-txt { display:none; }
+  }
+</style>
 <nav class="ed-topnav">
   <a href="/" class="ed-logo">Obra</a>
-  <div class="ed-topnav-links">
-    <a href="/home.html" data-en="Tools" data-he="כלים" data-es="Herramientas">Tools</a>
-    <a href="/dashboard.html" data-en="Dashboard" data-he="לוח בקרה" data-es="Panel">Dashboard</a>
+  <div class="ed-topnav-links" id="navLinks">
+    <a href="/home.html" data-nav="/home.html" data-en="Tools" data-he="כלים" data-es="Herramientas">Tools</a>
+    <a href="/crm" data-nav="/crm" data-en="Pipeline" data-he="פייפליין" data-es="Embudo">Pipeline</a>
+    <a href="/dashboard.html" data-nav="/dashboard.html" data-en="Dashboard" data-he="לוח בקרה" data-es="Panel">Dashboard</a>
     <a href="/#pricing" data-en="Pricing" data-he="מחירים" data-es="Precios">Pricing</a>
   </div>
-  <div style="display:flex;align-items:center;gap:12px;justify-self:end;">
-    <button class="ed-topnav-cta" onclick="openLangPicker()" title="Language" aria-label="Choose language" style="cursor:pointer;border:0;background:transparent;font-size:18px;">🌐</button>
-    <a class="ed-topnav-cta cmdk-trigger"><span data-en="Search" data-he="חיפוש" data-es="Buscar">Search</span> · <kbd>⌘K</kbd></a>
+  <div class="nav-right">
+    <button class="nav-icon" onclick="openLangPicker()" title="Language" aria-label="Choose language">🌐</button>
+    <button class="nav-icon cmdk-trigger" aria-label="Search" title="Search (⌘K)">🔎</button>
+    <a class="nav-credits" id="navCredits" href="/dashboard.html" title="Your credits"><span>⚡</span><span id="navCreditsNum">—</span></a>
+    <a class="nav-signin" id="navSignin" href="/auth.html" data-en="Sign in" data-he="התחברות" data-es="Entrar">Sign in</a>
+    <a class="nav-cta-primary" id="navCta" href="/auth.html" data-en="Start free" data-he="להתחיל חינם" data-es="Empezar gratis">Start free</a>
+    <button class="nav-icon nav-burger" onclick="document.getElementById('navLinks').classList.toggle('open')" aria-label="Menu">☰</button>
   </div>
 </nav>
+<script>
+  // Active-page indicator
+  (function(){ var p=location.pathname.replace(/\/$/,'')||'/home.html'; document.querySelectorAll('#navLinks a[data-nav]').forEach(function(a){ var n=a.getAttribute('data-nav'); if(p===n || (p==='/home'&&n==='/home.html') || (p==='/crm'&&n==='/crm') || (p==='/dashboard'&&n==='/dashboard.html')) a.classList.add('nav-active'); }); })();
+  // Account state: logged in → show credits + hide Sign in/Start free; logged out → keep marketing CTAs
+  (function(){
+    var tk; try{ tk=localStorage.getItem('bq_token'); }catch(e){}
+    if(!tk) return;
+    var si=document.getElementById('navSignin'), cta=document.getElementById('navCta');
+    if(si) si.style.display='none'; if(cta) cta.style.display='none';
+    var cr=document.getElementById('navCredits'); if(cr) cr.style.display='inline-flex';
+    fetch('https://bq-tools-api.fanzai-mgmt.workers.dev/api/user',{headers:{'Authorization':'Bearer '+tk}})
+      .then(function(r){return r.ok?r.json():null;}).then(function(d){
+        if(!d||!d.user) return; var n=document.getElementById('navCreditsNum');
+        if(n&&d.user.credits!=null) n.textContent=d.user.credits;
+        if(d.user.isPro){ var cr2=document.getElementById('navCredits'); if(cr2){cr2.innerHTML='<span>★</span><span>PRO</span>';} }
+      }).catch(function(){});
+  })();
+</script>
 
 <section class="home-hero">
   <div class="ed-container">
