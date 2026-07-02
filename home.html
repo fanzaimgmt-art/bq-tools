@@ -395,10 +395,14 @@
           var tk=localStorage.getItem('bq_token'); if(!tk) return;
           var r=await fetch('https://bq-tools-api.fanzai-mgmt.workers.dev/api/crm/pipeline',{headers:{'Authorization':'Bearer '+tk}});
           if(!r.ok) return; var d=await r.json();
+          // Won-this-month trophy stat (dopamine hook — visible progress that grows)
+          var wonM=(d.report&&d.report.wonThisMonthValue)||0;
+          if(wonM>0){ var wc=document.getElementById('wonCell'), ws=document.getElementById('statWonMonth');
+            if(ws) ws.textContent='$'+Math.round(wonM).toLocaleString(); if(wc) wc.style.display=''; }
           var open=((d.deals&&d.deals.new)||[]).concat((d.deals&&d.deals.quoted)||[]);
           if(!open.length) return;
           var val=(d.totals&&((d.totals.new||0)+(d.totals.quoted||0)))||0;
-          var due=d.followupsDue||0;
+          var due=(d.report&&d.report.followupsDue)||0;
           var L=(typeof lang!=='undefined'?lang:'en');
           var money=val?('$'+Math.round(val).toLocaleString()):'';
           var t;
@@ -629,6 +633,10 @@
     </div>
 
     <div class="stats-row">
+      <div class="stat-cell" id="wonCell" style="display:none">
+        <div class="lab" data-en="Won this month" data-he="נסגר החודש" data-es="Ganado este mes">Won this month</div>
+        <div class="num gold" id="statWonMonth">$0</div>
+      </div>
       <div class="stat-cell">
         <div class="lab" data-en="Projects" data-he="פרויקטים" data-es="Proyectos">Projects</div>
         <div class="num" id="statProjects">0</div>
