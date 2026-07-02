@@ -204,8 +204,35 @@ async function colDrop(e, stage) {
   e.preventDefault(); e.currentTarget.classList.remove('dragover');
   const id = _dragId; _dragId = null; // reset now so a failed drop can't move the wrong deal next time
   if (!id) return;
-  await _crmWrite(`${CRM_API}/api/crm/deal`, { method: 'PATCH', headers: _H(), body: JSON.stringify({ id, stage }) });
+  const fromCard = document.querySelector('.crm-card'); // (unused ref; celebration keys off target stage)
+  const ok = await _crmWrite(`${CRM_API}/api/crm/deal`, { method: 'PATCH', headers: _H(), body: JSON.stringify({ id, stage }) });
+  if (ok && stage === 'won') celebrateWon(); // the money moment — reward it
   loadPipeline(); // always re-sync from server (shows the move, or reverts a failed one)
+}
+
+// Deal-won celebration — confetti + toast. The positive-reinforcement hook: closing a deal
+// should FEEL like a win so the contractor keeps coming back to the board.
+function celebrateWon() {
+  try {
+    const msg = L({en:'🎉 Deal won! Nice work.',he:'🎉 עסקה נסגרה! עבודה יפה.',es:'🎉 ¡Trato ganado! Buen trabajo.'});
+    const tst = document.createElement('div');
+    tst.textContent = msg;
+    tst.style.cssText = 'position:fixed;left:50%;top:22%;transform:translateX(-50%);z-index:9999;background:linear-gradient(135deg,#c8a24a,#e6c876);color:#1a1407;font-weight:800;font-size:16px;padding:14px 22px;border-radius:14px;box-shadow:0 12px 40px rgba(200,162,74,.5);opacity:0;transition:opacity .3s,top .5s';
+    document.body.appendChild(tst);
+    requestAnimationFrame(()=>{ tst.style.opacity='1'; tst.style.top='16%'; });
+    setTimeout(()=>{ tst.style.opacity='0'; setTimeout(()=>tst.remove(),400); }, 2600);
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const c = document.createElement('canvas');
+    c.style.cssText = 'position:fixed;inset:0;z-index:9998;pointer-events:none';
+    c.width = innerWidth; c.height = innerHeight; document.body.appendChild(c);
+    const ctx = c.getContext('2d'); const cols = ['#c8a24a','#e6c876','#f5f1e8','#34d399'];
+    const P = Array.from({length:120}, ()=>({ x:innerWidth/2, y:innerHeight*0.22, vx:(Math.random()-0.5)*14, vy:Math.random()*-15-4, s:4+Math.random()*6, c:cols[(Math.random()*cols.length)|0], r:Math.random()*6 }));
+    let t0 = null;
+    (function frame(ts){ if(!t0)t0=ts; const dt=(ts-t0)/1000; ctx.clearRect(0,0,c.width,c.height);
+      P.forEach(p=>{ p.vy+=0.5; p.x+=p.vx; p.y+=p.vy; p.r+=0.2; ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.r); ctx.fillStyle=p.c; ctx.fillRect(-p.s/2,-p.s/2,p.s,p.s); ctx.restore(); });
+      if (dt < 2.4) requestAnimationFrame(frame); else c.remove();
+    })();
+  } catch(e){}
 }
 
 async function importClients() {
