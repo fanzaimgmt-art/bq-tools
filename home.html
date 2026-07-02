@@ -377,6 +377,26 @@
         if(document.readyState!=='loading')setPh();else document.addEventListener('DOMContentLoaded',setPh);
         window.setTimeout(setPh,400); // after i18n applies
       })();
+      /* Personal money hook — Tony greets logged-in users with their live pipeline (fail-silent) */
+      (async function(){
+        try{
+          var tk=localStorage.getItem('bq_token'); if(!tk) return;
+          var r=await fetch('https://bq-tools-api.fanzai-mgmt.workers.dev/api/crm/pipeline',{headers:{'Authorization':'Bearer '+tk}});
+          if(!r.ok) return; var d=await r.json();
+          var open=((d.deals&&d.deals.new)||[]).concat((d.deals&&d.deals.quoted)||[]);
+          if(!open.length) return;
+          var val=(d.totals&&((d.totals.new||0)+(d.totals.quoted||0)))||0;
+          var due=d.followupsDue||0;
+          var L=(typeof lang!=='undefined'?lang:'en');
+          var money=val?('$'+Math.round(val).toLocaleString()):'';
+          var t;
+          if(L==='he') t='יש לך '+open.length+' עסקאות פתוחות'+(money?' בשווי '+money:'')+(due?' ו-'+due+' מעקבים שמחכים':'')+' — בוא נסגור אותן?';
+          else if(L==='es') t='Tienes '+open.length+' tratos abiertos'+(money?' por '+money:'')+(due?' y '+due+' seguimientos pendientes':'')+' — ¿los cerramos?';
+          else t='You have '+open.length+' open deals'+(money?' worth '+money:'')+(due?' and '+due+' follow-ups due':'')+' — want to close them?';
+          var q=document.querySelector('.cc-q');
+          if(q){ q.textContent=t; q.removeAttribute('data-en'); q.removeAttribute('data-he'); q.removeAttribute('data-es'); }
+        }catch(e){}
+      })();
       function ccEsc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
       function ccQuick(btn){var el=document.getElementById('ccInput');el.value=btn.getAttribute('data-q')||btn.textContent.trim();ccAsk();}
       async function ccRoute(q){
