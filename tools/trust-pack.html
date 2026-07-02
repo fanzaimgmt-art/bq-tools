@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Obra — Trust Pack</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  .tp-wrap{max-width:760px;margin:0 auto;padding:0 16px 90px}
+  .tp-card{background:var(--sf);border:1px solid var(--bd);border-radius:16px;padding:22px;margin-bottom:16px}
+  .tp-card h3{margin:0 0 4px;font-size:16px}
+  .tp-card .sub{color:var(--txd);font-size:13px;margin:0 0 16px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  .fld{margin-bottom:12px}
+  .fld label{display:block;font-size:12.5px;color:var(--txd);margin-bottom:6px;font-weight:500}
+  .fld input,.fld textarea,.fld select{width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:10px;
+    padding:12px 13px;color:var(--tx);font-size:15px;font-family:var(--font-en)}
+  .fld input:focus,.fld textarea:focus{outline:none;border-color:var(--ac)}
+  .fld textarea{min-height:96px;resize:vertical;line-height:1.5}
+  .creds{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+  .cred{display:flex;align-items:center;gap:7px;padding:9px 13px;border:1px solid var(--bd);border-radius:999px;
+    background:var(--bg);color:var(--txd);font-size:13.5px;cursor:pointer;user-select:none;transition:.15s}
+  .cred.on{border-color:var(--ac);color:var(--tx);background:var(--ac-glow,rgba(200,162,74,.12))}
+  .cred .tk{width:16px;height:16px;border-radius:50%;border:1.5px solid currentColor;display:inline-flex;align-items:center;justify-content:center;font-size:10px}
+  .cred.on .tk{background:var(--ac);border-color:var(--ac);color:#1a1407}
+  .genbtn{width:100%;padding:15px;font-size:15px;margin-top:4px}
+  .prev{display:none;border:1px solid var(--bd);border-radius:12px;background:var(--bg);padding:16px;margin-top:14px}
+  .prev .ph{display:flex;gap:8px;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--bd);font-size:13.5px}
+  .prev .ph:last-child{border-bottom:0}
+  .prev .ph b{color:var(--ac)}
+  .prev .ph .ws{color:var(--txd);font-size:12.5px}
+  .linkbox{display:none;margin-top:14px;border:1px solid var(--ac);border-radius:12px;background:var(--ac-glow,rgba(200,162,74,.1));padding:16px}
+  .linkbox .lk{display:flex;gap:8px;align-items:center;background:var(--bg);border:1px solid var(--bd);border-radius:9px;padding:10px 12px;margin:10px 0;font-size:13px;color:var(--tx);word-break:break-all}
+  .linkrow{display:flex;gap:8px;flex-wrap:wrap}
+  .scorepill{display:inline-flex;align-items:center;gap:7px;font-weight:700;font-size:13px;padding:5px 11px;border-radius:99px;background:var(--sf);border:1px solid var(--bd)}
+  .hint{color:var(--txd);font-size:12px;margin-top:8px}
+  @media(max-width:560px){.grid2,.grid3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="tp-wrap">
+  <a href="/home.html" class="page-back">← Tools</a>
+  <h1 class="page-title">🛡️ Trust Pack</h1>
+  <p class="page-sub">Generate a branded "why you can trust me" document for any client — credentials, scope, milestone payments, and a live license-verify QR. The thing that wins the job before you've even started.</p>
+
+  <!-- BUSINESS -->
+  <div class="tp-card">
+    <h3>Your business</h3>
+    <p class="sub">Saved on this device — fill once, reuse for every client.</p>
+    <div class="grid2">
+      <div class="fld"><label>Company name</label><input id="coName" placeholder="Killer Contractors"></div>
+      <div class="fld"><label>Tagline</label><input id="coTag" placeholder="A-Z General Construction"></div>
+    </div>
+    <div class="grid3">
+      <div class="fld"><label>License # (CSLB/state)</label><input id="coLic" placeholder="1094465"></div>
+      <div class="fld"><label>License class</label><input id="coClass" placeholder="B — General Building"></div>
+      <div class="fld"><label>Phone</label><input id="coPhone" placeholder="(800) 590-8770"></div>
+    </div>
+    <div class="grid3">
+      <div class="fld"><label>Years in business</label><input id="coYears" type="number" placeholder="10"></div>
+      <div class="fld"><label># Reviews</label><input id="coReviews" type="number" placeholder="87"></div>
+      <div class="fld"><label>Service area</label><input id="coArea" placeholder="Los Angeles"></div>
+    </div>
+    <label class="input-label" style="margin-bottom:2px">What can you prove? (drives the Trust Score)</label>
+    <div class="creds" id="creds">
+      <span class="cred on" data-k="licenseActive"><span class="tk">✓</span>License active</span>
+      <span class="cred on" data-k="glInsurance"><span class="tk">✓</span>General Liability</span>
+      <span class="cred on" data-k="workersComp"><span class="tk">✓</span>Workers' Comp</span>
+      <span class="cred on" data-k="bond"><span class="tk">✓</span>Bonded</span>
+      <span class="cred on" data-k="coiUploaded"><span class="tk">✓</span>COI on file</span>
+    </div>
+  </div>
+
+  <!-- PROJECT -->
+  <div class="tp-card">
+    <h3>This client &amp; project</h3>
+    <p class="sub">Who it's for, and what the job is. The AI writes the phased scope + payment schedule.</p>
+    <div class="grid2">
+      <div class="fld"><label>Homeowner name</label><input id="pjName" placeholder="Dr. Cohen"></div>
+      <div class="fld"><label>Project address</label><input id="pjAddr" placeholder="Encino, CA"></div>
+    </div>
+    <div class="grid2">
+      <div class="fld"><label>Project type</label><input id="pjType" placeholder="Kitchen remodel"></div>
+      <div class="fld"><label>Total budget ($)</label><input id="pjBudget" type="number" placeholder="85000"></div>
+    </div>
+    <div class="fld"><label>Describe the job (the more detail, the better the scope)</label>
+      <textarea id="pjBrief" placeholder="Full kitchen gut: new cabinets, quartz counters, island, new electrical + plumbing, hardwood floor, recessed lighting, repaint."></textarea></div>
+    <button class="btn btn-primary genbtn" id="genBtn" onclick="generatePack()">✨ Generate proposal with AI (3 credits)</button>
+
+    <div class="prev" id="prev"></div>
+    <div class="linkbox" id="linkbox">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <b style="font-size:15px">✅ Trust Pack ready</b>
+        <span class="scorepill" id="scorePill">Trust Score —</span>
+      </div>
+      <div class="hint">Send this link to your client. They see a premium doc, verify your license by QR, and can accept &amp; e-sign.</div>
+      <div class="lk" id="shareLink">—</div>
+      <div class="linkrow">
+        <button class="btn btn-primary" id="copyBtn" onclick="copyLink()">📋 Copy link</button>
+        <a class="btn" id="openBtn" target="_blank">👁 Preview</a>
+        <button class="btn" onclick="resetForm()">+ New pack</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer"><div class="footer-brand">Powered by Obra — BQ Production LLC</div></footer>
+
+<script src="../js/auth.js"></script>
+<script src="../js/ai.js"></script>
+<script src="/js/i18n-dict.js" defer></script>
+<script src="../js/common.js"></script>
+<script>
+const LSK='obra_company_v1';
+let tpData=null;
+
+// credential toggles
+document.querySelectorAll('#creds .cred').forEach(c=>c.addEventListener('click',()=>c.classList.toggle('on')));
+function credState(){const o={};document.querySelectorAll('#creds .cred').forEach(c=>o[c.dataset.k]=c.classList.contains('on'));return o;}
+
+// load/save company on this device
+function loadCo(){
+  try{const c=JSON.parse(localStorage.getItem(LSK)||'{}');
+    ['Name','Tag','Lic','Class','Phone','Years','Reviews','Area'].forEach(k=>{const el=document.getElementById('co'+k);if(el&&c[k]!=null)el.value=c[k];});
+    if(c.creds)document.querySelectorAll('#creds .cred').forEach(x=>x.classList.toggle('on',!!c.creds[x.dataset.k]));
+  }catch(e){}
+}
+function saveCo(){
+  const c={};['Name','Tag','Lic','Class','Phone','Years','Reviews','Area'].forEach(k=>c[k]=document.getElementById('co'+k).value.trim());
+  c.creds=credState(); localStorage.setItem(LSK,JSON.stringify(c));
+}
+loadCo();
+
+function companyObj(){
+  const cr=credState();
+  return {name:document.getElementById('coName').value.trim(),tagline:document.getElementById('coTag').value.trim(),
+    license:document.getElementById('coLic').value.trim(),licenseClass:document.getElementById('coClass').value.trim(),
+    phone:document.getElementById('coPhone').value.trim(),
+    years:Number(document.getElementById('coYears').value)||'',reviewsCount:Number(document.getElementById('coReviews').value)||0,
+    serviceArea:document.getElementById('coArea').value.trim(),
+    licenseActive:cr.licenseActive,glInsurance:cr.glInsurance,workersComp:cr.workersComp,bond:cr.bond,coiUploaded:cr.coiUploaded};
+}
+function projectObj(){
+  return {homeownerName:document.getElementById('pjName').value.trim(),address:document.getElementById('pjAddr').value.trim(),
+    type:document.getElementById('pjType').value.trim(),budget:document.getElementById('pjBudget').value.trim()};
+}
+
+async function generatePack(){
+  const co=companyObj(), pj=projectObj();
+  const brief=document.getElementById('pjBrief').value.trim();
+  if(!co.name){showToast(lang==='he'?'מלא שם חברה':'Add your company name','err');return;}
+  if(!brief){showToast(lang==='he'?'תאר את הפרויקט':'Describe the project first','err');return;}
+  saveCo();
+
+  if(typeof confirmCredit==='function'){const ok=await confirmCredit('trust-pack','Trust Pack',3);if(!ok)return;}
+
+  const btn=document.getElementById('genBtn'); btn.disabled=true;
+  btn.textContent='⏳ '+(lang==='he'?'כותב את ההצעה…':'Writing your proposal…');
+  document.getElementById('linkbox').style.display='none';
+  try{
+    const g=await apiCall('/api/trustpack/generate',{method:'POST',body:{project:pj,brief}});
+    tpData={company:co,project:pj,scope:g.scope||[],milestones:g.milestones||[],warranty:g.warranty||'',communicationPromise:g.communicationPromise||''};
+    renderPreview();
+    await savePack(); // auto-save → produce the link immediately
+  }catch(err){ showToast('Error: '+(err.message||err),'err'); }
+  btn.disabled=false; btn.textContent='✨ '+(lang==='he'?'צור מחדש (3 קרדיטים)':'Regenerate (3 credits)');
+}
+
+function renderPreview(){
+  const p=document.getElementById('prev');
+  const ms=tpData.milestones.length;
+  p.style.display='block';
+  p.innerHTML=`<div style="font-weight:600;margin-bottom:8px">${tpData.scope.length} phases · ${ms} payment milestones</div>`+
+    tpData.scope.map((ph,i)=>`<div class="ph"><b>${i+1}.</b> ${escTp(ph.phase)} <span class="ws">— ${escTp((ph.whatYoullSee||'').slice(0,70))}</span></div>`).join('');
+}
+
+async function savePack(){
+  if(!tpData)return;
+  try{
+    const r=await apiCall('/api/trustpack/save',{method:'POST',body:{data:tpData}});
+    const url=`${location.origin}/tp?id=${r.id}`;
+    document.getElementById('shareLink').textContent=url;
+    document.getElementById('openBtn').href=url;
+    document.getElementById('copyBtn').dataset.url=url;
+    const s=r.score||0, lbl=s>=85?'Verified':s>=65?'Partial':'Build it up';
+    document.getElementById('scorePill').textContent=`Trust Score ${s} · ${lbl}`;
+    document.getElementById('linkbox').style.display='block';
+    document.getElementById('linkbox').scrollIntoView({behavior:'smooth',block:'center'});
+  }catch(err){ showToast('Save error: '+(err.message||err),'err'); }
+}
+
+function copyLink(){
+  const u=document.getElementById('copyBtn').dataset.url||'';
+  navigator.clipboard.writeText(u).then(()=>showToast(lang==='he'?'הקישור הועתק':'Link copied ✓','ok'));
+}
+function resetForm(){
+  document.getElementById('pjName').value='';document.getElementById('pjAddr').value='';
+  document.getElementById('pjType').value='';document.getElementById('pjBudget').value='';document.getElementById('pjBrief').value='';
+  document.getElementById('prev').style.display='none';document.getElementById('linkbox').style.display='none';tpData=null;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function escTp(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+</script>
+</body>
+</html>

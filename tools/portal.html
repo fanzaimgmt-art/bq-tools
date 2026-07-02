@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Obra — Client Portal</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  .pt-wrap{max-width:720px;margin:0 auto;padding:0 16px 90px}
+  .pt-card{background:var(--sf);border:1px solid var(--bd);border-radius:16px;padding:22px;margin-bottom:16px}
+  .pt-card h3{margin:0 0 4px;font-size:16px}.pt-card .sub{color:var(--txd);font-size:13px;margin:0 0 16px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .fld{margin-bottom:12px}.fld label{display:block;font-size:12.5px;color:var(--txd);margin-bottom:6px;font-weight:500}
+  .fld input,.fld textarea{width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:12px 13px;color:var(--tx);font-size:15px;font-family:var(--font-en)}
+  .fld input:focus,.fld textarea:focus{outline:none;border-color:var(--ac)}
+  .fld textarea{min-height:80px;resize:vertical}
+  .btnw{width:100%;padding:14px;font-size:15px}
+  .linkbox{display:none;margin-top:12px;border:1px solid var(--ac);border-radius:12px;background:var(--ac-glow,rgba(200,162,74,.1));padding:14px}
+  .lk{display:flex;gap:8px;align-items:center;background:var(--bg);border:1px solid var(--bd);border-radius:9px;padding:10px 12px;margin:8px 0;font-size:13px;color:var(--tx);word-break:break-all}
+  .jobs{display:grid;gap:10px}
+  .job{border:1px solid var(--bd);border-radius:12px;background:var(--bg);padding:14px;cursor:pointer;transition:.15s}
+  .job:hover{border-color:var(--ac)}
+  .job.sel{border-color:var(--ac);background:var(--ac-glow,rgba(200,162,74,.08))}
+  .job .t{font-weight:600;font-size:14.5px}
+  .job .m{color:var(--txd);font-size:12.5px;margin-top:3px}
+  .updbox{display:none}
+  .hint{color:var(--txd);font-size:12px;margin-top:6px}
+  @media(max-width:560px){.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="pt-wrap">
+  <a href="/home.html" class="page-back">← Tools</a>
+  <h1 class="page-title">📲 Client Portal</h1>
+  <p class="page-sub">Give each client a private link to a live progress feed. They see photos & updates without calling you — so you never look like you went quiet.</p>
+
+  <div class="pt-card">
+    <h3>Start a project</h3>
+    <p class="sub">Creates a private link you send the homeowner.</p>
+    <div class="fld"><label>Project title</label><input id="jTitle" placeholder="Cohen Kitchen Remodel — Encino"></div>
+    <div class="grid2">
+      <div class="fld"><label>Homeowner name</label><input id="jHome" placeholder="Dr. Cohen"></div>
+      <div class="fld"><label>Address</label><input id="jAddr" placeholder="Encino, CA"></div>
+    </div>
+    <button class="btn btn-primary btnw" id="createBtn" onclick="createJob()">+ Create project link</button>
+    <div class="linkbox" id="newLink">
+      <b>✅ Project created — send this to your client</b>
+      <div class="lk" id="newUrl">—</div>
+      <button class="btn btn-primary" onclick="copyNew()">📋 Copy link</button>
+      <a class="btn" id="newOpen" target="_blank">👁 Preview</a>
+    </div>
+  </div>
+
+  <div class="pt-card">
+    <h3>Post an update</h3>
+    <p class="sub" id="updHint">Pick a project below, then post progress.</p>
+    <div class="jobs" id="jobs"></div>
+    <div class="updbox" id="updbox" style="margin-top:14px">
+      <div class="fld"><label>Update for: <b id="updFor" style="color:var(--ac)"></b></label>
+        <textarea id="uBody" placeholder="Demo done — framing starts tomorrow. Everything on schedule."></textarea></div>
+      <div class="fld"><label>Photo URL (optional)</label><input id="uPhoto" placeholder="https://… (paste a progress photo or Bid Render link)"></div>
+      <button class="btn btn-primary btnw" id="postBtn" onclick="postUpdate()">📣 Post update to client</button>
+      <div class="hint" id="postOk" style="color:var(--ac);display:none">✓ Posted — your client sees it live.</div>
+    </div>
+  </div>
+</div>
+<footer class="footer"><div class="footer-brand">Powered by Obra — BQ Production LLC</div></footer>
+
+<script src="../js/auth.js"></script>
+<script src="../js/ai.js"></script>
+<script src="/js/i18n-dict.js" defer></script>
+<script src="../js/common.js"></script>
+<script>
+let sel=null, newUrl='';
+function val(id){return document.getElementById(id).value.trim();}
+function escP(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+async function createJob(){
+  if(!val('jTitle')){showToast(lang==='he'?'תן שם לפרויקט':'Add a project title','err');return;}
+  const btn=document.getElementById('createBtn'); btn.disabled=true; btn.textContent='…';
+  try{
+    const r=await apiCall('/api/portal/job',{method:'POST',body:{title:val('jTitle'),homeowner:val('jHome'),address:val('jAddr')}});
+    newUrl=`${location.origin}/job?id=${r.id}`;
+    document.getElementById('newUrl').textContent=newUrl;
+    document.getElementById('newOpen').href=newUrl;
+    document.getElementById('newLink').style.display='block';
+    document.getElementById('jTitle').value='';document.getElementById('jHome').value='';document.getElementById('jAddr').value='';
+    loadJobs();
+  }catch(e){showToast('Error: '+(e.message||e),'err');}
+  btn.disabled=false; btn.textContent='+ Create project link';
+}
+function copyNew(){ navigator.clipboard.writeText(newUrl).then(()=>showToast(lang==='he'?'הועתק':'Copied ✓','ok')); }
+
+async function loadJobs(){
+  try{
+    const r=await apiCall('/api/portal/jobs');
+    const el=document.getElementById('jobs');
+    if(!r.items||!r.items.length){el.innerHTML='<div class="hint">No projects yet.</div>';return;}
+    el.innerHTML=r.items.map(j=>`<div class="job" data-id="${escP(j.id)}" data-title="${escP(j.title)}">
+      <div class="t">${escP(j.title)}</div>
+      <div class="m">${escP(j.homeowner||'')} · ${j.updates} update${j.updates===1?'':'s'} · ${j.views} view${j.views===1?'':'s'}</div></div>`).join('');
+    el.onclick=function(e){var c=e.target.closest('.job');if(c)pick(c.dataset.id,c.dataset.title);}; // delegated — no inline JS-string injection
+  }catch(e){}
+}
+function pick(id,title){
+  sel=id;
+  document.querySelectorAll('.job').forEach(x=>x.classList.toggle('sel',x.dataset.id===id));
+  document.getElementById('updFor').textContent=title;
+  document.getElementById('updbox').style.display='block';
+  document.getElementById('updHint').textContent='Posting to: '+title;
+  document.getElementById('updbox').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+async function postUpdate(){
+  if(!sel){showToast('Pick a project first','err');return;}
+  if(!val('uBody')&&!val('uPhoto')){showToast(lang==='he'?'כתוב עדכון':'Write an update','err');return;}
+  const btn=document.getElementById('postBtn'); btn.disabled=true; btn.textContent='…';
+  try{
+    await apiCall('/api/portal/update',{method:'POST',body:{id:sel,body:val('uBody'),photo:val('uPhoto')}});
+    document.getElementById('uBody').value='';document.getElementById('uPhoto').value='';
+    const ok=document.getElementById('postOk'); ok.style.display='block'; setTimeout(()=>ok.style.display='none',3000);
+    loadJobs();
+  }catch(e){showToast('Error: '+(e.message||e),'err');}
+  btn.disabled=false; btn.textContent='📣 Post update to client';
+}
+loadJobs();
+</script>
+</body>
+</html>

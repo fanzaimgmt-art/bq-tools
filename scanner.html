@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contractor Quote Scanner — Obra</title>
+<meta name="description" content="Paste any contractor's quote — free AI scan flags what protections are missing before you sign.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0e0f12;--bg2:#15171c;--sf:#191b21;--line:rgba(255,255,255,.09);--line2:rgba(255,255,255,.16);
+    --tx:#f3f3f0;--mut:#9a9da7;--ac:#d8b24c;--ac2:#f0cf72;--good:#36c47a;--warn:#e0a83a;--bad:#e0664a;}
+  *{box-sizing:border-box}html,body{margin:0}
+  body{background:var(--bg);color:var(--tx);font-family:'Space Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.55}
+  .wrap{max-width:680px;margin:0 auto;padding:30px 18px 80px}
+  .brand{font-weight:700;font-size:16px}.brand span{color:var(--ac)}
+  .card{background:linear-gradient(180deg,var(--bg2),var(--sf));border:1px solid var(--line);border-radius:20px;padding:clamp(22px,5vw,38px);margin-top:24px}
+  h1{font-size:clamp(26px,5.5vw,40px);line-height:1.1;letter-spacing:-.02em;margin:0 0 14px}h1 em{font-style:normal;color:var(--ac)}
+  .lead{color:var(--mut);font-size:16px;margin:0 0 22px;max-width:48ch}
+  .stat{display:inline-block;font-size:13px;color:var(--ac2);border:1px solid var(--line2);border-radius:99px;padding:7px 14px;margin-bottom:20px}
+  label{display:block;font-size:12.5px;color:var(--mut);margin-bottom:6px;font-weight:500}
+  textarea,input{width:100%;background:var(--bg);border:1px solid var(--line2);border-radius:12px;padding:14px 15px;color:var(--tx);font-size:15px;font-family:inherit}
+  textarea{min-height:150px;resize:vertical;line-height:1.5;margin-bottom:14px}
+  input{margin-bottom:14px}textarea:focus,input:focus{outline:none;border-color:var(--ac)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line2);background:transparent;color:var(--tx);padding:15px 26px;border-radius:12px;font-weight:600;font-size:16px;cursor:pointer;font-family:inherit;transition:.15s;text-decoration:none;width:100%}
+  .btn:hover{border-color:var(--ac)}
+  .btn.go{background:linear-gradient(180deg,var(--ac2),var(--ac));border-color:var(--ac);color:#1a1407;box-shadow:0 8px 30px -10px rgba(216,178,76,.5)}
+  .err{color:var(--bad);font-size:13px;margin-top:8px;display:none}
+  /* result */
+  .res{display:none}
+  .gauge{--v:0;width:150px;height:150px;margin:4px auto 12px;border-radius:50%;position:relative;background:conic-gradient(var(--gc) calc(var(--v)*1%),rgba(255,255,255,.07) 0);display:flex;align-items:center;justify-content:center}
+  .gauge::after{content:"";position:absolute;inset:14px;background:var(--bg2);border-radius:50%}
+  .gauge b{position:relative;z-index:2;font-size:44px;font-weight:700}.gauge b span{font-size:16px;color:var(--mut);font-weight:500}
+  .rtitle{text-align:center;font-size:13px;color:var(--ac2);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
+  .summary{text-align:center;color:var(--tx);font-size:16px;font-weight:500;margin:0 auto 20px;max-width:46ch}
+  .flag{display:flex;gap:12px;align-items:flex-start;padding:13px 0;border-top:1px solid var(--line)}
+  .flag .ic{width:24px;height:24px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:13px;margin-top:1px}
+  .flag.good .ic{background:rgba(54,196,122,.16);color:var(--good)}
+  .flag.warn .ic{background:rgba(224,168,58,.16);color:var(--warn)}
+  .flag.bad .ic{background:rgba(224,102,74,.16);color:var(--bad)}
+  .flag .lbl{font-weight:600;font-size:14.5px}.flag .nt{color:var(--mut);font-size:13px;margin-top:2px}
+  .advice{margin-top:20px;background:linear-gradient(160deg,rgba(216,178,76,.14),rgba(216,178,76,.04));border:1px solid var(--line2);border-radius:14px;padding:18px 20px}
+  .advice .h{font-size:12px;color:var(--ac2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+  .advice p{margin:0;font-size:15px;font-weight:500}
+  .cta{margin-top:22px;text-align:center}.cta p{color:var(--mut);font-size:13.5px;margin:0 0 12px}
+  .rescan{background:none;border:none;color:var(--mut);font-size:13px;cursor:pointer;margin-top:14px;font-family:inherit;width:100%}
+  .foot{text-align:center;color:var(--mut);font-size:12px;margin-top:30px}.foot a{color:var(--mut)}
+  .spin{display:none;text-align:center;color:var(--mut);padding:30px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">Obra<span>.</span></div>
+
+  <div class="card" id="intro">
+    <span class="stat">🛡️ Free — no quote stored, just scanned</span>
+    <h1>Is your contractor's quote <em>protecting you?</em></h1>
+    <p class="lead">Most homeowners who get burned were missing the same few things on paper. Paste any contractor's quote or bid — AI flags what's missing <b>before you sign</b>.</p>
+    <label>Paste the contractor's quote / bid text</label>
+    <textarea id="qtext" placeholder="Paste the estimate, proposal, or text the contractor sent you…"></textarea>
+    <label>Your email (we'll send your report)</label>
+    <input type="email" id="qemail" placeholder="you@email.com" autocomplete="email">
+    <button class="btn go" id="scanBtn" onclick="scan()">🔍 Scan this quote — free</button>
+    <div class="err" id="introErr"></div>
+  </div>
+
+  <div class="spin" id="spin">🔍 Reading the quote…</div>
+
+  <div class="card res" id="res">
+    <div class="rtitle">Protection Score</div>
+    <div class="gauge" id="gauge"><b><span id="scoreNum">0</span><span>/100</span></b></div>
+    <p class="summary" id="summary"></p>
+    <div id="flags"></div>
+    <div class="advice"><div class="h">⚠️ Ask before you sign</div><p id="advice"></p></div>
+    <div class="cta">
+      <p>Are you the contractor? Make every quote score 100 — credentials, scope, milestone payments, license QR.</p>
+      <a class="btn go" href="/">See how Obra does it →</a>
+      <button class="rescan" onclick="reset()">↻ Scan another quote</button>
+    </div>
+  </div>
+
+  <div class="foot">Free tool by <a href="/">Obra</a> — making contractors the trustworthy choice.</div>
+</div>
+
+<script>
+const API='https://bq-tools-api.fanzai-mgmt.workers.dev';
+const $=(s)=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ICON={good:'✓',warn:'!',bad:'✕'};
+function col(s){return s>=80?'var(--good)':s>=50?'var(--warn)':'var(--bad)';}
+
+async function scan(){
+  const text=$('#qtext').value.trim(), email=$('#qemail').value.trim();
+  const err=$('#introErr'); err.style.display='none';
+  if(text.length<30){err.textContent='Paste a bit more of the quote.';err.style.display='block';return;}
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){err.textContent='Enter a valid email for your report.';err.style.display='block';return;}
+  $('#intro').style.display='none'; $('#spin').style.display='block'; window.scrollTo({top:0});
+  try{
+    const r=await fetch(API+'/api/scanner/check',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,text})});
+    const d=await r.json();
+    if(!d.ok) throw new Error(d.error||'Scan failed');
+    show(d);
+  }catch(e){
+    $('#spin').style.display='none'; $('#intro').style.display='block';
+    err.textContent=e.message||'Could not scan — try again.'; err.style.display='block';
+  }
+}
+
+function show(d){
+  $('#spin').style.display='none'; $('#res').style.display='block';
+  const c=col(d.score);
+  $('#gauge').style.setProperty('--gc',c);
+  $('#summary').textContent=d.summary||'';
+  $('#advice').textContent=d.advice||'Ask for proof of license, insurance, and a milestone payment schedule.';
+  $('#flags').innerHTML=(d.flags||[]).map(f=>{
+    const st=(f.status==='good'||f.status==='warn'||f.status==='bad')?f.status:'warn';
+    return `<div class="flag ${st}"><div class="ic">${ICON[st]}</div><div><div class="lbl">${esc(f.label)}</div><div class="nt">${esc(f.note)}</div></div></div>`;
+  }).join('');
+  let n=0; const step=Math.max(1,Math.round(d.score/40));
+  const iv=setInterval(()=>{n=Math.min(d.score,n+step);$('#scoreNum').textContent=n;$('#gauge').style.setProperty('--v',n);if(n>=d.score)clearInterval(iv);},22);
+}
+function reset(){ $('#res').style.display='none'; $('#intro').style.display='block'; $('#qtext').value=''; window.scrollTo({top:0,behavior:'smooth'}); }
+</script>
+</body>
+</html>

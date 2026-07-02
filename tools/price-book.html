@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Obra — Price Book</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  .pb-wrap{max-width:720px;margin:0 auto;padding:0 16px 90px}
+  .pb-card{background:var(--sf);border:1px solid var(--bd);border-radius:16px;padding:20px;margin-bottom:14px}
+  .pb-card h3{margin:0 0 3px;font-size:17px}.pb-card .sub{color:var(--txd);font-size:13px;margin:0 0 14px}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .fld{margin-bottom:10px}.fld label{display:block;font-size:12px;color:var(--txd);margin-bottom:5px;font-weight:500}
+  .fld input,.fld textarea{width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:12px 13px;color:var(--tx);font-size:15px;font-family:var(--font-en)}
+  .fld input:focus,.fld textarea:focus{outline:none;border-color:var(--ac)}
+  .fld textarea{min-height:64px;resize:vertical}
+  .bw{width:100%;padding:13px;font-size:15px}
+  /* margin calc result */
+  .calc{display:flex;gap:12px;margin-top:12px;flex-wrap:wrap}
+  .ccell{flex:1;min-width:120px;background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:14px;text-align:center}
+  .ccell .n{font-family:var(--font-en);font-weight:800;font-size:24px}
+  .ccell .l{color:var(--txd);font-size:11.5px;margin-top:3px;text-transform:uppercase;letter-spacing:.04em}
+  .ccell.win{border-color:var(--ac);background:var(--ac-glow,rgba(200,162,74,.1))}.ccell.win .n{color:var(--ac)}
+  /* search results */
+  .stats{display:flex;gap:10px;margin:10px 0}
+  .stat{flex:1;background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:11px;text-align:center}
+  .stat .n{font-weight:700;font-size:18px}.stat .l{color:var(--txd);font-size:11px}
+  .pe{display:flex;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid var(--bd);font-size:13.5px}
+  .pe:last-child{border-bottom:0}
+  .pe .it{font-weight:600}.pe .meta{color:var(--txd);font-size:12px}
+  .pe .pr{font-family:var(--font-en);font-weight:700;white-space:nowrap}
+  .est{display:none;margin-top:12px;border:1px solid var(--ac);border-radius:12px;background:var(--ac-glow,rgba(200,162,74,.08));padding:16px}
+  .bd{display:flex;justify-content:space-between;font-size:13px;color:var(--txd);padding:4px 0}
+  .muted{color:var(--txd);font-size:12.5px;margin-top:8px}
+  @media(max-width:560px){.row2,.row3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="pb-wrap">
+  <a href="/home.html" class="page-back">← Tools</a>
+  <h1 class="page-title">💰 Price Book</h1>
+  <p class="page-sub">Know what a job really costs — and exactly what to charge so you make money. No more guessing or chasing your mentor.</p>
+
+  <!-- WHAT SHOULD I CHARGE -->
+  <div class="pb-card">
+    <h3>What should I charge?</h3>
+    <p class="sub">Supplier charges you X, you want to make Y → here's what to quote the customer.</p>
+    <div class="row2">
+      <div class="fld"><label>Your cost ($) — what the supplier charges you</label><input id="mCost" type="number" inputmode="decimal" placeholder="10000" oninput="calc()"></div>
+      <div class="fld"><label>Markup (×)</label><input id="mMul" type="number" inputmode="decimal" placeholder="2" value="2" oninput="calc()"></div>
+    </div>
+    <div class="calc" id="calcOut" style="display:none">
+      <div class="ccell"><div class="n" id="cCost">—</div><div class="l">Your cost</div></div>
+      <div class="ccell win"><div class="n" id="cSell">—</div><div class="l">Charge customer</div></div>
+      <div class="ccell"><div class="n" id="cProfit">—</div><div class="l">Your profit</div></div>
+    </div>
+
+    <div style="border-top:1px solid var(--bd);margin:16px 0 12px"></div>
+    <p class="sub" style="margin-bottom:8px">Don't know the cost? Describe the job — AI estimates it.</p>
+    <div class="fld"><textarea id="eDesc" placeholder="Replace full HVAC system (furnace + condenser) in a 3-bed house, LA"></textarea></div>
+    <button class="btn btn-primary bw" id="eBtn" onclick="estimate()">🔮 Estimate this job (1 credit)</button>
+    <div class="est" id="est"></div>
+  </div>
+
+  <!-- WHAT DOES IT COST -->
+  <div class="pb-card">
+    <h3>What does it cost?</h3>
+    <p class="sub">Real prices from the field — search any item or trade.</p>
+    <div class="fld"><input id="sQ" placeholder="insulation, HVAC, countertop…" onkeydown="if(event.key==='Enter')search()"></div>
+    <button class="btn bw" onclick="search()">🔍 Search prices</button>
+    <div id="sStats"></div>
+    <div id="sList"></div>
+  </div>
+
+  <!-- ADD A PRICE -->
+  <div class="pb-card">
+    <h3>Add a price</h3>
+    <p class="sub">Know a real price? Add it — the more everyone adds, the sharper it gets for all of us.</p>
+    <div class="row3">
+      <div class="fld"><label>What</label><input id="aItem" placeholder="Blown-in insulation"></div>
+      <div class="fld"><label>Price ($)</label><input id="aPrice" type="number" inputmode="decimal" placeholder="1500"></div>
+      <div class="fld"><label>Per</label><input id="aUnit" placeholder="job / sq ft"></div>
+    </div>
+    <div class="row2">
+      <div class="fld"><label>Trade</label><input id="aTrade" placeholder="Insulation"></div>
+      <div class="fld"><label>Area</label><input id="aRegion" placeholder="Los Angeles"></div>
+    </div>
+    <button class="btn btn-primary bw" id="aBtn" onclick="addPrice()">➕ Add to the book</button>
+  </div>
+</div>
+<footer class="footer"><div class="footer-brand">Powered by Obra — BQ Production LLC</div></footer>
+
+<script src="../js/auth.js"></script>
+<script src="../js/ai.js"></script>
+<script src="/js/i18n-dict.js" defer></script>
+<script src="../js/common.js"></script>
+<script>
+const money=n=>{const x=Number(n);return isFinite(x)?'$'+Math.round(x).toLocaleString('en-US'):'—';};
+const escP=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function val(id){return document.getElementById(id).value.trim();}
+
+function calc(){
+  const c=Number(val('mCost')), m=Number(val('mMul'))||0;
+  const out=document.getElementById('calcOut');
+  if(!isFinite(c)||c<=0){out.style.display='none';return;}
+  const sell=c*m, profit=sell-c;
+  document.getElementById('cCost').textContent=money(c);
+  document.getElementById('cSell').textContent=money(sell);
+  document.getElementById('cProfit').textContent=money(profit);
+  out.style.display='flex';
+}
+
+async function estimate(){
+  if(!val('eDesc')){showToast(lang==='he'?'תאר את העבודה':'Describe the job','err');return;}
+  if(typeof confirmCredit==='function'){const ok=await confirmCredit('price-estimate','Job Estimate',1);if(!ok)return;}
+  const btn=document.getElementById('eBtn');btn.disabled=true;btn.textContent='⏳ '+(lang==='he'?'מעריך…':'Estimating…');
+  try{
+    const d=await apiCall('/api/pricebook/estimate',{method:'POST',body:{description:val('eDesc'),region:val('aRegion')||'Los Angeles'}});
+    const cc=d.contractorCost||{},ss=d.suggestedSell||{},ym=d.yourMargin||{};
+    const rng=(o)=>o&&(o.low||o.high)?money(o.low)+' – '+money(o.high):'—';
+    document.getElementById('est').innerHTML=`
+      <div class="calc"><div class="ccell"><div class="n" style="font-size:18px">${rng(cc)}</div><div class="l">Costs you</div></div>
+      <div class="ccell win"><div class="n" style="font-size:18px">${rng(ss)}</div><div class="l">Charge customer</div></div>
+      <div class="ccell"><div class="n" style="font-size:18px">${rng(ym)}</div><div class="l">Your margin</div></div></div>
+      ${(d.breakdown||[]).map(x=>`<div class="bd"><span>${escP(x.label)}</span><span>${escP(x.amount)}</span></div>`).join('')}
+      ${d.note?`<div class="muted">💡 ${escP(d.note)}</div>`:''}`;
+    document.getElementById('est').style.display='block';
+  }catch(e){showToast('Error: '+(e.message||e),'err');}
+  btn.disabled=false;btn.textContent='🔮 '+(lang==='he'?'הערך שוב (1 קרדיט)':'Estimate again (1 credit)');
+}
+
+async function search(){
+  const q=val('sQ'); if(!q){showToast(lang==='he'?'מה לחפש?':'Search what?','err');return;}
+  try{
+    const d=await apiCall('/api/pricebook/search?q='+encodeURIComponent(q));
+    const st=d.stats;
+    document.getElementById('sStats').innerHTML = st ? `<div class="stats">
+      <div class="stat"><div class="n">${money(st.min)}</div><div class="l">Low</div></div>
+      <div class="stat"><div class="n">${money(st.avg)}</div><div class="l">Average</div></div>
+      <div class="stat"><div class="n">${money(st.max)}</div><div class="l">High</div></div></div>` : '';
+    const items=d.items||[];
+    document.getElementById('sList').innerHTML = items.length ? items.map(r=>`<div class="pe">
+      <div><div class="it">${escP(r.item)}</div><div class="meta">${[r.trade,r.region].filter(Boolean).map(escP).join(' · ')}</div></div>
+      <div class="pr">${money(r.price)}${r.unit?'<span class="meta"> /'+escP(r.unit)+'</span>':''}</div></div>`).join('')
+      : '<div class="muted">No prices yet — be the first to add one below.</div>';
+  }catch(e){showToast('Error: '+(e.message||e),'err');}
+}
+
+async function addPrice(){
+  if(!val('aItem')||!val('aPrice')){showToast(lang==='he'?'מה ובכמה?':'What + price?','err');return;}
+  const btn=document.getElementById('aBtn');btn.disabled=true;btn.textContent='…';
+  try{
+    await apiCall('/api/pricebook/add',{method:'POST',body:{item:val('aItem'),price:Number(val('aPrice')),unit:val('aUnit'),trade:val('aTrade'),region:val('aRegion')}});
+    document.getElementById('aItem').value='';document.getElementById('aPrice').value='';document.getElementById('aUnit').value='';
+    showToast(lang==='he'?'נוסף למחירון ✓':'Added ✓','ok');
+  }catch(e){showToast('Error: '+(e.message||e),'err');}
+  btn.disabled=false;btn.textContent='➕ Add to the book';
+}
+</script>
+</body>
+</html>

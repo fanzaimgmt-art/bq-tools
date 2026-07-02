@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Your Project — Live Updates</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#15161a;--mut:#6b6f7a;--line:#e7e6e1;--bg:#f3f2ee;--paper:#fff;--ac:#c8a24a;--acd:#8a6d1f;--good:#1f9d57;}
+  *{box-sizing:border-box}html,body{margin:0}
+  body{background:var(--bg);color:var(--ink);font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.55}
+  h1,h2,h3{font-family:'Plus Jakarta Sans',sans-serif}
+  .wrap{max-width:680px;margin:0 auto;padding:24px 16px 80px}
+  .head{background:linear-gradient(170deg,#fbfaf6,#f3f1ea);border:1px solid var(--line);border-radius:18px;padding:26px 24px}
+  .live{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--good);background:#e7f6ec;border-radius:99px;padding:5px 12px;margin-bottom:14px}
+  .live i{width:8px;height:8px;border-radius:50%;background:var(--good);display:inline-block;animation:pulse 1.6s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .head h1{font-size:clamp(22px,5vw,32px);letter-spacing:-.02em;margin:0 0 6px}
+  .head .meta{color:var(--mut);font-size:14px}
+  .feed{margin-top:22px}
+  .u{position:relative;padding:0 0 4px 28px;margin-bottom:18px}
+  .u::before{content:"";position:absolute;left:7px;top:6px;bottom:-18px;width:2px;background:var(--line)}
+  .u:last-child::before{display:none}
+  .u .dot{position:absolute;left:0;top:4px;width:16px;height:16px;border-radius:50%;background:var(--ac);border:3px solid var(--bg)}
+  .u .when{font-size:12px;color:var(--mut);font-weight:600}
+  .u .body{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-top:6px;font-size:14.5px;white-space:pre-wrap}
+  .u img{width:100%;border-radius:10px;margin-top:10px;display:block;border:1px solid var(--line)}
+  .empty{text-align:center;color:var(--mut);padding:40px 20px}
+  .foot{text-align:center;font-size:12px;color:var(--mut);margin-top:30px}.foot a{color:var(--mut)}
+  #err{text-align:center;padding:60px 20px;color:var(--mut)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="err" style="display:none">Loading…</div>
+  <div id="doc" style="display:none">
+    <div class="head">
+      <span class="live"><i></i> LIVE PROJECT UPDATES</span>
+      <h1 id="title"></h1>
+      <div class="meta" id="meta"></div>
+    </div>
+    <div class="feed" id="feed"></div>
+  </div>
+  <div class="foot">Updated by your contractor · Powered by <a href="https://bq-tools.fanzai-mgmt.workers.dev" target="_blank" rel="noopener">Obra</a></div>
+</div>
+<script>
+const API='https://bq-tools-api.fanzai-mgmt.workers.dev';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ID=(new URLSearchParams(location.search).get('id')||'').toUpperCase();
+function when(ts){ try{const d=new Date((ts||'').replace(' ','T')+'Z');return d.toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});}catch(e){return ts||'';} }
+
+async function load(){
+  if(!/^JOB-[A-Z0-9]+$/.test(ID)){ $('#err').textContent='Invalid project link.'; $('#err').style.display='block'; return; }
+  try{
+    const r=await fetch(`${API}/api/portal/get?id=${encodeURIComponent(ID)}`);
+    const j=await r.json();
+    if(!j.ok) throw new Error(j.error||'Not found');
+    const d=j.data||{};
+    document.title=(d.title||'Your Project')+' — Live Updates';
+    $('#title').textContent=d.title||'Your Project';
+    $('#meta').textContent=[d.homeowner,d.address].filter(Boolean).join(' · ');
+    const ups=j.updates||[];
+    $('#feed').innerHTML = ups.length ? ups.map(u=>`
+      <div class="u"><div class="dot"></div>
+        <div class="when">${esc(when(u.created_at))}</div>
+        ${u.body?`<div class="body">${esc(u.body)}</div>`:''}
+        ${u.photo?`<img src="${esc(u.photo)}" alt="progress" loading="lazy">`:''}
+      </div>`).join('') : '<div class="empty">No updates yet — your contractor will post progress here.</div>';
+    $('#err').style.display='none'; $('#doc').style.display='block';
+  }catch(e){ $('#err').textContent = (e.message==='Not found')?'This project was not found.':'Could not load updates.'; $('#err').style.display='block'; }
+}
+load();
+setInterval(load, 45000); // light auto-refresh for "live" feel
+</script>
+</body>
+</html>

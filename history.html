@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>History — Obra</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0e0f12;--sf:#191b21;--line:rgba(255,255,255,.09);--line2:rgba(255,255,255,.16);--tx:#f3f3f0;--mut:#9a9da7;--ac:#d8b24c;}
+  *{box-sizing:border-box}html,body{margin:0}
+  body{background:var(--bg);color:var(--tx);font-family:'Space Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:760px;margin:0 auto;padding:24px 16px 80px}
+  .top{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+  .top a{color:var(--mut);text-decoration:none;font-size:14px}
+  h1{font-size:26px;margin:6px 0 4px}
+  .sub{color:var(--mut);font-size:14px;margin:0 0 18px}
+  .filt{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+  .fc{background:var(--sf);border:1px solid var(--line);border-radius:99px;padding:8px 14px;color:var(--mut);font-size:13px;cursor:pointer;font-family:inherit}
+  .fc.on{border-color:var(--ac);color:var(--tx)}
+  .day{color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.06em;margin:18px 0 8px}
+  .it{display:flex;gap:12px;align-items:center;background:var(--sf);border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin-bottom:8px;text-decoration:none;color:var(--tx)}
+  .it:hover{border-color:var(--ac)}
+  .it .ic{width:34px;height:34px;border-radius:9px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:17px;background:var(--bg)}
+  .it .t{flex:1;min-width:0}.it .t b{font-weight:600;font-size:14.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .it .t span{color:var(--mut);font-size:12.5px}
+  .it .when{color:var(--mut);font-size:12px;white-space:nowrap}
+  .empty{text-align:center;color:var(--mut);padding:60px 20px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><a href="/home">← Home</a></div>
+  <h1 id="h1">History</h1>
+  <p class="sub" id="sub">Everything you've done — newest first.</p>
+  <div class="filt" id="filt"></div>
+  <div id="list"><div class="empty">Loading…</div></div>
+</div>
+<script>
+const API='https://bq-tools-api.fanzai-mgmt.workers.dev';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const lang=(localStorage.getItem('bq_lang')||'en');const RTL=['he','fa','ar'].includes(lang);
+if(RTL)document.documentElement.dir='rtl';
+const ICON={tony:'✦',quote:'💸',invoice:'💵','trust-pack':'🛡️','ig-analysis':'📊',render:'🏡','bid-justifier':'⚖️','price-book':'💰',portal:'📲',scanner:'🔍'};
+const TXT=RTL?{h:'היסטוריה',sub:'כל מה שעשית — מהחדש לישן.',all:'הכל',empty:'עוד אין היסטוריה.',load:'טוען…'}:{h:'History',sub:"Everything you've done — newest first.",all:'All',empty:'No history yet.',load:'Loading…'};
+$('#h1').textContent=TXT.h;$('#sub').textContent=TXT.sub;
+let items=[],activeProj=null,projects=[],filterProj='all';
+function tApi(p){const token=localStorage.getItem('bq_token')||'';return fetch(API+p,{headers:{'Authorization':'Bearer '+token}}).then(r=>r.json());}
+function fmtDay(ts){try{const d=new Date((ts||'').replace(' ','T')+'Z');return d.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'});}catch(e){return ts;}}
+function fmtTime(ts){try{const d=new Date((ts||'').replace(' ','T')+'Z');return d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});}catch(e){return '';}}
+function projName(id){const p=projects.find(x=>x.id===id);return p?p.name:'';}
+function render(){
+  const rows=filterProj==='all'?items:items.filter(i=>i.project_id===filterProj);
+  if(!rows.length){$('#list').innerHTML='<div class="empty">'+TXT.empty+'</div>';return;}
+  let html='',lastDay='';
+  rows.forEach(i=>{
+    const day=fmtDay(i.created_at);
+    if(day!==lastDay){html+='<div class="day">'+esc(day)+'</div>';lastDay=day;}
+    const href=/^(https?:\/\/|\/(?!\/))/i.test(i.ref||'')?i.ref:'#';  // block javascript:/data: + protocol-relative //evil schemes
+    html+='<a class="it" href="'+esc(href)+'"><span class="ic">'+(ICON[i.type]||'•')+'</span>'
+      +'<span class="t"><b>'+esc(i.title||i.type)+'</b><span>'+esc(i.type)+(i.project_id?' · '+esc(projName(i.project_id)):'')+'</span></span>'
+      +'<span class="when">'+fmtTime(i.created_at)+'</span></a>';
+  });
+  $('#list').innerHTML=html;
+}
+function renderFilt(){
+  let html='<button class="fc'+(filterProj==='all'?' on':'')+'" data-p="all">'+TXT.all+'</button>';
+  projects.forEach(p=>{html+='<button class="fc'+(filterProj===p.id?' on':'')+'" data-p="'+p.id+'">📁 '+esc(p.name)+'</button>';});
+  $('#filt').innerHTML=html;
+  document.querySelectorAll('.fc').forEach(b=>b.onclick=()=>{filterProj=b.dataset.p;renderFilt();render();});
+}
+(async function(){
+  try{ const pj=await tApi('/api/projects'); projects=pj.projects||[]; activeProj=pj.active||null; }catch(e){}
+  try{ const h=await tApi('/api/history'); items=h.items||[]; }catch(e){}
+  renderFilt(); render();
+})();
+</script>
+</body>
+</html>

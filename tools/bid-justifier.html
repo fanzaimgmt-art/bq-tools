@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Obra — Bid Justifier</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  .bj-wrap{max-width:760px;margin:0 auto;padding:0 16px 90px}
+  .bj-card{background:var(--sf);border:1px solid var(--bd);border-radius:16px;padding:22px;margin-bottom:16px}
+  .bj-card h3{margin:0 0 4px;font-size:16px}.bj-card .sub{color:var(--txd);font-size:13px;margin:0 0 16px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .fld{margin-bottom:12px}.fld label{display:block;font-size:12.5px;color:var(--txd);margin-bottom:6px;font-weight:500}
+  .fld input,.fld textarea{width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:12px 13px;color:var(--tx);font-size:15px;font-family:var(--font-en)}
+  .fld input:focus,.fld textarea:focus{outline:none;border-color:var(--ac)}
+  .fld textarea{min-height:80px;resize:vertical;line-height:1.5}
+  .genbtn{width:100%;padding:15px;font-size:15px}
+  .out{display:none;margin-top:18px}
+  .cmp{border:1px solid var(--bd);border-radius:14px;overflow:hidden}
+  .cmp .hd{display:grid;grid-template-columns:1fr 1fr 1fr;background:var(--bg);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--txd);font-weight:700}
+  .cmp .hd div{padding:11px 13px}
+  .cmp .hd .y{color:var(--ac)}
+  .rw{display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid var(--bd);font-size:13.5px}
+  .rw>div{padding:13px}
+  .rw .cat{font-weight:600}
+  .rw .cheap{color:var(--txd);border-left:1px solid var(--bd);border-right:1px solid var(--bd)}
+  .rw .yours{color:var(--tx)}
+  .bottom{margin-top:16px;background:linear-gradient(160deg,rgba(216,178,76,.14),rgba(216,178,76,.04));border:1px solid var(--bd);border-radius:12px;padding:18px 20px;font-size:16px;font-weight:600;text-align:center}
+  .acts{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+  @media(max-width:560px){.grid2{grid-template-columns:1fr}
+    .cmp .hd{grid-template-columns:1fr}.rw{grid-template-columns:1fr}
+    .rw .cheap,.rw .yours{border:0;border-top:1px dashed var(--bd)}
+    .cmp .hd div:not(:first-child){display:none}}
+</style>
+</head>
+<body>
+<div class="bj-wrap">
+  <a href="/home.html" class="page-back">← Tools</a>
+  <h1 class="page-title">⚖️ Bid Justifier</h1>
+  <p class="page-sub">A client got a cheaper bid? In one tap, get an honest side-by-side that shows what that lowball price <em>isn't</em> telling them — so your price makes sense.</p>
+
+  <div class="bj-card">
+    <h3>The two bids</h3>
+    <p class="sub">Yours, and the cheaper one they're comparing you to.</p>
+    <div class="fld"><label>Project type</label><input id="bjType" placeholder="Roof replacement"></div>
+    <div class="grid2">
+      <div class="fld"><label>Your price ($)</label><input id="bjYour" placeholder="32000"></div>
+      <div class="fld"><label>Their cheaper price ($) — optional</label><input id="bjComp" placeholder="18000"></div>
+    </div>
+    <div class="fld"><label>What your price includes (a few words)</label>
+      <textarea id="bjScope" placeholder="40-yr architectural shingles, synthetic underlayment, ice & water shield, full tear-off + haul, permits, licensed crew, workmanship warranty."></textarea></div>
+    <button class="btn btn-primary genbtn" id="bjBtn" onclick="justify()">⚖️ Generate the honest comparison (2 credits)</button>
+
+    <div class="out" id="out">
+      <div class="cmp">
+        <div class="hd"><div>Category</div><div class="cheap">The cheaper bid</div><div class="y">Your bid</div></div>
+        <div id="rows"></div>
+      </div>
+      <div class="bottom" id="bottom"></div>
+      <div class="acts">
+        <button class="btn btn-primary" onclick="copyOut()">📋 Copy as text</button>
+        <button class="btn" onclick="window.print()">⬇ Save as PDF</button>
+      </div>
+    </div>
+  </div>
+</div>
+<footer class="footer"><div class="footer-brand">Powered by Obra — BQ Production LLC</div></footer>
+
+<script src="../js/auth.js"></script>
+<script src="../js/ai.js"></script>
+<script src="/js/i18n-dict.js" defer></script>
+<script src="../js/common.js"></script>
+<script>
+let bjData=null;
+function val(id){return document.getElementById(id).value.trim();}
+function escB(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+async function justify(){
+  if(!val('bjYour')){showToast(lang==='he'?'הכנס את המחיר שלך':'Enter your price','err');return;}
+  if(typeof confirmCredit==='function'){const ok=await confirmCredit('bid-justifier','Bid Justifier',2);if(!ok)return;}
+  const btn=document.getElementById('bjBtn'); btn.disabled=true; btn.textContent='⏳ '+(lang==='he'?'משווה…':'Comparing…');
+  try{
+    const d=await apiCall('/api/bidjustify/generate',{method:'POST',body:{projectType:val('bjType'),yourPrice:val('bjYour'),competitorPrice:val('bjComp'),scope:val('bjScope')}});
+    bjData=d;
+    document.getElementById('rows').innerHTML=(d.rows||[]).map(r=>`<div class="rw">
+      <div class="cat">${escB(r.category)}</div>
+      <div class="cheap">${escB(r.cheap)}</div>
+      <div class="yours">${escB(r.yours)}</div></div>`).join('');
+    document.getElementById('bottom').textContent=d.bottomLine||'';
+    document.getElementById('out').style.display='block';
+    document.getElementById('out').scrollIntoView({behavior:'smooth',block:'start'});
+  }catch(err){showToast('Error: '+(err.message||err),'err');}
+  btn.disabled=false; btn.textContent='⚖️ '+(lang==='he'?'צור מחדש (2 קרדיטים)':'Regenerate (2 credits)');
+}
+function copyOut(){
+  if(!bjData)return;
+  let t='Your bid vs the cheaper one:\n\n';
+  (bjData.rows||[]).forEach(r=>{t+=`• ${r.category}\n   Cheaper bid: ${r.cheap}\n   Us: ${r.yours}\n\n`;});
+  t+=bjData.bottomLine||'';
+  navigator.clipboard.writeText(t).then(()=>showToast(lang==='he'?'הועתק':'Copied ✓','ok'));
+}
+</script>
+</body>
+</html>

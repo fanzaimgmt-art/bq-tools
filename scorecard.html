@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contractor Trust Score — Obra</title>
+<meta name="description" content="78% of homeowners hire the first contractor they trust. Find out your Contractor Trust Score in 60 seconds — free.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0e0f12;--bg2:#15171c;--sf:#191b21;--line:rgba(255,255,255,.09);--line2:rgba(255,255,255,.16);
+    --tx:#f3f3f0;--mut:#9a9da7;--ac:#d8b24c;--ac2:#f0cf72;--good:#36c47a;--warn:#e0a83a;--bad:#e0664a;}
+  *{box-sizing:border-box}html,body{margin:0}
+  body{background:var(--bg);color:var(--tx);font-family:'Space Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.55}
+  .wrap{max-width:680px;margin:0 auto;padding:30px 18px 80px}
+  .brand{font-weight:700;font-size:16px;letter-spacing:-.01em}.brand span{color:var(--ac)}
+  .card{background:linear-gradient(180deg,var(--bg2),var(--sf));border:1px solid var(--line);border-radius:20px;padding:clamp(22px,5vw,40px);margin-top:24px}
+  h1{font-size:clamp(28px,6vw,44px);line-height:1.08;letter-spacing:-.02em;margin:0 0 14px}
+  h1 em{font-style:normal;color:var(--ac)}
+  .lead{color:var(--mut);font-size:16px;margin:0 0 26px;max-width:48ch}
+  .stat{display:inline-block;font-size:13px;color:var(--ac2);border:1px solid var(--line2);border-radius:99px;padding:7px 14px;margin-bottom:22px}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line2);background:transparent;color:var(--tx);
+    padding:15px 26px;border-radius:12px;font-weight:600;font-size:16px;cursor:pointer;font-family:inherit;transition:.15s;text-decoration:none;width:100%}
+  .btn:hover{border-color:var(--ac)}
+  .btn.go{background:linear-gradient(180deg,var(--ac2),var(--ac));border-color:var(--ac);color:#1a1407;box-shadow:0 8px 30px -10px rgba(216,178,76,.5)}
+  .btn.go:hover{filter:brightness(1.05)}
+  /* quiz */
+  .qwrap{display:none}
+  .prog{height:5px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden;margin-bottom:6px}
+  .prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--ac),var(--ac2));transition:width .35s}
+  .qmeta{display:flex;justify-content:space-between;font-size:12px;color:var(--mut);margin-bottom:22px}
+  .qcat{color:var(--ac2);letter-spacing:.08em;text-transform:uppercase;font-weight:600;font-size:11px;margin-bottom:10px}
+  .q{font-size:22px;font-weight:600;letter-spacing:-.01em;margin:0 0 26px;min-height:64px}
+  .ans{display:grid;gap:12px}
+  .opt{border:1px solid var(--line2);background:rgba(255,255,255,.02);border-radius:13px;padding:17px 20px;font-size:16px;font-weight:500;cursor:pointer;transition:.12s;display:flex;align-items:center;gap:12px}
+  .opt:hover{border-color:var(--ac);background:rgba(216,178,76,.06)}
+  .opt .k{width:26px;height:26px;border-radius:7px;border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--mut)}
+  .back{background:none;border:none;color:var(--mut);font-size:13px;cursor:pointer;margin-top:20px;font-family:inherit}
+  /* result */
+  .rwrap{display:none;text-align:center}
+  .gauge{--v:0;width:180px;height:180px;margin:6px auto 14px;border-radius:50%;position:relative;
+    background:conic-gradient(var(--gc) calc(var(--v)*1%),rgba(255,255,255,.07) 0);display:flex;align-items:center;justify-content:center}
+  .gauge::after{content:"";position:absolute;inset:15px;background:var(--bg2);border-radius:50%}
+  .gauge b{position:relative;z-index:2;font-size:52px;font-weight:700;line-height:1}
+  .gauge b span{font-size:18px;color:var(--mut);font-weight:500}
+  .tier{font-size:24px;font-weight:700;margin:4px 0 2px}
+  .tdesc{color:var(--mut);font-size:15px;margin:0 auto 8px;max-width:42ch}
+  /* email gate */
+  .gate{margin-top:22px;border-top:1px solid var(--line);padding-top:22px}
+  .gate p{color:var(--mut);font-size:14px;margin:0 0 14px}
+  .gate input{width:100%;background:var(--bg);border:1px solid var(--line2);border-radius:12px;padding:15px 16px;color:var(--tx);font-size:16px;font-family:inherit;margin-bottom:12px}
+  .gate input:focus{outline:none;border-color:var(--ac)}
+  /* breakdown */
+  .breakdown{display:none;text-align:left;margin-top:24px}
+  .cat{margin-bottom:18px}
+  .cat .ch{display:flex;justify-content:space-between;align-items:center;font-size:14px;margin-bottom:7px}
+  .cat .bar{height:8px;background:rgba(255,255,255,.07);border-radius:99px;overflow:hidden}
+  .cat .bar i{display:block;height:100%;border-radius:99px}
+  .gap{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;color:var(--mut);margin-top:8px;padding-left:2px}
+  .gap b{color:var(--tx)}
+  .gap .fx{color:var(--ac2)}
+  .cta{margin-top:26px;background:linear-gradient(160deg,rgba(216,178,76,.14),rgba(216,178,76,.04));border:1px solid var(--line2);border-radius:16px;padding:22px;text-align:center}
+  .cta h3{margin:0 0 6px;font-size:19px}
+  .cta p{color:var(--mut);font-size:14px;margin:0 0 16px}
+  .fomo{display:inline-block;font-size:12.5px;color:var(--ac2);border:1px solid var(--line2);border-radius:99px;padding:6px 13px;margin-bottom:14px}
+  .share{margin-top:14px}
+  .foot{text-align:center;color:var(--mut);font-size:12px;margin-top:30px}
+  .foot a{color:var(--mut)}
+  @media(max-width:480px){.q{font-size:19px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">Obra<span>.</span></div>
+
+  <!-- INTRO -->
+  <div class="card" id="intro">
+    <span class="stat">📊 78% of homeowners hire the first contractor they trust</span>
+    <h1>What's your <em>Contractor Trust Score?</em></h1>
+    <p class="lead">Homeowners are terrified of getting scammed. The contractors who win don't just show up first — they look <b>safe</b>. Answer 10 quick questions and see exactly where you stand, and what's costing you jobs.</p>
+    <button class="btn go" onclick="startQuiz()">Start — 60 seconds →</button>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="card qwrap" id="quiz">
+    <div class="prog"><i id="progBar"></i></div>
+    <div class="qmeta"><span id="qNum">1 / 10</span><span id="qCatLabel"></span></div>
+    <div class="qcat" id="qCat"></div>
+    <div class="q" id="qText"></div>
+    <div class="ans">
+      <div class="opt" onclick="answer(10)"><span class="k">Y</span><span>Yes, always</span></div>
+      <div class="opt" onclick="answer(5)"><span class="k">~</span><span>Sometimes</span></div>
+      <div class="opt" onclick="answer(0)"><span class="k">N</span><span>No / not yet</span></div>
+    </div>
+    <button class="back" id="backBtn" onclick="goBack()" style="display:none">← Back</button>
+  </div>
+
+  <!-- RESULT -->
+  <div class="card rwrap" id="result">
+    <div class="qcat">Your Contractor Trust Score</div>
+    <div class="gauge" id="gauge"><b><span id="scoreNum">0</span><span>/100</span></b></div>
+    <div class="tier" id="tierName">—</div>
+    <p class="tdesc" id="tierDesc"></p>
+
+    <div class="gate" id="gate">
+      <p>👇 Enter your email to unlock your full breakdown + exactly how to fix every gap.</p>
+      <input type="email" id="emailIn" placeholder="you@email.com" autocomplete="email">
+      <button class="btn go" id="unlockBtn" onclick="unlock()">Unlock my breakdown →</button>
+      <div id="gateErr" style="color:var(--bad);font-size:13px;margin-top:8px;display:none"></div>
+    </div>
+
+    <div class="breakdown" id="breakdown"></div>
+  </div>
+
+  <div class="foot">Free tool by <a href="/" >Obra</a> — the toolkit that makes contractors the trustworthy choice.</div>
+</div>
+
+<script>
+const API='https://bq-tools-api.fanzai-mgmt.workers.dev';
+const $=(s)=>document.querySelector(s);
+const CATS={speed:'Speed & Responsiveness',legal:'Legal & Financial Protection',cred:'Verification & Credentials',exp:'Client Experience'};
+const QS=[
+  {c:'speed',t:'Do you respond to a new lead within 1 hour?',fix:'Obra CRM pings you on every new lead + 1-tap call/text — be the first responder.'},
+  {c:'speed',t:'Do you send a written estimate within 48 hours of a site visit?',fix:'Obra writes an itemized quote in minutes from a short brief.'},
+  {c:'legal',t:'Do you always use a signed written contract?',fix:'Obra generates a contract + Trust Pack the client e-signs in one tap.'},
+  {c:'legal',t:'Do you structure payments in milestones — never 100% upfront?',fix:'Trust Pack builds a milestone schedule tied to verified phases (CA-law compliant).'},
+  {c:'legal',t:'Do you give every client a detailed scope of work in writing?',fix:'Trust Pack writes a phase-by-phase scope automatically.'},
+  {c:'cred',t:'Are you licensed AND insured, with proof ready to show?',fix:'Trust Pack displays your license, bond & insurance up front.'},
+  {c:'cred',t:'Can a client verify your license online in under 60 seconds?',fix:'Trust Pack adds a live QR that opens your CSLB record — instantly.'},
+  {c:'cred',t:'Do you have 10+ real reviews a client can find?',fix:'Obra collects + displays reviews on your Trust Pack.'},
+  {c:'exp',t:'Do you send progress updates without the client asking?',fix:'Obra CRM logs the job + pushes client updates so you never go quiet.'},
+  {c:'exp',t:'Do you have a written process for changes (change orders)?',fix:'Trust Pack ships a change-order policy: stop, photo, written approval first.'},
+];
+const TIERS=[
+  {min:90,name:'Elite',c:'var(--good)',d:"You look as safe as the best in your market. Homeowners trust you on sight — protect that edge."},
+  {min:80,name:'Trusted',c:'var(--good)',d:"You're winning on trust. A couple of gaps are still costing you the most cautious clients."},
+  {min:60,name:'Credible',c:'var(--warn)',d:"You're solid, but a nervous homeowner can still find reasons to doubt. Close the gaps below."},
+  {min:40,name:'Basic',c:'var(--warn)',d:"You're doing the work, but you look risky on paper — and that's why some bids go cold."},
+  {min:0,name:'Invisible',c:'var(--bad)',d:"To a scared homeowner you look like every contractor who ever burned them. This is fixable, fast."},
+];
+let i=0, answers=new Array(QS.length).fill(null);
+
+function startQuiz(){ $('#intro').style.display='none'; $('#quiz').style.display='block'; render(); window.scrollTo({top:0}); }
+function render(){
+  const q=QS[i];
+  $('#progBar').style.width=((i)/QS.length*100)+'%';
+  $('#qNum').textContent=(i+1)+' / '+QS.length;
+  $('#qCat').textContent=CATS[q.c];
+  $('#qText').textContent=q.t;
+  $('#backBtn').style.display=i>0?'block':'none';
+}
+function answer(v){ answers[i]=v; if(i<QS.length-1){i++;render();}else finish(); }
+function goBack(){ if(i>0){i--;render();} }
+
+function tierFor(s){ return TIERS.find(t=>s>=t.min); }
+function finish(){
+  $('#progBar').style.width='100%';
+  const score=answers.reduce((a,b)=>a+(b||0),0);
+  const t=tierFor(score);
+  $('#quiz').style.display='none'; $('#result').style.display='block'; window.scrollTo({top:0});
+  $('#tierName').textContent=t.name; $('#tierName').style.color=t.c;
+  $('#tierDesc').textContent=t.d;
+  $('#gauge').style.setProperty('--gc',t.c);
+  // animated count-up + gauge fill
+  let n=0; const step=Math.max(1,Math.round(score/40));
+  const iv=setInterval(()=>{ n=Math.min(score,n+step); $('#scoreNum').textContent=n; $('#gauge').style.setProperty('--v',n);
+    if(n>=score)clearInterval(iv); },22);
+  window._score=score; window._tier=t.name;
+}
+
+async function unlock(){
+  const email=$('#emailIn').value.trim();
+  const err=$('#gateErr'); err.style.display='none';
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){err.textContent='Enter a valid email.';err.style.display='block';return;}
+  const btn=$('#unlockBtn'); btn.disabled=true; btn.textContent='Unlocking…';
+  try{
+    await fetch(API+'/api/scorecard/lead',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email,score:window._score,tier:window._tier,answers})});
+  }catch(e){}
+  $('#gate').style.display='none';
+  showBreakdown();
+}
+
+function showBreakdown(){
+  const bd=$('#breakdown'); bd.style.display='block';
+  // per-category
+  const catScore={}, catMax={};
+  QS.forEach((q,idx)=>{catScore[q.c]=(catScore[q.c]||0)+(answers[idx]||0);catMax[q.c]=(catMax[q.c]||0)+10;});
+  let html='<h3 style="margin:0 0 16px;font-size:18px">Where you stand</h3>';
+  Object.keys(CATS).forEach(c=>{
+    const pct=Math.round(catScore[c]/catMax[c]*100);
+    const col=pct>=80?'var(--good)':pct>=50?'var(--warn)':'var(--bad)';
+    html+=`<div class="cat"><div class="ch"><span>${CATS[c]}</span><b style="color:${col}">${pct}%</b></div>
+      <div class="bar"><i style="width:${pct}%;background:${col}"></i></div>`;
+    QS.forEach((q,idx)=>{ if(q.c===c && (answers[idx]||0)<10){
+      html+=`<div class="gap"><span>⚠️</span><span><b>${q.t}</b><br><span class="fx">Fix → ${q.fix}</span></span></div>`;
+    }});
+    html+='</div>';
+  });
+  const gaps=answers.filter(a=>(a||0)<10).length;
+  html+=`<div class="cta">
+    <span class="fomo">🔒 Founding price: first 100 contractors lock $29/mo forever (then $79)</span>
+    <h3>${gaps?('Close your '+gaps+' gap'+(gaps>1?'s':'')+' with Obra'):'Keep your edge with Obra'}</h3>
+    <p>Every fix above is one tool inside Obra. Be the contractor homeowners trust on sight.</p>
+    <a class="btn go" href="/">Get early access →</a>
+    <div class="share"><button class="btn" onclick="shareScore()">📣 Share my score</button></div>
+  </div>`;
+  bd.innerHTML=html;
+  bd.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function shareScore(){
+  const txt=`I scored ${window._score}/100 on the Contractor Trust Score (${window._tier}). What's yours?`;
+  const url=location.origin+'/scorecard';
+  if(navigator.share){navigator.share({title:'Contractor Trust Score',text:txt,url});}
+  else{navigator.clipboard.writeText(txt+' '+url).then(()=>{const b=event.target;b.textContent='Copied ✓';});}
+}
+</script>
+</body>
+</html>

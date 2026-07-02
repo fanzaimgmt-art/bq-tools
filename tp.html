@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Trust Pack</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#15161a; --ink2:#3d4049; --mut:#6b6f7a; --line:#e7e6e1;
+    --paper:#ffffff; --bg:#f3f2ee; --accent:#c8a24a; --accent-ink:#8a6d1f;
+    --good:#1f9d57; --warn:#d68a16; --bad:#d0402b;
+    --r:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--bg);color:var(--ink);font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.55}
+  h1,h2,h3,.dsp{font-family:'Plus Jakarta Sans',sans-serif}
+  .wrap{max-width:840px;margin:0 auto;padding:22px 16px 80px}
+  /* top action bar — never prints */
+  .bar{position:sticky;top:0;z-index:20;display:flex;gap:10px;align-items:center;justify-content:space-between;
+    background:rgba(243,242,238,.86);backdrop-filter:blur(10px);padding:12px 16px;margin:-22px -16px 22px;border-bottom:1px solid var(--line)}
+  .bar .who{font-weight:700;font-family:'Plus Jakarta Sans';font-size:15px}
+  .bar .acts{display:flex;gap:8px}
+  .btn{border:1px solid var(--line);background:#fff;color:var(--ink);padding:10px 16px;border-radius:10px;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;transition:.15s}
+  .btn:hover{border-color:#cfcdc4}
+  .btn.pri{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .btn.go{background:var(--accent);border-color:var(--accent);color:#1a1407}
+  .paper{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 1px 0 rgba(0,0,0,.02),0 18px 50px -28px rgba(20,22,26,.18);overflow:hidden}
+  .pad{padding:clamp(22px,5vw,46px)}
+  .sec{border-top:1px solid var(--line)}
+  .eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent-ink);font-weight:700;margin:0 0 12px}
+  h2.sh{font-size:20px;margin:0 0 4px;letter-spacing:-.01em}
+  .mut{color:var(--mut)}
+  /* cover */
+  .cover{background:linear-gradient(170deg,#fbfaf6, #f3f1ea);text-align:center}
+  .logo{width:62px;height:62px;border-radius:16px;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Plus Jakarta Sans';font-weight:800;font-size:26px;margin:0 auto 16px}
+  .co{font-size:15px;font-weight:700;letter-spacing:.02em}
+  .tag{font-size:13px;color:var(--mut);margin-top:2px}
+  .cover h1{font-size:clamp(26px,5.5vw,40px);line-height:1.12;letter-spacing:-.02em;margin:20px auto 8px;max-width:14ch}
+  .meta{display:flex;gap:8px 26px;flex-wrap:wrap;justify-content:center;margin-top:18px;font-size:13.5px}
+  .meta b{font-weight:600}
+  .tpid{display:inline-block;margin-top:16px;font-size:11px;letter-spacing:.12em;color:var(--mut);border:1px solid var(--line);border-radius:99px;padding:5px 12px}
+  /* trust gauge */
+  .score{display:flex;gap:26px;align-items:center;flex-wrap:wrap}
+  .gauge{--v:0;position:relative;width:138px;height:138px;flex:0 0 auto;border-radius:50%;
+    background:conic-gradient(var(--gc) calc(var(--v)*1%), #eceae3 0);display:flex;align-items:center;justify-content:center}
+  .gauge::after{content:"";position:absolute;inset:13px;background:#fff;border-radius:50%}
+  .gauge .gv{position:relative;z-index:2;text-align:center}
+  .gauge .gv b{font-family:'Plus Jakarta Sans';font-weight:800;font-size:34px;line-height:1}
+  .gauge .gv span{font-size:11px;color:var(--mut)}
+  .score .gx{flex:1;min-width:230px}
+  .badge{display:inline-flex;align-items:center;gap:7px;font-weight:700;font-size:14px;padding:6px 12px;border-radius:99px}
+  .checks{display:grid;grid-template-columns:1fr 1fr;gap:7px 18px;margin-top:14px;font-size:13.5px}
+  .ck{display:flex;align-items:center;gap:8px;color:var(--ink2)}
+  .ck i{width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-style:normal;font-size:11px;flex:0 0 auto}
+  .ck.on i{background:#e7f6ec;color:var(--good)} .ck.off i{background:#fbeae7;color:var(--bad)}
+  /* credentials */
+  .credgrid{display:grid;grid-template-columns:1.1fr .9fr;gap:22px}
+  .lic{font-family:'Plus Jakarta Sans';font-weight:800;font-size:30px;letter-spacing:.02em}
+  .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}
+  .row{display:flex;justify-content:space-between;gap:14px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:13.5px}
+  .row:last-child{border-bottom:0}
+  .row .k{color:var(--mut)} .row .v{font-weight:600;text-align:right}
+  .qrbox{text-align:center;background:#faf9f5;border:1px solid var(--line);border-radius:12px;padding:16px}
+  .qrbox img{width:130px;height:130px;display:block;margin:0 auto 8px;background:#fff;border-radius:8px}
+  .qrbox a{font-size:12px;color:var(--accent-ink);font-weight:600;text-decoration:none}
+  .lawnote{margin-top:16px;font-size:12.5px;color:var(--ink2);background:#faf8f1;border:1px solid #efe7cf;border-left:3px solid var(--accent);border-radius:8px;padding:12px 14px}
+  /* phases */
+  .phase{border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:12px;background:#fdfdfb}
+  .phase .ph-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .phase h3{font-size:16px;margin:0}
+  .phase .ph-m{font-size:12px;color:var(--mut)}
+  .phase ul{margin:10px 0 0;padding-left:18px}
+  .phase li{margin:3px 0;font-size:13.5px;color:var(--ink2)}
+  .seeing{margin-top:12px;background:#f4f8f5;border:1px solid #d9ece0;border-radius:9px;padding:10px 13px;font-size:13.5px;color:#1d6b43}
+  .seeing b{color:#13502f}
+  .ph-tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}
+  .tg{font-size:11.5px;background:#f0efe9;border-radius:6px;padding:3px 9px;color:var(--ink2)}
+  /* table */
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:4px}
+  th,td{text-align:left;padding:11px 10px;border-bottom:1px solid var(--line)}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);font-weight:700}
+  td.amt,th.amt{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+  tr:last-child td{border-bottom:0}
+  tr.total td{font-weight:800;border-top:2px solid var(--ink)}
+  /* promise / generic block */
+  .promise{background:#15161a;color:#f4f3ee;border-radius:12px;padding:22px 24px}
+  .promise .eyebrow{color:var(--accent)}
+  .promise h2{color:#fff}
+  .promise p{color:#cfcec6;font-size:14.5px;margin:10px 0 0}
+  .copy{font-size:14px;color:var(--ink2)}
+  .copy p{margin:8px 0}
+  /* sign */
+  .sign{background:#faf9f5}
+  .field{margin:14px 0}
+  .field label{display:block;font-size:12.5px;font-weight:600;color:var(--ink2);margin-bottom:6px}
+  .field input[type=text],.field input[type=email]{width:100%;border:1px solid #d8d6cd;border-radius:10px;padding:13px 14px;font-size:15px;font-family:inherit;background:#fff}
+  .field input:focus{outline:none;border-color:var(--accent)}
+  .chk{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;color:var(--ink2);margin:10px 0}
+  .chk input{margin-top:3px;width:17px;height:17px;flex:0 0 auto;accent-color:var(--accent)}
+  .signed{display:none;text-align:center;padding:26px;background:#eef8f1;border:1px solid #cdead8;border-radius:12px}
+  .signed .big{font-family:'Plus Jakarta Sans';font-weight:800;font-size:20px;color:#13502f}
+  .foot{text-align:center;font-size:11.5px;color:var(--mut);margin-top:24px}
+  .foot a{color:var(--mut)}
+  .powered{opacity:.7}
+  #err{display:none;text-align:center;padding:60px 20px;color:var(--mut)}
+  @media (max-width:620px){.credgrid{grid-template-columns:1fr}.checks{grid-template-columns:1fr}.score{justify-content:center}}
+  @media print{
+    body{background:#fff}
+    .bar,.foot .powered,#printbtn{display:none!important}
+    .wrap{padding:0;max-width:none}
+    .paper{border:0;box-shadow:none;border-radius:0}
+    .sec,.phase{break-inside:avoid}
+    .promise{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .cover,.gauge,.seeing,.lawnote,.badge,.promise,.ck i{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar">
+    <div class="who" id="barWho">Trust Pack</div>
+    <div class="acts">
+      <button class="btn" id="printbtn" onclick="window.print()">⬇ Save as PDF</button>
+      <button class="btn go" onclick="document.getElementById('signsec').scrollIntoView({behavior:'smooth'})">Accept &amp; Sign</button>
+    </div>
+  </div>
+
+  <div id="err">Loading…</div>
+  <div class="paper" id="doc" style="display:none"></div>
+
+  <div class="foot">
+    <span id="footid"></span> ·
+    <span class="powered">Generated with <a href="https://bq-tools.fanzai-mgmt.workers.dev" target="_blank" rel="noopener">Obra</a></span>
+  </div>
+</div>
+
+<script>
+const API='https://bq-tools-api.fanzai-mgmt.workers.dev';
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money=n=>{const x=Number(String(n).replace(/[^0-9.]/g,''));return isFinite(x)&&x?'$'+x.toLocaleString('en-US'):(n||'—');};
+const PARAMS=new URLSearchParams(location.search);
+const ID=(PARAMS.get('id')||location.pathname.split('/').filter(Boolean).pop()||'').toUpperCase();
+
+function gaugeColor(s){return s>=85?'var(--good)':s>=65?'var(--warn)':'var(--bad)';}
+function tier(s){return s>=85?{t:'Verified',bg:'#e7f6ec',c:'#13502f'}:s>=65?{t:'Partially Verified',bg:'#fcf3e2',c:'#8a5a09'}:{t:'Incomplete',bg:'#fbeae7',c:'#a12c1a'};}
+
+function render(d, score){
+  const c=d.company||{}, p=d.project||{}, scope=d.scope||[], ms=d.milestones||[];
+  const initials=(c.name||'Obra').trim().slice(0,2).toUpperCase();
+  document.title=`Trust Pack — ${c.name||''}`.trim();
+  $('#barWho').textContent=c.name||'Trust Pack';
+  $('#footid').textContent=ID;
+  const tot=Number(String(p.budget||'').replace(/[^0-9.]/g,''))||0;
+  const checks=[
+    ['Licensed', c.licenseActive],['General Liability', c.glInsurance],["Workers' Comp", c.workersComp],
+    ['Bonded', c.bond],['COI on file', c.coiUploaded],[(c.reviewsCount||0)+'+ reviews', (Number(c.reviewsCount)||0)>=3]
+  ];
+  const tr=tier(score);
+  // CSLB deep link for QR
+  const licUrl = c.license ? `https://www.cslb.ca.gov/OnlineServices/CheckLicenseII/LicenseDetail.aspx?LicNum=${encodeURIComponent(c.license)}` : 'https://www.cslb.ca.gov/onlineservices/checklicenseII/checklicense.aspx';
+  const qr=`https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=0&data=${encodeURIComponent(licUrl)}`;
+
+  const phasesHtml = scope.map((ph,i)=>`
+    <div class="phase">
+      <div class="ph-h"><h3>${i+1}. ${esc(ph.phase)}</h3>
+        <span class="ph-m">${ph.durationDays?esc(ph.durationDays)+' days':''}</span></div>
+      ${(ph.items&&ph.items.length)?`<ul>${ph.items.map(it=>`<li>${esc(it)}</li>`).join('')}</ul>`:''}
+      ${ph.whatYoullSee?`<div class="seeing"><b>When this phase is done:</b> ${esc(ph.whatYoullSee)}</div>`:''}
+      <div class="ph-tags">
+        ${ph.materialsBy?`<span class="tg">Materials: ${esc(ph.materialsBy)}</span>`:''}
+        ${ph.milestone?`<span class="tg">💳 ${esc(ph.milestone)}</span>`:''}
+        ${(ph.exclusions&&ph.exclusions.length)?`<span class="tg">Excludes: ${esc(ph.exclusions.join(', '))}</span>`:''}
+      </div>
+    </div>`).join('');
+
+  const msHtml = ms.map(m=>{
+    const amt = tot && m.percent ? Math.round(tot*m.percent/100) : null;
+    return `<tr><td><b>${esc(m.milestone)}</b></td><td class="mut">${esc(m.trigger||'')}</td>
+      <td class="amt">${m.percent!=null?esc(m.percent)+'%':''}</td>
+      <td class="amt">${amt!=null?money(amt):''}</td></tr>`;
+  }).join('');
+
+  $('#doc').innerHTML=`
+    <div class="pad cover">
+      <div class="logo">${esc(initials)}</div>
+      <div class="co">${esc(c.name||'')}</div>
+      ${c.tagline?`<div class="tag">${esc(c.tagline)}</div>`:''}
+      <h1>Why You Can Trust ${esc(c.name||'Us')} With Your Home</h1>
+      <div class="meta">
+        ${p.homeownerName?`<span class="mut">Prepared for</span> <b>${esc(p.homeownerName)}</b>`:''}
+        ${p.address?`<span class="mut">·</span> <b>${esc(p.address)}</b>`:''}
+        ${p.type?`<span class="mut">·</span> <b>${esc(p.type)}</b>`:''}
+      </div>
+      <div class="tpid">TRUST PACK · ${esc(ID)}</div>
+    </div>
+
+    <div class="sec pad">
+      <div class="score">
+        <div class="gauge" style="--v:${score};--gc:${gaugeColor(score)}">
+          <div class="gv"><b>${score}</b><span>/ 100</span></div>
+        </div>
+        <div class="gx">
+          <p class="eyebrow">Trust Index</p>
+          <span class="badge" style="background:${tr.bg};color:${tr.c}">● ${tr.t}</span>
+          <div class="checks">
+            ${checks.map(([l,on])=>`<div class="ck ${on?'on':'off'}"><i>${on?'✓':'–'}</i>${esc(l)}</div>`).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec pad">
+      <p class="eyebrow">Credentials</p>
+      <div class="credgrid">
+        <div>
+          <div class="lic"><span class="dot" style="background:${c.licenseActive?'var(--good)':'var(--bad)'}"></span>${esc(c.license?('CSLB #'+c.license):'License on file')}</div>
+          <div class="mut" style="font-size:13px;margin:4px 0 14px">${c.licenseClass?esc(c.licenseClass)+' · ':''}${c.licenseActive?'Active &amp; in good standing':'Status pending'}</div>
+          <div class="row"><span class="k">General Liability Insurance</span><span class="v">${c.glInsurance?'✓ Current':'—'}</span></div>
+          <div class="row"><span class="k">Workers' Compensation</span><span class="v">${c.workersComp?'✓ Current':'—'}</span></div>
+          <div class="row"><span class="k">Contractor's Bond</span><span class="v">${c.bond?(c.bondAmount?money(c.bondAmount):'✓ Active'):'—'}</span></div>
+          <div class="row"><span class="k">Certificate of Insurance</span><span class="v">${c.coiUploaded?'✓ On file':'—'}</span></div>
+        </div>
+        <div class="qrbox">
+          <img src="${qr}" alt="Scan to verify license" loading="lazy">
+          <div style="font-size:12px;color:var(--ink2);margin-bottom:4px">Scan to verify — live on CSLB</div>
+          <a href="${licUrl}" target="_blank" rel="noopener">Verify license →</a>
+        </div>
+      </div>
+      <div class="lawnote">Under California Business &amp; Professions Code §7159.5, a licensed contractor may not collect a deposit greater than <b>10% of the contract price or $1,000 — whichever is less</b>. Your payments below follow this law and are tied to verified milestones.</div>
+    </div>
+
+    ${(c.years||c.serviceArea||c.reviewsCount)?`<div class="sec pad">
+      <p class="eyebrow">About ${esc(c.name||'us')}</p>
+      <div class="checks" style="grid-template-columns:1fr 1fr 1fr">
+        ${c.years?`<div><div class="lic" style="font-size:24px">${esc(c.years)}+</div><div class="mut" style="font-size:12.5px">Years in business</div></div>`:''}
+        ${c.projects?`<div><div class="lic" style="font-size:24px">${esc(c.projects)}+</div><div class="mut" style="font-size:12.5px">Projects completed</div></div>`:''}
+        ${c.reviewsCount?`<div><div class="lic" style="font-size:24px">${esc(c.reviewsCount)}</div><div class="mut" style="font-size:12.5px">Verified reviews</div></div>`:''}
+      </div>
+      ${c.serviceArea?`<div class="mut" style="font-size:13.5px;margin-top:14px">Serving ${esc(c.serviceArea)}</div>`:''}
+    </div>`:''}
+
+    ${scope.length?`<div class="sec pad">
+      <p class="eyebrow">Scope of Work</p>
+      <h2 class="sh">Exactly what we'll do — phase by phase</h2>
+      <p class="mut" style="font-size:13.5px;margin:0 0 16px">Every phase lists what's included and what you'll see when it's complete. Anything not listed is not in this contract.</p>
+      ${phasesHtml}
+    </div>`:''}
+
+    ${ms.length?`<div class="sec pad">
+      <p class="eyebrow">Payment Schedule</p>
+      <h2 class="sh">You pay as work is verified — never all upfront</h2>
+      <table>
+        <thead><tr><th>Milestone</th><th>Released when…</th><th class="amt">%</th><th class="amt">Amount</th></tr></thead>
+        <tbody>${msHtml}${tot?`<tr class="total"><td>Total</td><td></td><td class="amt">100%</td><td class="amt">${money(tot)}</td></tr>`:''}</tbody>
+      </table>
+    </div>`:''}
+
+    <div class="sec pad">
+      <div class="promise">
+        <p class="eyebrow">Our Promise To You</p>
+        <h2 class="sh">How we communicate — every step</h2>
+        <p>${esc(d.communicationPromise||"You'll get progress updates without having to chase us. If anything unexpected comes up behind a wall or under a floor, we stop, photograph it, call you within 2 hours, and send a written change order before any extra work begins.")}</p>
+      </div>
+    </div>
+
+    ${d.warranty?`<div class="sec pad">
+      <p class="eyebrow">Warranty</p>
+      <div class="copy"><p>${esc(d.warranty)}</p></div>
+    </div>`:''}
+
+    <div class="sec pad">
+      <p class="eyebrow">Change Order Policy</p>
+      <div class="copy">
+        <p>Any change to the scope or price above is put in writing first — describing the change, the reason, the cost impact, and the timeline impact. <b>No extra work begins until you approve and sign the change order.</b> Verbal agreements are not binding, which protects both of us.</p>
+      </div>
+    </div>
+
+    <div class="sec pad sign" id="signsec">
+      <p class="eyebrow">Acceptance</p>
+      <h2 class="sh">Review &amp; accept</h2>
+      <p class="mut" style="font-size:13.5px;margin:0 0 6px">Accepting confirms you've read the scope and payment schedule above. This creates a timestamped electronic record (ESIGN/UETA).</p>
+      <div id="signform">
+        <div class="field"><label>Your full name</label><input type="text" id="sgName" placeholder="Type your full name" value="${esc(p.homeownerName||'')}"></div>
+        <div class="field"><label>Email (for your copy)</label><input type="email" id="sgEmail" placeholder="you@email.com"></div>
+        <label class="chk"><input type="checkbox" id="sgRead"> I have read and understood the Scope of Work and Payment Schedule above.</label>
+        <label class="chk"><input type="checkbox" id="sgVer"> I verified this contractor's license at CSLB (QR / link above).</label>
+        <button class="btn pri" style="width:100%;padding:15px;margin-top:6px;font-size:15px" id="sgBtn" onclick="doSign()">Accept &amp; Sign</button>
+        <div id="sgErr" class="mut" style="color:var(--bad);font-size:13px;text-align:center;margin-top:10px;display:none"></div>
+      </div>
+      <div class="signed" id="signed">
+        <div class="big">✓ Accepted</div>
+        <div class="mut" style="margin-top:6px">Thank you. A timestamped record has been saved and ${esc(c.name||'your contractor')} has been notified.</div>
+      </div>
+    </div>
+  `;
+  $('#doc').style.display='';
+}
+
+async function doSign(){
+  const name=$('#sgName').value.trim();
+  const err=$('#sgErr'); err.style.display='none';
+  if(!name){err.textContent='Please type your full name.';err.style.display='';return;}
+  if(!$('#sgRead').checked){err.textContent='Please confirm you read the scope & payments.';err.style.display='';return;}
+  const btn=$('#sgBtn'); btn.disabled=true; btn.textContent='Signing…';
+  try{
+    const r=await fetch(`${API}/api/trustpack/sign`,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({id:ID,name,email:$('#sgEmail').value.trim(),consent:true,verifiedLicense:$('#sgVer').checked})});
+    const j=await r.json();
+    if(!j.ok) throw new Error(j.error||'Failed');
+    $('#signform').style.display='none'; $('#signed').style.display='block';
+    $('#signed').scrollIntoView({behavior:'smooth',block:'center'});
+  }catch(e){ err.textContent=e.message||'Could not sign — try again.'; err.style.display=''; btn.disabled=false; btn.textContent='Accept & Sign'; }
+}
+
+(async function(){
+  if(!/^TP-[A-Z0-9]+$/.test(ID)){ $('#err').textContent='Invalid Trust Pack link.'; $('#err').style.display='block'; return; }
+  $('#err').style.display='block';
+  try{
+    const r=await fetch(`${API}/api/trustpack/get?id=${encodeURIComponent(ID)}`);
+    const j=await r.json();
+    if(!j.ok) throw new Error(j.error||'Not found');
+    $('#err').style.display='none';
+    render(j.data||{}, j.score||0);
+  }catch(e){ $('#err').textContent = (e.message==='Not found') ? 'This Trust Pack was not found.' : 'Could not load this Trust Pack.'; }
+})();
+</script>
+</body>
+</html>
