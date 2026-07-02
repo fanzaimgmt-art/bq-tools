@@ -2273,12 +2273,23 @@ async function handleVideoAnalyze(request, env) {
   if (!hasFrames && !hasVideo) {
     return json({ error: 'At least one frame or a video file is required' }, 400);
   }
+  // Size caps — a large base64 body can OOM the 128MB isolate.
+  if (hasVideo && typeof video_base64 === 'string' && video_base64.length > 24_000_000) {
+    return json({ error: 'Video too large (max ~18MB). Trim it or upload fewer frames.' }, 413);
+  }
+  if (hasFrames && (frames.length > 30 || frames.some(f => typeof f === 'string' && f.length > 3_000_000))) {
+    return json({ error: 'Too many/large frames (max 30, ~2MB each).' }, 413);
+  }
 
   const CREDIT_COST = 2;
   const updated = checkMonthlyReset(user);
   if (updated.credits < CREDIT_COST) {
     return json({ error: 'Not enough credits', credits: updated.credits, cost: CREDIT_COST }, 402);
   }
+  // Reserve credits BEFORE the paid AI call so parallel requests can't bypass the meter; refund on failure.
+  updated.credits -= CREDIT_COST;
+  updated.creditsUsedThisMonth = (updated.creditsUsedThisMonth || 0) + CREDIT_COST;
+  await env.BQ_USERS.put(`user:${updated.email}`, JSON.stringify(updated));
 
   const today = new Date().toISOString().slice(0, 10);
   const foremanPrompt = `You are an expert construction foreman and estimator reviewing a contractor's job-site walkthrough video. The contractor NARRATES while filming — they TALK and POINT at things ("remove this cabinet here", "demo this wall"). Your job: LISTEN to the audio narration AND WATCH where they point, then produce a bilingual crew plan with a frame-by-frame timeline.
@@ -2308,11 +2319,13 @@ TODAY: ${today}` +
       rawText = await callGeminiWithModel(env, 'gemini-2.5-flash', foremanPrompt, frames);
     }
   } catch (err) {
-    return json({ error: `AI failed: ${err.message}` }, 502);
+    // Refund the reserved credits — the paid call never produced a result.
+    updated.credits += CREDIT_COST;
+    updated.creditsUsedThisMonth = Math.max(0, (updated.creditsUsedThisMonth || 0) - CREDIT_COST);
+    try { await env.BQ_USERS.put(`user:${updated.email}`, JSON.stringify(updated)); } catch (_) {}
+    return json({ error: 'AI could not process that — try again.' }, 502);
   }
 
-  updated.credits -= CREDIT_COST;
-  updated.creditsUsedThisMonth = (updated.creditsUsedThisMonth || 0) + CREDIT_COST;
   // Activation tracking: AI returned a result for a real upload = the aha moment.
   const nowIso = new Date().toISOString();
   if (!updated.firstUploadAt) updated.firstUploadAt = nowIso;
@@ -4209,8 +4222,8 @@ async function nightlyReengagement(env) {
       const user = JSON.parse(raw);
 
       // Only contact Pro users who haven't logged in for 7+ days
-      if (!user.pro) continue;
-      const lastSeen = user.lastSeenAt ? new Date(user.lastSeenAt).getTime() : 0;
+      if (!_proActive(user)) continue;
+      const lastSeen = user.lastLogin ? new Date(user.lastLogin).getTime() : 0;
       if (lastSeen > cutoff) continue;
 
       // Avoid spamming: skip if re-engagement email sent within last 14 days
@@ -4220,7 +4233,7 @@ async function nightlyReengagement(env) {
       const reengSent = await sendEmail(env, {
         to: user.email,
         subject: 'Your Obra account is waiting for you 👋',
-        text: `Hi ${user.name || 'there'},\n\nWe noticed you haven't logged in to Obra for a while. Your Pro account has ${user.credits || 0} credits ready to use!\n\nLog in at https://obra.build\n\nObra Team`
+        text: `Hi ${user.businessName || 'there'},\n\nWe noticed you haven't logged in to Obra for a while. Your Pro account has ${user.credits || 0} credits ready to use!\n\nLog in at https://obra.build\n\nObra Team`
       });
 
       if (reengSent) {
@@ -4249,7 +4262,7 @@ async function nightlyAnalyticsDigest(env, taskResults) {
       const raw = await env.BQ_USERS.get(key.name);
       if (!raw) continue;
       const u = JSON.parse(raw);
-      if (u.pro) proUsers++;
+      if (_proActive(u)) proUsers++;
       totalCredits += u.credits || 0;
     } catch (_) {}
   }
@@ -5802,8 +5815,8 @@ async function handleAdminNotifyClient(request, env) {
   const user = JSON.parse(userRaw);
 
   const emailBody = type === 'video_ready'
-    ? `Hi ${user.name || 'there'},\n\nYour AI video is ready!\n\nView and download it here:\n${safeAdUrl || 'Log in to your Obra account to see it.'}\n\nObra Team`
-    : `Hi ${user.name || 'there'},\n\nYou have a new notification from Obra.\n\nObra Team`;
+    ? `Hi ${user.businessName || 'there'},\n\nYour AI video is ready!\n\nView and download it here:\n${safeAdUrl || 'Log in to your Obra account to see it.'}\n\nObra Team`
+    : `Hi ${user.businessName || 'there'},\n\nYou have a new notification from Obra.\n\nObra Team`;
 
   const sent = await sendEmail(env, {
     to: user.email,
