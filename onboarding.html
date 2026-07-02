@@ -269,6 +269,9 @@
         <div class="lang-option" id="langHe" onclick="selectLang('he')">
           🇮🇱 עברית
         </div>
+        <div class="lang-option" id="langEs" onclick="selectLang('es')">
+          🇲🇽 Español
+        </div>
       </div>
 
       <div class="ob-nav">
@@ -326,6 +329,7 @@ function selectLang(l) {
   selectedLang = l;
   document.getElementById('langEn').classList.toggle('selected', l === 'en');
   document.getElementById('langHe').classList.toggle('selected', l === 'he');
+  const es = document.getElementById('langEs'); if (es) es.classList.toggle('selected', l === 'es');
 }
 
 // Logo upload

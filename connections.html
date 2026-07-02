@@ -69,6 +69,17 @@ else if(params.get('err')){ const b=$('#banner');b.className='banner err';b.text
 async function load(){
   try{
     const r=await fetch(API+'/api/connections',{headers:{'Authorization':'Bearer '+token()}});
+    if(r.status===401){
+      // Logged-out: render an auth prompt instead of a silent black void.
+      const he=RTL;
+      $('#list').innerHTML='<div style="text-align:center;padding:48px 20px;border:1px dashed var(--line2);border-radius:14px">'
+        +'<div style="font-size:34px;margin-bottom:12px">🔌</div>'
+        +'<div style="font-weight:700;font-size:17px;margin-bottom:8px">'+(he?'התחבר כדי לחבר חשבונות':'Sign in to connect your accounts')+'</div>'
+        +'<div style="color:var(--mut);margin-bottom:18px;max-width:38ch;margin-inline:auto">'+(he?'חבר את Google Drive ו-Gmail כדי לשלוח מסמכים ולקבל תשלומים ישירות מ-Obra.':'Connect Google Drive & Gmail to send documents and get paid straight from Obra.')+'</div>'
+        +'<a href="/auth.html?next=/connections" class="btn" style="background:var(--ac);color:#1a1407;font-weight:700;text-decoration:none;display:inline-block">'+(he?'התחברות →':'Sign in →')+'</a>'
+        +'</div>';
+      return;
+    }
     const d=await r.json();
     let anyUnconfigured=false;
     $('#list').innerHTML=(d.providers||[]).map(p=>{

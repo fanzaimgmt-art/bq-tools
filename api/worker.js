@@ -1777,18 +1777,8 @@ async function handleRegister(request, env) {
     text: `Your Obra verification code is: ${code}\n\nIt expires in 10 minutes.\n\n— Obra`
   });
 
-  // 2) PRE-LAUNCH TEST AID: MailChannels' free keyless relay was discontinued (Aug 2024), so email likely fails
-  // until a real provider (Resend/Brevo) + verified domain are set up.
-  // ⚠️ SECURITY (review CRITICAL): NEVER relay arbitrary users' codes to an operator inbox — that's account
-  // takeover. Relay ONLY the owner's OWN test signup (allowlisted to LEAD_OWNER_EMAIL) so Moshe can verify the
-  // flow; every other registrant's code stays inside the system. Remove this block once real email is live.
-  const ownerEmail = (env.LEAD_OWNER_EMAIL || '').toLowerCase();
-  if (!emailSent && ownerEmail && emailLower === ownerEmail && env.TELEGRAM_BOT_TOKEN && env.MOSHE_CHAT_ID) {
-    await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: env.MOSHE_CHAT_ID, text: `🔑 Obra verify code (your test signup): ${code}` })
-    }).catch(() => {});
-  }
+  // (Removed the pre-launch Telegram code-relay fallback — real email via Resend is live + verified,
+  // so verification codes are delivered by email only. No code ever leaves the email channel now.)
 
   return json({
     ok: true,
