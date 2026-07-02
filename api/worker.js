@@ -942,7 +942,7 @@ async function handlePortalGet(request, env) { // PUBLIC — homeowner views the
 // CSRF-protected via a one-time state nonce in KV. Live flow needs GOOGLE_CLIENT_ID/SECRET secrets.
 const GOOGLE_SCOPES = 'openid email https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/gmail.send';
 const GOOGLE_REDIRECT = 'https://bq-tools-api.fanzai-mgmt.workers.dev/api/connections/google/callback';
-const CONN_SITE = 'https://bq-tools.fanzai-mgmt.workers.dev';
+const CONN_SITE = 'https://obra.build';
 async function handleConnectionsList(request, env) {
   const user = await _crmUser(request, env);
   if (!user) return json({ error: 'Unauthorized' }, 401);
