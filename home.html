@@ -309,6 +309,20 @@
 </head>
 <body>
 
+<!-- Atmosphere: night job-site — blueprint grid + work-light + film grain -->
+<style>
+  .atmo{position:fixed;inset:0;pointer-events:none;z-index:0}
+  .atmo-grid{background-image:linear-gradient(rgba(232,197,71,.026) 1px,transparent 1px),linear-gradient(90deg,rgba(232,197,71,.026) 1px,transparent 1px);background-size:56px 56px;-webkit-mask-image:radial-gradient(ellipse 95% 70% at 50% 0%,#000 25%,transparent 75%);mask-image:radial-gradient(ellipse 95% 70% at 50% 0%,#000 25%,transparent 75%)}
+  .atmo-light{background:radial-gradient(ellipse 60% 40% at 50% -6%,rgba(232,197,71,.11),transparent 68%)}
+  .atmo-grain{opacity:.045;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>")}
+  [data-reveal]{opacity:0;transform:translateY(14px);transition:opacity .6s ease,transform .6s ease}
+  [data-reveal].in{opacity:1;transform:none}
+  @media (prefers-reduced-motion: reduce){[data-reveal]{opacity:1;transform:none;transition:none}}
+</style>
+<div class="atmo atmo-grid" aria-hidden="true"></div>
+<div class="atmo atmo-light" aria-hidden="true"></div>
+<div class="atmo atmo-grain" aria-hidden="true"></div>
+
 <style>
   /* Topnav v2 — logical groups, account state, primary CTA, mobile menu */
   html.editorial .ed-topnav-links a { position: relative; padding: 4px 0; font-weight: 500; }
@@ -415,7 +429,7 @@
       .cc-reply a{display:inline-block;margin-top:9px;background:var(--ac);color:#1a1407;text-decoration:none;padding:9px 16px;border-radius:9px;font-weight:600;font-size:14px}
       @media(max-width:560px){.cc-q{font-size:15px}.concierge{padding:15px}}
     </style>
-    <div class="concierge">
+    <div class="concierge" style="box-shadow:0 0 60px -18px rgba(232,197,71,.22)">
       <div class="cc-orb" id="ccOrb">✦</div>
       <div class="cc-main">
         <div class="cc-q" data-en="Hi, I'm Tony — what do you need?" data-he="היי, אני טוני — מה אתה צריך?" data-es="Hola, soy Tony — ¿qué necesitas?">Hi, I'm Tony — what do you need?</div>
@@ -511,7 +525,7 @@
   </div>
 </section>
 
-<section class="ed-section" style="padding-top: 0;">
+<section class="ed-section" style="padding-top: 0;" data-reveal>
   <div class="ed-container">
     <div class="ed-bento" id="toolsBento">
       <!-- VIDEO BRAIN — flagship -->
@@ -690,7 +704,7 @@
       </button>
     </div>
 
-    <div class="stats-row">
+    <div class="stats-row" data-reveal style="font-variant-numeric:tabular-nums">
       <div class="stat-cell" id="wonCell" style="display:none">
         <div class="lab" data-en="Won this month" data-he="נסגר החודש" data-es="Ganado este mes">Won this month</div>
         <div class="num gold" id="statWonMonth">$0</div>
@@ -709,7 +723,7 @@
       </div>
     </div>
 
-    <div class="recent">
+    <div class="recent" data-reveal>
       <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 16px;">
         <div>
           <span class="ed-eyebrow" data-en="Recent activity" data-he="פעילות אחרונה" data-es="Actividad reciente">Recent activity</span>
@@ -844,6 +858,15 @@ const _tc = document.getElementById('toolCount'); if (_tc) _tc.textContent = all
 <script src="/js/editorial.js" defer></script>
 <script src="/js/cmdk-palette.js" defer></script>
 <script src="/js/brain-assistant.js" defer></script>
+<script>
+  // Scroll reveal — blocks rise in as you reach them (skipped for reduced motion)
+  (function(){
+    var els=document.querySelectorAll('[data-reveal]');
+    if(matchMedia('(prefers-reduced-motion: reduce)').matches||!('IntersectionObserver'in window)){els.forEach(function(e){e.classList.add('in')});return}
+    var io=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){en.target.classList.add('in');io.unobserve(en.target)}})},{threshold:.1,rootMargin:'0px 0px -8% 0px'});
+    els.forEach(function(e){io.observe(e)});
+  })();
+</script>
 
 <!-- Feedback loop: one-tap voice of customer, lands in admin errors list under FEEDBACK: -->
 <style>
