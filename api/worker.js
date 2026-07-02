@@ -6423,7 +6423,9 @@ async function handleStripeWebhook(request, env) {
     console.log('[stripe] duplicate event, skipping:', event.id);
     return new Response('ok', { status: 200 });
   }
-  await env.BQ_USERS.put(dedupeKey, '1', { expirationTtl: 604800 });
+  // NOTE: the dedupe key is written only AFTER the grant succeeds (end of handler), so a
+  // transient failure (missing metadata / user not yet created) doesn't permanently swallow
+  // a paid event — Stripe's retry can still apply it.
 
   const eventType = event.type;
   let metadata;
@@ -6490,6 +6492,8 @@ async function handleStripeWebhook(request, env) {
 
   await env.BQ_USERS.put(`user:${userEmail.toLowerCase()}`, JSON.stringify(userData));
   await unlockPremium(env); // first real Stripe payment unlocks all premium models globally
+  // Record idempotency ONLY now that the grant is safely applied.
+  await env.BQ_USERS.put(dedupeKey, '1', { expirationTtl: 604800 });
   console.log(`[stripe] granted tier=${tier} to ${userEmail} (event ${event.id})`);
 
   return new Response('ok', { status: 200 });
