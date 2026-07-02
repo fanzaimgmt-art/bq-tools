@@ -2,6 +2,6 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "bq-tools",
   "compatibility_date": "2025-06-01",
-  "assets": { "directory": "." },
+  "assets": { "directory": ".", "not_found_handling": "404-page" },
   "observability": { "enabled": true }
 }
