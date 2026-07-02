@@ -392,8 +392,17 @@ async function finishOnboarding() {
     await updateUserProfile(profile);
     setLang(selectedLang);
     showToast(lang === 'he' ? '✓ הפרופיל מוכן!' : '✓ Profile ready!', 'ok');
+    // First-win: drop the new user straight into Tony with a trade-aware starter so they
+    // see a real document generated in their first 2 minutes (activation > empty dashboard).
+    var trade = profile.businessType || '';
+    var starters = {
+      he: trade ? ('אני '+({'General Contractor':'קבלן כללי','Remodeler':'שיפוצניק','Painter':'צבעי','Roofer':'קבלן גגות','Landscaper':'גנן','Interior Designer':'מעצב פנים'}[trade]||'קבלן')+'. תעזור לי להכין הצעת מחיר ללקוח חדש') : 'תעזור לי להכין הצעת מחיר ללקוח חדש',
+      es: 'Ayúdame a preparar una cotización para un cliente nuevo',
+      en: (trade ? "I'm a "+trade.toLowerCase()+". " : '') + 'Help me build a price quote for a new customer'
+    };
+    var q = starters[selectedLang] || starters.en;
     setTimeout(() => {
-      window.location.href = '/home.html';
+      window.location.href = '/tony?q=' + encodeURIComponent(q);
     }, 800);
   } catch (err) {
     showToast(err.message, 'err');
