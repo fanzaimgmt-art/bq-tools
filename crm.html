@@ -102,7 +102,7 @@
 <!-- New deal modal -->
 <div class="crm-overlay" id="newDealOverlay">
   <div class="crm-modal">
-    <button class="crm-close" onclick="closeOverlay('newDealOverlay')">&times;</button>
+    <button class="crm-close" onclick="closeOverlay('newDealOverlay')" aria-label="Close">&times;</button>
     <h2 data-en="New Deal" data-he="עסקה חדשה" data-es="Nuevo Trato">New Deal</h2>
     <div class="crm-field"><label for="nd_title" data-en="Title" data-he="כותרת" data-es="Título">Title</label><input id="nd_title" maxlength="200" placeholder="Kitchen remodel — Smith"></div>
     <div class="crm-row2">
@@ -288,7 +288,7 @@ async function openDeal(id) {
   const acts = activities.length ? activities.map(a => `<div class="crm-act"><span class="badge">${escapeHtml(a.type)}</span>${escapeHtml(a.body||'')}<div class="when">${new Date(a.created_at+'Z').toLocaleString()}</div></div>`).join('') : `<div class="crm-empty" data-en="No activity yet" data-he="אין פעילות" data-es="Sin actividad">No activity yet</div>`;
   const taskList = tasks.length ? tasks.map(tk => `<div class="crm-task ${tk.done?'done':''}"><input type="checkbox" ${tk.done?'checked':''} onchange="toggleTask(${tk.id},this.checked,${id})"><span>${escapeHtml(tk.title)}${tk.due_at?' · '+escapeHtml(tk.due_at):''}</span></div>`).join('') : '';
   document.getElementById('dealModal').innerHTML = `
-    <button class="crm-close" onclick="closeOverlay('dealOverlay')">&times;</button>
+    <button class="crm-close" onclick="closeOverlay('dealOverlay')" aria-label="Close">&times;</button>
     <h2>${escapeHtml(deal.title)}</h2>
     <div class="crm-row2">
       <div class="crm-field"><label data-en="Stage" data-he="שלב">Stage</label><select onchange="moveStage(${id},this.value)">${stageOpts}</select></div>
