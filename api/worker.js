@@ -5455,6 +5455,11 @@ async function handleNanoBananaGenerate(request, env) {
   let updated = { ...user };
   updated = checkMonthlyReset(updated);
   if (updated.credits < 5) return json({ error: 'Not enough credits (need 5)' }, 402);
+  // Reserve BEFORE the paid PiAPI call so parallel requests can't bypass the meter; refund on failure.
+  updated.credits -= 5;
+  updated.creditsUsedThisMonth = (updated.creditsUsedThisMonth || 0) + 5;
+  await env.BQ_USERS.put(`user:${updated.email}`, JSON.stringify(updated));
+  const _refund5 = async () => { updated.credits += 5; updated.creditsUsedThisMonth = Math.max(0, (updated.creditsUsedThisMonth || 0) - 5); try { await env.BQ_USERS.put(`user:${updated.email}`, JSON.stringify(updated)); } catch (_) {} };
 
   const isImg2Img = !!referenceImage;
   // Optional caller-set img2img strength (clamped). Lower = stay faithful to the input photo —
@@ -5477,20 +5482,15 @@ async function handleNanoBananaGenerate(request, env) {
   });
 
   if (!res.ok) {
-    const errText = await res.text();
-    return json({ error: 'PiAPI error: ' + errText }, 502);
+    await _refund5();
+    return json({ error: 'Image service error — try again.' }, 502);
   }
 
   const data = await res.json();
   const taskId = data?.data?.task_id;
-  if (!taskId) return json({ error: 'No task_id returned: ' + JSON.stringify(data) }, 502);
+  if (!taskId) { await _refund5(); return json({ error: 'Image service returned no task — try again.' }, 502); }
 
-  // Deduct credits
-  updated.credits -= 5;
-  updated.creditsUsedThisMonth = (updated.creditsUsedThisMonth || 0) + 5;
-  await env.BQ_USERS.put(`user:${updated.email}`, JSON.stringify(updated));
   await logCreditUsage(updated.email, 'nanobanana-generate', prompt.substring(0, 60), env);
-
   return json({ ok: true, taskId, credits: updated.credits });
 }
 
