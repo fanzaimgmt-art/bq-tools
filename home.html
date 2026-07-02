@@ -333,8 +333,17 @@
       .cc-inputrow{display:flex;gap:8px}
       .cc-inputrow input{flex:1;min-width:0;background:var(--bg);border:1px solid var(--bd);border-radius:11px;padding:12px 14px;color:var(--tx);font-size:15px;font-family:var(--font-en)}
       .cc-inputrow input:focus{outline:none;border-color:var(--ac)}
-      .cc-go{flex:0 0 auto;width:46px;border:0;border-radius:11px;background:var(--ac);color:#1a1407;font-size:20px;font-weight:700;cursor:pointer}
+      .cc-go{flex:0 0 auto;width:46px;border:0;border-radius:11px;background:var(--ac);color:#1a1407;font-size:20px;font-weight:700;cursor:pointer;transition:transform .15s,box-shadow .15s}
+      .cc-go:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(200,162,74,.35)}
       .cc-go:disabled{opacity:.6}
+      .cc-mic{flex:0 0 auto;width:46px;border:1px solid var(--bd);border-radius:11px;background:var(--bg);font-size:18px;cursor:pointer;transition:border-color .15s,transform .15s}
+      .cc-mic:hover{border-color:var(--ac);transform:translateY(-1px)}
+      .cc-sub{color:var(--txd);font-size:13px;margin:-4px 0 10px;line-height:1.5}
+      @media(prefers-reduced-motion:no-preference){
+        .tool-cell{animation:cellin .45s ease backwards}
+        .tool-cell:nth-child(2){animation-delay:.04s}.tool-cell:nth-child(3){animation-delay:.08s}.tool-cell:nth-child(4){animation-delay:.12s}.tool-cell:nth-child(5){animation-delay:.16s}.tool-cell:nth-child(6){animation-delay:.2s}
+        @keyframes cellin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+      }
       .cc-chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
       .cc-chip{background:var(--bg);border:1px solid var(--bd);border-radius:999px;padding:7px 13px;color:var(--txd);font-size:13px;cursor:pointer;font-family:inherit}
       .cc-chip:hover{border-color:var(--ac);color:var(--tx)}
@@ -346,8 +355,10 @@
       <div class="cc-orb" id="ccOrb">✦</div>
       <div class="cc-main">
         <div class="cc-q" data-en="Hi, I'm Tony — what do you need?" data-he="היי, אני טוני — מה אתה צריך?" data-es="Hola, soy Tony — ¿qué necesitas?">Hi, I'm Tony — what do you need?</div>
+        <div class="cc-sub" data-en="Not another chatbot — Tony knows your prices, your clients, and turns answers into real documents." data-he="לא עוד צ'אט — טוני מכיר את המחירים שלך, את הלקוחות שלך, והופך תשובות למסמכים אמיתיים." data-es="No es otro chatbot — Tony conoce tus precios, tus clientes, y convierte respuestas en documentos reales.">Not another chatbot — Tony knows your prices, your clients, and turns answers into real documents.</div>
         <div class="cc-inputrow">
           <input id="ccInput" autocomplete="off" onkeydown="if(event.key==='Enter')ccAsk()">
+          <button class="cc-mic" id="ccMic" onclick="location.href='/tony?voice=1'" title="Speak" aria-label="Speak">🎤</button>
           <button class="cc-go" id="ccGo" onclick="ccAsk()" aria-label="Go">→</button>
         </div>
         <div class="cc-chips">
@@ -450,7 +461,7 @@
         <span class="ed-tag new" data-en="2 CR · NEW" data-he="2 קר · חדש" data-es="2 CR · NUEVO">2 CR · NEW</span>
       </a>
 
-      <a href="/tools/price-book.html" data-folded="1" style="display:none" class="ed-cell tool-cell col-2" data-cat="sales" data-tag="new">
+      <a href="/tools/price-book.html" class="ed-cell tool-cell col-2" data-cat="sales" data-tag="new">
         <span class="ed-icon" data-en="NEW · KNOW THE NUMBER" data-he="חדש · תדע את המספר" data-es="NUEVO · CONOCE EL NÚMERO">NEW · KNOW THE NUMBER</span>
         <span class="ed-icon-em">💰</span>
         <h3 data-en="Price Book" data-he="מחירון" data-es="Lista de Precios">Price <em>Book</em></h3>
@@ -466,7 +477,7 @@
         <span class="ed-tag new" data-en="FREE · NEW" data-he="חינם · חדש" data-es="GRATIS · NUEVO">FREE · NEW</span>
       </a>
 
-      <a href="/tools/ai-video.html" class="ed-cell tool-cell col-2" data-cat="content">
+      <a href="/tools/ai-video.html" data-folded="1" style="display:none" class="ed-cell tool-cell col-2" data-cat="content">
         <span class="ed-icon" data-en="VIDEO" data-he="וידאו" data-es="VIDEO">VIDEO</span>
         <span class="ed-icon-em">🎬</span>
         <h3 data-en="AI Video" data-he="וידאו AI" data-es="Video IA">AI Video</h3>
@@ -474,7 +485,7 @@
         <span class="ed-tag" data-en="PRO" data-he="פרו" data-es="PRO">PRO</span>
       </a>
 
-      <a href="/tools/ad-creator.html" class="ed-cell tool-cell col-2" data-cat="content">
+      <a href="/tools/ad-creator.html" data-folded="1" style="display:none" class="ed-cell tool-cell col-2" data-cat="content">
         <span class="ed-icon" data-en="AD" data-he="פרסומת" data-es="ANUNCIO">AD</span>
         <span class="ed-icon-em">🎨</span>
         <h3 data-en="Ad Creator" data-he="יוצר פרסומות" data-es="Creador de Anuncios">Ad <em>Creator</em></h3>
@@ -506,7 +517,7 @@
         <span class="ed-tag">1-6 CR</span>
       </a>
 
-      <a href="/tools/quote.html" data-folded="1" style="display:none" class="ed-cell tool-cell col-2" data-cat="business">
+      <a href="/tools/quote.html" class="ed-cell tool-cell col-2" data-cat="business">
         <span class="ed-icon" data-en="QUOTE" data-he="הצעת מחיר" data-es="COTIZACIÓN">QUOTE</span>
         <span class="ed-icon-em">📝</span>
         <h3 data-en="Quote Generator" data-he="מחולל הצעות מחיר" data-es="Generador de Cotizaciones">Quote <em>Generator</em></h3>
@@ -546,7 +557,7 @@
         <span class="ed-tag">1 CR</span>
       </a>
 
-      <a href="/tools/sketch.html" class="ed-cell tool-cell col-2" data-cat="content">
+      <a href="/tools/sketch.html" data-folded="1" style="display:none" class="ed-cell tool-cell col-2" data-cat="content">
         <span class="ed-icon" data-en="SKETCH" data-he="סקיצה" data-es="BOCETO">SKETCH</span>
         <span class="ed-icon-em">✏️</span>
         <h3 data-en="Quick Sketch" data-he="סקיצה מהירה" data-es="Boceto Rápido">Quick Sketch</h3>
@@ -562,7 +573,7 @@
         <span class="ed-tag free" data-en="FREE" data-he="חינם" data-es="GRATIS">FREE</span>
       </a>
 
-      <a href="/tools/contract.html" data-folded="1" style="display:none" class="ed-cell tool-cell col-2" data-cat="business">
+      <a href="/tools/contract.html" class="ed-cell tool-cell col-2" data-cat="business">
         <span class="ed-icon" data-en="CONTRACT" data-he="חוזה" data-es="CONTRATO">CONTRACT</span>
         <span class="ed-icon-em">📜</span>
         <h3 data-en="Contract" data-he="חוזה" data-es="Contrato">Contract</h3>
@@ -577,6 +588,12 @@
         <p data-en="Quote, Invoice, Contract, Client Pages — your entire client workflow in one tab. 8 tools wired together." data-he="הצעת מחיר, חשבונית, חוזה, דפי לקוח — כל תהליך העבודה עם לקוחות בטאב אחד. 8 כלים מחוברים יחד." data-es="Cotización, Factura, Contrato, Páginas de Cliente — todo tu flujo de trabajo en una pestaña. 8 herramientas conectadas.">Quote, Invoice, Contract, Client Pages — your entire client workflow in one tab. 8 tools wired together.</p>
         <span class="ed-tag" data-en="8 TOOLS" data-he="8 כלים" data-es="8 HERRAMIENTAS">8 TOOLS</span>
       </a>
+    </div>
+
+    <div style="text-align:center;margin:18px 0 4px">
+      <button id="showAllTools" class="ed-btn-ghost" style="cursor:pointer" onclick="document.querySelectorAll('.tool-cell[data-folded]').forEach(c=>{c.style.display='';});this.style.display='none'">
+        <span data-en="Show all tools" data-he="הצג את כל הכלים" data-es="Mostrar todas">Show all tools</span> <span id="foldedCount"></span> ↓
+      </button>
     </div>
 
     <div class="stats-row">
@@ -692,8 +709,10 @@ document.querySelectorAll('.filter-chip').forEach(chip => {
       const show = f === 'all' || cat === f || tag.includes(f);
       cell.style.display = show ? '' : 'none';
     });
+    const sa = document.getElementById('showAllTools'); if (sa) sa.style.display = 'none'; // any filter = full view
   });
 });
+{ const fc = document.getElementById('foldedCount'); if (fc) fc.textContent = '(' + document.querySelectorAll('.tool-cell[data-folded]').length + ')'; }
 
 // Compute counts for filter chips
 const all = document.querySelectorAll('.tool-cell');

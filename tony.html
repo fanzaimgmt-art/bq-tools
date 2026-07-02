@@ -363,6 +363,7 @@ loadConvos(); applyLang();
 const _q=new URLSearchParams(location.search).get('q');
 if(_q){ newChat(); renderSidebar(); $('#input').value=_q; send(); }
 else { curId=(convos[0]&&convos[0].id)||null; renderThread(); renderSidebar(); input.focus(); }
+if(new URLSearchParams(location.search).get('voice')==='1'){ newChat(); renderSidebar(); const m=$('#micBtn'); if(m&&m.style.display!=='none') setTimeout(()=>m.click(),400); }
 </script>
 </body>
 </html>
