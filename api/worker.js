@@ -130,6 +130,7 @@ export default {
       if (path === '/api/connections' && request.method === 'GET') return corsResponse(env, request, await handleConnectionsList(request, env));
       if (path === '/api/connections/google/start' && request.method === 'GET') return corsResponse(env, request, await handleGoogleStart(request, env));
       if (path === '/api/connections/google/callback' && request.method === 'GET') return await handleGoogleCallback(request, env); // PUBLIC (Google redirect) — returns a 302
+      if (path === '/api/connections/google/finish' && request.method === 'POST') return corsResponse(env, request, await handleGoogleFinish(request, env));
       if (path === '/api/connections/disconnect' && request.method === 'POST') return corsResponse(env, request, await handleConnectionDisconnect(request, env));
       if (path === '/api/portal/job' && request.method === 'POST') return corsResponse(env, request, await handlePortalJobCreate(request, env));
       if (path === '/api/portal/jobs' && request.method === 'GET') return corsResponse(env, request, await handlePortalJobs(request, env));
@@ -970,6 +971,11 @@ async function handleGoogleStart(request, env) {
   u.searchParams.set('state', nonce);
   return json({ ok: true, url: u.toString() });
 }
+// CSRF hardening: the Google redirect no longer redeems the code. It bounces code+state back
+// to the site, and the LOGGED-IN browser redeems them via POST /google/finish with its Bearer
+// token — the server then requires state's owner email === the authenticated user. This blocks
+// the account-linking attack where an attacker's state + a victim's consent stores the victim's
+// Google tokens under the attacker's account.
 async function handleGoogleCallback(request, env) {
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
@@ -977,6 +983,16 @@ async function handleGoogleCallback(request, env) {
   if (!code || !state) return Response.redirect(CONN_SITE + '/connections?err=1', 302);
   const email = await env.BQ_USERS.get('oauthstate:' + state);
   if (!email) return Response.redirect(CONN_SITE + '/connections?err=state', 302);
+  return Response.redirect(CONN_SITE + '/connections?gc=' + encodeURIComponent(code) + '&gs=' + encodeURIComponent(state), 302);
+}
+async function handleGoogleFinish(request, env) {
+  const user = await _crmUser(request, env);
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+  let b; try { b = await request.json(); } catch { return json({ error: 'Invalid request' }, 400); }
+  const code = String(b.code || ''), state = String(b.state || '');
+  if (!code || !state) return json({ error: 'Missing code/state' }, 400);
+  const email = await env.BQ_USERS.get('oauthstate:' + state);
+  if (!email || email !== user.email) return json({ error: 'State mismatch' }, 403); // session binding
   await env.BQ_USERS.delete('oauthstate:' + state);
   try {
     const tr = await fetch('https://oauth2.googleapis.com/token', {
@@ -984,12 +1000,12 @@ async function handleGoogleCallback(request, env) {
       body: new URLSearchParams({ code, client_id: env.GOOGLE_CLIENT_ID, client_secret: env.GOOGLE_CLIENT_SECRET, redirect_uri: GOOGLE_REDIRECT, grant_type: 'authorization_code' })
     });
     const td = await tr.json();
-    if (!td.access_token) return Response.redirect(CONN_SITE + '/connections?err=token', 302);
+    if (!td.access_token) return json({ error: 'Token exchange failed' }, 502);
     const exp = new Date(Date.now() + (td.expires_in || 3600) * 1000).toISOString();
     await env.CRM_DB.prepare("INSERT INTO connections (owner_email,provider,access_token,refresh_token,expires_at,scope) VALUES (?,?,?,?,?,?) ON CONFLICT(owner_email,provider) DO UPDATE SET access_token=excluded.access_token, refresh_token=COALESCE(excluded.refresh_token, connections.refresh_token), expires_at=excluded.expires_at, scope=excluded.scope, connected_at=datetime('now')")
-      .bind(email, 'google', td.access_token, td.refresh_token || null, exp, td.scope || GOOGLE_SCOPES).run();
-    return Response.redirect(CONN_SITE + '/connections?connected=google', 302);
-  } catch (e) { return Response.redirect(CONN_SITE + '/connections?err=ex', 302); }
+      .bind(user.email, 'google', td.access_token, td.refresh_token || null, exp, td.scope || GOOGLE_SCOPES).run();
+    return json({ ok: true, connected: 'google' });
+  } catch (e) { return json({ error: 'Exchange error' }, 500); }
 }
 async function handleConnectionDisconnect(request, env) {
   const user = await _crmUser(request, env);

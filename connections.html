@@ -50,7 +50,17 @@ const TXT=RTL?{h:'חיבורים',sub:'חבר את החשבונות שלך כד�
 $('#h1').textContent=TXT.h;$('#sub').textContent=TXT.sub;
 
 const params=new URLSearchParams(location.search);
-if(params.get('connected')){ const b=$('#banner');b.className='banner ok';b.textContent=TXT.okmsg; }
+// Google callback bounces code+state here; the logged-in browser redeems via POST /finish (CSRF-safe session binding).
+if(params.get('gc')&&params.get('gs')){
+  (async()=>{ try{
+    const r=await fetch(API+'/api/connections/google/finish',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token()},body:JSON.stringify({code:params.get('gc'),state:params.get('gs')})});
+    const d=await r.json();
+    const b=$('#banner'); if(d.ok){ b.className='banner ok'; b.textContent=TXT.okmsg; } else { b.className='banner err'; b.textContent=TXT.errmsg; }
+  }catch(e){ const b=$('#banner');b.className='banner err';b.textContent=TXT.errmsg; }
+  history.replaceState(null,'',location.pathname); load();
+  })();
+}
+else if(params.get('connected')){ const b=$('#banner');b.className='banner ok';b.textContent=TXT.okmsg; }
 else if(params.get('err')){ const b=$('#banner');b.className='banner err';b.textContent=TXT.errmsg; }
 
 async function load(){
