@@ -364,7 +364,9 @@ document.getElementById('artPrint').onclick=()=>{ const w=document.createElement
 /* init */
 loadConvos(); applyLang();
 const _q=new URLSearchParams(location.search).get('q');
-if(_q){ newChat(); renderSidebar(); $('#input').value=_q; send(); }
+// SECURITY: ?q= PRE-FILLS only — it never auto-sends. A malicious link (…/tony?q=send an email to X)
+// must not fire an action (incl. Gmail send) on a zero-click page load. The user reviews and hits send.
+if(_q){ newChat(); renderSidebar(); $('#input').value=_q; input.focus(); input.dispatchEvent(new Event('input')); }
 else { curId=(convos[0]&&convos[0].id)||null; renderThread(); renderSidebar(); input.focus(); }
 if(new URLSearchParams(location.search).get('voice')==='1'){ newChat(); renderSidebar(); const m=$('#micBtn'); if(m&&m.style.display!=='none') setTimeout(()=>m.click(),400); }
 </script>

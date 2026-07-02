@@ -5403,16 +5403,36 @@ async function handleKinoviCreate(request, env) {
   if (arr(inp.audioUrls).length) inputs.audioUrls = arr(inp.audioUrls).slice(0, 3);
   if (!inputs.prompt && !inputs.imageUrls) return json({ error: 'prompt required' }, 400);
 
-  const res = await fetch('https://kinovi.ai/api/v1/jobs/createTask', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${kinoviKey}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ model, inputs })
-  });
-  const data = await res.json();
-  return json(data, res.status);
+  // Credit gate — video generation is the most expensive paid call (Kinovi/Seedance/Kling). Without
+  // this a free account (email-only signup) could run thousands of jobs/day on our paid account.
+  const KINOVI_COST = 5;
+  const kUser = checkMonthlyReset(user);
+  if ((kUser.credits || 0) < KINOVI_COST) return json({ error: `Not enough credits (need ${KINOVI_COST})`, credits: kUser.credits || 0 }, 402);
+  // Reserve before the paid call; refund on failure.
+  kUser.credits -= KINOVI_COST;
+  kUser.creditsUsedThisMonth = (kUser.creditsUsedThisMonth || 0) + KINOVI_COST;
+  await env.BQ_USERS.put(`user:${kUser.email}`, JSON.stringify(kUser));
+
+  let res, data;
+  try {
+    res = await fetch('https://kinovi.ai/api/v1/jobs/createTask', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${kinoviKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model, inputs })
+    });
+    data = await res.json();
+  } catch (e) {
+    kUser.credits += KINOVI_COST; kUser.creditsUsedThisMonth = Math.max(0, (kUser.creditsUsedThisMonth || 0) - KINOVI_COST);
+    try { await env.BQ_USERS.put(`user:${kUser.email}`, JSON.stringify(kUser)); } catch (_) {}
+    return json({ error: 'Video service unreachable — try again.' }, 502);
+  }
+  if (!res.ok) {
+    kUser.credits += KINOVI_COST; kUser.creditsUsedThisMonth = Math.max(0, (kUser.creditsUsedThisMonth || 0) - KINOVI_COST);
+    try { await env.BQ_USERS.put(`user:${kUser.email}`, JSON.stringify(kUser)); } catch (_) {}
+    return json({ error: 'Video generation failed — credits refunded.' }, res.status);
+  }
+  await logCreditUsage(kUser.email, 'kinovi-video', model, env);
+  return json({ ...data, credits: kUser.credits }, res.status);
 }
 
 async function handleKinoviStatus(request, env) {
@@ -5751,23 +5771,34 @@ async function handleTTSGenerate(request, env) {
   if (text.length > 2000) return json({ error: 'Text too long (max 2000 chars)' }, 400);
   if (!ALLOWED_VOICE_IDS.has(voiceId)) return json({ error: 'Invalid voiceId' }, 400);
 
-  const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-    method: 'POST',
-    headers: {
-      'xi-api-key': elevenKey,
-      'Content-Type': 'application/json',
-      'Accept': 'audio/mpeg'
-    },
-    body: JSON.stringify({
-      text,
-      model_id: 'eleven_multilingual_v2',
-      voice_settings: { stability: 0.5, similarity_boost: 0.75 }
-    })
-  });
+  // Credit gate — ElevenLabs TTS bills per character; 1 credit per call, reserve+refund on failure.
+  const ttsUser = checkMonthlyReset(user);
+  if ((ttsUser.credits || 0) < 1) return json({ error: 'Not enough credits (need 1)', credits: ttsUser.credits || 0 }, 402);
+  ttsUser.credits -= 1;
+  ttsUser.creditsUsedThisMonth = (ttsUser.creditsUsedThisMonth || 0) + 1;
+  await env.BQ_USERS.put(`user:${ttsUser.email}`, JSON.stringify(ttsUser));
+  const _refundTTS = async () => { ttsUser.credits += 1; ttsUser.creditsUsedThisMonth = Math.max(0, (ttsUser.creditsUsedThisMonth || 0) - 1); try { await env.BQ_USERS.put(`user:${ttsUser.email}`, JSON.stringify(ttsUser)); } catch (_) {} };
+
+  let res;
+  try {
+    res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+      method: 'POST',
+      headers: {
+        'xi-api-key': elevenKey,
+        'Content-Type': 'application/json',
+        'Accept': 'audio/mpeg'
+      },
+      body: JSON.stringify({
+        text,
+        model_id: 'eleven_multilingual_v2',
+        voice_settings: { stability: 0.5, similarity_boost: 0.75 }
+      })
+    });
+  } catch (e) { await _refundTTS(); return json({ error: 'Voice service unreachable — try again.' }, 502); }
 
   if (!res.ok) {
-    const errText = await res.text();
-    return json({ error: 'ElevenLabs error: ' + errText }, 502);
+    await _refundTTS();
+    return json({ error: 'Voice generation failed — credit refunded.' }, 502);
   }
 
   // Stream audio back
@@ -6384,12 +6415,18 @@ async function handleStripeCreateSession(request, env) {
 // Verify Stripe webhook signature using Web Crypto (timing-safe HMAC-SHA256).
 // Header format: "t=<timestamp>,v1=<hex_sig>[,v1=<hex_sig2>...]"
 async function _verifyStripeSignature(rawBody, sigHeader, secret) {
+  // Fail closed if the signing secret is absent/blank — otherwise HMAC would key on the string
+  // "undefined" and an attacker who knows that could forge events.
+  if (!secret || typeof secret !== 'string' || secret.length < 8) return false;
   const parts = sigHeader.split(',');
   const tPart = parts.find(p => p.startsWith('t='));
   const v1Parts = parts.filter(p => p.startsWith('v1='));
   if (!tPart || v1Parts.length === 0) return false;
 
   const t = tPart.slice(2);
+  // Reject stale/replayed payloads outside a ±5-minute window.
+  const tsSec = parseInt(t, 10);
+  if (!Number.isFinite(tsSec) || Math.abs(Date.now() / 1000 - tsSec) > 300) return false;
   const payload = `${t}.${rawBody}`;
   const enc = new TextEncoder();
 
