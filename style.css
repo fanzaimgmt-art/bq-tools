@@ -1,6 +1,16 @@
 /* Premium typography stack — Inter (EN/ES), Heebo (HE), Space Grotesk (display), JetBrains Mono (code) */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=Heebo:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
+/* Site-wide motion accessibility — respect the OS "reduce motion" setting (WCAG 2.3.3). */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 :root {
   /* Dark theme (default) — construction psychology: gold (trust/value), deep black (stability), amber accents */
   --bg: #08080d;
@@ -220,10 +230,6 @@ a:hover, a:active { opacity: .8; }
   height: 52px;
   background: rgba(8,8,13,0.92);
   border-bottom-color: rgba(255,255,255,0.10);
-}
-  position: sticky;
-  top: 0;
-  z-index: 100;
 }
 [data-theme="light"] .nav {
   background: rgba(255,255,255,0.72);

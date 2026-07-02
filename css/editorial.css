@@ -5,7 +5,8 @@
    Add <html class="editorial"> to opt in.
 ═══════════════════════════════════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+/* JetBrains Mono only — Instrument Serif + DM Sans were never used as a font-family (display resolves to Space Grotesk); dropped to cut two render-blocking font downloads. */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
 
 html.editorial {
   --ed-ink: #0b0b0d;
