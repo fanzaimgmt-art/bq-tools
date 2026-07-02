@@ -240,7 +240,7 @@ function openProject(idx) {
       <div style="font-size:14px;color:var(--txd);margin-bottom:8px;">${new Date(p.date).toLocaleDateString()} — ${p.tool}</div>
       ${p.result_summary ? `<div style="font-size:14px;padding:10px;background:var(--bg);border-radius:8px;">${p.result_summary}</div>` : ''}
       <div style="display:flex;gap:8px;margin-top:12px;">
-        <a href="/tools/${p.tool === 'compare' ? 'compare' : p.tool}.html" class="btn" style="flex:1;" data-en="Open Tool" data-he="פתח כלי">Open Tool</a>
+        <a href="${({compare:'/tools/compare.html','social-post':'/tools/social-post.html','social-analysis':'/tools/social-analysis.html'})[p.tool] || '/home.html'}" class="btn" style="flex:1;" data-en="Open Tool" data-he="פתח כלי">Open Tool</a>
       </div>
     </div>`;
   document.body.appendChild(m);
