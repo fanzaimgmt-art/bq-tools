@@ -105,11 +105,23 @@
   }
 
   /* Tool cells */
-  .tool-cell { cursor: pointer; }
+  .tool-cell { cursor: pointer; position: relative; background-size: cover !important; background-position: center !important;
+    transition: transform .28s cubic-bezier(.2,.7,.2,1), box-shadow .28s, border-color .28s, background-size .5s cubic-bezier(.2,.7,.2,1) !important; }
+  .tool-cell:hover { transform: translateY(-4px); border-color: rgba(212,166,75,.55) !important;
+    box-shadow: 0 18px 44px rgba(0,0,0,.55), 0 0 0 1px rgba(212,166,75,.25) inset, 0 0 30px rgba(212,166,75,.12); background-size: 116% !important; }
   .tool-cell .ed-icon-em {
     font-size: 32px; margin-bottom: 14px; display: block;
     filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4));
+    transition: transform .28s cubic-bezier(.2,.7,.2,1);
   }
+  .tool-cell:hover .ed-icon-em { transform: scale(1.12) rotate(-3deg); }
+  /* Concierge orb — living gold shimmer */
+  .cc-orb { position: relative; overflow: hidden; }
+  .cc-orb::after { content:""; position:absolute; inset:0; border-radius:50%;
+    background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,.55) 50%, transparent 70%);
+    transform: translateX(-120%); animation: ccshine 3.8s ease-in-out infinite; }
+  @keyframes ccshine { 0%,60%{transform:translateX(-120%)} 80%,100%{transform:translateX(120%)} }
+  @media (prefers-reduced-motion: reduce){ .cc-orb::after{ animation:none; display:none } }
   /* Override editorial.css h3 Instrument Serif */
   .tool-cell h3 {
     font-family: var(--font-display) !important;
@@ -449,7 +461,7 @@
         <span class="ed-tag new" data-en="NEW · FLAGSHIP" data-he="חדש · מוצר הדגל" data-es="NUEVO · ESTRELLA">NEW · FLAGSHIP</span>
       </a>
 
-      <a href="/crm" class="ed-cell tool-cell col-2" data-cat="sales" data-tag="new">
+      <a href="/crm" style="background:linear-gradient(180deg,rgba(14,14,16,.72),rgba(14,14,16,.94)),url('/img/card-crm.jpg') center/cover no-repeat" class="ed-cell tool-cell col-2" data-cat="sales" data-tag="new">
         <span class="ed-icon" data-en="SALES PIPELINE" data-he="צינור מכירות" data-es="EMBUDO DE VENTAS">SALES PIPELINE</span>
         <span class="ed-icon-em">📊</span>
         <h3 data-en="CRM" data-he="CRM" data-es="CRM">CRM</h3>
@@ -489,7 +501,7 @@
         <span class="ed-tag new" data-en="1 CR · NEW" data-he="1 קר · חדש" data-es="1 CR · NUEVO">1 CR · NEW</span>
       </a>
 
-      <a href="/tools/portal.html" class="ed-cell tool-cell col-2" data-cat="sales" data-tag="new">
+      <a href="/tools/portal.html" style="background:linear-gradient(180deg,rgba(14,14,16,.72),rgba(14,14,16,.94)),url('/img/card-portal.jpg') center/cover no-repeat" class="ed-cell tool-cell col-2" data-cat="sales" data-tag="new">
         <span class="ed-icon" data-en="NEW · NEVER GO QUIET" data-he="חדש · אל תיעלם" data-es="NUEVO · NUNCA TE CALLES">NEW · NEVER GO QUIET</span>
         <span class="ed-icon-em">📲</span>
         <h3 data-en="Client Portal" data-he="פורטל לקוח" data-es="Portal del Cliente">Client <em>Portal</em></h3>
@@ -513,7 +525,7 @@
         <span class="ed-tag">20 CR</span>
       </a>
 
-      <a href="/tools/compare.html" data-folded="1" style="display:none" class="ed-cell tool-cell col-2" data-cat="sales" data-tag="free">
+      <a href="/tools/compare.html" data-folded="1" style="display:none;background:linear-gradient(180deg,rgba(14,14,16,.72),rgba(14,14,16,.94)),url('/img/card-compare.jpg') center/cover no-repeat" class="ed-cell tool-cell col-2" data-cat="sales" data-tag="free">
         <span class="ed-icon" data-en="COMPARE" data-he="השוואה" data-es="COMPARAR">COMPARE</span>
         <span class="ed-icon-em">🔀</span>
         <h3 data-en="Compare" data-he="השוואה" data-es="Comparar">Compare</h3>
@@ -593,7 +605,7 @@
         <span class="ed-tag free" data-en="FREE" data-he="חינם" data-es="GRATIS">FREE</span>
       </a>
 
-      <a href="/tools/contract.html" class="ed-cell tool-cell col-2" data-cat="business">
+      <a href="/tools/contract.html" style="background:linear-gradient(180deg,rgba(14,14,16,.72),rgba(14,14,16,.94)),url('/img/card-contract.jpg') center/cover no-repeat" class="ed-cell tool-cell col-2" data-cat="business">
         <span class="ed-icon" data-en="CONTRACT" data-he="חוזה" data-es="CONTRATO">CONTRACT</span>
         <span class="ed-icon-em">📜</span>
         <h3 data-en="Contract" data-he="חוזה" data-es="Contrato">Contract</h3>
