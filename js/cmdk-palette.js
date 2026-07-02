@@ -178,7 +178,7 @@
     });
 
     if (visible.length === 0) {
-      list.innerHTML = `<div class="cmdk-empty">${escapeHtml(t.empty)}<button onclick="window.BQBrain && window.BQBrain.ask('${q ? escapeJs(input.value) : 'recommend a tool'}')">${escapeHtml(t.ask)} →</button></div>`;
+      list.innerHTML = `<div class="cmdk-empty">${escapeHtml(t.empty)}<button onclick="window.BQBrain && window.BQBrain.ask('${q ? escapeHtml(escapeJs(input.value)) : 'recommend a tool'}')">${escapeHtml(t.ask)} →</button></div>`;
       return;
     }
 

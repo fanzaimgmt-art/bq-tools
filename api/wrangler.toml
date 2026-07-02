@@ -8,7 +8,7 @@ GEMINI_MODEL = "gemini-2.5-flash"
 GEMINI_MODEL_FALLBACK = "gemini-2.0-flash"
 ALLOWED_ORIGIN = "https://bq-tools.fanzai-mgmt.workers.dev"
 FREE_CREDITS = "5"
-GOOGLE_CLIENT_ID = "704767034441-ljp9b1a874bdi9rqpodr8p4l5rmvbtdj.apps.googleusercontent.com"
+GOOGLE_CLIENT_ID = "791515986123-ahji6s7f0mff047c90mrnh5kpf8e7gh6.apps.googleusercontent.com"
 STRIPE_ENABLED = "true"
 MOSHE_CHAT_ID = "369310707"
 # Inbound /contact leads auto-create a deal in this Obra account's CRM pipeline.

@@ -1,6 +1,15 @@
 // ── BQ Tools — Shared Common JS ──
 
 let lang = localStorage.getItem('bq_lang') || 'en';
+
+// ── PromoteKit affiliate tracking — loads on every page (landing captures ?via=, checkout reads window.promotekit_referral) ──
+(function () {
+  if (document.querySelector('script[data-promotekit]')) return;
+  var s = document.createElement('script');
+  s.async = true; s.src = 'https://cdn.promotekit.com/pk.js';
+  s.setAttribute('data-promotekit', '91705ed2-21b5-4271-bc11-559c70d0cdb5');
+  (document.head || document.documentElement).appendChild(s);
+})();
 // Dark-first brand. Light mode was never fully themed (hardcoded dark backgrounds across pages → broken
 // half-light), so the toggle is removed and dark is forced (ignores any stale 'light' preference).
 let theme = 'dark';
@@ -1183,6 +1192,7 @@ function buildAppNav() {
 
   oldNav.innerHTML = `
     <a href="${loggedIn ? '/home' : '/'}" class="nav-logo">Obra</a>
+    ${loggedIn ? '<button class="proj-pill" id="projPill" onclick="toggleProjMenu(event)" title="Project">📁 <span id="projName">…</span> <span style="opacity:.55">▾</span></button>' : ''}
     <div class="nav-right">
       ${linksHtml}
       ${creditPill}
@@ -1194,7 +1204,73 @@ function buildAppNav() {
   if (loggedIn && user) {
     const wrap = document.getElementById('navAvatarWrap');
     if (wrap) _buildDropdownInto(wrap, user);
+    loadProjects();
   }
+}
+
+// ── Project selector (Kolbo-style) ──
+function _projApi(path, opts) {
+  const token = localStorage.getItem('bq_token') || '';
+  return fetch('https://bq-tools-api.fanzai-mgmt.workers.dev/api' + path,
+    Object.assign({ headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token } }, opts || {})).then(r => r.json());
+}
+function _pe(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+let _projects = [], _activeProj = null;
+async function loadProjects() {
+  try {
+    const d = await _projApi('/projects'); _projects = d.projects || []; _activeProj = d.active || null;
+    const el = document.getElementById('projName');
+    if (el) { const a = _projects.find(p => p.id === _activeProj); el.textContent = a ? a.name : (lang === 'he' ? 'בחר פרויקט' : 'Pick project'); }
+  } catch (e) {}
+}
+function toggleProjMenu(e) {
+  e.stopPropagation();
+  const ex = document.getElementById('projMenu'); if (ex) { ex.remove(); return; }
+  if (!document.getElementById('projMenuStyle')) {
+    const st = document.createElement('style'); st.id = 'projMenuStyle';
+    st.textContent = '.proj-pill{direction:ltr;display:inline-flex;align-items:center;gap:7px;background:var(--sf);border:1px solid var(--bd);border-radius:99px;padding:7px 13px;color:var(--tx);font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;max-width:230px;margin-inline-start:10px}.proj-pill span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.proj-menu{position:fixed;z-index:10001;background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:6px;box-shadow:0 18px 50px rgba(0,0,0,.5);min-width:230px;max-height:60vh;overflow:auto;animation:lpIn .14s ease-out}.pm-i{display:flex;align-items:center;gap:8px;width:100%;padding:10px 12px;border:0;border-radius:9px;background:transparent;color:var(--tx);font-size:14px;cursor:pointer;font-family:inherit;text-align:start}.pm-i:hover{background:var(--bg)}.pm-i.on{color:var(--ac)}.pm-sep{height:1px;background:var(--bd);margin:5px 0}.pm-new{color:var(--ac);font-weight:600}';
+    document.head.appendChild(st);
+  }
+  const m = document.createElement('div'); m.id = 'projMenu'; m.className = 'proj-menu';
+  const items = _projects.map(p => `<button class="pm-i${p.id === _activeProj ? ' on' : ''}" data-id="${p.id}">📁 ${_pe(p.name)}${p.id === _activeProj ? ' ✓' : ''}</button>`).join('') || `<div style="padding:10px 12px;color:var(--txd);font-size:13px">${lang === 'he' ? 'אין פרויקטים עדיין' : 'No projects yet'}</div>`;
+  m.innerHTML = items + `<div class="pm-sep"></div>`
+    + (_activeProj ? `<button class="pm-i" data-ctx="1">✎ ${lang === 'he' ? 'קונטקסט הפרויקט' : 'Project context'}</button>` : '')
+    + `<button class="pm-i pm-new" data-new="1">＋ ${lang === 'he' ? 'פרויקט חדש' : 'New project'}</button><button class="pm-i" data-hist="1">🕘 ${lang === 'he' ? 'היסטוריה' : 'History'}</button>`;
+  document.body.appendChild(m);
+  const r = document.getElementById('projPill').getBoundingClientRect();
+  m.style.top = (r.bottom + 8) + 'px';
+  let left = r.left; if (left + m.offsetWidth > window.innerWidth - 8) left = window.innerWidth - 8 - m.offsetWidth;
+  m.style.left = Math.max(8, left) + 'px';
+  m.querySelectorAll('[data-id]').forEach(b => b.onclick = () => switchProject(b.dataset.id));
+  m.querySelector('[data-new]').onclick = () => newProject();
+  m.querySelector('[data-hist]').onclick = () => { location.href = '/history'; };
+  const _ctxB = m.querySelector('[data-ctx]'); if (_ctxB) _ctxB.onclick = () => { m.remove(); editProjectContext(); };
+  setTimeout(() => { function od(ev) { if (!m.contains(ev.target) && ev.target.id !== 'projPill') { m.remove(); document.removeEventListener('click', od); } } document.addEventListener('click', od); }, 0);
+}
+async function switchProject(id) { try { await _projApi('/projects/active', { method: 'POST', body: JSON.stringify({ id }) }); } catch (e) {} location.reload(); }
+async function newProject() { const name = prompt(lang === 'he' ? 'שם הפרויקט:' : 'Project name:'); if (!name) return; try { await _projApi('/projects', { method: 'POST', body: JSON.stringify({ name }) }); } catch (e) {} location.reload(); }
+async function editProjectContext() {
+  const p = _projects.find(x => x.id === _activeProj); if (!p) return;
+  const ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;z-index:10002;background:rgba(6,7,10,.78);display:flex;align-items:center;justify-content:center;padding:20px';
+  ov.innerHTML = `<div style="background:var(--sf,#191b21);border:1px solid var(--bd,#2a2a30);border-radius:16px;max-width:560px;width:100%;padding:22px">
+    <div style="font-weight:700;font-size:17px;margin-bottom:4px;color:var(--tx,#f3f3f0)">${lang === 'he' ? 'קונטקסט — ' : 'Context — '}${_pe(p.name)}</div>
+    <div style="color:var(--txd,#9a9da7);font-size:13px;margin-bottom:14px">${lang === 'he' ? 'מי מנהל את הפרויקט, איך הוא אוהב דברים, איך חושב, עובדות מפתח — טוני תמיד ישתמש בזה כאן.' : 'Who manages it, how they like things, how they think, key facts — Tony always uses this on this project.'}</div>
+    <textarea id="pcText" style="width:100%;min-height:210px;background:var(--bg,#0e0f12);border:1px solid var(--bd,#2a2a30);border-radius:10px;padding:12px;color:var(--tx,#f3f3f0);font-size:14px;font-family:inherit;resize:vertical;line-height:1.5"></textarea>
+    <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end">
+      <button id="pcCancel" style="background:none;border:1px solid var(--bd,#2a2a30);color:var(--txd,#9a9da7);border-radius:10px;padding:10px 16px;cursor:pointer;font-family:inherit;font-size:14px">${lang === 'he' ? 'ביטול' : 'Cancel'}</button>
+      <button id="pcSave" style="background:var(--ac,#d8b24c);border:0;color:#1a1407;border-radius:10px;padding:10px 18px;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600">${lang === 'he' ? 'שמור' : 'Save'}</button>
+    </div></div>`;
+  document.body.appendChild(ov);
+  ov.querySelector('#pcText').value = p.context || '';
+  ov.querySelector('#pcCancel').onclick = () => ov.remove();
+  ov.onclick = e => { if (e.target === ov) ov.remove(); };
+  ov.querySelector('#pcSave').onclick = async () => {
+    const val = ov.querySelector('#pcText').value;
+    try { await _projApi('/projects/context', { method: 'POST', body: JSON.stringify({ id: _activeProj, context: val }) }); p.context = val; } catch (e) {}
+    ov.remove();
+    if (typeof showToast === 'function') showToast(lang === 'he' ? 'הקונטקסט נשמר ✓' : 'Context saved ✓', 'ok');
+  };
 }
 
 function _buildDropdownInto(wrap, user) {
@@ -1387,22 +1463,42 @@ function maybeFirstVisitLangPicker() {
   openLangPicker();
 }
 function openLangPicker() {
-  if (document.getElementById('langPicker')) return;
-  const m = document.createElement('div');
-  m.id = 'langPicker';
-  m.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(6,6,10,.92);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:24px;';
-  m.innerHTML = `
-    <div style="background:var(--sf,#141418);border:1px solid var(--ac,#e8c547);border-radius:20px;padding:28px 24px;max-width:380px;width:100%;text-align:center;box-shadow:0 30px 90px rgba(0,0,0,.6);">
-      <div style="font-family:var(--font-display,sans-serif);font-weight:900;font-size:24px;letter-spacing:2px;color:var(--ac,#e8c547);margin-bottom:6px;">Obra</div>
-      <div style="color:var(--txd,#888);font-size:14px;margin-bottom:20px;">Choose your language · Elige tu idioma · Ընտրեք լեզուն · בחר שפה</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        ${LANG_OPTIONS.map(o => `<button data-pick="${o.code}" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border-radius:12px;border:1px solid var(--bd,#2a2a30);background:var(--bg,#08080d);color:var(--tx,#f0f0f0);font-size:16px;font-weight:700;cursor:pointer;min-height:54px;font-family:inherit;">${o.flag} ${o.label}</button>`).join('')}
-      </div>
-    </div>`;
-  document.body.appendChild(m);
-  m.querySelectorAll('[data-pick]').forEach(btn => {
-    btn.onclick = () => { setLang(btn.dataset.pick); localStorage.setItem('bq_lang_picked', '1'); m.remove(); };
+  const existing = document.getElementById('langPicker');
+  if (existing) { existing.remove(); return; } // toggle off on re-click
+  // anchor = the globe button that opened this (open right under it, don't block the screen)
+  const anchor = (window.event && (window.event.currentTarget || window.event.target)) ||
+                 document.querySelector('.theme-toggle[onclick*="openLangPicker"]');
+  if (!document.getElementById('lpStyle')) {
+    const st = document.createElement('style'); st.id = 'lpStyle';
+    st.textContent = '.lp-pop{position:fixed;z-index:10000;background:var(--sf,#141418);border:1px solid var(--bd,#2a2a30);border-radius:14px;padding:6px;box-shadow:0 18px 50px rgba(0,0,0,.5);min-width:152px;animation:lpIn .14s ease-out;}'
+      + '@keyframes lpIn{from{opacity:0;transform:translateY(-6px) scale(.97)}to{opacity:1;transform:none}}'
+      + '.lp-opt{display:flex;align-items:center;gap:9px;width:100%;padding:10px 12px;border:0;border-radius:9px;background:transparent;color:var(--tx,#f0f0f0);font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;text-align:start;transition:background .12s,transform .12s;}'
+      + '.lp-opt:hover{background:var(--bg,#08080d);transform:translateX(3px);}'
+      + '.lp-opt.on{color:var(--ac,#e8c547);}';
+    document.head.appendChild(st);
+  }
+  const pop = document.createElement('div');
+  pop.id = 'langPicker'; pop.className = 'lp-pop';
+  pop.innerHTML = LANG_OPTIONS.map(o =>
+    `<button data-pick="${o.code}" class="lp-opt${lang === o.code ? ' on' : ''}">${o.flag} <span>${o.label}</span>${lang === o.code ? ' ✓' : ''}</button>`
+  ).join('');
+  document.body.appendChild(pop);
+  // position right under the globe, kept inside the viewport
+  const r = (anchor && anchor.getBoundingClientRect) ? anchor.getBoundingClientRect() : null;
+  if (r && r.width) {
+    pop.style.top = (r.bottom + 8) + 'px';
+    let left = r.right - pop.offsetWidth;
+    if (left + pop.offsetWidth > window.innerWidth - 8) left = window.innerWidth - 8 - pop.offsetWidth;
+    if (left < 8) left = 8;
+    pop.style.left = left + 'px';
+  } else { pop.style.top = '60px'; pop.style.right = '14px'; }
+  pop.querySelectorAll('[data-pick]').forEach(btn => {
+    btn.onclick = (e) => { e.stopPropagation(); setLang(btn.dataset.pick); localStorage.setItem('bq_lang_picked', '1'); pop.remove(); };
   });
+  setTimeout(() => {
+    function onDoc(e) { if (!pop.contains(e.target) && e.target !== anchor) { pop.remove(); document.removeEventListener('click', onDoc); } }
+    document.addEventListener('click', onDoc);
+  }, 0);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1477,7 +1573,7 @@ async function _stripeCheckout(tier, modalEl) {
     const res = await fetch('https://bq-tools-api.fanzai-mgmt.workers.dev/api/payments/stripe/create-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body: JSON.stringify({ tier }),
+      body: JSON.stringify({ tier, promotekit_referral: (typeof window !== 'undefined' && window.promotekit_referral) || '' }),
     });
     const data = await res.json();
     if (res.ok && data.url) {

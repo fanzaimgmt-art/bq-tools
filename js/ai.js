@@ -325,7 +325,7 @@ function updateCreditDisplay() {
 async function saveProjectToServer(project) {
   if (!isLoggedIn()) return;
   try {
-    await apiCall('/api/projects', { method: 'POST', body: project });
+    await apiCall('/api/projects/snapshots', { method: 'POST', body: project });
   } catch (e) {
     console.error('Failed to save project:', e);
   }
@@ -334,7 +334,7 @@ async function saveProjectToServer(project) {
 async function getProjectsFromServer() {
   if (!isLoggedIn()) return [];
   try {
-    const data = await apiCall('/api/projects');
+    const data = await apiCall('/api/projects/snapshots');
     return data.projects || [];
   } catch { return []; }
 }

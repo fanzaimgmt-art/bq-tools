@@ -310,7 +310,7 @@
 
 <section class="home-hero">
   <div class="ed-container">
-    <div class="home-greeting-row">
+    <div class="home-greeting-row" style="display:none">
       <div>
         <span class="ed-eyebrow" style="margin-bottom: 16px;" data-en="Welcome back" data-he="ברוך שובך" data-es="Bienvenido de vuelta">Welcome back</span>
         <h1><em id="greetingWord" data-en="Good afternoon" data-he="צהריים טובים" data-es="Buenas tardes">Good afternoon</em>,<br><span class="name" id="userName">there</span>.</h1>
@@ -322,8 +322,75 @@
       </div>
     </div>
 
+    <!-- CONCIERGE -->
+    <style>
+      .concierge{display:flex;gap:15px;align-items:flex-start;background:linear-gradient(135deg,var(--sf),var(--bg-elevated,var(--sf)));border:1px solid var(--bd);border-radius:18px;padding:18px 20px;margin:6px 0 22px;position:relative;overflow:hidden}
+      .concierge::before{content:"";position:absolute;top:-45%;right:-8%;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,var(--ac-glow,rgba(200,162,74,.18)),transparent 70%);pointer-events:none}
+      .cc-orb{width:46px;height:46px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:20px;background:linear-gradient(135deg,var(--ac),var(--ac-2,var(--ac)));color:#1a1407;box-shadow:0 0 0 6px var(--ac-glow,rgba(200,162,74,.14));animation:ccpulse 2.6s ease-in-out infinite}
+      @keyframes ccpulse{0%,100%{box-shadow:0 0 0 6px rgba(200,162,74,.14)}50%{box-shadow:0 0 0 11px rgba(200,162,74,.05)}}
+      .cc-main{flex:1;min-width:0;position:relative;z-index:1}
+      .cc-q{font-weight:700;font-size:17px;margin-bottom:10px}
+      .cc-inputrow{display:flex;gap:8px}
+      .cc-inputrow input{flex:1;min-width:0;background:var(--bg);border:1px solid var(--bd);border-radius:11px;padding:12px 14px;color:var(--tx);font-size:15px;font-family:var(--font-en)}
+      .cc-inputrow input:focus{outline:none;border-color:var(--ac)}
+      .cc-go{flex:0 0 auto;width:46px;border:0;border-radius:11px;background:var(--ac);color:#1a1407;font-size:20px;font-weight:700;cursor:pointer}
+      .cc-go:disabled{opacity:.6}
+      .cc-chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+      .cc-chip{background:var(--bg);border:1px solid var(--bd);border-radius:999px;padding:7px 13px;color:var(--txd);font-size:13px;cursor:pointer;font-family:inherit}
+      .cc-chip:hover{border-color:var(--ac);color:var(--tx)}
+      .cc-reply{display:none;margin-top:12px;background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:13px 15px;font-size:14px}
+      .cc-reply a{display:inline-block;margin-top:9px;background:var(--ac);color:#1a1407;text-decoration:none;padding:9px 16px;border-radius:9px;font-weight:600;font-size:14px}
+      @media(max-width:560px){.cc-q{font-size:15px}.concierge{padding:15px}}
+    </style>
+    <div class="concierge">
+      <div class="cc-orb" id="ccOrb">✦</div>
+      <div class="cc-main">
+        <div class="cc-q" data-en="Hi, I'm Tony — what do you need?" data-he="היי, אני טוני — מה אתה צריך?" data-es="Hola, soy Tony — ¿qué necesitas?">Hi, I'm Tony — what do you need?</div>
+        <div class="cc-inputrow">
+          <input id="ccInput" autocomplete="off" onkeydown="if(event.key==='Enter')ccAsk()">
+          <button class="cc-go" id="ccGo" onclick="ccAsk()" aria-label="Go">→</button>
+        </div>
+        <div class="cc-chips">
+          <button class="cc-chip" onclick="ccQuick(this)" data-q="I need to send a price to a customer" data-en="💸 Send a price" data-he="💸 לשלוח מחיר" data-es="💸 Enviar un precio">💸 Send a price</button>
+          <button class="cc-chip" onclick="ccQuick(this)" data-q="I need to get paid for a job" data-en="💵 Get paid" data-he="💵 לקבל תשלום" data-es="💵 Cobrar">💵 Get paid</button>
+          <button class="cc-chip" onclick="ccQuick(this)" data-q="how much does this job cost and what should I charge" data-en="💰 What does it cost?" data-he="💰 כמה זה עולה?" data-es="💰 ¿Cuánto cuesta?">💰 What does it cost?</button>
+          <button class="cc-chip" onclick="ccQuick(this)" data-q="I want to look trustworthy and prove I am licensed" data-en="🛡️ Win their trust" data-he="🛡️ לזכות באמון" data-es="🛡️ Gana su confianza">🛡️ Win their trust</button>
+        </div>
+        <div class="cc-reply" id="ccReply"></div>
+      </div>
+    </div>
+    <script>
+      (function(){
+        var PH={he:'לשלוח מחיר, לקבל תשלום, כמה עולה עבודה…',es:'Enviar un precio, cobrar, cuánto cuesta…',en:'Send a price, get paid, what does a job cost…'};
+        function setPh(){var el=document.getElementById('ccInput');if(el)el.placeholder=PH[(typeof lang!=='undefined'?lang:'en')]||PH.en;}
+        if(document.readyState!=='loading')setPh();else document.addEventListener('DOMContentLoaded',setPh);
+        window.setTimeout(setPh,400); // after i18n applies
+      })();
+      function ccEsc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+      function ccQuick(btn){var el=document.getElementById('ccInput');el.value=btn.getAttribute('data-q')||btn.textContent.trim();ccAsk();}
+      async function ccRoute(q){
+        // Tony — direct fetch (home page doesn't load apiCall). Free, no credits.
+        var token=localStorage.getItem('bq_token')||'';
+        var r=await fetch('https://bq-tools-api.fanzai-mgmt.workers.dev/api/tony/chat',{
+          method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({message:q})});
+        var d=await r.json();
+        if(!r.ok||!d||!d.ok) throw new Error((d&&d.error)||('HTTP '+r.status));
+        return d;
+      }
+      function ccOpenLabel(key){
+        var L={'trust-pack':'Trust Pack','crm':'CRM','portal':'Client Portal','quote':'Quote','invoice':'Invoice','contract':'Contract','price-book':'Price Book','bid-justifier':'Bid Justifier','social-analysis':'Social Analysis','video':'Video','scanner':'Scanner'};
+        var name=L[(key||'').replace(/^\//,'').replace('/tools/','').replace('.html','')]||'Open';
+        return ((typeof lang!=='undefined'&&lang==='he')?'פתח ':'Open ')+name+' →';
+      }
+      function ccAsk(){
+        // home orb → launch the full Tony chat with this first message
+        var inp=document.getElementById('ccInput');var q=(inp.value||'').trim();if(!q)return;
+        location.href='/tony?q='+encodeURIComponent(q);
+      }
+    </script>
+
     <div style="display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
-      <span class="ed-eyebrow"><span data-en="Your toolbox" data-he="ארגז הכלים שלך" data-es="Tu caja de herramientas">Your toolbox</span> · <span id="toolCount">18</span> <span data-en="tools" data-he="כלים" data-es="herramientas">tools</span></span>
+      <span class="ed-eyebrow"><span data-en="Or jump straight to a tool" data-he="או קפוץ ישר לכלי" data-es="O ve directo a una herramienta">Or jump straight to a tool</span></span>
       <button class="cmdk-hint cmdk-trigger">⌘ <span data-en="Quick search" data-he="חיפוש מהיר" data-es="Búsqueda rápida">Quick search</span> · <kbd>⌘K</kbd></button>
     </div>
 
@@ -359,12 +426,44 @@
         <span class="ed-tag new" data-en="NEW" data-he="חדש" data-es="NUEVO">NEW</span>
       </a>
 
+      <a href="/tools/trust-pack.html" class="ed-cell tool-cell col-2" data-cat="sales" data-tag="new">
+        <span class="ed-icon" data-en="NEW · WIN THEIR TRUST" data-he="חדש · תזכה באמון" data-es="NUEVO · GANA SU CONFIANZA">NEW · WIN THEIR TRUST</span>
+        <span class="ed-icon-em">🛡️</span>
+        <h3 data-en="Trust Pack" data-he="חבילת אמון" data-es="Paquete de Confianza">Trust <em>Pack</em></h3>
+        <p data-en="One click → a branded doc proving you're licensed, insured & safe: credentials, phased scope, milestone payments, live license-verify QR, and e-sign. The thing that wins the job before you start." data-he="קליק אחד → מסמך ממותג שמוכיח שאתה מורשה, מבוטח ובטוח: אישורים, scope לפי שלבים, תשלומי אבני-דרך, QR לאימות רישיון, וחתימה. מה שסוגר את העבודה לפני שהתחלת." data-es="Un clic → un documento de marca que prueba que tienes licencia, seguro y eres confiable: credenciales, alcance por fases, pagos por hitos, QR de verificación de licencia y firma. Lo que gana el trabajo antes de empezar.">One click → a branded doc proving you're licensed, insured & safe: credentials, phased scope, milestone payments, live license-verify QR, and e-sign. The thing that wins the job before you start.</p>
+        <span class="ed-tag new" data-en="3 CR · NEW" data-he="3 קר · חדש" data-es="3 CR · NUEVO">3 CR · NEW</span>
+      </a>
+
       <a href="/tools/bid-render.html" class="ed-cell tool-cell col-2" data-cat="sales" data-tag="new">
         <span class="ed-icon" data-en="NEW · WIN THE BID" data-he="חדש · תסגור עבודה" data-es="NUEVO · GANA LA OFERTA">NEW · WIN THE BID</span>
         <span class="ed-icon-em">🏡</span>
         <h3 data-en="Bid Render" data-he="רינדור הצעה" data-es="Render de Oferta">Bid <em>Render</em></h3>
         <p data-en="Photo of the room → a photorealistic 'after' render to attach to your quote. Show clients the finished job before they sign." data-he="צילום של החדר → רינדור 'אחרי' פוטוריאליסטי לצרף להצעת המחיר. תראה ללקוח את התוצאה לפני שהוא חותם." data-es="Foto del cuarto → un render 'después' fotorrealista para adjuntar a tu cotización. Muéstrale al cliente el resultado antes de firmar.">Photo of the room → a photorealistic 'after' render to attach to your quote. Show clients the finished job before they sign.</p>
         <span class="ed-tag new" data-en="5 CR · NEW" data-he="5 קר · חדש" data-es="5 CR · NUEVO">5 CR · NEW</span>
+      </a>
+
+      <a href="/tools/bid-justifier.html" data-folded="1" style="display:none" class="ed-cell tool-cell col-2" data-cat="sales" data-tag="new">
+        <span class="ed-icon" data-en="NEW · DEFEND YOUR PRICE" data-he="חדש · תגן על המחיר" data-es="NUEVO · DEFIENDE TU PRECIO">NEW · DEFEND YOUR PRICE</span>
+        <span class="ed-icon-em">⚖️</span>
+        <h3 data-en="Bid Justifier" data-he="מצדיק הצעות" data-es="Justificador de Ofertas">Bid <em>Justifier</em></h3>
+        <p data-en="Client got a cheaper bid? One tap → an honest side-by-side showing what that lowball price isn't telling them. Make your price make sense." data-he="הלקוח קיבל הצעה זולה יותר? קליק אחד → השוואה ישרה שמראה מה המחיר הזול לא מספר לו. תגרום למחיר שלך להיות הגיוני." data-es="¿El cliente recibió una oferta más barata? Un toque → una comparación honesta que muestra lo que ese precio bajo no le dice. Haz que tu precio tenga sentido.">Client got a cheaper bid? One tap → an honest side-by-side showing what that lowball price isn't telling them.</p>
+        <span class="ed-tag new" data-en="2 CR · NEW" data-he="2 קר · חדש" data-es="2 CR · NUEVO">2 CR · NEW</span>
+      </a>
+
+      <a href="/tools/price-book.html" data-folded="1" style="display:none" class="ed-cell tool-cell col-2" data-cat="sales" data-tag="new">
+        <span class="ed-icon" data-en="NEW · KNOW THE NUMBER" data-he="חדש · תדע את המספר" data-es="NUEVO · CONOCE EL NÚMERO">NEW · KNOW THE NUMBER</span>
+        <span class="ed-icon-em">💰</span>
+        <h3 data-en="Price Book" data-he="מחירון" data-es="Lista de Precios">Price <em>Book</em></h3>
+        <p data-en="Know what a job really costs and exactly what to charge to make money. Live community prices + AI estimate + instant margin math. No more guessing or chasing your mentor." data-he="תדע כמה עבודה באמת עולה ובדיוק בכמה לגבות כדי להרוויח. מחירון קהילתי חי + הערכת AI + חישוב מרווח מיידי. בלי לנחש ובלי לרדוף אחרי המנטור." data-es="Sabe cuánto cuesta realmente un trabajo y exactamente cuánto cobrar para ganar dinero. Precios comunitarios en vivo + estimación IA + cálculo de margen instantáneo.">Know what a job really costs and exactly what to charge to make money. Live prices + AI estimate + instant margin math.</p>
+        <span class="ed-tag new" data-en="1 CR · NEW" data-he="1 קר · חדש" data-es="1 CR · NUEVO">1 CR · NEW</span>
+      </a>
+
+      <a href="/tools/portal.html" class="ed-cell tool-cell col-2" data-cat="sales" data-tag="new">
+        <span class="ed-icon" data-en="NEW · NEVER GO QUIET" data-he="חדש · אל תיעלם" data-es="NUEVO · NUNCA TE CALLES">NEW · NEVER GO QUIET</span>
+        <span class="ed-icon-em">📲</span>
+        <h3 data-en="Client Portal" data-he="פורטל לקוח" data-es="Portal del Cliente">Client <em>Portal</em></h3>
+        <p data-en="Give each client a private link to a live progress feed — photos & updates without the phone calls. The #1 reason clients trust you: they always know what's happening." data-he="תן לכל לקוח לינק פרטי לפיד התקדמות חי — תמונות ועדכונים בלי טלפונים. הסיבה מס'1 שלקוחות בוטחים בך: הם תמיד יודעים מה קורה." data-es="Dale a cada cliente un enlace privado a un feed de progreso en vivo — fotos y actualizaciones sin llamadas. La razón #1 por la que confían en ti: siempre saben qué pasa.">Give each client a private link to a live progress feed — photos & updates without the phone calls.</p>
+        <span class="ed-tag new" data-en="FREE · NEW" data-he="חינם · חדש" data-es="GRATIS · NUEVO">FREE · NEW</span>
       </a>
 
       <a href="/tools/ai-video.html" class="ed-cell tool-cell col-2" data-cat="content">
@@ -383,7 +482,7 @@
         <span class="ed-tag">20 CR</span>
       </a>
 
-      <a href="/tools/compare.html" class="ed-cell tool-cell col-2" data-cat="sales" data-tag="free">
+      <a href="/tools/compare.html" data-folded="1" style="display:none" class="ed-cell tool-cell col-2" data-cat="sales" data-tag="free">
         <span class="ed-icon" data-en="COMPARE" data-he="השוואה" data-es="COMPARAR">COMPARE</span>
         <span class="ed-icon-em">🔀</span>
         <h3 data-en="Compare" data-he="השוואה" data-es="Comparar">Compare</h3>
@@ -391,7 +490,7 @@
         <span class="ed-tag free" data-en="FREE" data-he="חינם" data-es="GRATIS">FREE</span>
       </a>
 
-      <a href="/tools/social-post.html" class="ed-cell tool-cell col-2" data-cat="content">
+      <a href="/tools/social-post.html" data-folded="1" style="display:none" class="ed-cell tool-cell col-2" data-cat="content">
         <span class="ed-icon" data-en="SOCIAL" data-he="סושיאל" data-es="SOCIAL">SOCIAL</span>
         <span class="ed-icon-em">📱</span>
         <h3 data-en="Social Post" data-he="פוסט לרשתות" data-es="Publicación Social">Social Post</h3>
@@ -407,7 +506,7 @@
         <span class="ed-tag">1-6 CR</span>
       </a>
 
-      <a href="/tools/quote.html" class="ed-cell tool-cell col-2" data-cat="business">
+      <a href="/tools/quote.html" data-folded="1" style="display:none" class="ed-cell tool-cell col-2" data-cat="business">
         <span class="ed-icon" data-en="QUOTE" data-he="הצעת מחיר" data-es="COTIZACIÓN">QUOTE</span>
         <span class="ed-icon-em">📝</span>
         <h3 data-en="Quote Generator" data-he="מחולל הצעות מחיר" data-es="Generador de Cotizaciones">Quote <em>Generator</em></h3>
@@ -415,7 +514,7 @@
         <span class="ed-tag">1 CR</span>
       </a>
 
-      <a href="/tools/estimate.html" class="ed-cell tool-cell col-2" data-cat="sales">
+      <a href="/tools/estimate.html" data-folded="1" style="display:none" class="ed-cell tool-cell col-2" data-cat="sales">
         <span class="ed-icon" data-en="ESTIMATE" data-he="אומדן" data-es="ESTIMADO">ESTIMATE</span>
         <span class="ed-icon-em">💰</span>
         <h3 data-en="Smart Estimate" data-he="אומדן עלויות חכם" data-es="Estimado Inteligente">Smart <em>Estimate</em></h3>
@@ -431,7 +530,7 @@
         <span class="ed-tag free" data-en="FREE" data-he="חינם" data-es="GRATIS">FREE</span>
       </a>
 
-      <a href="/tools/report.html" class="ed-cell tool-cell col-2" data-cat="sales">
+      <a href="/tools/report.html" data-folded="1" style="display:none" class="ed-cell tool-cell col-2" data-cat="sales">
         <span class="ed-icon" data-en="REPORT" data-he="דוח" data-es="REPORTE">REPORT</span>
         <span class="ed-icon-em">📄</span>
         <h3 data-en="Quick Report" data-he="דוח מהיר" data-es="Reporte Rápido">Quick Report</h3>
@@ -439,7 +538,7 @@
         <span class="ed-tag">1 CR</span>
       </a>
 
-      <a href="/tools/review.html" class="ed-cell tool-cell col-2" data-cat="sales">
+      <a href="/tools/review.html" data-folded="1" style="display:none" class="ed-cell tool-cell col-2" data-cat="sales">
         <span class="ed-icon" data-en="REVIEW" data-he="ביקורת" data-es="RESEÑA">REVIEW</span>
         <span class="ed-icon-em">⭐</span>
         <h3 data-en="Review Request" data-he="בקשת ביקורת" data-es="Solicitud de Reseña">Review Request</h3>
@@ -463,7 +562,7 @@
         <span class="ed-tag free" data-en="FREE" data-he="חינם" data-es="GRATIS">FREE</span>
       </a>
 
-      <a href="/tools/contract.html" class="ed-cell tool-cell col-2" data-cat="business">
+      <a href="/tools/contract.html" data-folded="1" style="display:none" class="ed-cell tool-cell col-2" data-cat="business">
         <span class="ed-icon" data-en="CONTRACT" data-he="חוזה" data-es="CONTRATO">CONTRACT</span>
         <span class="ed-icon-em">📜</span>
         <h3 data-en="Contract" data-he="חוזה" data-es="Contrato">Contract</h3>
@@ -610,7 +709,7 @@ document.querySelectorAll('.filter-chip').forEach(chip => {
   else if (count) chip.innerHTML += ` <span class="count">${count}</span>`;
 });
 
-document.getElementById('toolCount').textContent = all.length;
+const _tc = document.getElementById('toolCount'); if (_tc) _tc.textContent = all.length; // guard: element was removed in the Tony-first cleanup
 </script>
 
 <script src="/js/i18n-dict.js" defer></script>
