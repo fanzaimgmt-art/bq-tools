@@ -319,6 +319,14 @@ function updateCreditDisplay() {
   // Warning state
   bar.classList.toggle('credit-low', credits > 0 && credits < 5);
   bar.classList.toggle('credit-empty', credits === 0);
+
+  // Every credit display is a door to the money page
+  if (!bar.dataset.buyWired) {
+    bar.dataset.buyWired = '1';
+    bar.style.cursor = 'pointer';
+    bar.title = lang === 'he' ? 'לחץ לטעינת קרדיטים' : lang === 'es' ? 'Clic para recargar créditos' : 'Click to top up credits';
+    bar.addEventListener('click', () => { window.location.href = '/buy.html'; });
+  }
 }
 
 // ── Projects ──

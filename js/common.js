@@ -188,8 +188,8 @@ function _ddHTML(user) {
     <a href="/affiliate.html" class="nav-dd-item"><span class="dd-icon">💰</span>${t({ en: 'Affiliate Program', he: 'תוכנית שותפים', es: 'Programa de Afiliados' })}</a>
     <div class="nav-dd-divider"></div>
     <button class="nav-dd-item" onclick="resetTutorial()"><span class="dd-icon">📖</span>${t({ en: 'Show Tutorial Again', he: 'הצג Tutorial שוב', es: 'Ver Tutorial' })}</button>
-    <button class="nav-dd-item accent" onclick="showBuyCreditsModal()"><span class="dd-icon">🛒</span>${t({ en: 'Buy Credits', he: 'קנה קרדיטים', es: 'Comprar Créditos' })}</button>
-    ${!user.isPro ? `<button class="nav-dd-item green" onclick="showProModal()"><span class="dd-icon">⭐</span>${t({ en: 'Upgrade to Pro', he: 'שדרג ל-Pro', es: 'Hazte Pro' })}</button>` : ''}
+    <a class="nav-dd-item accent" href="/buy.html"><span class="dd-icon">🛒</span>${t({ en: 'Buy Credits', he: 'קנה קרדיטים', es: 'Comprar Créditos' })}</a>
+    ${!user.isPro ? `<a class="nav-dd-item green" href="/buy.html"><span class="dd-icon">⭐</span>${t({ en: 'Upgrade to Pro', he: 'שדרג ל-Pro', es: 'Hazte Pro' })}</a>` : ''}
     <div class="nav-dd-divider"></div>
     <button class="nav-dd-item danger" onclick="doLogout()"><span class="dd-icon">🚪</span>${t({ en: 'Sign Out', he: 'התנתק', es: 'Cerrar Sesión' })}</button>`;
 }

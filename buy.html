@@ -100,7 +100,7 @@
     </div>
   </div>
 
-  <h2 class="sec-title" data-en="Or go unlimited" data-he="או עבור לבלתי מוגבל" data-es="O hazte ilimitado">Or go unlimited</h2>
+  <h2 class="sec-title" data-en="Or go Pro" data-he="או עבור ל-Pro" data-es="O hazte Pro">Or go Pro</h2>
   <p class="sec-sub" data-en="⚡ Founding price — locked for life while you stay subscribed." data-he="⚡ מחיר מייסדים — נעול לכל החיים כל עוד אתה מנוי." data-es="⚡ Precio fundador — fijo de por vida mientras sigas suscrito.">⚡ Founding price — locked for life while you stay subscribed.</p>
 
   <div class="pro-grid">
@@ -109,9 +109,9 @@
       <div class="num" data-en-keep>PRO <small data-en="monthly" data-he="חודשי" data-es="mensual">monthly</small></div>
       <div class="price">$14.99<span class="per">/mo</span></div>
       <ul class="pro-feats">
-        <li data-en="Unlimited AI chat + Tony, your business brain" data-he="צ'אט AI ללא הגבלה + טוני, המוח העסקי שלך" data-es="Chat IA ilimitado + Tony, tu cerebro de negocios">Unlimited AI chat + Tony, your business brain</li>
+        <li data-en="50 AI credits refill every month" data-he="50 קרדיטים מתחדשים כל חודש" data-es="50 créditos de IA renovados cada mes">50 AI credits refill every month</li>
         <li data-en="All money tools: CRM, invoices, quotes, contracts" data-he="כל כלי הכסף: CRM, חשבוניות, הצעות, חוזים" data-es="Todas las herramientas: CRM, facturas, cotizaciones, contratos">All money tools: CRM, invoices, quotes, contracts</li>
-        <li data-en="Video Brain walkthrough analysis" data-he="ניתוח סיורי וידאו — Video Brain" data-es="Análisis de video con Video Brain">Video Brain walkthrough analysis</li>
+        <li data-en="Your logo on every export" data-he="הלוגו שלך על כל ייצוא" data-es="Tu logo en cada exportación">Your logo on every export</li>
         <li data-en="Cancel in one click, anytime" data-he="ביטול בלחיצה אחת, בכל רגע" data-es="Cancela con un clic, cuando quieras">Cancel in one click, anytime</li>
       </ul>
       <button class="btn btn-primary buy-btn" data-en="Go Pro — $14.99/mo" data-he="עבור ל-Pro — $14.99/חודש" data-es="Hazte Pro — $14.99/mes">Go Pro — $14.99/mo</button>
@@ -187,7 +187,7 @@ async function loadMyCredits() {
     const u = d && d.user ? d.user : d;
     if (!u) return;
     document.getElementById('myCredits').style.display = 'flex';
-    document.getElementById('myCreditsNum').textContent = u.isPro ? '∞ PRO' : (u.credits ?? '—');
+    document.getElementById('myCreditsNum').textContent = u.isPro ? `PRO · ${u.credits ?? 0}` : (u.credits ?? '—');
   } catch (e) {}
 }
 
