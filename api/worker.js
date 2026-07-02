@@ -15,7 +15,7 @@ export default {
    try {
     // CORS preflight (do not gate)
     if (request.method === 'OPTIONS') {
-      return corsResponse(env, new Response(null, { status: 204 }));
+      return corsResponse(env, request, new Response(null, { status: 204 }));
     }
 
     // ── Security gate ── (rate limit, probes, banned IPs, bad UAs)
@@ -37,7 +37,7 @@ export default {
         return addSecurityHeaders(await handleSecurityUnban(request, env), request);
       }
       if (path === '/api/security-health' && request.method === 'GET') {
-        return corsResponse(env, await handleSecurityHealth(request, env));
+        return corsResponse(env, request, await handleSecurityHealth(request, env));
       }
 
       // ── Routes ──
@@ -45,267 +45,267 @@ export default {
         return await handlePusherWebhook(request, env, ctx);
       }
       if (path === '/api/pusher-stats' && request.method === 'GET') {
-        return corsResponse(env, await handlePusherStats(request, env));
+        return corsResponse(env, request, await handlePusherStats(request, env));
       }
       if (path === '/api/pusher-health' && request.method === 'GET') {
-        return corsResponse(env, await handlePusherHealth(request, env));
+        return corsResponse(env, request, await handlePusherHealth(request, env));
       }
       if (path === '/api/brain/chat' && request.method === 'POST') {
-        return corsResponse(env, await handleBrainChat(request, env));
+        return corsResponse(env, request, await handleBrainChat(request, env));
       }
       if (path === '/api/pusher-beta-seats' && request.method === 'GET') {
-        return corsResponse(env, await handlePusherBetaSeats(request, env));
+        return corsResponse(env, request, await handlePusherBetaSeats(request, env));
       }
       if (path === '/api/pusher/me' && request.method === 'GET') {
-        return corsResponse(env, await handlePusherMe(request, env));
+        return corsResponse(env, request, await handlePusherMe(request, env));
       }
       if (path === '/api/pusher/onboard' && request.method === 'POST') {
-        return corsResponse(env, await handlePusherOnboard(request, env));
+        return corsResponse(env, request, await handlePusherOnboard(request, env));
       }
       if (path === '/api/admin/pusher/list' && request.method === 'GET') {
-        return corsResponse(env, await handlePusherAdminList(request, env));
+        return corsResponse(env, request, await handlePusherAdminList(request, env));
       }
       if (path === '/api/admin/pusher/user' && request.method === 'GET') {
-        return corsResponse(env, await handlePusherAdminUserGet(request, env));
+        return corsResponse(env, request, await handlePusherAdminUserGet(request, env));
       }
       if (path === '/api/admin/pusher/user-update' && request.method === 'POST') {
-        return corsResponse(env, await handlePusherAdminUserUpdate(request, env));
+        return corsResponse(env, request, await handlePusherAdminUserUpdate(request, env));
       }
       if (path === '/api/admin/pusher/link-telegram' && request.method === 'POST') {
-        return corsResponse(env, await handlePusherAdminLinkTelegram(request, env));
+        return corsResponse(env, request, await handlePusherAdminLinkTelegram(request, env));
       }
       if (path === '/api/admin/pusher/provision' && request.method === 'POST') {
-        return corsResponse(env, await handlePusherProvisionSchedule(request, env));
+        return corsResponse(env, request, await handlePusherProvisionSchedule(request, env));
       }
       if (path === '/api/admin/pusher/run-now' && request.method === 'POST') {
-        return corsResponse(env, await handlePusherAdminRunNow(request, env));
+        return corsResponse(env, request, await handlePusherAdminRunNow(request, env));
       }
       if (path === '/api/auth/register' && request.method === 'POST') {
-        return corsResponse(env, await handleRegister(request, env));
+        return corsResponse(env, request, await handleRegister(request, env));
       }
       if (path === '/api/auth/verify' && request.method === 'POST') {
-        return corsResponse(env, await handleVerify(request, env));
+        return corsResponse(env, request, await handleVerify(request, env));
       }
       if (path === '/api/auth/google' && request.method === 'POST') {
-        return corsResponse(env, await handleGoogleAuth(request, env));
+        return corsResponse(env, request, await handleGoogleAuth(request, env));
       }
       if (path === '/api/auth/logout' && request.method === 'POST') {
-        return corsResponse(env, await handleLogout(request, env));
+        return corsResponse(env, request, await handleLogout(request, env));
       }
       if (path === '/api/contact' && request.method === 'POST') {
-        return corsResponse(env, await handleContact(request, env));
+        return corsResponse(env, request, await handleContact(request, env));
       }
       // ── CRM (D1) ──
-      if (path === '/api/crm/pipeline' && request.method === 'GET') return corsResponse(env, await handleCrmPipeline(request, env));
-      if (path === '/api/crm/deal' && request.method === 'POST') return corsResponse(env, await handleCrmDealCreate(request, env));
-      if (path === '/api/crm/deal' && request.method === 'PATCH') return corsResponse(env, await handleCrmDealUpdate(request, env));
-      if (path === '/api/crm/deal' && request.method === 'GET') return corsResponse(env, await handleCrmDealGet(request, env));
-      if (path === '/api/crm/deal' && request.method === 'DELETE') return corsResponse(env, await handleCrmDealDelete(request, env));
-      if (path === '/api/crm/activity' && request.method === 'POST') return corsResponse(env, await handleCrmActivity(request, env));
-      if (path === '/api/crm/task' && request.method === 'POST') return corsResponse(env, await handleCrmTaskCreate(request, env));
-      if (path === '/api/crm/task' && request.method === 'PATCH') return corsResponse(env, await handleCrmTaskDone(request, env));
-      if (path === '/api/crm/tasks' && request.method === 'GET') return corsResponse(env, await handleCrmTasks(request, env));
-      if (path === '/api/crm/import-clients' && request.method === 'POST') return corsResponse(env, await handleCrmImportClients(request, env));
+      if (path === '/api/crm/pipeline' && request.method === 'GET') return corsResponse(env, request, await handleCrmPipeline(request, env));
+      if (path === '/api/crm/deal' && request.method === 'POST') return corsResponse(env, request, await handleCrmDealCreate(request, env));
+      if (path === '/api/crm/deal' && request.method === 'PATCH') return corsResponse(env, request, await handleCrmDealUpdate(request, env));
+      if (path === '/api/crm/deal' && request.method === 'GET') return corsResponse(env, request, await handleCrmDealGet(request, env));
+      if (path === '/api/crm/deal' && request.method === 'DELETE') return corsResponse(env, request, await handleCrmDealDelete(request, env));
+      if (path === '/api/crm/activity' && request.method === 'POST') return corsResponse(env, request, await handleCrmActivity(request, env));
+      if (path === '/api/crm/task' && request.method === 'POST') return corsResponse(env, request, await handleCrmTaskCreate(request, env));
+      if (path === '/api/crm/task' && request.method === 'PATCH') return corsResponse(env, request, await handleCrmTaskDone(request, env));
+      if (path === '/api/crm/tasks' && request.method === 'GET') return corsResponse(env, request, await handleCrmTasks(request, env));
+      if (path === '/api/crm/import-clients' && request.method === 'POST') return corsResponse(env, request, await handleCrmImportClients(request, env));
       // ── Trust Pack ──
-      if (path === '/api/trustpack/generate' && request.method === 'POST') return corsResponse(env, await handleTrustpackGenerate(request, env));
-      if (path === '/api/trustpack/save' && request.method === 'POST') return corsResponse(env, await handleTrustpackSave(request, env));
-      if (path === '/api/trustpack/list' && request.method === 'GET') return corsResponse(env, await handleTrustpackList(request, env));
-      if (path === '/api/trustpack/get' && request.method === 'GET') return corsResponse(env, await handleTrustpackGet(request, env));   // PUBLIC
-      if (path === '/api/trustpack/sign' && request.method === 'POST') return corsResponse(env, await handleTrustpackSign(request, env)); // PUBLIC
-      if (path === '/api/scorecard/lead' && request.method === 'POST') return corsResponse(env, await handleScorecardLead(request, env)); // PUBLIC
-      if (path === '/api/bidjustify/generate' && request.method === 'POST') return corsResponse(env, await handleBidJustify(request, env));
-      if (path === '/api/scanner/check' && request.method === 'POST') return corsResponse(env, await handleScannerCheck(request, env)); // PUBLIC (email-gated)
-      if (path === '/api/pricebook/add' && request.method === 'POST') return corsResponse(env, await handlePriceAdd(request, env));
-      if (path === '/api/pricebook/search' && request.method === 'GET') return corsResponse(env, await handlePriceSearch(request, env));
-      if (path === '/api/pricebook/estimate' && request.method === 'POST') return corsResponse(env, await handlePriceEstimate(request, env));
-      if (path === '/api/concierge/route' && request.method === 'POST') return corsResponse(env, await handleConciergeRoute(request, env));
-      if (path === '/api/tony/chat' && request.method === 'POST') return corsResponse(env, await handleTonyChat(request, env));
-      if (path === '/api/tony/skills' && request.method === 'GET') return corsResponse(env, await handleTonySkills(request, env));
-      if (path === '/api/projects' && request.method === 'POST') return corsResponse(env, await handleProjectCreate(request, env));
-      if (path === '/api/projects' && request.method === 'GET') return corsResponse(env, await handleProjectList(request, env));
-      if (path === '/api/projects/active' && request.method === 'POST') return corsResponse(env, await handleProjectActive(request, env));
-      if (path === '/api/projects/context' && request.method === 'POST') return corsResponse(env, await handleProjectContext(request, env));
-      if (path === '/api/history' && request.method === 'POST') return corsResponse(env, await handleHistoryLog(request, env));
-      if (path === '/api/history' && request.method === 'GET') return corsResponse(env, await handleHistoryList(request, env));
-      if (path === '/api/connections' && request.method === 'GET') return corsResponse(env, await handleConnectionsList(request, env));
-      if (path === '/api/connections/google/start' && request.method === 'GET') return corsResponse(env, await handleGoogleStart(request, env));
+      if (path === '/api/trustpack/generate' && request.method === 'POST') return corsResponse(env, request, await handleTrustpackGenerate(request, env));
+      if (path === '/api/trustpack/save' && request.method === 'POST') return corsResponse(env, request, await handleTrustpackSave(request, env));
+      if (path === '/api/trustpack/list' && request.method === 'GET') return corsResponse(env, request, await handleTrustpackList(request, env));
+      if (path === '/api/trustpack/get' && request.method === 'GET') return corsResponse(env, request, await handleTrustpackGet(request, env));   // PUBLIC
+      if (path === '/api/trustpack/sign' && request.method === 'POST') return corsResponse(env, request, await handleTrustpackSign(request, env)); // PUBLIC
+      if (path === '/api/scorecard/lead' && request.method === 'POST') return corsResponse(env, request, await handleScorecardLead(request, env)); // PUBLIC
+      if (path === '/api/bidjustify/generate' && request.method === 'POST') return corsResponse(env, request, await handleBidJustify(request, env));
+      if (path === '/api/scanner/check' && request.method === 'POST') return corsResponse(env, request, await handleScannerCheck(request, env)); // PUBLIC (email-gated)
+      if (path === '/api/pricebook/add' && request.method === 'POST') return corsResponse(env, request, await handlePriceAdd(request, env));
+      if (path === '/api/pricebook/search' && request.method === 'GET') return corsResponse(env, request, await handlePriceSearch(request, env));
+      if (path === '/api/pricebook/estimate' && request.method === 'POST') return corsResponse(env, request, await handlePriceEstimate(request, env));
+      if (path === '/api/concierge/route' && request.method === 'POST') return corsResponse(env, request, await handleConciergeRoute(request, env));
+      if (path === '/api/tony/chat' && request.method === 'POST') return corsResponse(env, request, await handleTonyChat(request, env));
+      if (path === '/api/tony/skills' && request.method === 'GET') return corsResponse(env, request, await handleTonySkills(request, env));
+      if (path === '/api/projects' && request.method === 'POST') return corsResponse(env, request, await handleProjectCreate(request, env));
+      if (path === '/api/projects' && request.method === 'GET') return corsResponse(env, request, await handleProjectList(request, env));
+      if (path === '/api/projects/active' && request.method === 'POST') return corsResponse(env, request, await handleProjectActive(request, env));
+      if (path === '/api/projects/context' && request.method === 'POST') return corsResponse(env, request, await handleProjectContext(request, env));
+      if (path === '/api/history' && request.method === 'POST') return corsResponse(env, request, await handleHistoryLog(request, env));
+      if (path === '/api/history' && request.method === 'GET') return corsResponse(env, request, await handleHistoryList(request, env));
+      if (path === '/api/connections' && request.method === 'GET') return corsResponse(env, request, await handleConnectionsList(request, env));
+      if (path === '/api/connections/google/start' && request.method === 'GET') return corsResponse(env, request, await handleGoogleStart(request, env));
       if (path === '/api/connections/google/callback' && request.method === 'GET') return await handleGoogleCallback(request, env); // PUBLIC (Google redirect) — returns a 302
-      if (path === '/api/connections/disconnect' && request.method === 'POST') return corsResponse(env, await handleConnectionDisconnect(request, env));
-      if (path === '/api/portal/job' && request.method === 'POST') return corsResponse(env, await handlePortalJobCreate(request, env));
-      if (path === '/api/portal/jobs' && request.method === 'GET') return corsResponse(env, await handlePortalJobs(request, env));
-      if (path === '/api/portal/update' && request.method === 'POST') return corsResponse(env, await handlePortalUpdate(request, env));
-      if (path === '/api/portal/get' && request.method === 'GET') return corsResponse(env, await handlePortalGet(request, env)); // PUBLIC
+      if (path === '/api/connections/disconnect' && request.method === 'POST') return corsResponse(env, request, await handleConnectionDisconnect(request, env));
+      if (path === '/api/portal/job' && request.method === 'POST') return corsResponse(env, request, await handlePortalJobCreate(request, env));
+      if (path === '/api/portal/jobs' && request.method === 'GET') return corsResponse(env, request, await handlePortalJobs(request, env));
+      if (path === '/api/portal/update' && request.method === 'POST') return corsResponse(env, request, await handlePortalUpdate(request, env));
+      if (path === '/api/portal/get' && request.method === 'GET') return corsResponse(env, request, await handlePortalGet(request, env)); // PUBLIC
       if (path === '/api/user' && request.method === 'GET') {
-        return corsResponse(env, await handleGetUser(request, env));
+        return corsResponse(env, request, await handleGetUser(request, env));
       }
       if (path === '/api/user/update' && request.method === 'POST') {
-        return corsResponse(env, await handleUpdateUser(request, env));
+        return corsResponse(env, request, await handleUpdateUser(request, env));
       }
       if (path === '/api/ai' && request.method === 'POST') {
-        return corsResponse(env, await handleAI(request, env));
+        return corsResponse(env, request, await handleAI(request, env));
       }
       if (path === '/api/ai/chat' && request.method === 'POST') {
-        return corsResponse(env, await handleAIChat(request, env));
+        return corsResponse(env, request, await handleAIChat(request, env));
       }
       if (path === '/api/video/analyze' && request.method === 'POST') {
-        return corsResponse(env, await handleVideoAnalyze(request, env));
+        return corsResponse(env, request, await handleVideoAnalyze(request, env));
       }
       if (path === '/api/social/analyze' && request.method === 'POST') {
-        return corsResponse(env, await handleSocialAnalyze(request, env));
+        return corsResponse(env, request, await handleSocialAnalyze(request, env));
       }
       if (path === '/api/credits/redeem' && request.method === 'POST') {
-        return corsResponse(env, await handleRedeemCode(request, env));
+        return corsResponse(env, request, await handleRedeemCode(request, env));
       }
       if (path === '/api/admin/create-giftcode' && request.method === 'POST') {
-        return corsResponse(env, await handleAdminCreateGiftCode(request, env));
+        return corsResponse(env, request, await handleAdminCreateGiftCode(request, env));
       }
       if (path === '/api/affiliate/register' && request.method === 'POST') {
-        return corsResponse(env, await handleAffiliateRegister(request, env));
+        return corsResponse(env, request, await handleAffiliateRegister(request, env));
       }
       if (path === '/api/affiliate/stats' && request.method === 'GET') {
-        return corsResponse(env, await handleAffiliateStats(request, env));
+        return corsResponse(env, request, await handleAffiliateStats(request, env));
       }
       if (path === '/api/admin/scrape-directory' && request.method === 'POST') {
-        return corsResponse(env, await handleAdminScrapeDirectory(request, env));
+        return corsResponse(env, request, await handleAdminScrapeDirectory(request, env));
       }
       if (path === '/api/admin/scrape-status' && request.method === 'GET') {
-        return corsResponse(env, await handleAdminScrapeStatus(request, env));
+        return corsResponse(env, request, await handleAdminScrapeStatus(request, env));
       }
       if (path === '/api/admin/import-results' && request.method === 'POST') {
-        return corsResponse(env, await handleAdminImportResults(request, env));
+        return corsResponse(env, request, await handleAdminImportResults(request, env));
       }
       if (path === '/api/directory/claim' && request.method === 'POST') {
-        return corsResponse(env, await handleDirectoryClaim(request, env));
+        return corsResponse(env, request, await handleDirectoryClaim(request, env));
       }
       if (path === '/api/credits/add' && request.method === 'POST') {
-        return corsResponse(env, await handleAddCredits(request, env));
+        return corsResponse(env, request, await handleAddCredits(request, env));
       }
       if (path === '/api/admin/users' && request.method === 'GET') {
-        return corsResponse(env, await handleAdminUsers(request, env));
+        return corsResponse(env, request, await handleAdminUsers(request, env));
       }
       if (path === '/api/admin/user' && request.method === 'GET') {
-        return corsResponse(env, await handleAdminGetUser(request, env));
+        return corsResponse(env, request, await handleAdminGetUser(request, env));
       }
       if (path === '/api/admin/toggle-pro' && request.method === 'POST') {
-        return corsResponse(env, await handleAdminTogglePro(request, env));
+        return corsResponse(env, request, await handleAdminTogglePro(request, env));
       }
       if (path === '/api/admin/beta-tag' && request.method === 'POST') {
-        return corsResponse(env, await handleAdminBetaTag(request, env));
+        return corsResponse(env, request, await handleAdminBetaTag(request, env));
       }
       if (path === '/api/admin/beta-funnel' && request.method === 'GET') {
-        return corsResponse(env, await handleAdminBetaFunnel(request, env));
+        return corsResponse(env, request, await handleAdminBetaFunnel(request, env));
       }
       if (path === '/api/error-report' && request.method === 'POST') {
-        return corsResponse(env, await handleErrorReport(request, env));
+        return corsResponse(env, request, await handleErrorReport(request, env));
       }
       if (path === '/api/admin/errors' && request.method === 'GET') {
-        return corsResponse(env, await handleAdminErrors(request, env));
+        return corsResponse(env, request, await handleAdminErrors(request, env));
       }
       // legacy KV snapshot projects (dashboard/gallery) — distinct path so it doesn't collide with the D1 workspace /api/projects above
       if (path === '/api/projects/snapshots' && request.method === 'GET') {
-        return corsResponse(env, await handleGetProjects(request, env));
+        return corsResponse(env, request, await handleGetProjects(request, env));
       }
       if (path === '/api/projects/snapshots' && request.method === 'POST') {
-        return corsResponse(env, await handleSaveProject(request, env));
+        return corsResponse(env, request, await handleSaveProject(request, env));
       }
       if (path === '/api/credits/history' && request.method === 'GET') {
-        return corsResponse(env, await handleGetCreditHistory(request, env));
+        return corsResponse(env, request, await handleGetCreditHistory(request, env));
       }
       if (path === '/api/monthly-tip' && request.method === 'GET') {
-        return corsResponse(env, await handleMonthlyTip(request, env));
+        return corsResponse(env, request, await handleMonthlyTip(request, env));
       }
       // ── Directory Routes ──
       if (path === '/api/directory/update' && request.method === 'POST') {
-        return corsResponse(env, await handleDirectoryUpdate(request, env));
+        return corsResponse(env, request, await handleDirectoryUpdate(request, env));
       }
       if (path === '/api/directory/list' && request.method === 'GET') {
-        return corsResponse(env, await handleDirectoryList(request, env));
+        return corsResponse(env, request, await handleDirectoryList(request, env));
       }
       if (path === '/api/directory/profile' && request.method === 'GET') {
-        return corsResponse(env, await handleDirectoryProfile(request, env));
+        return corsResponse(env, request, await handleDirectoryProfile(request, env));
       }
       if (path === '/api/directory/location' && request.method === 'POST') {
-        return corsResponse(env, await handleDirectoryLocation(request, env));
+        return corsResponse(env, request, await handleDirectoryLocation(request, env));
       }
       if (path === '/api/admin/directory-tier' && request.method === 'POST') {
-        return corsResponse(env, await handleAdminDirectoryTier(request, env));
+        return corsResponse(env, request, await handleAdminDirectoryTier(request, env));
       }
 
       if (path === '/api/waitlist/video' && request.method === 'POST') {
-        return corsResponse(env, await handleVideoWaitlist(request, env));
+        return corsResponse(env, request, await handleVideoWaitlist(request, env));
       }
       if (path === '/api/referral/stats' && request.method === 'GET') {
-        return corsResponse(env, await handleReferralStats(request, env));
+        return corsResponse(env, request, await handleReferralStats(request, env));
       }
       if (path === '/api/referral/link' && request.method === 'GET') {
-        return corsResponse(env, await handleReferralLink(request, env));
+        return corsResponse(env, request, await handleReferralLink(request, env));
       }
 
       // ── Memory Routes ──
       if (path === '/api/memories' && request.method === 'GET') {
-        return corsResponse(env, await handleGetMemories(request, env));
+        return corsResponse(env, request, await handleGetMemories(request, env));
       }
       if (path === '/api/memories' && request.method === 'POST') {
-        return corsResponse(env, await handleSaveMemory(request, env));
+        return corsResponse(env, request, await handleSaveMemory(request, env));
       }
       if (path.startsWith('/api/memories/') && request.method === 'PUT') {
-        return corsResponse(env, await handleUpdateMemory(request, env, path));
+        return corsResponse(env, request, await handleUpdateMemory(request, env, path));
       }
       if (path.startsWith('/api/memories/') && request.method === 'DELETE') {
-        return corsResponse(env, await handleDeleteMemory(request, env, path));
+        return corsResponse(env, request, await handleDeleteMemory(request, env, path));
       }
       if (path === '/api/memories/generate' && request.method === 'POST') {
-        return corsResponse(env, await handleGenerateMemories(request, env));
+        return corsResponse(env, request, await handleGenerateMemories(request, env));
       }
 
       // ── Training Routes ──
       if (path === '/api/training' && request.method === 'GET') {
-        return corsResponse(env, await handleTrainingList(request, env));
+        return corsResponse(env, request, await handleTrainingList(request, env));
       }
       if (path === '/api/training/upload' && request.method === 'POST') {
-        return corsResponse(env, await handleTrainingUpload(request, env));
+        return corsResponse(env, request, await handleTrainingUpload(request, env));
       }
       if (path.startsWith('/api/training/') && request.method === 'DELETE') {
-        return corsResponse(env, await handleTrainingDelete(request, env, path));
+        return corsResponse(env, request, await handleTrainingDelete(request, env, path));
       }
       if (path === '/api/training/knowledge' && request.method === 'GET') {
-        return corsResponse(env, await handleTrainingKnowledge(request, env));
+        return corsResponse(env, request, await handleTrainingKnowledge(request, env));
       }
 
       // ── Quote Routes ──
       if (path === '/api/quotes' && request.method === 'GET') {
-        return corsResponse(env, await handleQuoteList(request, env));
+        return corsResponse(env, request, await handleQuoteList(request, env));
       }
       if (path === '/api/quotes' && request.method === 'POST') {
-        return corsResponse(env, await handleQuoteSave(request, env));
+        return corsResponse(env, request, await handleQuoteSave(request, env));
       }
       if (path === '/api/quotes/generate' && request.method === 'POST') {
-        return corsResponse(env, await handleQuoteGenerate(request, env, ctx));
+        return corsResponse(env, request, await handleQuoteGenerate(request, env, ctx));
       }
       if (path.startsWith('/api/quotes/') && request.method === 'PUT') {
-        return corsResponse(env, await handleQuoteUpdate(request, env, path));
+        return corsResponse(env, request, await handleQuoteUpdate(request, env, path));
       }
       if (path.startsWith('/api/quotes/') && request.method === 'DELETE') {
-        return corsResponse(env, await handleQuoteDelete(request, env, path));
+        return corsResponse(env, request, await handleQuoteDelete(request, env, path));
       }
       if (path.startsWith('/api/quotes/') && request.method === 'GET') {
-        return corsResponse(env, await handleQuoteGet(request, env, path));
+        return corsResponse(env, request, await handleQuoteGet(request, env, path));
       }
 
       // ── Contract Routes ──
       if (path === '/api/contracts/generate' && request.method === 'POST') {
-        return corsResponse(env, await handleContractGenerate(request, env));
+        return corsResponse(env, request, await handleContractGenerate(request, env));
       }
 
       // ── News Routes ──
       if (path === '/api/news/today' && request.method === 'GET') {
-        return corsResponse(env, await handleNewsToday(request, env));
+        return corsResponse(env, request, await handleNewsToday(request, env));
       }
       if (path === '/api/news/archive' && request.method === 'GET') {
-        return corsResponse(env, await handleNewsArchive(request, env));
+        return corsResponse(env, request, await handleNewsArchive(request, env));
       }
       if (path === '/api/admin/news/refresh' && request.method === 'POST') {
-        return corsResponse(env, await handleAdminNewsRefresh(request, env));
+        return corsResponse(env, request, await handleAdminNewsRefresh(request, env));
       }
 
       // ── Business Operations Suite ──
@@ -314,104 +314,104 @@ export default {
       if (businessMatch) {
         const collection = businessMatch[1];
         const itemId = businessMatch[2] ? businessMatch[2].slice(1) : null;
-        return corsResponse(env, await handleBusinessCRUD(request, env, collection, itemId));
+        return corsResponse(env, request, await handleBusinessCRUD(request, env, collection, itemId));
       }
       if (path === '/api/receipts/extract' && request.method === 'POST') {
-        return corsResponse(env, await handleReceiptExtract(request, env));
+        return corsResponse(env, request, await handleReceiptExtract(request, env));
       }
 
       // ── Content Intelligence ──
       if (path === '/api/content/scan' && request.method === 'POST') {
-        return corsResponse(env, await handleContentScan(request, env));
+        return corsResponse(env, request, await handleContentScan(request, env));
       }
       if (path === '/api/content/moodboard' && request.method === 'GET') {
-        return corsResponse(env, await handleMoodboardList(request, env));
+        return corsResponse(env, request, await handleMoodboardList(request, env));
       }
       if (path === '/api/content/save' && request.method === 'POST') {
-        return corsResponse(env, await handleMoodboardSave(request, env));
+        return corsResponse(env, request, await handleMoodboardSave(request, env));
       }
       if (path.startsWith('/api/content/moodboard/') && request.method === 'DELETE') {
-        return corsResponse(env, await handleMoodboardDelete(request, env, path));
+        return corsResponse(env, request, await handleMoodboardDelete(request, env, path));
       }
 
       // ── Video Downloader ──
       if (path === '/api/downloader/get' && request.method === 'POST') {
-        return corsResponse(env, await handleVideoDownload(request, env));
+        return corsResponse(env, request, await handleVideoDownload(request, env));
       }
 
       // ── Kinovi (Seedance 2) Proxy ──
       if (path === '/api/kinovi/create' && request.method === 'POST') {
-        return corsResponse(env, await handleKinoviCreate(request, env));
+        return corsResponse(env, request, await handleKinoviCreate(request, env));
       }
       if (path === '/api/kinovi/status' && request.method === 'GET') {
-        return corsResponse(env, await handleKinoviStatus(request, env));
+        return corsResponse(env, request, await handleKinoviStatus(request, env));
       }
 
       // ── NanoBanana (PiAPI / Flux image gen) ──
       if (path === '/api/nanobanana/generate' && request.method === 'POST') {
-        return corsResponse(env, await handleNanoBananaGenerate(request, env));
+        return corsResponse(env, request, await handleNanoBananaGenerate(request, env));
       }
       if (path === '/api/nanobanana/status' && request.method === 'GET') {
-        return corsResponse(env, await handleNanoBananaStatus(request, env));
+        return corsResponse(env, request, await handleNanoBananaStatus(request, env));
       }
 
       // ── Auto Ad Creator ──
       if (path === '/api/ad-creator/generate' && request.method === 'POST') {
-        return corsResponse(env, await handleAdCreatorGenerate(request, env, ctx));
+        return corsResponse(env, request, await handleAdCreatorGenerate(request, env, ctx));
       }
       if (path === '/api/ad-creator/suggest-description' && request.method === 'POST') {
-        return corsResponse(env, await handleAdCreatorSuggestDescription(request, env));
+        return corsResponse(env, request, await handleAdCreatorSuggestDescription(request, env));
       }
 
       // ── ElevenLabs TTS Proxy ──
       if (path === '/api/tts/generate' && request.method === 'POST') {
-        return corsResponse(env, await handleTTSGenerate(request, env));
+        return corsResponse(env, request, await handleTTSGenerate(request, env));
       }
 
       // ── Admin Video Flow ──
       if (path === '/api/admin/save-client-ad' && request.method === 'POST') {
-        return corsResponse(env, await handleAdminSaveClientAd(request, env));
+        return corsResponse(env, request, await handleAdminSaveClientAd(request, env));
       }
       if (path === '/api/admin/notify-client' && request.method === 'POST') {
-        return corsResponse(env, await handleAdminNotifyClient(request, env));
+        return corsResponse(env, request, await handleAdminNotifyClient(request, env));
       }
 
       if (path === '/api/admin/check-auth' && request.method === 'GET') {
-        return corsResponse(env, handleAdminCheckAuth(request, env));
+        return corsResponse(env, request, handleAdminCheckAuth(request, env));
       }
 
       // ── User Brain ──
       if (path === '/api/brain' && request.method === 'GET') {
-        return corsResponse(env, await handleBrainGet(request, env));
+        return corsResponse(env, request, await handleBrainGet(request, env));
       }
       if (path === '/api/brain' && request.method === 'PUT') {
-        return corsResponse(env, await handleBrainUpdate(request, env));
+        return corsResponse(env, request, await handleBrainUpdate(request, env));
       }
       if (path === '/api/brain/learn' && request.method === 'POST') {
-        return corsResponse(env, await handleBrainLearn(request, env));
+        return corsResponse(env, request, await handleBrainLearn(request, env));
       }
       if (path === '/api/brain/import-memory' && request.method === 'POST') {
-        return corsResponse(env, await handleBrainImportMemory(request, env));
+        return corsResponse(env, request, await handleBrainImportMemory(request, env));
       }
       if (path === '/api/brain/save-imported-memory' && request.method === 'POST') {
-        return corsResponse(env, await handleBrainSaveImportedMemory(request, env));
+        return corsResponse(env, request, await handleBrainSaveImportedMemory(request, env));
       }
 
       if (path === '/api/health') {
-        return corsResponse(env, json({ ok: true, ts: Date.now() }));
+        return corsResponse(env, request, json({ ok: true, ts: Date.now() }));
       }
 
       // ── Payment Routes ──
       if (path === '/api/payments/paypal/submit' && request.method === 'POST') {
-        return corsResponse(env, await handlePaypalSubmit(request, env));
+        return corsResponse(env, request, await handlePaypalSubmit(request, env));
       }
       if (path === '/api/payments/crypto/submit' && request.method === 'POST') {
-        return corsResponse(env, await handleCryptoSubmit(request, env));
+        return corsResponse(env, request, await handleCryptoSubmit(request, env));
       }
       // ── Stripe Routes (gated: only active when STRIPE_ENABLED === "true") ──
       if (path === '/api/payments/stripe/create-session' && request.method === 'POST') {
-        if (env.STRIPE_ENABLED !== 'true') return corsResponse(env, json({ error: 'Stripe not enabled yet' }, 503));
-        return corsResponse(env, await handleStripeCreateSession(request, env));
+        if (env.STRIPE_ENABLED !== 'true') return corsResponse(env, request, json({ error: 'Stripe not enabled yet' }, 503));
+        return corsResponse(env, request, await handleStripeCreateSession(request, env));
       }
       if (path === '/api/payments/stripe/webhook' && request.method === 'POST') {
         if (env.STRIPE_ENABLED !== 'true') return json({ error: 'Stripe not enabled yet' }, 503);
@@ -420,51 +420,51 @@ export default {
       }
       // ── Feature Flags (public) ──
       if (path === '/api/config/flags' && request.method === 'GET') {
-        return corsResponse(env, json({ stripeEnabled: env.STRIPE_ENABLED === 'true' }));
+        return corsResponse(env, request, json({ stripeEnabled: env.STRIPE_ENABLED === 'true' }));
       }
 
       // ── Admin Payment Routes ──
       if (path === '/api/admin/payments/list' && request.method === 'GET') {
-        return corsResponse(env, await handleAdminPaymentsList(request, env));
+        return corsResponse(env, request, await handleAdminPaymentsList(request, env));
       }
       if (path === '/api/admin/payments/verify' && request.method === 'POST') {
-        return corsResponse(env, await handleAdminPaymentsVerify(request, env));
+        return corsResponse(env, request, await handleAdminPaymentsVerify(request, env));
       }
       if (path === '/api/admin/alerts' && request.method === 'GET') {
-        return corsResponse(env, await handleAdminAlerts(request, env));
+        return corsResponse(env, request, await handleAdminAlerts(request, env));
       }
 
       // ── Invoice / Payment-Flow Routes ──
       if (path === '/api/invoices/create' && request.method === 'POST') {
-        return corsResponse(env, await handleInvoiceCreate(request, env));
+        return corsResponse(env, request, await handleInvoiceCreate(request, env));
       }
       if (path === '/api/invoices/list' && request.method === 'GET') {
-        return corsResponse(env, await handleInvoiceList(request, env));
+        return corsResponse(env, request, await handleInvoiceList(request, env));
       }
       if (path === '/api/invoices/update' && request.method === 'POST') {
-        return corsResponse(env, await handleInvoiceUpdate(request, env));
+        return corsResponse(env, request, await handleInvoiceUpdate(request, env));
       }
       if (path === '/api/invoices/remind' && request.method === 'POST') {
-        return corsResponse(env, await handleInvoiceRemind(request, env));
+        return corsResponse(env, request, await handleInvoiceRemind(request, env));
       }
       if (path === '/api/job/status' && request.method === 'GET') {
-        return corsResponse(env, await handleJobStatus(request, env));
+        return corsResponse(env, request, await handleJobStatus(request, env));
       }
       if (path === '/api/profile/docs' && request.method === 'GET') {
-        return corsResponse(env, await handleDocsGet(request, env));
+        return corsResponse(env, request, await handleDocsGet(request, env));
       }
       if (path === '/api/profile/docs' && request.method === 'POST') {
-        return corsResponse(env, await handleDocsPost(request, env));
+        return corsResponse(env, request, await handleDocsPost(request, env));
       }
 
-      return corsResponse(env, json({ error: 'Not found' }, 404));
+      return corsResponse(env, request, json({ error: 'Not found' }, 404));
     } catch (err) {
       console.error('Worker error:', err);
       // Malformed/empty JSON body throws SyntaxError → that's a client error, not a 500
       if (err instanceof SyntaxError) {
-        return corsResponse(env, json({ error: 'Invalid request body' }, 400));
+        return corsResponse(env, request, json({ error: 'Invalid request body' }, 400));
       }
-      return corsResponse(env, json({ error: 'Internal error' }, 500));
+      return corsResponse(env, request, json({ error: 'Internal error' }, 500));
     }
   }
 };
@@ -478,10 +478,14 @@ function json(data, status = 200) {
   });
 }
 
-function corsResponse(env, response) {
-  const origin = env.ALLOWED_ORIGIN || '*';
+const CORS_ORIGINS = ['https://obra.build', 'https://www.obra.build', 'https://bq-tools.fanzai-mgmt.workers.dev'];
+
+function corsResponse(env, request, response) {
+  const reqOrigin = request && request.headers.get('Origin');
+  const origin = (reqOrigin && CORS_ORIGINS.includes(reqOrigin)) ? reqOrigin : (env.ALLOWED_ORIGIN || 'https://obra.build');
   const headers = new Headers(response.headers);
   headers.set('Access-Control-Allow-Origin', origin);
+  headers.set('Vary', 'Origin');
   headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
   headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   headers.set('Access-Control-Max-Age', '86400');
