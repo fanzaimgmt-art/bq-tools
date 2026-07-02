@@ -4032,6 +4032,37 @@ async function runNightlyTasks(env) {
     results.analytics = 'error: ' + e.message;
   }
 
+  // 5) Follow-up digest — the daily "money on the table" email per CRM owner
+  try {
+    results.followupDigest = await nightlyFollowupDigests(env);
+  } catch (e) {
+    results.followupDigest = 'error: ' + e.message;
+  }
+
+}
+
+// Daily "money on the table" digest: each CRM owner with follow-ups due today gets one
+// morning email pointing at /crm. Only fires when something is actually due — never spam.
+async function nightlyFollowupDigests(env) {
+  if (!env.CRM_DB) return 'skipped: no CRM_DB';
+  const today = new Date().toISOString().slice(0, 10);
+  const { results } = await env.CRM_DB.prepare(
+    `SELECT owner_email,
+            COUNT(*) AS open_count,
+            SUM(value) AS open_value,
+            SUM(CASE WHEN next_follow_up IS NOT NULL AND next_follow_up <= ? THEN 1 ELSE 0 END) AS due_count
+       FROM deals WHERE stage IN ('new','quoted')
+      GROUP BY owner_email`
+  ).bind(today).all();
+  let sent = 0;
+  for (const r of (results || [])) {
+    if (!r.owner_email || !r.due_count) continue;
+    const money = r.open_value ? '$' + Math.round(r.open_value).toLocaleString('en-US') : '';
+    const subject = `${r.due_count} follow-up${r.due_count > 1 ? 's' : ''} due today${money ? ' — ' + money + ' on the table' : ''}`;
+    const text = `Good morning,\n\nYou have ${r.due_count} follow-up${r.due_count > 1 ? 's' : ''} due today and ${r.open_count} open deal${r.open_count > 1 ? 's' : ''}${money ? ' worth ' + money : ''}.\n\nDeals go cold fast — one call today keeps them warm.\n\nOpen your pipeline: https://obra.build/crm\n\n— Tony, Obra`;
+    try { const ok = await sendEmail(env, { to: r.owner_email, subject, text }); if (ok) sent++; } catch (_) {}
+  }
+  return `sent ${sent}/${(results || []).length}`;
 }
 
 // Trigger a small Apify scrape (20 results) to grow the directory incrementally
