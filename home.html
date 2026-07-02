@@ -836,5 +836,52 @@ const _tc = document.getElementById('toolCount'); if (_tc) _tc.textContent = all
 <script src="/js/editorial.js" defer></script>
 <script src="/js/cmdk-palette.js" defer></script>
 <script src="/js/brain-assistant.js" defer></script>
+
+<!-- Feedback loop: one-tap voice of customer, lands in admin errors list under FEEDBACK: -->
+<style>
+  .fb-fab{position:fixed;bottom:22px;inset-inline-end:22px;z-index:180;background:var(--sf,#141418);border:1px solid rgba(255,255,255,.14);color:var(--tx,#f5f1e8);border-radius:100px;padding:10px 16px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 8px 24px rgba(0,0,0,.4);transition:border-color .2s ease,transform .2s ease}
+  .fb-fab:hover{border-color:#e8c547;transform:translateY(-2px)}
+  .fb-panel{display:none;position:fixed;bottom:74px;inset-inline-end:22px;z-index:181;width:min(320px,calc(100vw - 44px));background:var(--sf,#141418);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:16px;box-shadow:0 16px 48px rgba(0,0,0,.5)}
+  .fb-panel.open{display:block}
+  .fb-panel h4{margin:0 0 8px;font-size:14.5px;color:var(--tx,#f5f1e8)}
+  .fb-panel textarea{width:100%;box-sizing:border-box;background:#08080d;border:1px solid rgba(255,255,255,.12);border-radius:9px;color:#f5f1e8;padding:10px;font-size:13.5px;font-family:inherit;min-height:84px;resize:vertical}
+  .fb-panel .row{display:flex;gap:8px;margin-top:10px;justify-content:flex-end}
+  .fb-panel button{font-family:inherit;cursor:pointer;border-radius:100px;font-size:13px;padding:8px 16px}
+  .fb-send{background:#e8c547;color:#1a1407;border:none;font-weight:700}
+  .fb-cancel{background:none;border:1px solid rgba(255,255,255,.14);color:#9a958c}
+  @media (prefers-reduced-motion: reduce){.fb-fab,.fb-fab:hover{transform:none;transition:none}}
+</style>
+<button class="fb-fab" id="fbFab" aria-label="Send feedback" onclick="document.getElementById('fbPanel').classList.toggle('open')">💬 <span data-en="Feedback" data-he="פידבק" data-es="Comentarios">Feedback</span></button>
+<div class="fb-panel" id="fbPanel" role="dialog" aria-label="Feedback form">
+  <h4 data-en="What's missing? What's annoying?" data-he="מה חסר? מה מעצבן?" data-es="¿Qué falta? ¿Qué molesta?">What's missing? What's annoying?</h4>
+  <textarea id="fbText" maxlength="900" placeholder="..."></textarea>
+  <div class="row">
+    <button class="fb-cancel" onclick="document.getElementById('fbPanel').classList.remove('open')" data-en="Close" data-he="סגור" data-es="Cerrar">Close</button>
+    <button class="fb-send" id="fbSend" data-en="Send" data-he="שלח" data-es="Enviar">Send</button>
+  </div>
+</div>
+<script>
+document.getElementById('fbSend').addEventListener('click', async function () {
+  var txt = (document.getElementById('fbText').value || '').trim();
+  if (!txt) return;
+  var email = '';
+  try { var u = JSON.parse(localStorage.getItem('bq_user') || 'null'); email = (u && u.email) || ''; } catch (e) {}
+  this.disabled = true;
+  try {
+    await fetch('https://bq-tools-api.fanzai-mgmt.workers.dev/api/error-report', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ page: '/home [feedback]', error: 'FEEDBACK: ' + txt + (email ? ' — from ' + email : ''), userAgent: navigator.userAgent })
+    });
+  } catch (e) {}
+  document.getElementById('fbText').value = '';
+  document.getElementById('fbPanel').classList.remove('open');
+  this.disabled = false;
+  var l = (localStorage.getItem('bq_lang') || 'en');
+  var fab = document.getElementById('fbFab');
+  var orig = fab.innerHTML;
+  fab.textContent = l === 'he' ? '🙏 תודה! קראנו כל מילה' : l === 'es' ? '🙏 ¡Gracias! Leemos todo' : '🙏 Thanks! We read every word';
+  setTimeout(function () { fab.innerHTML = orig; }, 3000);
+});
+</script>
 </body>
 </html>
