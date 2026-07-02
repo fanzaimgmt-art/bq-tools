@@ -1619,7 +1619,17 @@ function checkMonthlyReset(user) {
 
 // Rate limit check: max 10 requests per minute per user
 async function checkRateLimit(email, env) {
-  const now = Math.floor(Date.now() / 60000); // minute bucket
+  // Atomic ratelimit binding (no per-call KV write — the old KV counter could exhaust the
+  // free 1000/day write cap and 1101 the whole worker). Fail-open if the binding is missing
+  // or errors, so a limiter hiccup never blocks a paying user.
+  try {
+    if (env.USER_LIMITER) {
+      const { success } = await env.USER_LIMITER.limit({ key: `u:${email}` });
+      return success;
+    }
+  } catch (_) { return true; }
+  // Fallback (binding not yet provisioned): legacy KV counter.
+  const now = Math.floor(Date.now() / 60000);
   const key = `rate:${email}:${now}`;
   const count = parseInt(await env.BQ_USERS.get(key) || '0');
   if (count >= 10) return false;

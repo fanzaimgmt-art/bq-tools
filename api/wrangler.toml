@@ -62,6 +62,14 @@ type = "ratelimit"
 namespace_id = "2003"
 simple = { limit = 10, period = 60 }
 
+# Per-user/per-key limiter for checkRateLimit() — replaces a per-call KV write (the documented
+# 1000/day-cap total-outage cause). 10 requests / 60s per key. Atomic, zero KV writes.
+[[unsafe.bindings]]
+name = "USER_LIMITER"
+type = "ratelimit"
+namespace_id = "2004"
+simple = { limit = 10, period = 60 }
+
 [triggers]
 # 8am PT = 16:00 UTC. Runs: news refresh + scrape 20 new contractors + re-engagement + analytics digest.
 crons = ["0 16 * * *"]
