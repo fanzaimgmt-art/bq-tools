@@ -2,14 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tony — Obra</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=Heebo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{--bg:#0e0f12;--bg2:#15171c;--sf:#191b21;--sf2:#20232b;--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.15);
-    --tx:#f3f3f0;--mut:#9a9da7;--ac:#d8b24c;--ac2:#f0cf72;}
+    --tx:#f3f3f0;--mut:#9a9da7;--ac:#e8c547;--ac2:#f0cf72;--font-body:'Inter',system-ui,sans-serif;--font-display:'Space Grotesk',system-ui,sans-serif;}
+  :root:lang(he),[dir="rtl"]{--font-body:'Heebo','Inter',system-ui,sans-serif;}
   *{box-sizing:border-box}html,body{margin:0;height:100%}
-  body{background:var(--bg);color:var(--tx);font-family:'Space Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased;height:100dvh;overflow:hidden;display:flex}
+  body{background:var(--bg);color:var(--tx);font-family:var(--font-body);-webkit-font-smoothing:antialiased;height:100dvh;overflow:hidden;display:flex}
+  .side .sh, .newc, h1, h2, h3{font-family:var(--font-display)}
   /* ── left sidebar (conversation history, Claude-style) ── */
   .side{flex:0 0 268px;background:var(--bg2);border-inline-end:1px solid var(--line);display:flex;flex-direction:column;transition:margin .22s}
   .side .sh{display:flex;align-items:center;gap:9px;padding:14px 14px 10px;font-weight:700}
