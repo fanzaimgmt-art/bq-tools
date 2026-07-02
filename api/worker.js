@@ -1897,7 +1897,7 @@ async function handleGoogleAuth(request, env) {
   // Security: tokeninfo only confirms Google signed the token — NOT that it was
   // minted for THIS app. Without these checks any Google ID token (from any
   // OAuth client) carrying a victim's email = account takeover.
-  const CLIENT_ID = env.GOOGLE_CLIENT_ID || '704767034441-ljp9b1a874bdi9rqpodr8p4l5rmvbtdj.apps.googleusercontent.com';
+  const CLIENT_ID = env.GOOGLE_CLIENT_ID || '791515986123-ahji6s7f0mff047c90mrnh5kpf8e7gh6.apps.googleusercontent.com';
   if (payload.aud !== CLIENT_ID) {
     return json({ error: 'Invalid Google credential' }, 401);
   }
