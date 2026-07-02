@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Page not found — Obra</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&family=Space+Grotesk:wght@600;700&family=Heebo:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#08080d;--sf:#141418;--tx:#f5f1e8;--txd:#9a958c;--ac:#e8c547;--bd:rgba(255,255,255,.08);}
+  *{box-sizing:border-box;margin:0}
+  body{background:var(--bg);color:var(--tx);font-family:'Inter',system-ui,sans-serif;min-height:100dvh;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px}
+  .card{max-width:460px}
+  .code{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:84px;line-height:1;color:var(--ac);letter-spacing:-.03em}
+  h1{font-family:'Space Grotesk',sans-serif;font-size:24px;margin:14px 0 8px}
+  p{color:var(--txd);font-size:15px;line-height:1.55;margin-bottom:24px}
+  .btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+  a{text-decoration:none;font-weight:600;font-size:14px;padding:11px 20px;border-radius:100px}
+  .primary{background:var(--ac);color:#1a1407}
+  .ghost{border:1px solid var(--bd);color:var(--tx)}
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="code">404</div>
+    <h1 data-en="This page took a lunch break." data-he="הדף הזה יצא להפסקת צהריים." data-es="Esta página salió a almorzar.">This page took a lunch break.</h1>
+    <p data-en="The link's broken or the page moved. Let's get you back to work." data-he="הקישור שבור או שהדף עבר. בוא נחזיר אותך לעבודה." data-es="El enlace está roto o la página se movió. Volvamos al trabajo.">The link's broken or the page moved. Let's get you back to work.</p>
+    <div class="btns">
+      <a class="primary" href="/home" data-en="Go to Tools" data-he="לכלים" data-es="Ir a Herramientas">Go to Tools</a>
+      <a class="ghost" href="/" data-en="Home" data-he="דף הבית" data-es="Inicio">Home</a>
+    </div>
+  </div>
+  <script src="/js/i18n-lite.js"></script>
+</body>
+</html>
