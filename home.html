@@ -226,6 +226,7 @@
     font-size: 12px; letter-spacing: 0.02em; color: var(--ed-paper-faint);
     font-weight: 500;
   }
+  .cta-firstwin:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(212,166,75,.4); }
   .recent-empty {
     text-align: center; padding: 60px 0;
     font-family: var(--font-en) !important;
@@ -660,7 +661,12 @@
         <a href="/dashboard.html" class="ed-btn-ghost" data-en="View all" data-he="הצג הכל" data-es="Ver todo">View all</a>
       </div>
       <div class="recent-list" id="recentList">
-        <div class="recent-empty" data-en="No recent projects yet. Pick a tool above to start." data-he="אין פרויקטים אחרונים עדיין. בחר כלי למעלה כדי להתחיל." data-es="Aún no hay proyectos recientes. Elige una herramienta arriba para empezar.">No recent projects yet. Pick a tool above to start.</div>
+        <div class="recent-empty">
+          <div style="font-size:34px;margin-bottom:10px">⚡</div>
+          <div style="font-weight:700;color:var(--ed-paper);font-size:16px;margin-bottom:6px" data-en="Let's land your first win." data-he="בוא נשיג את הניצחון הראשון שלך." data-es="Consigamos tu primera victoria.">Let's land your first win.</div>
+          <div style="margin-bottom:16px" data-en="Ask Tony for a price quote — you'll have a client-ready document in under 2 minutes." data-he="בקש מטוני הצעת מחיר — יהיה לך מסמך מוכן ללקוח בפחות מ-2 דקות." data-es="Pídele a Tony una cotización — tendrás un documento listo para el cliente en menos de 2 minutos.">Ask Tony for a price quote — you'll have a client-ready document in under 2 minutes.</div>
+          <a href="/tony?q=%D7%AA%D7%A2%D7%96%D7%95%D7%A8%20%D7%9C%D7%99%20%D7%9C%D7%94%D7%9B%D7%99%D7%9F%20%D7%94%D7%A6%D7%A2%D7%AA%20%D7%9E%D7%97%D7%99%D7%A8%20%D7%9C%D7%9C%D7%A7%D7%95%D7%97" class="cta-firstwin" style="display:inline-block;background:var(--ed-gold);color:#1a1407;font-weight:700;padding:11px 22px;border-radius:11px;text-decoration:none;transition:transform .15s,box-shadow .15s" data-en="Start with Tony →" data-he="התחל עם טוני →" data-es="Empezar con Tony →">Start with Tony →</a>
+        </div>
       </div>
     </div>
   </div>

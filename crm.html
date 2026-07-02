@@ -163,6 +163,17 @@ function renderBoard(d) {
     + `<span class="rep">📅 ${L({en:'Won this month',he:'נסגר החודש',es:'Ganado este mes'})} ${fmt$(rep.wonThisMonthValue||0)}</span>`
     + `<span class="rep">📊 ${L({en:'Avg deal',he:'עסקה ממוצעת',es:'Trato promedio'})} ${fmt$(rep.avgDeal||0)}</span>`;
   const board = document.getElementById('board');
+  // First-run empty board — invite the first deal instead of showing four blank "Drop here" columns.
+  if (!d.count) {
+    board.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:56px 20px;border:1px dashed var(--bd);border-radius:14px">
+      <div style="font-size:38px;margin-bottom:12px">📈</div>
+      <div style="font-weight:800;font-size:18px;margin-bottom:8px">${L({en:'Your pipeline starts here.',he:'הפייפליין שלך מתחיל כאן.',es:'Tu embudo empieza aquí.'})}</div>
+      <div style="color:var(--txd);max-width:440px;margin:0 auto 18px;line-height:1.5">${L({en:'Add your first deal or pull in your existing clients. Every quote you send can land here automatically.',he:'הוסף עסקה ראשונה או ייבא את הלקוחות הקיימים שלך. כל הצעת מחיר שתשלח יכולה לנחות פה אוטומטית.',es:'Agrega tu primer trato o importa tus clientes. Cada cotización que envíes puede llegar aquí automáticamente.'})}</div>
+      <button class="btn btn-primary" onclick="openNewDeal()" style="margin-inline-end:8px">+ ${L({en:'Add first deal',he:'הוסף עסקה ראשונה',es:'Agregar primer trato'})}</button>
+      <button class="btn" onclick="importClients()">${L({en:'Import clients',he:'ייבא לקוחות',es:'Importar clientes'})}</button>
+    </div>`;
+    return;
+  }
   board.innerHTML = d.stages.map(s => {
     const deals = d.deals[s] || [];
     const cards = deals.length ? deals.map(dealCard).join('') : `<div class="crm-empty" data-en="Drop here" data-he="גרור לכאן" data-es="Arrastra aquí">Drop here</div>`;
