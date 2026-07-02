@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin-pusher.html
+Disallow: /api/
+
+Sitemap: https://obra.build/sitemap.xml
