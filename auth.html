@@ -279,7 +279,8 @@ async function handleGoogleCallback(response) {
 const GOOGLE_CLIENT_ID = '791515986123-ahji6s7f0mff047c90mrnh5kpf8e7gh6.apps.googleusercontent.com';
 const GOOGLE_REDIR = location.origin + '/auth.html';   // MUST exactly match the token-exchange redirect_uri
 function startGoogleRedirect() {
-  const state = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  const _b = new Uint8Array(32); crypto.getRandomValues(_b);
+  const state = Array.from(_b, x => x.toString(16).padStart(2, '0')).join(''); // CSPRNG anti-CSRF state
   sessionStorage.setItem('g_state', state);
   const u = new URL('https://accounts.google.com/o/oauth2/v2/auth');
   u.searchParams.set('client_id', GOOGLE_CLIENT_ID);
@@ -299,7 +300,13 @@ function manualGoogleSignIn() { startGoogleRedirect(); } // legacy name kept
   if (!code) return;
   const clean = location.origin + location.pathname; // strip query so a refresh can't replay the code
   const state = p.get('state'), saved = sessionStorage.getItem('g_state');
-  if (saved && state && state !== saved) { history.replaceState(null, '', clean); showMsg(lang==='he'?'אימות Google נכשל — נסה שוב':'Google verification mismatch — try again','err'); return; }
+  // Fail CLOSED: state must be present AND match what we stored when the user started the flow.
+  // A returning ?code with no matching state = not a login we initiated (CSRF) → abort.
+  if (!saved || !state || state !== saved) {
+    history.replaceState(null, '', clean);
+    showMsg(lang==='he'?'התחברות Google נכשלה — התחל שוב מהכפתור':'Google sign-in couldn’t be verified — start again from the button','err');
+    return;
+  }
   sessionStorage.removeItem('g_state');
   showMsg(lang === 'he' ? '...מתחבר עם Google' : 'Signing in with Google...', 'ok');
   fetch(API_URL + '/api/auth/google/exchange', {
