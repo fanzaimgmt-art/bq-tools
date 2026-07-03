@@ -76,7 +76,9 @@ let DATA = null;
 
 function tr(k){ return (T[k]&&(T[k][L]||T[k].en))||''; }
 function setL(l){ L=l; localStorage.setItem('obra_client_lang',l); document.body.classList.toggle('rtl',l==='he'); document.documentElement.lang=l; document.querySelectorAll('.langs button').forEach(b=>b.classList.toggle('on',b.dataset.l===l)); render(); }
-function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+// Only allow https image URLs in the logo src — blocks javascript:/data: and attribute-breakout payloads.
+function safeImg(u){ u=String(u||''); return /^https:\/\/[^"'<>\s]+$/.test(u) ? u : ''; }
 function fmtDate(d){ if(!d) return ''; try{ return new Date(d+'T00:00:00').toLocaleDateString(L==='he'?'he-IL':L==='es'?'es-MX':'en-US',{weekday:'short',month:'short',day:'numeric'}); }catch(e){ return d; } }
 
 async function load(){
@@ -96,7 +98,8 @@ function render(){
   const c = DATA.contractor||{};
   const miles = (DATA.schedule||[]).slice().sort((a,b)=>(a.date||'9')<(b.date||'9')?-1:1);
   const approved = !!DATA.approvedAt;
-  const logo = c.logo ? `<img src="${esc(c.logo)}" alt="">` : `<div style="width:44px;height:44px;border-radius:11px;background:var(--ac);color:#1a1407;display:flex;align-items:center;justify-content:center;font-weight:800;font-family:'Space Grotesk'">${esc((c.businessName||'B')[0])}</div>`;
+  const logoUrl = safeImg(c.logo);
+  const logo = logoUrl ? `<img src="${esc(logoUrl)}" alt="">` : `<div style="width:44px;height:44px;border-radius:11px;background:var(--ac);color:#1a1407;display:flex;align-items:center;justify-content:center;font-weight:800;font-family:'Space Grotesk'">${esc((c.businessName||'B')[0])}</div>`;
   const tl = miles.length ? `<div class="tl">${miles.map(m=>`<div class="ms ${m.done?'done':''}">
       <div class="mt">${esc(m.title)}</div>
       ${m.date?`<div class="md">${fmtDate(m.date)}</div>`:''}
