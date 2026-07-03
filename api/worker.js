@@ -209,6 +209,12 @@ export default {
       if (path === '/api/admin/errors' && request.method === 'GET') {
         return corsResponse(env, request, await handleAdminErrors(request, env));
       }
+      if (path === '/api/admin/changelog' && request.method === 'GET') {
+        return corsResponse(env, request, await handleAdminChangelogGet(request, env));
+      }
+      if (path === '/api/admin/changelog' && request.method === 'POST') {
+        return corsResponse(env, request, await handleAdminChangelogAdd(request, env));
+      }
       // legacy KV snapshot projects (dashboard/gallery) — distinct path so it doesn't collide with the D1 workspace /api/projects above
       if (path === '/api/projects/snapshots' && request.method === 'GET') {
         return corsResponse(env, request, await handleGetProjects(request, env));
@@ -407,7 +413,7 @@ export default {
 
       if (path === '/api/health') {
         // `version` bumps on meaningful deploys — lets us confirm an auto-deploy actually shipped.
-        return corsResponse(env, request, json({ ok: true, ts: Date.now(), version: 'obra-2026-07-03-patch' }));
+        return corsResponse(env, request, json({ ok: true, ts: Date.now(), version: 'obra-2026-07-03-changelog' }));
       }
 
       // ── Payment Routes ──
@@ -3168,6 +3174,48 @@ async function handleAdminErrors(request, env) {
   }
 
   return json({ ok: true, errors, count: errors.length });
+}
+
+// ── Admin changelog (private, admin-gated) ──
+// Baseline is version-controlled here (Claude appends when shipping changes); entries Moshe adds
+// via the page are stored in KV `admin:changelog`. GET merges: KV additions (newest first) then seed.
+const CHANGELOG_SEED = [
+  { date: '2026-07-03', type: 'fix', title: 'Project update no longer wipes data', detail: 'A partial save (e.g. changing only status) was erasing the schedule/client/address. Now only the fields you send are touched.' },
+  { date: '2026-07-03', type: 'perf', title: 'Landing hero video 94% lighter', detail: 'Re-encoded the hero video from 5.3MB to 371KB — much faster load on phones/cell data, same look.' },
+  { date: '2026-07-03', type: 'security', title: 'Capped AI abuse spend', detail: 'Public/free AI tools now use free models first (paid only as fallback), so nobody can run up the API bill.' },
+  { date: '2026-07-03', type: 'fix', title: 'Credit meter races closed', detail: 'AI chat and social-analysis now reserve credits before the call, so parallel requests cannot bypass the meter.' },
+  { date: '2026-07-03', type: 'security', title: 'Gift codes hardened', detail: 'Gift codes now use crypto-strength randomness; redemption fails safe if the DB is unavailable.' },
+  { date: '2026-07-03', type: 'feature', title: 'Project workspace + client schedule', detail: 'Every job has its own brain/context; share a schedule link and the client taps once to add the dates to their phone calendar, then approves.' },
+  { date: '2026-07-03', type: 'fix', title: 'Calendar file fixes', detail: 'Invalid dates no longer break the .ics download; re-adding a schedule updates events instead of duplicating them.' },
+  { date: '2026-07-03', type: 'feature', title: 'Auto-deploy live', detail: 'Both the site and API now deploy automatically on every code push — no manual step.' },
+  { date: '2026-07-02', type: 'feature', title: 'Payments live (Stripe)', detail: 'Instant card checkout on /buy for credit packs, Pro monthly ($14.99) and annual ($119). Also /vs comparison and /cinema pages.' },
+  { date: '2026-07-02', type: 'feature', title: 'Launched on obra.build', detail: 'Custom domain live, transactional email verified, branded pages, mobile menu, SEO, 404.' },
+];
+async function handleAdminChangelogGet(request, env) {
+  if (!await isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
+  let added = [];
+  try { added = JSON.parse((await env.BQ_USERS.get('admin:changelog')) || '[]'); } catch {}
+  return json({ ok: true, entries: [...added, ...CHANGELOG_SEED] });
+}
+async function handleAdminChangelogAdd(request, env) {
+  if (!await isAdmin(request, env)) return json({ error: 'Unauthorized' }, 403);
+  let b; try { b = await request.json(); } catch { return json({ error: 'Invalid request' }, 400); }
+  if (!b || typeof b !== 'object') return json({ error: 'Invalid request' }, 400);
+  const title = String(b.title || '').slice(0, 140).trim();
+  if (!title) return json({ error: 'Title required' }, 400);
+  const allowed = ['fix', 'feature', 'perf', 'security', 'note'];
+  const entry = {
+    date: new Date().toISOString().slice(0, 10),
+    type: allowed.includes(b.type) ? b.type : 'note',
+    title,
+    detail: String(b.detail || '').slice(0, 600),
+  };
+  let added = [];
+  try { added = JSON.parse((await env.BQ_USERS.get('admin:changelog')) || '[]'); } catch {}
+  added.unshift(entry);
+  if (added.length > 200) added = added.slice(0, 200);
+  await env.BQ_USERS.put('admin:changelog', JSON.stringify(added));
+  return json({ ok: true, entry });
 }
 
 // ── Directory ──

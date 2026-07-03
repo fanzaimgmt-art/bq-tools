@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Obra — Changelog (admin)</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  body{display:flex;flex-direction:column;min-height:100dvh}
+  .wrap{max-width:820px;margin:0 auto;padding:40px 20px 80px;width:100%}
+  h1{font-size:24px;font-weight:800;margin:0 0 4px}
+  h1 .lock{color:var(--txd);font-size:14px;font-weight:500}
+  .sub{color:var(--txd);font-size:13.5px;margin:0 0 24px}
+  .login{max-width:340px;margin:70px auto;text-align:center}
+  .login input{width:100%;box-sizing:border-box;background:var(--sf);border:1px solid var(--bd);border-radius:10px;color:var(--tx);padding:12px 14px;font-size:15px;font-family:inherit;margin-bottom:10px}
+  .content{display:none}
+  .content.show{display:block}
+  /* add form */
+  .addbox{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:22px}
+  .addbox .row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+  .addbox input,.addbox select,.addbox textarea{background:var(--bg);border:1px solid var(--bd);border-radius:9px;color:var(--tx);padding:10px 12px;font-size:14px;font-family:inherit}
+  .addbox input.title{flex:1;min-width:200px}
+  .addbox textarea{width:100%;box-sizing:border-box;min-height:56px;resize:vertical}
+  /* timeline */
+  .entry{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+  .entry .when{flex:0 0 84px;color:var(--txd);font-size:12px;font-variant-numeric:tabular-nums;padding-top:2px}
+  .entry .body{flex:1}
+  .entry .t{font-weight:700;font-size:14.5px;margin-bottom:3px}
+  .entry .d{color:var(--txd);font-size:13px;line-height:1.5}
+  .badge{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:2px 7px;border-radius:100px;margin-inline-start:8px;vertical-align:middle}
+  .b-fix{background:rgba(125,180,255,.14);color:#8fbaff}
+  .b-feature{background:rgba(232,197,71,.16);color:var(--ac)}
+  .b-perf{background:rgba(125,216,125,.14);color:#7dd87d}
+  .b-security{background:rgba(255,143,143,.14);color:#ff8f8f}
+  .b-note{background:rgba(150,150,160,.14);color:#b9b4ab}
+  .msg{font-size:13px;margin-top:8px}
+  .grp{color:var(--ac);font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;margin:22px 0 6px}
+</style>
+</head>
+<body>
+<nav class="nav"><a href="/home" class="nav-logo">Obra</a><div class="nav-links"><a href="/admin.html" class="nav-link">← Admin</a></div></nav>
+
+<div class="wrap">
+  <div class="login" id="login">
+    <h1>🔒 Changelog</h1>
+    <p class="sub">Admin only.</p>
+    <input type="password" id="pw" placeholder="Admin password" autocomplete="current-password">
+    <button class="btn btn-primary" style="width:100%" onclick="login()">Unlock</button>
+    <div class="msg" id="loginMsg" style="color:#ff8f8f"></div>
+  </div>
+
+  <div class="content" id="content">
+    <h1>Fixes &amp; updates <span class="lock">· private</span></h1>
+    <p class="sub">Everything shipped to obra.build, newest first. Add your own notes below.</p>
+
+    <div class="addbox">
+      <div class="row">
+        <input class="title" id="aTitle" maxlength="140" placeholder="What changed? (e.g. Added new pricing tier)">
+        <select id="aType">
+          <option value="note">Note</option>
+          <option value="fix">Fix</option>
+          <option value="feature">Feature</option>
+          <option value="perf">Performance</option>
+          <option value="security">Security</option>
+        </select>
+      </div>
+      <textarea id="aDetail" maxlength="600" placeholder="Optional detail…"></textarea>
+      <div class="row" style="justify-content:flex-end;margin-top:8px;margin-bottom:0">
+        <button class="btn btn-primary" onclick="addEntry()">Add entry</button>
+      </div>
+      <div class="msg" id="addMsg"></div>
+    </div>
+
+    <div id="list"></div>
+  </div>
+</div>
+
+<script>
+const API_URL = 'https://bq-tools-api.fanzai-mgmt.workers.dev';
+let adminPass = sessionStorage.getItem('adminPass') || '';
+function escHtml(s){return String(s ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+async function api(path, opts={}) {
+  const res = await fetch(API_URL + path, {
+    method: opts.method || 'GET',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + adminPass },
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+  });
+  if (res.status === 403) throw new Error('unauthorized');
+  return res.json();
+}
+
+async function login() {
+  adminPass = document.getElementById('pw').value;
+  if (!adminPass) return;
+  try {
+    await loadList();
+    sessionStorage.setItem('adminPass', adminPass);
+    document.getElementById('login').style.display = 'none';
+    document.getElementById('content').classList.add('show');
+  } catch (e) {
+    document.getElementById('loginMsg').textContent = 'Wrong password';
+  }
+}
+document.getElementById('pw').addEventListener('keydown', e => { if (e.key==='Enter') login(); });
+
+function fmtDate(d){ try { return new Date(d+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}); } catch { return d; } }
+
+async function loadList() {
+  const data = await api('/api/admin/changelog');
+  if (!data.entries) throw new Error('unauthorized');
+  const el = document.getElementById('list');
+  let lastMonth = '';
+  el.innerHTML = data.entries.map(e => {
+    const mo = (e.date||'').slice(0,7);
+    let head = '';
+    if (mo !== lastMonth) { lastMonth = mo; head = `<div class="grp">${escHtml(fmtMonth(mo))}</div>`; }
+    const type = ['fix','feature','perf','security','note'].includes(e.type) ? e.type : 'note';
+    return head + `<div class="entry">
+      <div class="when">${escHtml(fmtDate(e.date))}</div>
+      <div class="body">
+        <div class="t">${escHtml(e.title)}<span class="badge b-${type}">${type}</span></div>
+        ${e.detail ? `<div class="d">${escHtml(e.detail)}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('') || '<p class="sub">No entries yet.</p>';
+}
+function fmtMonth(mo){ try { const [y,m]=mo.split('-'); return new Date(y,m-1,1).toLocaleDateString('en-US',{month:'long',year:'numeric'}); } catch { return mo; } }
+
+async function addEntry() {
+  const title = document.getElementById('aTitle').value.trim();
+  const msg = document.getElementById('addMsg');
+  if (!title) { msg.style.color='#ff8f8f'; msg.textContent='Enter a title'; return; }
+  try {
+    await api('/api/admin/changelog', { method:'POST', body:{
+      title, type: document.getElementById('aType').value, detail: document.getElementById('aDetail').value.trim()
+    }});
+    document.getElementById('aTitle').value=''; document.getElementById('aDetail').value='';
+    msg.style.color='#7dd87d'; msg.textContent='Added ✓'; setTimeout(()=>msg.textContent='',2000);
+    await loadList();
+  } catch (e) { msg.style.color='#ff8f8f'; msg.textContent=e.message; }
+}
+
+// auto-unlock if an admin session already exists (shared with other admin pages)
+if (adminPass) { loadList().then(() => { document.getElementById('login').style.display='none'; document.getElementById('content').classList.add('show'); }).catch(()=>{}); }
+</script>
+</body>
+</html>
