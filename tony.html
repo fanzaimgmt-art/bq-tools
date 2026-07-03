@@ -301,23 +301,32 @@ function speakReply(t){
   }catch(e){}
 }
 (function(){
+  const mic=$('#micBtn'); if(!mic) return;
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  const mic=$('#micBtn'); if(!SR||!mic) return; // unsupported browser → mic stays hidden
-  mic.style.display=''; let rec=null,listening=false;
+  mic.style.display=''; // ALWAYS visible — a hidden button can't be pressed; if voice is unavailable we say why on click
+  const hint=$('#hint'); const say=m=>{ if(hint) hint.textContent=m; };
+  let rec=null,listening=false;
   mic.onclick=()=>{
+    if(!SR){ say(RTL?'קלט קולי עובד ב-Chrome או Safari.':'Voice input works in Chrome or Safari.'); return; }
     if(listening){ try{rec.stop();}catch(e){} return; }
     try{speechSynthesis.cancel();}catch(e){} // tapping mic interrupts Tony mid-speech
     rec=new SR(); rec.lang=RTL?'he-IL':'en-US'; rec.interimResults=true; rec.continuous=false;
     const base=input.value?input.value.replace(/\s+$/,'')+' ':'';
     rec.onresult=e=>{ let t=''; for(let i=0;i<e.results.length;i++) t+=e.results[i][0].transcript; input.value=base+t; input.style.height='auto'; input.style.height=Math.min(input.scrollHeight,160)+'px'; };
-    rec.onerror=()=>{ listening=false; mic.classList.remove('rec'); };
+    rec.onerror=ev=>{ listening=false; mic.classList.remove('rec');
+      const er=ev&&ev.error;
+      if(er==='not-allowed'||er==='service-not-allowed') say(RTL?'צריך לאשר מיקרופון — לחץ על 🎤 בשורת הכתובת ובחר Allow.':'Allow microphone access — tap the 🎤 in the address bar.');
+      else if(er==='audio-capture') say(RTL?'לא נמצא מיקרופון במכשיר.':'No microphone found.');
+      else if(er==='no-speech') say(RTL?'לא שמעתי כלום — נסה שוב.':"Didn't catch that — try again.");
+    };
     rec.onend=()=>{
       listening=false; mic.classList.remove('rec');
       const said=input.value.slice(base.length).trim();
       if(said.length>1 && !sending){ window.__voiceAuto=true; send(); }
       else input.focus();
     };
-    try{ rec.start(); listening=true; mic.classList.add('rec'); }catch(e){ listening=false; mic.classList.remove('rec'); }
+    try{ rec.start(); listening=true; mic.classList.add('rec'); }
+    catch(e){ listening=false; mic.classList.remove('rec'); say(RTL?'לא הצלחתי להפעיל מיקרופון — בדוק הרשאות בדפדפן.':"Couldn't start the mic — check browser permissions."); }
   };
 })();
 

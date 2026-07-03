@@ -413,7 +413,7 @@ export default {
 
       if (path === '/api/health') {
         // `version` bumps on meaningful deploys — lets us confirm an auto-deploy actually shipped.
-        return corsResponse(env, request, json({ ok: true, ts: Date.now(), version: 'obra-2026-07-03-changelog' }));
+        return corsResponse(env, request, json({ ok: true, ts: Date.now(), version: 'obra-2026-07-03-micfix' }));
       }
 
       // ── Payment Routes ──
@@ -3180,6 +3180,8 @@ async function handleAdminErrors(request, env) {
 // Baseline is version-controlled here (Claude appends when shipping changes); entries Moshe adds
 // via the page are stored in KV `admin:changelog`. GET merges: KV additions (newest first) then seed.
 const CHANGELOG_SEED = [
+  { date: '2026-07-03', type: 'fix', title: 'Tony microphone gives feedback', detail: 'The voice button is always visible now and tells you why if it can’t start (mic permission, unsupported browser) instead of silently doing nothing.' },
+  { date: '2026-07-03', type: 'fix', title: 'Admin login shows lockouts clearly', detail: 'After 5 wrong tries the IP is blocked for an hour; the login now says “temporarily blocked” instead of a misleading “wrong password”.' },
   { date: '2026-07-03', type: 'fix', title: 'Project update no longer wipes data', detail: 'A partial save (e.g. changing only status) was erasing the schedule/client/address. Now only the fields you send are touched.' },
   { date: '2026-07-03', type: 'perf', title: 'Landing hero video 94% lighter', detail: 'Re-encoded the hero video from 5.3MB to 371KB — much faster load on phones/cell data, same look.' },
   { date: '2026-07-03', type: 'security', title: 'Capped AI abuse spend', detail: 'Public/free AI tools now use free models first (paid only as fallback), so nobody can run up the API bill.' },

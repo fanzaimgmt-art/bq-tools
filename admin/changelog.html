@@ -87,20 +87,32 @@ async function api(path, opts={}) {
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + adminPass },
     body: opts.body ? JSON.stringify(opts.body) : undefined,
   });
-  if (res.status === 403) throw new Error('unauthorized');
+  if (!res.ok) {
+    let body = {}; try { body = await res.json(); } catch (e) {}
+    const err = new Error(body.error || ('HTTP ' + res.status));
+    // securityGate returns {error:"blocked"} (or 404/429) for a temporarily-banned IP —
+    // distinct from a wrong password (401/403 "Unauthorized").
+    err.blocked = body.error === 'blocked' || res.status === 404 || res.status === 429;
+    throw err;
+  }
   return res.json();
 }
 
 async function login() {
   adminPass = document.getElementById('pw').value;
   if (!adminPass) return;
+  const msg = document.getElementById('loginMsg');
+  msg.textContent = '';
   try {
     await loadList();
     sessionStorage.setItem('adminPass', adminPass);
     document.getElementById('login').style.display = 'none';
     document.getElementById('content').classList.add('show');
   } catch (e) {
-    document.getElementById('loginMsg').textContent = 'Wrong password';
+    // Tell the two cases apart so a lockout doesn't masquerade as "wrong password".
+    msg.textContent = e.blocked
+      ? 'Too many attempts — this IP is temporarily blocked. Wait ~1 minute, then try again.'
+      : 'Wrong password. (Note: 5 wrong tries locks this IP for 1 hour.)';
   }
 }
 document.getElementById('pw').addEventListener('keydown', e => { if (e.key==='Enter') login(); });
