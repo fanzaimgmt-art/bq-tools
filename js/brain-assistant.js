@@ -8,6 +8,9 @@
 (function () {
   if (window.__bqBrainMounted) return;
   window.__bqBrainMounted = true;
+  // Floating brain orb removed at Moshe's request (2026-07-03) — Tony on /home + /tony is the assistant now.
+  // Early-return keeps the file harmless everywhere it's still included; delete the <script> tags later to save the fetch.
+  return;
 
   const API = window.API_URL || 'https://bq-tools-api.fanzai-mgmt.workers.dev';
   const STORAGE_KEY = 'bq_brain_history';

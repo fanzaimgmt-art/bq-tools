@@ -109,10 +109,7 @@ html.editorial .ed-eyebrow {
   text-transform: uppercase; letter-spacing: 0.06em;
   display: inline-flex; align-items: center; gap: 10px;
 }
-html.editorial .ed-eyebrow::before {
-  content: '§'; font-family: var(--font-display); font-size: 16px;
-  font-style: normal; color: var(--ed-paper-dim);
-}
+/* (removed the '§' eyebrow ornament — read as a broken glyph, not a flourish) */
 
 html.editorial .ed-lede {
   font-family: var(--font-en);

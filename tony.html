@@ -313,11 +313,14 @@ function speakReply(t){
     rec=new SR(); rec.lang=RTL?'he-IL':'en-US'; rec.interimResults=true; rec.continuous=false;
     const base=input.value?input.value.replace(/\s+$/,'')+' ':'';
     rec.onresult=e=>{ let t=''; for(let i=0;i<e.results.length;i++) t+=e.results[i][0].transcript; input.value=base+t; input.style.height='auto'; input.style.height=Math.min(input.scrollHeight,160)+'px'; };
+    rec.onstart=()=>say(RTL?'🎤 מקשיב — דבר עכשיו':'🎤 Listening — speak now');
     rec.onerror=ev=>{ listening=false; mic.classList.remove('rec');
-      const er=ev&&ev.error;
+      const er=(ev&&ev.error)||'unknown';
       if(er==='not-allowed'||er==='service-not-allowed') say(RTL?'צריך לאשר מיקרופון — לחץ על 🎤 בשורת הכתובת ובחר Allow.':'Allow microphone access — tap the 🎤 in the address bar.');
       else if(er==='audio-capture') say(RTL?'לא נמצא מיקרופון במכשיר.':'No microphone found.');
       else if(er==='no-speech') say(RTL?'לא שמעתי כלום — נסה שוב.':"Didn't catch that — try again.");
+      else if(er==='network') say(RTL?'המיקרופון חסום ע"י הרשת/VPN (שירות הדיבור של Google לא נגיש). כבה VPN/פיירוול ונסה, או הקלד.':'Voice blocked by your network/VPN — Google speech service unreachable. Disable VPN/firewall or just type.');
+      else say((RTL?'שגיאת מיקרופון: ':'Mic error: ')+er);
     };
     rec.onend=()=>{
       listening=false; mic.classList.remove('rec');
