@@ -98,3 +98,8 @@ Schema markup (FAQ), internal links → estimate tool. These pages double as con
 
 ## Status Log
 - 2026-07-03: Plan created. Wave 1+2 execution started (Sonnet builders).
+- 2026-07-03 ~11:15: **Waves 1.1, 1.2, 2.1, 2.2 SHIPPED** (commit 1a234ca): hero trust strip + density, Obra Pledge (6 honest inversions, EN/ES/partial HE), compare/ hub + 4 pages (all claims re-verified live by builder; unverifiable Handoff price-history claim dropped), guides/ hub + 3 LA cost guides (sourced, FAQ JSON-LD, bilingual). Deploy verification in progress.
+- In progress: Wave 1.3 Spanish completeness (b2, profile.html started), Wave 3.2 crew-brief WhatsApp share (b1, video-brain.html started).
+- Known follow-ups: light-theme price-card contrast bug (pre-existing, flagged by b1); he/hy/fa/ar translations for new hero eyebrow beyond data-he; home.html stale duplicate of index.html — decide keep/kill.
+- 2026-07-03 ~11:15: **LIVE VERIFIED** — all URLs 200 (/, /compare/*, /guides/*), homepage screenshot confirms trust strip + video peek. Honesty fix shipped (c5734ca): compare tables claimed "unlimited AI" for Obra (false — Pro=50 credits); reframed to "AI included at $14.99 flat" vs competitors' metered add-ons.
+- In flight (2nd push): b1 crew-brief WhatsApp share (video-brain.html), b2 Spanish completeness (~17 pages, started with profile.html), b3 Smart Estimate price-book grounding (tools/estimate.html).

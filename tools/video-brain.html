@@ -206,6 +206,68 @@ body { display: flex; flex-direction: column; }
   padding: 0 10px;
 }
 
+/* Crew Brief composer */
+.vb-brief-box {
+  background: var(--sf-2);
+  border: 1px solid var(--bd);
+  border-radius: var(--r);
+  padding: 18px;
+  margin-bottom: 18px;
+}
+.vb-brief-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.vb-brief-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--tx);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.vb-brief-langtoggle {
+  display: flex;
+  gap: 2px;
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 2px;
+}
+.vb-brief-lang-btn {
+  border: none;
+  background: transparent;
+  color: var(--txd);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.vb-brief-lang-btn.on { background: var(--sf); color: var(--ac); }
+.vb-brief-lang-btn:hover:not(.on) { color: var(--tx); }
+.vb-brief-preview {
+  font-family: inherit;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--tx);
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: var(--bg);
+  border: 1px solid var(--bd);
+  border-radius: var(--r);
+  padding: 14px;
+  margin: 0 0 12px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+.vb-brief-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.vb-brief-actions .btn { flex: 1; min-width: 120px; }
+
 /* Upsells */
 .vb-upsell-list { display: flex; flex-direction: column; gap: 10px; }
 .vb-upsell-item {
@@ -354,6 +416,7 @@ body { display: flex; flex-direction: column; }
   .vb-row { grid-template-columns: 1fr; }
   .vb-crew-grid { grid-template-columns: 1fr; }
   .vb-estimate { font-size: 22px; }
+  .vb-brief-header { flex-direction: column; align-items: flex-start; }
 }
 </style>
 </head>
@@ -368,14 +431,15 @@ body { display: flex; flex-direction: column; }
 </nav>
 
 <div class="page">
-  <a href="/home.html" class="page-back" data-en="← All Tools" data-he="כל הכלים →">← All Tools</a>
+  <a href="/home.html" class="page-back" data-en="← All Tools" data-es="← Todas las Herramientas" data-he="כל הכלים →">← All Tools</a>
 
   <div style="margin-bottom: 24px;">
     <h1 class="page-title" style="margin-bottom: 8px;">
-      <span data-en="Video Brain" data-he="וידאו ברין">Video Brain</span>
+      <span data-en="Video Brain" data-es="Video Brain" data-he="וידאו ברין">Video Brain</span>
     </h1>
     <p style="font-size: 15px; color: var(--txd); line-height: 1.6; max-width: 560px;"
        data-en="Point your phone at the job. Obra explains it to your crew, prices it, and finds your upsells."
+       data-es="Apunta tu teléfono al trabajo. Obra se lo explica a tu equipo, lo cotiza, y encuentra tus oportunidades de venta adicional."
        data-he="כוון את הטלפון לעבודה. Obra מסביר לצוות, מתמחר, ומוצא הזדמנויות.">
       Point your phone at the job. Obra explains it to your crew, prices it, and finds your upsells.
     </p>
@@ -385,8 +449,8 @@ body { display: flex; flex-direction: column; }
   <div class="vb-upload-zone" id="uploadZone">
     <input type="file" id="videoInput" accept="video/*" capture="environment">
     <span class="vb-upload-icon">🎥</span>
-    <div class="vb-upload-label" data-en="Tap to record or upload a job-site video" data-he="הקש להקלטה או העלאת וידאו מהאתר">Tap to record or upload a job-site video</div>
-    <div class="vb-upload-sub" data-en="MP4, MOV, WebM · up to a few minutes works great" data-he="MP4, MOV, WebM · כמה דקות עובד מעולה">MP4, MOV, WebM · up to a few minutes works great</div>
+    <div class="vb-upload-label" data-en="Tap to record or upload a job-site video" data-es="Toca para grabar o subir un video del trabajo" data-he="הקש להקלטה או העלאת וידאו מהאתר">Tap to record or upload a job-site video</div>
+    <div class="vb-upload-sub" data-en="MP4, MOV, WebM · up to a few minutes works great" data-es="MP4, MOV, WebM · unos minutos funcionan perfecto" data-he="MP4, MOV, WebM · כמה דקות עובד מעולה">MP4, MOV, WebM · up to a few minutes works great</div>
     <div class="vb-file-name" id="fileName"></div>
   </div>
 
@@ -397,7 +461,7 @@ body { display: flex; flex-direction: column; }
   <div class="vb-form" id="vbForm">
     <div class="vb-row">
       <div class="vb-field">
-        <label class="vb-label" for="tradeSelect" data-en="Trade" data-he="תחום">Trade</label>
+        <label class="vb-label" for="tradeSelect" data-en="Trade" data-es="Oficio" data-he="תחום">Trade</label>
         <select class="input" id="tradeSelect">
           <option value="">— Select trade —</option>
           <option value="Remodel">Remodel / Renovation</option>
@@ -421,21 +485,21 @@ body { display: flex; flex-direction: column; }
     </div>
 
     <div class="vb-field">
-      <label class="vb-label" for="noteInput" data-en="Note (optional)" data-he="הערה (אופציונלי)">Note (optional)</label>
+      <label class="vb-label" for="noteInput" data-en="Note (optional)" data-es="Nota (opcional)" data-he="הערה (אופציונלי)">Note (optional)</label>
       <textarea class="input" id="noteInput" rows="2"
         placeholder="e.g. Second floor bathroom, owner wants tile replaced, tight access..."
         style="resize: vertical; min-height: 60px;"></textarea>
     </div>
 
     <div class="vb-field">
-      <label class="vb-label" for="pricebookInput" data-en="Your prices (optional)" data-he="המחירים שלך (אופציונלי)">Your prices (optional)</label>
+      <label class="vb-label" for="pricebookInput" data-en="Your prices (optional)" data-es="Tus precios (opcional)" data-he="המחירים שלך (אופציונלי)">Your prices (optional)</label>
       <textarea class="input" id="pricebookInput" rows="2"
         placeholder="e.g. Demo: $4/sqft · Tile: $18/sqft · Daily labor: $450..."
         style="resize: vertical; min-height: 60px;"></textarea>
     </div>
 
     <button class="btn btn-primary" id="analyzeBtn" disabled>
-      <span data-en="Analyze Video (2 credits)" data-he="נתח וידאו (2 קרדיטים)">Analyze Video (2 credits)</span>
+      <span data-en="Analyze Video (2 credits)" data-es="Analizar Video (2 créditos)" data-he="נתח וידאו (2 קרדיטים)">Analyze Video (2 credits)</span>
     </button>
   </div>
 
@@ -458,7 +522,7 @@ body { display: flex; flex-direction: column; }
 
     <!-- Timeline (hero) -->
     <div class="vb-section" id="secTimeline" style="display:none;">
-      <div class="vb-section-title"><span>🎬</span><span data-en="Step-by-Step Timeline" data-he="ציר זמן צעד אחר צעד">Step-by-Step Timeline</span></div>
+      <div class="vb-section-title"><span>🎬</span><span data-en="Step-by-Step Timeline" data-es="Cronología Paso a Paso" data-he="ציר זמן צעד אחר צעד">Step-by-Step Timeline</span></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
         <button class="btn" id="btnCopyEs" onclick="copyTimelineEs()">📋 Copy crew steps (Español)</button>
         <button class="btn" id="btnWAEs" style="background:#25D366;border-color:#25D366;color:#fff;" onclick="shareTimelineEs()">💬 WhatsApp Español</button>
@@ -468,13 +532,32 @@ body { display: flex; flex-direction: column; }
 
     <!-- Work Plan -->
     <div class="vb-section" id="secPlan" style="display:none;">
-      <div class="vb-section-title"><span>📋</span><span data-en="Work Plan" data-he="תוכנית עבודה">Work Plan</span></div>
+      <div class="vb-section-title"><span>📋</span><span data-en="Work Plan" data-es="Plan de Trabajo" data-he="תוכנית עבודה">Work Plan</span></div>
       <div class="vb-steps" id="planSteps"></div>
     </div>
 
     <!-- Crew Instructions -->
     <div class="vb-section" id="secCrew" style="display:none;">
-      <div class="vb-section-title"><span>👷</span><span data-en="Crew Instructions" data-he="הוראות לצוות">Crew Instructions</span></div>
+      <div class="vb-section-title"><span>👷</span><span data-en="Crew Instructions" data-es="Instrucciones para el Equipo" data-he="הוראות לצוות">Crew Instructions</span></div>
+
+      <!-- Send to Crew — composed WhatsApp-ready brief (title/date, scope, numbered steps, materials/safety if present) -->
+      <div class="vb-brief-box" id="briefBox" style="display:none;">
+        <div class="vb-brief-header">
+          <div class="vb-brief-title">
+            <span>🔨</span><span data-en="Send to Crew" data-es="Enviar a la Cuadrilla" data-he="שלח לצוות">Send to Crew</span>
+          </div>
+          <div class="vb-brief-langtoggle" role="group" aria-label="Brief language">
+            <button type="button" class="vb-brief-lang-btn on" id="briefLangEs" onclick="setBriefLang('es')" data-en="Español" data-es="Español">Español</button>
+            <button type="button" class="vb-brief-lang-btn" id="briefLangEn" onclick="setBriefLang('en')" data-en="English" data-es="English">English</button>
+          </div>
+        </div>
+        <pre class="vb-brief-preview" id="briefPreview"></pre>
+        <div class="vb-brief-actions">
+          <button class="btn" onclick="copyCrewBrief()" data-en="📋 Copy" data-es="📋 Copiar">📋 Copy</button>
+          <button class="btn" style="background:#25D366;border-color:#25D366;color:#fff;" onclick="shareCrewBriefWA()" data-en="💬 WhatsApp" data-es="💬 WhatsApp">💬 WhatsApp</button>
+        </div>
+      </div>
+
       <div class="vb-crew-grid">
         <!-- English -->
         <div class="vb-crew-card">
@@ -499,13 +582,13 @@ body { display: flex; flex-direction: column; }
 
     <!-- Upsells -->
     <div class="vb-section" id="secUpsell" style="display:none;">
-      <div class="vb-section-title"><span>💡</span><span data-en="Ways to Grow This Job" data-he="הזדמנויות להרחיב">Ways to Grow This Job</span></div>
+      <div class="vb-section-title"><span>💡</span><span data-en="Ways to Grow This Job" data-es="Formas de Ampliar Este Trabajo" data-he="הזדמנויות להרחיב">Ways to Grow This Job</span></div>
       <div class="vb-upsell-list" id="upsellList"></div>
     </div>
 
     <!-- Estimate -->
     <div class="vb-section" id="secEstimate" style="display:none;">
-      <div class="vb-section-title"><span>💰</span><span data-en="Estimated Range" data-he="טווח מחירים משוער">Estimated Range</span></div>
+      <div class="vb-section-title"><span>💰</span><span data-en="Estimated Range" data-es="Rango Estimado" data-he="טווח מחירים משוער">Estimated Range</span></div>
       <div class="vb-estimate" id="estimateRange"></div>
       <div class="vb-estimate-note" id="estimateNote"></div>
     </div>
@@ -858,6 +941,10 @@ function deepFind(obj, key) {
   return undefined;
 }
 
+// ── Crew Brief composer state (populated by renderResults, read by composeCrewBrief) ──
+let lastCrewData = null;
+let briefLang = 'es';
+
 // ── Render results ──
 function renderResults(resp) {
   document.getElementById('vbResults').classList.add('visible');
@@ -952,7 +1039,20 @@ function renderResults(resp) {
   if (crewEn || crewEs) {
     document.getElementById('crewEn').textContent = crewEn;
     document.getElementById('crewEs').textContent = crewEs;
+    lastCrewData = {
+      crewEn, crewEs,
+      // AI's own read of the walkthrough (worker.js schema top-level "summary") beats the
+      // contractor's pre-analysis note as a scope line; fall back to the note if AI left it blank.
+      summary: deepFind(r, 'summary') || (document.getElementById('noteInput')?.value || '').trim(),
+      // Not in today's AI response schema — deepFind so the brief picks these up automatically
+      // the day worker.js starts returning them, with no front-end change required.
+      materials: deepFind(r, 'materials') || deepFind(r, 'materials_list') || null,
+      safety: deepFind(r, 'safety') || deepFind(r, 'safety_notes') || deepFind(r, 'ppe') || null,
+    };
+    renderBriefPreview();
     show('secCrew');
+  } else {
+    lastCrewData = null;
   }
 
   // Upsells
@@ -1019,6 +1119,93 @@ function shareTimelineEs() {
   window.open('https://wa.me/?text=' + encodeURIComponent(getTimelineEs()), '_blank');
 }
 
+// ── Crew Brief composer — one WhatsApp-ready doc: date, scope, numbered steps, materials/safety if present ──
+function buildBriefSteps(langCode) {
+  // Prefer per-timestamp timeline do_en/do_es lines (richer); fall back to the flat crew_instructions.<lang> array
+  const rows = document.querySelectorAll('#timelineList .vb-tl-row');
+  const lines = [];
+  rows.forEach(row => {
+    const el = row.querySelector(langCode === 'es' ? '.vb-tl-es' : '.vb-tl-en');
+    if (!el) return;
+    const timeEl = row.querySelector('.vb-tl-chip');
+    const time = timeEl ? timeEl.textContent.trim() : '';
+    const text = el.textContent.replace(/^🇺🇸\s*|^🇲🇽\s*/, '').trim();
+    if (text) lines.push(time ? `[${time}] ${text}` : text);
+  });
+  if (lines.length) return lines;
+  const raw = lastCrewData ? (langCode === 'es' ? lastCrewData.crewEs : lastCrewData.crewEn) : '';
+  return raw ? raw.split('\n').map(s => s.trim()).filter(Boolean) : [];
+}
+
+function composeCrewBrief(langCode) {
+  const isEs = langCode === 'es';
+  const steps = buildBriefSteps(langCode);
+  const summary = lastCrewData ? lastCrewData.summary : '';
+  const materials = lastCrewData ? lastCrewData.materials : null;
+  const safety = lastCrewData ? lastCrewData.safety : null;
+  const dateStr = new Date().toLocaleDateString(isEs ? 'es-MX' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  const out = [];
+  out.push(isEs ? '🔨 *Instrucciones para la Cuadrilla*' : '🔨 *Crew Brief*');
+  out.push(dateStr, '');
+  if (summary) {
+    out.push(isEs ? '📋 *Alcance:*' : '📋 *Scope:*', summary, '');
+  }
+  if (steps.length) {
+    out.push(isEs ? '*Pasos:*' : '*Steps:*');
+    steps.forEach((s, i) => out.push(`${i + 1}. ${s}`));
+    out.push('');
+  }
+  if (materials) {
+    const list = Array.isArray(materials) ? materials : [materials];
+    out.push(isEs ? '*Materiales:*' : '*Materials:*');
+    list.forEach(m => out.push(`• ${m}`));
+    out.push('');
+  }
+  if (safety) {
+    const list = Array.isArray(safety) ? safety : [safety];
+    out.push(isEs ? '⚠️ *Seguridad:*' : '⚠️ *Safety:*');
+    list.forEach(s => out.push(`• ${s}`));
+    out.push('');
+  }
+  return out.join('\n').trim();
+}
+
+function renderBriefPreview() {
+  const box = document.getElementById('briefBox');
+  if (!box) return;
+  const hasSteps = buildBriefSteps('es').length || buildBriefSteps('en').length;
+  if (!hasSteps) { box.style.display = 'none'; return; }
+  box.style.display = '';
+  document.getElementById('briefPreview').textContent = composeCrewBrief(briefLang);
+  document.getElementById('briefLangEs').classList.toggle('on', briefLang === 'es');
+  document.getElementById('briefLangEn').classList.toggle('on', briefLang === 'en');
+}
+
+function setBriefLang(l) {
+  briefLang = l;
+  renderBriefPreview();
+}
+
+function copyCrewBrief() {
+  const txt = composeCrewBrief(briefLang);
+  const ok = () => showToast(briefLang === 'es' ? 'Copiado!' : 'Copied!', 'ok');
+  navigator.clipboard.writeText(txt).then(ok).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = txt;
+    ta.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+    ok();
+  });
+}
+
+function shareCrewBriefWA() {
+  window.open('https://wa.me/?text=' + encodeURIComponent(composeCrewBrief(briefLang)), '_blank');
+}
+
 // ── Helpers ──
 function show(id) { document.getElementById(id).style.display = 'block'; }
 function hideResults() {
@@ -1027,6 +1214,7 @@ function hideResults() {
   ['secTimeline','secPlan','secCrew','secUpsell','secEstimate','secRaw'].forEach(id => {
     document.getElementById(id).style.display = 'none';
   });
+  lastCrewData = null;
 }
 function showError(msg) {
   const el = document.getElementById('vbError');

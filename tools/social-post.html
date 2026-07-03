@@ -61,7 +61,7 @@
 
 <div class="page">
   <a href="/" class="page-back" data-en="← All Tools" data-es="← Todas las Herramientas" data-he="כל הכלים →">← All Tools</a>
-  <h1 class="page-title" data-en="📱 Social Post Generator" data-he="📱 מחולל פוסטים">📱 Social Post Generator</h1>
+  <h1 class="page-title" data-en="📱 Social Post Generator" data-es="📱 Generador de Publicaciones" data-he="📱 מחולל פוסטים">📱 Social Post Generator</h1>
   <p class="page-sub" data-en="Upload a before/after, pick your platform, get a ready-to-post caption." data-es="Sube un antes/después, elige tu plataforma, obtén un texto listo para publicar." data-he="העלה לפני/אחרי, בחר פלטפורמה, קבל קפשן מוכן לפרסום.">Upload a before/after, pick your platform, get a ready-to-post caption.</p>
 
   <div id="hiw-social-post"></div>
@@ -70,11 +70,11 @@
   <div class="card" style="margin-bottom:14px;">
     <label class="input-label" data-en="Upload Before/After Photo" data-es="Sube Foto de Antes/Después" data-he="העלה תמונת לפני/אחרי">Upload Photo</label>
     <div class="upload-area" id="uploadArea">
-      <span id="uploadText" data-en="Click or drag to upload" data-he="לחץ או גרור להעלאה">Click or drag to upload</span>
+      <span id="uploadText" data-en="Click or drag to upload" data-es="Haz clic o arrastra para subir" data-he="לחץ או גרור להעלאה">Click or drag to upload</span>
       <input type="file" accept="image/*" id="photoInput">
     </div>
 
-    <label class="input-label" data-en="What work was done?" data-he="מה בוצע?">What work was done?</label>
+    <label class="input-label" data-en="What work was done?" data-es="¿Qué trabajo se hizo?" data-he="מה בוצע?">What work was done?</label>
     <input class="input" id="workDesc" placeholder="Bathroom renovation - new tile, vanity, and fixtures" style="margin-bottom:14px;">
 
     <label class="input-label" data-en="Platform" data-es="Plataforma" data-he="פלטפורמה">Platform</label>
@@ -85,20 +85,20 @@
     </div>
   </div>
 
-  <button class="btn btn-primary btn-large" style="width:100%;" onclick="generatePost()" id="genBtn" data-en="🧠 Generate Caption" data-he="🧠 צור קפשן">🧠 Generate Caption</button>
+  <button class="btn btn-primary btn-large" style="width:100%;" onclick="generatePost()" id="genBtn" data-en="🧠 Generate Caption" data-es="🧠 Generar Texto" data-he="🧠 צור קפשן">🧠 Generate Caption</button>
 
   <div class="result-card" id="resultCard">
-    <h3 data-en="Your Caption" data-he="הקפשן שלך">Your Caption</h3>
+    <h3 data-en="Your Caption" data-es="Tu Texto" data-he="הקפשן שלך">Your Caption</h3>
     <div class="caption-box" id="captionBox"></div>
     <div class="hashtags" id="hashtagBox"></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
-      <button class="btn btn-primary" style="flex:1;" onclick="copyCaption()" data-en="📋 Copy Caption" data-he="📋 העתק">📋 Copy Caption</button>
-      <button class="btn" style="flex:1;" onclick="generatePromoImage()" id="promoBtn" data-en="🎨 Generate Image (5 cr)" data-he="🎨 צור תמונה (5 קר)">🎨 Generate Image (5 cr)</button>
+      <button class="btn btn-primary" style="flex:1;" onclick="copyCaption()" data-en="📋 Copy Caption" data-es="📋 Copiar Texto" data-he="📋 העתק">📋 Copy Caption</button>
+      <button class="btn" style="flex:1;" onclick="generatePromoImage()" id="promoBtn" data-en="🎨 Generate Image (5 cr)" data-es="🎨 Generar Imagen (5 cr)" data-he="🎨 צור תמונה (5 קר)">🎨 Generate Image (5 cr)</button>
     </div>
     <div id="promoResult" style="margin-top:12px;display:none;">
       <img id="promoImg" style="max-width:100%;border-radius:12px;border:1px solid var(--bd);" alt="Promo image">
       <div style="margin-top:8px;">
-        <a id="promoDownload" class="btn" download="obra-promo.png" data-en="⬇️ Download" data-he="⬇️ הורד">⬇️ Download</a>
+        <a id="promoDownload" class="btn" download="obra-promo.png" data-en="⬇️ Download" data-es="⬇️ Descargar" data-he="⬇️ הורד">⬇️ Download</a>
       </div>
     </div>
   </div>

@@ -41,6 +41,15 @@
     background: var(--bg); border-radius: 6px; line-height: 1.5;
   }
 
+  .pb-status {
+    font-size: 13px; padding: 9px 12px; border-radius: 8px; margin-bottom: 12px;
+    background: rgba(81,207,102,.08); border: 1px solid var(--grn); color: var(--grn); font-weight: 600;
+  }
+  .pb-status.pb-nudge {
+    background: var(--acd); border-color: var(--ac); color: var(--txd); font-weight: 500;
+  }
+  .pb-status.pb-nudge a { color: var(--ac); font-weight: 700; text-decoration: underline; }
+
   @media (max-width: 600px) {
     .upload-area { padding: 16px; }
     .est-row { flex-direction: column; align-items: flex-start; gap: 2px; }
@@ -143,6 +152,75 @@ function handlePhotoUpload(e) {
 }
 document.getElementById('photoInput').addEventListener('change', handlePhotoUpload);
 
+// ── Price-book grounding (front-end only) ──
+// Pulls the contractor's own /api/pricebook/search entries and folds them into the
+// estimate prompt, same idea as Video Brain's pricebook grounding but auto-fetched
+// instead of manually pasted.
+const PB_STOPWORDS = new Set(['the','a','an','and','or','to','of','in','on','for','with','is','are','be','job','into','from','at','by','it','this','that','new','old','existing','need','needs','needed','replace','replacing','install','installing','installed','repair','repairing','repaired','fix','fixing','add','adding','remove','removing','build','building','my','our','some','all','full','complete','area','room']);
+
+function extractPricebookKeywords(desc) {
+  const words = String(desc || '').toLowerCase().replace(/[^a-z0-9\s-]/g, ' ').split(/\s+/).filter(Boolean);
+  const uniq = [];
+  for (const w of words) {
+    if (w.length > 3 && !PB_STOPWORDS.has(w) && !uniq.includes(w)) uniq.push(w);
+    if (uniq.length >= 3) break;
+  }
+  return uniq;
+}
+
+// Raw fetch, NOT apiCall — apiCall wipes the user's session on any 401, which is fine
+// for a required call but wrong here: this is a best-effort lookup, so any failure
+// (not logged in, expired token, network error, server error) must be silent and must
+// never log the user out or interrupt the estimate they're mid-way through generating.
+async function searchPriceBookSafe(q) {
+  const token = getToken();
+  if (!token) return null;
+  try {
+    const res = await fetch(`${API_URL}/api/pricebook/search?q=${encodeURIComponent(q)}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch { return null; }
+}
+
+async function getPriceBookGrounding(desc) {
+  if (!isLoggedIn()) return [];
+  const keywords = extractPricebookKeywords(desc);
+  if (!keywords.length) return [];
+  const responses = await Promise.all(keywords.map(searchPriceBookSafe));
+  const seen = new Set();
+  const items = [];
+  for (const r of responses) {
+    if (!r || !Array.isArray(r.items)) continue;
+    for (const it of r.items) {
+      const key = `${it.item}|${it.unit}|${it.price}|${it.region}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      items.push(it);
+    }
+  }
+  return items.slice(0, 20);
+}
+
+function priceBookPromptLines(items) {
+  return items.map(it => {
+    const priceUnit = it.unit ? `$${it.price}/${it.unit}` : `$${it.price}`;
+    return `[${it.item} — ${priceUnit}${it.region ? ' — ' + it.region : ''}]`;
+  }).join('; ');
+}
+
+function priceBookStatusLine(groundedCount) {
+  if (groundedCount > 0) {
+    const n = groundedCount;
+    return `<div class="pb-status" data-en="✓ Priced with your price book (${n} item${n !== 1 ? 's' : ''})" data-es="✓ Cotizado con tu libro de precios (${n} artículo${n !== 1 ? 's' : ''})">✓ Priced with your price book (${n} item${n !== 1 ? 's' : ''})</div>`;
+  }
+  // Only nudge once ever per device — a helpful pointer, not a recurring nag.
+  if (localStorage.getItem('bq_pb_nudge_shown')) return '';
+  localStorage.setItem('bq_pb_nudge_shown', '1');
+  return `<div class="pb-status pb-nudge"><span data-en="No price-book match yet." data-es="Aún no hay coincidencias en tu libro de precios.">No price-book match yet.</span> <a href="/tools/price-book.html" data-en="Add your prices →" data-es="Agrega tus precios →">Add your prices →</a></div>`;
+}
+
 async function generateEstimate() {
   if (!requirePro()) return;
 
@@ -163,10 +241,15 @@ async function generateEstimate() {
       images.push(await resizeForAPI(photoSrc));
     }
 
+    const groundedItems = await getPriceBookGrounding(desc);
+    const groundingBlock = groundedItems.length
+      ? `\n\nGROUND ALL PRICES ON THIS CONTRACTOR'S OWN PRICE BOOK (authoritative over general knowledge): ${priceBookPromptLines(groundedItems)}`
+      : '';
+
     const prompt = `You are a construction cost estimator. Based on the photo (if provided) and description, provide a cost estimate.
 
 Job: ${desc}
-${loc ? 'Location: ' + loc : 'Location: US average'}
+${loc ? 'Location: ' + loc : 'Location: US average'}${groundingBlock}
 
 Respond JSON only:
 {
@@ -185,6 +268,7 @@ Respond JSON only:
     const el = document.getElementById('estResult');
     el.classList.add('on');
     el.innerHTML = `
+      ${priceBookStatusLine(groundedItems.length)}
       <div class="est-section">
         <h3 data-en="Materials" data-es="Materiales" data-he="חומרים">Materials</h3>
         ${r.materials.map(m => `<div class="est-row"><span class="est-label">${m.item}</span><span class="est-val">${m.estimated_cost}</span></div>`).join('')}

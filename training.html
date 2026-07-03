@@ -117,23 +117,23 @@
 
 <div class="page">
   <div class="train-hero">
-    <h1>🧠 <span class="accent" data-en="Train Obra on YOUR Pricing" data-he="אמן את Obra על המחירים שלך">Train Obra on YOUR Pricing</span></h1>
-    <p data-en="Upload your past contracts, invoices, and price lists. AI will learn your rates and generate personalized estimates and quotes that match how YOU price jobs." data-he="העלה חוזים, חשבוניות, ומחירונים מהעבר. ה-AI ילמד את המחירים שלך וייצור הערכות והצעות מחיר אישיות שמתאימות בדיוק לאיך שאתה מתמחר.">Upload your past contracts, invoices, and price lists. AI will learn your rates and generate personalized estimates and quotes that match how YOU price jobs.</p>
+    <h1>🧠 <span class="accent" data-en="Train Obra on YOUR Pricing" data-es="Entrena a Obra con TUS Precios" data-he="אמן את Obra על המחירים שלך">Train Obra on YOUR Pricing</span></h1>
+    <p data-en="Upload your past contracts, invoices, and price lists. AI will learn your rates and generate personalized estimates and quotes that match how YOU price jobs." data-es="Sube tus contratos, facturas y listas de precios anteriores. La IA aprenderá tus tarifas y generará estimados y cotizaciones personalizadas que coincidan con cómo TÚ cotizas los trabajos." data-he="העלה חוזים, חשבוניות, ומחירונים מהעבר. ה-AI ילמד את המחירים שלך וייצור הערכות והצעות מחיר אישיות שמתאימות בדיוק לאיך שאתה מתמחר.">Upload your past contracts, invoices, and price lists. AI will learn your rates and generate personalized estimates and quotes that match how YOU price jobs.</p>
   </div>
 
   <!-- Stats -->
   <div class="train-stats">
     <div class="train-stat" id="statFiles">
       <div class="num" id="filesCount">0</div>
-      <div class="lbl" data-en="Training Files" data-he="קבצי אימון">Training Files</div>
+      <div class="lbl" data-en="Training Files" data-es="Archivos de Entrenamiento" data-he="קבצי אימון">Training Files</div>
     </div>
     <div class="train-stat" id="statTrained">
       <div class="num" id="trainStatus">—</div>
-      <div class="lbl" data-en="AI Status" data-he="סטטוס AI">AI Status</div>
+      <div class="lbl" data-en="AI Status" data-es="Estado de la IA" data-he="סטטוס AI">AI Status</div>
     </div>
     <div class="train-stat">
       <div class="num" id="lastUpdate">—</div>
-      <div class="lbl" data-en="Last Updated" data-he="עודכן לאחרונה">Last Updated</div>
+      <div class="lbl" data-en="Last Updated" data-es="Última Actualización" data-he="עודכן לאחרונה">Last Updated</div>
     </div>
   </div>
 
@@ -141,8 +141,8 @@
   <label class="upload-zone" id="uploadZone">
     <input type="file" accept="image/*,.pdf" id="fileInput" onchange="handleUpload(event)">
     <div class="icon">📤</div>
-    <h3 data-en="Drop files here or click to upload" data-he="גרור קבצים או לחץ להעלאה">Drop files here or click to upload</h3>
-    <p data-en="Past contracts, invoices, quotes, price lists — any document with your pricing" data-he="חוזים, חשבוניות, הצעות מחיר, מחירונים — כל מסמך עם המחירים שלך">Past contracts, invoices, quotes, price lists — any document with your pricing</p>
+    <h3 data-en="Drop files here or click to upload" data-es="Suelta archivos aquí o haz clic para subir" data-he="גרור קבצים או לחץ להעלאה">Drop files here or click to upload</h3>
+    <p data-en="Past contracts, invoices, quotes, price lists — any document with your pricing" data-es="Contratos, facturas, cotizaciones, listas de precios anteriores — cualquier documento con tus precios" data-he="חוזים, חשבוניות, הצעות מחיר, מחירונים — כל מסמך עם המחירים שלך">Past contracts, invoices, quotes, price lists — any document with your pricing</p>
     <div class="file-type-chips">
       <span class="file-chip">📄 PDF</span>
       <span class="file-chip">🖼️ JPG/PNG</span>
@@ -152,26 +152,26 @@
 
   <!-- Quick actions -->
   <div class="train-actions">
-    <button class="btn" onclick="rebuildKnowledge()">🔄 <span data-en="Rebuild Knowledge" data-he="בנה מחדש ידע">Rebuild Knowledge</span></button>
-    <a href="/tools/quote.html" class="btn btn-primary">📝 <span data-en="Generate a Quote →" data-he="צור הצעת מחיר →">Generate a Quote →</span></a>
+    <button class="btn" onclick="rebuildKnowledge()">🔄 <span data-en="Rebuild Knowledge" data-es="Reconstruir Conocimiento" data-he="בנה מחדש ידע">Rebuild Knowledge</span></button>
+    <a href="/tools/quote.html" class="btn btn-primary">📝 <span data-en="Generate a Quote →" data-es="Generar una Cotización →" data-he="צור הצעת מחיר →">Generate a Quote →</span></a>
   </div>
 
   <!-- Files list -->
   <div class="files-list">
     <div class="list-header">
-      📁 <span data-en="Your Training Files" data-he="קבצי האימון שלך">Your Training Files</span>
+      📁 <span data-en="Your Training Files" data-es="Tus Archivos de Entrenamiento" data-he="קבצי האימון שלך">Your Training Files</span>
     </div>
     <div id="filesBody">
       <div class="empty-state">
         <div class="icon">📭</div>
-        <p data-en="No files yet. Upload your first document above." data-he="אין קבצים עדיין. העלה את המסמך הראשון למעלה.">No files yet. Upload your first document above.</p>
+        <p data-en="No files yet. Upload your first document above." data-es="Aún no hay archivos. Sube tu primer documento arriba." data-he="אין קבצים עדיין. העלה את המסמך הראשון למעלה.">No files yet. Upload your first document above.</p>
       </div>
     </div>
   </div>
 
   <!-- Knowledge Base Preview -->
   <div class="knowledge-panel" id="knowledgePanel" style="display:none;">
-    <h2>📊 <span data-en="What AI Learned About Your Business" data-he="מה ה-AI למד על העסק שלך">What AI Learned About Your Business</span></h2>
+    <h2>📊 <span data-en="What AI Learned About Your Business" data-es="Lo Que la IA Aprendió Sobre Tu Negocio" data-he="מה ה-AI למד על העסק שלך">What AI Learned About Your Business</span></h2>
     <div id="knowledgeBody"></div>
   </div>
 </div>

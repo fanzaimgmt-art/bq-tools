@@ -73,7 +73,7 @@
 
 <div class="page">
   <a href="/" class="page-back" data-en="← All Tools" data-es="← Todas las Herramientas" data-he="כל הכלים →">← All Tools</a>
-  <h1 class="page-title" data-en="✏️ Quick Sketch" data-he="✏️ סקיצה מהירה">✏️ Quick Sketch</h1>
+  <h1 class="page-title" data-en="✏️ Quick Sketch" data-es="✏️ Boceto Rápido" data-he="✏️ סקיצה מהירה">✏️ Quick Sketch</h1>
   <p class="page-sub" data-en="Draw a rough sketch or upload a photo of one. AI cleans it up into a sharp blueprint." data-es="Dibuja un boceto o sube una foto. La IA lo limpia en un plano profesional." data-he="צייר סקיצה או העלה תמונה. AI מנקה לשרטוט חד.">Draw a rough sketch or upload a photo of one. AI cleans it up into a sharp blueprint.</p>
 
   <div id="hiw-sketch"></div>
@@ -92,36 +92,36 @@
       <div class="color-dot" style="background:#51cf66" onclick="setColor(this,'#51cf66')"></div>
     </div>
     <input type="range" class="size-slider" min="1" max="12" value="3" id="sizeSlider">
-    <button class="tool-btn" onclick="clearCanvas()" data-en="Clear" data-he="נקה">Clear</button>
+    <button class="tool-btn" onclick="clearCanvas()" data-en="Clear" data-es="Limpiar" data-he="נקה">Clear</button>
   </div>
 
   <div class="canvas-wrap">
     <canvas id="sketchCanvas" width="800" height="500"></canvas>
   </div>
 
-  <div class="upload-or" data-en="— OR upload a sketch photo —" data-he="— או העלה תמונת סקיצה —">— OR upload a sketch photo —</div>
+  <div class="upload-or" data-en="— OR upload a sketch photo —" data-es="— O sube una foto del boceto —" data-he="— או העלה תמונת סקיצה —">— OR upload a sketch photo —</div>
 
   <div class="upload-area" id="uploadArea">
-    <span data-en="Click to upload sketch photo" data-he="לחץ להעלאת תמונת סקיצה">Click to upload sketch photo</span>
+    <span data-en="Click to upload sketch photo" data-es="Haz clic para subir foto del boceto" data-he="לחץ להעלאת תמונת סקיצה">Click to upload sketch photo</span>
     <input type="file" accept="image/*" id="sketchInput">
   </div>
 
-  <label class="input-label" data-en="Describe what this sketch shows (optional)" data-he="תאר מה הסקיצה מציגה (אופציונלי)">Describe the sketch (optional)</label>
+  <label class="input-label" data-en="Describe what this sketch shows (optional)" data-es="Describe lo que muestra el boceto (opcional)" data-he="תאר מה הסקיצה מציגה (אופציונלי)">Describe the sketch (optional)</label>
   <input class="input" id="sketchDesc" placeholder="Floor plan for kitchen extension, 12x14 feet" style="margin-bottom:14px;">
 
-  <button class="btn btn-primary btn-large" style="width:100%;" onclick="cleanUpSketch()" id="cleanBtn" data-en="🧠 Clean Up with AI" data-he="🧠 נקה עם AI">🧠 Clean Up with AI</button>
+  <button class="btn btn-primary btn-large" style="width:100%;" onclick="cleanUpSketch()" id="cleanBtn" data-en="🧠 Clean Up with AI" data-es="🧠 Limpiar con IA" data-he="🧠 נקה עם AI">🧠 Clean Up with AI</button>
 
   <div id="resultSection" style="display:none;margin-top:16px;text-align:center;">
     <p style="font-size:14px;color:var(--ac);margin-bottom:8px;">AI Analysis</p>
     <div class="card" id="cleanResult" style="text-align:left;font-size:13px;line-height:1.7;"></div>
     <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;">
-      <button class="btn" onclick="exportSketch()" data-en="📥 Export PNG" data-he="📥 ייצוא PNG">📥 Export PNG</button>
-      <button class="btn btn-primary" onclick="generateVisual()" id="visualBtn" data-en="🎨 Generate Visual (5 credits)" data-he="🎨 צור ויזואל (5 קרדיטים)">🎨 Generate Visual (5 credits)</button>
+      <button class="btn" onclick="exportSketch()" data-en="📥 Export PNG" data-es="📥 Exportar PNG" data-he="📥 ייצוא PNG">📥 Export PNG</button>
+      <button class="btn btn-primary" onclick="generateVisual()" id="visualBtn" data-en="🎨 Generate Visual (5 credits)" data-es="🎨 Generar Visual (5 créditos)" data-he="🎨 צור ויזואל (5 קרדיטים)">🎨 Generate Visual (5 credits)</button>
     </div>
     <div id="visualResult" style="margin-top:14px;display:none;">
       <img id="visualImg" style="max-width:100%;border-radius:12px;border:1px solid var(--bd);" alt="Generated visual">
       <div style="margin-top:8px;">
-        <a id="visualDownload" class="btn" download="obra-visual.png" data-en="⬇️ Download" data-he="⬇️ הורד">⬇️ Download</a>
+        <a id="visualDownload" class="btn" download="obra-visual.png" data-en="⬇️ Download" data-es="⬇️ Descargar" data-he="⬇️ הורד">⬇️ Download</a>
       </div>
     </div>
   </div>

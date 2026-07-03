@@ -110,7 +110,7 @@
 
   <!-- Business Info -->
   <div class="profile-section">
-    <h3>🏢 <span data-en="Business Info" data-he="פרטי עסק">Business Info</span></h3>
+    <h3>🏢 <span data-en="Business Info" data-es="Información del Negocio" data-he="פרטי עסק">Business Info</span></h3>
 
     <div class="field-row">
       <label class="field-label" data-en="Business Name" data-es="Nombre del Negocio" data-he="שם העסק">Business Name</label>
@@ -140,7 +140,7 @@
       <label class="field-label" data-en="Logo" data-es="Logo" data-he="לוגו">Logo</label>
       <div class="logo-upload-area" id="logoArea">
         <div id="logoPreview"><span style="font-size:24px;opacity:.3;">📷</span></div>
-        <div class="logo-hint" data-en="Click to upload (max 5MB, resized to 200x200)" data-he="לחץ להעלאה (מקס 5MB, מוקטן ל-200x200)">Click to upload (max 5MB)</div>
+        <div class="logo-hint" data-en="Click to upload (max 5MB, resized to 200x200)" data-es="Haz clic para subir (máx 5MB, se ajusta a 200x200)" data-he="לחץ להעלאה (מקס 5MB, מוקטן ל-200x200)">Click to upload (max 5MB)</div>
         <input type="file" accept="image/*" id="logoInput">
       </div>
     </div>
@@ -148,26 +148,26 @@
 
   <!-- Directory & Social -->
   <div class="profile-section">
-    <h3 id="directory">🌐 <span data-en="Directory & Social" data-he="Directory ורשתות חברתיות">Directory & Social</span></h3>
+    <h3 id="directory">🌐 <span data-en="Directory & Social" data-es="Directorio y Redes Sociales" data-he="Directory ורשתות חברתיות">Directory & Social</span></h3>
 
     <div class="field-row">
-      <label class="field-label" data-en="Website URL" data-he="כתובת אתר">Website URL</label>
+      <label class="field-label" data-en="Website URL" data-es="URL del Sitio Web" data-he="כתובת אתר">Website URL</label>
       <input class="field-input" type="url" id="fWebsite" placeholder="https://your-site.com">
     </div>
     <div class="field-row">
-      <label class="field-label" data-en="Instagram URL" data-he="Instagram URL">Instagram URL</label>
+      <label class="field-label" data-en="Instagram URL" data-es="URL de Instagram" data-he="Instagram URL">Instagram URL</label>
       <input class="field-input" type="url" id="fInstagram" placeholder="https://instagram.com/your_handle">
     </div>
     <div class="field-row">
-      <label class="field-label" data-en="Facebook URL" data-he="Facebook URL">Facebook URL</label>
+      <label class="field-label" data-en="Facebook URL" data-es="URL de Facebook" data-he="Facebook URL">Facebook URL</label>
       <input class="field-input" type="url" id="fFacebook" placeholder="https://facebook.com/your-page">
     </div>
     <div class="field-row">
-      <label class="field-label" data-en="YouTube URL" data-he="YouTube URL">YouTube URL</label>
+      <label class="field-label" data-en="YouTube URL" data-es="URL de YouTube" data-he="YouTube URL">YouTube URL</label>
       <input class="field-input" type="url" id="fYoutube" placeholder="https://youtube.com/@your-channel">
     </div>
     <div class="field-row">
-      <label class="field-label" data-en="License Number (optional)" data-he="מספר רישיון (אופציונלי)">License Number (optional)</label>
+      <label class="field-label" data-en="License Number (optional)" data-es="Número de Licencia (opcional)" data-he="מספר רישיון (אופציונלי)">License Number (optional)</label>
       <input class="field-input" type="text" id="fLicense" placeholder="CA-12345">
     </div>
     <div class="field-row">
@@ -178,12 +178,13 @@
 
   <!-- Settings -->
   <div class="profile-section" id="settings">
-    <h3>⚙️ <span data-en="Settings" data-he="הגדרות">Settings</span></h3>
+    <h3>⚙️ <span data-en="Settings" data-es="Configuración" data-he="הגדרות">Settings</span></h3>
 
     <div class="field-row">
-      <label class="field-label" data-en="Language" data-he="שפה">Language</label>
+      <label class="field-label" data-en="Language" data-es="Idioma" data-he="שפה">Language</label>
       <div class="lang-choice">
         <button class="lang-opt" id="langEn" onclick="pickLang('en')">🇺🇸 English</button>
+        <button class="lang-opt" id="langEs" onclick="pickLang('es')">🇲🇽 Español</button>
         <button class="lang-opt" id="langHe" onclick="pickLang('he')">🇮🇱 עברית</button>
       </div>
     </div>
@@ -199,10 +200,10 @@
 
   <!-- Data -->
   <div class="profile-section">
-    <h3>📦 <span data-en="Data" data-he="מידע">Data</span></h3>
+    <h3>📦 <span data-en="Data" data-es="Datos" data-he="מידע">Data</span></h3>
     <div class="data-row">
-      <button class="btn" onclick="exportData()" data-en="Export JSON" data-he="ייצוא JSON">Export JSON</button>
-      <button class="btn" style="position:relative;" data-en="Import JSON" data-he="ייבוא JSON">
+      <button class="btn" onclick="exportData()" data-en="Export JSON" data-es="Exportar JSON" data-he="ייצוא JSON">Export JSON</button>
+      <button class="btn" style="position:relative;" data-en="Import JSON" data-es="Importar JSON" data-he="ייבוא JSON">
         Import JSON
         <input type="file" accept=".json" onchange="importData(event)" style="position:absolute;inset:0;opacity:0;cursor:pointer;">
       </button>
@@ -211,9 +212,9 @@
 
   <!-- Danger Zone -->
   <div class="profile-section danger-zone">
-    <h3>⚠️ <span data-en="Danger Zone" data-he="אזור מסוכן">Danger Zone</span></h3>
-    <p style="font-size:14px;color:var(--txd);margin-bottom:14px;line-height:1.5;" data-en="This will permanently delete your account and all data. This action cannot be undone." data-he="פעולה זו תמחק את החשבון שלך ואת כל המידע לצמיתות. לא ניתן לבטל פעולה זו.">This will permanently delete your account and all data. This action cannot be undone.</p>
-    <button class="btn btn-danger" style="width:100%;" onclick="deleteAccount()" data-en="Delete Account" data-he="מחק חשבון">Delete Account</button>
+    <h3>⚠️ <span data-en="Danger Zone" data-es="Zona de Peligro" data-he="אזור מסוכן">Danger Zone</span></h3>
+    <p style="font-size:14px;color:var(--txd);margin-bottom:14px;line-height:1.5;" data-en="This will permanently delete your account and all data. This action cannot be undone." data-es="Esto eliminará tu cuenta y todos los datos de forma permanente. Esta acción no se puede deshacer." data-he="פעולה זו תמחק את החשבון שלך ואת כל המידע לצמיתות. לא ניתן לבטל פעולה זו.">This will permanently delete your account and all data. This action cannot be undone.</p>
+    <button class="btn btn-danger" style="width:100%;" onclick="deleteAccount()" data-en="Delete Account" data-es="Eliminar Cuenta" data-he="מחק חשבון">Delete Account</button>
   </div>
 </div>
 
@@ -261,6 +262,7 @@ function loadProfile() {
   // Language
   selectedLang = user.language || lang;
   document.getElementById('langEn').classList.toggle('selected', selectedLang === 'en');
+  document.getElementById('langEs').classList.toggle('selected', selectedLang === 'es');
   document.getElementById('langHe').classList.toggle('selected', selectedLang === 'he');
 
   // Load directory fields (async — from server)
@@ -290,6 +292,7 @@ async function loadDirectoryFields() {
 function pickLang(l) {
   selectedLang = l;
   document.getElementById('langEn').classList.toggle('selected', l === 'en');
+  document.getElementById('langEs').classList.toggle('selected', l === 'es');
   document.getElementById('langHe').classList.toggle('selected', l === 'he');
 }
 
