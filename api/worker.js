@@ -407,7 +407,7 @@ export default {
 
       if (path === '/api/health') {
         // `version` bumps on meaningful deploys — lets us confirm an auto-deploy actually shipped.
-        return corsResponse(env, request, json({ ok: true, ts: Date.now(), version: 'obra-2026-07-03-freefirst' }));
+        return corsResponse(env, request, json({ ok: true, ts: Date.now(), version: 'obra-2026-07-03-patch' }));
       }
 
       // ── Payment Routes ──
@@ -1185,25 +1185,24 @@ async function handleProjectUpdate(request, env) {
   if (!user) return json({ error: 'Unauthorized' }, 401);
   if (!env.CRM_DB) return json({ error: 'Not configured' }, 503);
   let b; try { b = await request.json(); } catch { return json({ error: 'Invalid request' }, 400); }
+  if (!b || typeof b !== 'object') return json({ error: 'Invalid request' }, 400);
   const id = String(b.id || '');
   if (!PRJ_ID_RE.test(id)) return json({ error: 'Bad id' }, 400);
   const own = await env.CRM_DB.prepare('SELECT id FROM projects WHERE id=? AND owner_email=?').bind(id, user.email).first();
   if (!own) return json({ error: 'Not found' }, 404);
-  const name = String(b.name || '').slice(0, 80).trim();
-  const clientName = String(b.client_name || '').slice(0, 120);
-  const clientEmail = String(b.client_email || '').slice(0, 160);
-  const address = String(b.address || '').slice(0, 240);
-  const allowedStatus = ['active', 'won', 'done', 'archived'];
-  const status = allowedStatus.includes(b.status) ? b.status : 'active';
-  const schedule = JSON.stringify(_sanitizeSchedule(b.schedule));
-  const context = (b.context !== undefined) ? String(b.context || '').slice(0, 8000) : null;
-  if (context !== null) {
-    await env.CRM_DB.prepare('UPDATE projects SET name=COALESCE(NULLIF(?,\'\'),name), client_name=?, client_email=?, address=?, status=?, schedule=?, context=? WHERE id=? AND owner_email=?')
-      .bind(name, clientName, clientEmail, address, status, schedule, context, id, user.email).run();
-  } else {
-    await env.CRM_DB.prepare('UPDATE projects SET name=COALESCE(NULLIF(?,\'\'),name), client_name=?, client_email=?, address=?, status=?, schedule=? WHERE id=? AND owner_email=?')
-      .bind(name, clientName, clientEmail, address, status, schedule, id, user.email).run();
-  }
+  // PATCH semantics — only touch columns actually present in the body, so a partial update
+  // (e.g. just {status}) can't wipe schedule/client/address. (Previously these were full-replaced.)
+  const sets = [], vals = [];
+  if (b.name !== undefined) { const v = String(b.name || '').slice(0, 80).trim(); if (v) { sets.push('name=?'); vals.push(v); } }
+  if (b.client_name !== undefined) { sets.push('client_name=?'); vals.push(String(b.client_name || '').slice(0, 120)); }
+  if (b.client_email !== undefined) { sets.push('client_email=?'); vals.push(String(b.client_email || '').slice(0, 160)); }
+  if (b.address !== undefined) { sets.push('address=?'); vals.push(String(b.address || '').slice(0, 240)); }
+  if (b.status !== undefined) { sets.push('status=?'); vals.push(['active', 'won', 'done', 'archived'].includes(b.status) ? b.status : 'active'); }
+  if (b.schedule !== undefined) { sets.push('schedule=?'); vals.push(JSON.stringify(_sanitizeSchedule(b.schedule))); }
+  if (b.context !== undefined) { sets.push('context=?'); vals.push(String(b.context || '').slice(0, 8000)); }
+  if (!sets.length) return json({ ok: true }); // nothing provided to change
+  vals.push(id, user.email);
+  await env.CRM_DB.prepare(`UPDATE projects SET ${sets.join(', ')} WHERE id=? AND owner_email=?`).bind(...vals).run();
   return json({ ok: true });
 }
 async function handleProjectShare(request, env) {
