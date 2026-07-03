@@ -210,7 +210,11 @@ async function stripeBuy(tier, btn) {
     if (d.url) { window.location.href = d.url; return; }
     throw new Error(d.error || 'No checkout URL');
   } catch (e) {
-    toast(t({ en: 'Checkout failed — try again or use PayPal', he: 'התשלום נכשל — נסה שוב או דרך PayPal', es: 'Falló el pago — reintenta o usa PayPal' }));
+    // Only point at PayPal for tiers that actually have a PayPal fallback (annual is Stripe-only).
+    const hasPaypal = !!PAYPAL_LINKS[tier];
+    toast(hasPaypal
+      ? t({ en: 'Checkout failed — try again or use PayPal', he: 'התשלום נכשל — נסה שוב או דרך PayPal', es: 'Falló el pago — reintenta o usa PayPal' })
+      : t({ en: 'Checkout failed — please try again', he: 'התשלום נכשל — נסה שוב', es: 'Falló el pago — reintenta' }));
     btn.disabled = false;
     btn.textContent = orig;
   }

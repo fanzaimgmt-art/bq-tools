@@ -202,7 +202,7 @@ async function openProject(id) {
     // share state
     document.getElementById('shareUrl').value = '';
     const ap = document.getElementById('approveState');
-    if (p.client_approved_at) ap.innerHTML = '<span class="pill ok">✓</span> '+t({en:'Client approved on ',he:'הלקוח אישר ב-',es:'Cliente aprobó el '}) + new Date(p.client_approved_at+'Z').toLocaleDateString();
+    if (p.client_approved_at) { const ad=new Date(p.client_approved_at); ap.innerHTML = '<span class="pill ok">✓</span> '+t({en:'Client approved on ',he:'הלקוח אישר ב-',es:'Cliente aprobó el '}) + (isNaN(ad)?'':ad.toLocaleDateString()); }
     else ap.textContent = '';
     if (p.share_token) { document.getElementById('shareUrl').value = location.origin + '/schedule?t=' + p.share_token; }
     setLang(lang); // re-apply i18n to any data-en nodes
@@ -231,14 +231,14 @@ async function saveProject(){
     schedule: collectMiles(),
   };
   const msg = document.getElementById('saveMsg');
-  try { await apiCall('/api/projects/update',{method:'POST',body}); msg.textContent = t({en:'Saved ✓',he:'נשמר ✓',es:'Guardado ✓'}); setTimeout(()=>msg.textContent='',2500); await loadList(); }
-  catch(e){ msg.style.color='#ff8f8f'; msg.textContent=e.message; }
+  try { await apiCall('/api/projects/update',{method:'POST',body}); msg.style.color=''; msg.textContent = t({en:'Saved ✓',he:'נשמר ✓',es:'Guardado ✓'}); setTimeout(()=>msg.textContent='',2500); await loadList(); return true; }
+  catch(e){ msg.style.color='#ff8f8f'; msg.textContent=e.message; return false; }
 }
 async function genShare(){
   if(!CUR) return;
   const btn=document.getElementById('shareBtn'); btn.disabled=true;
   try {
-    await saveProject(); // persist latest schedule before sharing
+    if (!(await saveProject())) { btn.disabled=false; return; } // don't share a stale link if the save failed
     const d = await apiCall('/api/projects/share',{method:'POST',body:{id:CUR}});
     const inp=document.getElementById('shareUrl'); inp.value=d.url;
     inp.select(); try{ document.execCommand('copy'); }catch(e){}

@@ -1109,7 +1109,8 @@ async function handleProjectList(request, env) {
   const user = await _crmUser(request, env);
   if (!user) return json({ error: 'Unauthorized' }, 401);
   if (!env.CRM_DB) return json({ error: 'Not configured' }, 503);
-  const { results } = await env.CRM_DB.prepare('SELECT id, name, created_at, context FROM projects WHERE owner_email=? AND archived=0 ORDER BY created_at DESC LIMIT 100').bind(user.email).all();
+  const { results } = await env.CRM_DB.prepare('SELECT id, name, created_at, context, status, client_approved_at FROM projects WHERE owner_email=? AND archived=0 ORDER BY created_at DESC LIMIT 100').bind(user.email).all();
+  for (const r of (results || [])) r.client_approved_at = _isoZ(r.client_approved_at);
   return json({ ok: true, projects: results || [], active: user.activeProject || null });
 }
 async function handleProjectContext(request, env) {
@@ -1142,7 +1143,16 @@ function _projShareToken() {
   // 128-bit CSPRNG — the only access gate on the public client schedule page.
   return Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b => b.toString(16).padStart(2, '0')).join('');
 }
+// SQLite datetime('now') ("2026-07-03 12:00:00") → parseable ISO ("2026-07-03T12:00:00Z") for the frontend.
+function _isoZ(s) { if (!s) return null; return /\d{4}-\d{2}-\d{2}T/.test(s) ? s : String(s).replace(' ', 'T') + 'Z'; }
 const _DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+// Real calendar validity, not just shape: rejects 2026-13-99 / 2026-02-31 (which would crash
+// the .ics builder's Date().toISOString() with RangeError). Round-trips the date to itself.
+function _validDate(s) {
+  if (typeof s !== 'string' || !_DATE_RE.test(s)) return false;
+  const d = new Date(s + 'T00:00:00Z');
+  return !isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
+}
 function _sanitizeSchedule(raw) {
   // Accept an array of milestones; coerce+cap. Returns a clean array (max 40).
   let arr = raw;
@@ -1150,7 +1160,7 @@ function _sanitizeSchedule(raw) {
   if (!Array.isArray(arr)) return [];
   return arr.slice(0, 40).map(m => ({
     title: String((m && m.title) || '').slice(0, 120),
-    date: (m && _DATE_RE.test(m.date)) ? m.date : '',
+    date: (m && _validDate(m.date)) ? m.date : '',
     note: String((m && m.note) || '').slice(0, 300),
     done: !!(m && m.done),
   })).filter(m => m.title);
@@ -1164,6 +1174,7 @@ async function handleProjectGet(request, env) {
   const p = await env.CRM_DB.prepare('SELECT id, name, context, client_name, client_email, address, status, schedule, share_token, client_approved_at, created_at FROM projects WHERE id=? AND owner_email=?').bind(id, user.email).first();
   if (!p) return json({ error: 'Not found' }, 404);
   p.schedule = _sanitizeSchedule(p.schedule);
+  p.client_approved_at = _isoZ(p.client_approved_at);
   return json({ ok: true, project: p });
 }
 async function handleProjectUpdate(request, env) {
@@ -1226,7 +1237,7 @@ async function handleProjectPublicGet(request, env) {
     address: p.address || '',
     status: p.status || 'active',
     schedule: _sanitizeSchedule(p.schedule),
-    approvedAt: p.client_approved_at || null,
+    approvedAt: _isoZ(p.client_approved_at),
     contractor: biz,
   });
 }
@@ -1235,14 +1246,14 @@ async function handleProjectApprove(request, env) {
   let b; try { b = await request.json(); } catch { return json({ error: 'Invalid request' }, 400); }
   const t = String(b.t || '');
   if (!/^[a-f0-9]{32}$/.test(t)) return json({ error: 'Bad token' }, 400);
-  const p = await env.CRM_DB.prepare('SELECT id, owner_email, name, client_approved_at FROM projects WHERE share_token=?').bind(t).first();
+  const p = await env.CRM_DB.prepare('SELECT owner_email, name, client_approved_at FROM projects WHERE share_token=?').bind(t).first();
   if (!p) return json({ error: 'Not found' }, 404);
-  if (!p.client_approved_at) {
-    await env.CRM_DB.prepare("UPDATE projects SET client_approved_at=datetime('now') WHERE share_token=?").bind(t).run();
-    // Notify the contractor their client signed off (fail-silent; email optional).
+  // Conditional UPDATE — only the first approval flips it, so concurrent taps can't double-notify the contractor.
+  const res = await env.CRM_DB.prepare("UPDATE projects SET client_approved_at=datetime('now') WHERE share_token=? AND client_approved_at IS NULL").bind(t).run();
+  if (res && res.meta && res.meta.changes > 0) {
     try { await _notifyProjectApproved(p.owner_email, p.name, env); } catch {}
   }
-  return json({ ok: true, approvedAt: p.client_approved_at || new Date().toISOString() });
+  return json({ ok: true, approvedAt: _isoZ(p.client_approved_at) || new Date().toISOString() });
 }
 // PUBLIC — returns an .ics the client's phone opens straight into its calendar. Raw text/calendar, no CORS needed (link navigation).
 async function handleProjectICS(request, env) {
@@ -1255,19 +1266,24 @@ async function handleProjectICS(request, env) {
   try { const u = JSON.parse((await env.BQ_USERS.get('user:' + p.owner_email)) || '{}'); if (u.businessName) bizName = u.businessName; } catch {}
   const sched = _sanitizeSchedule(p.schedule).filter(m => m.date);
   const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
-  const esc = s => String(s || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+  // Strip ALL control chars (CR/LF/TAB) first, then escape iCal specials. A lone CR would split a content line.
+  const esc = s => String(s || '').replace(/[\x00-\x1f\x7f]/g, ' ').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,');
   const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Obra//Project Schedule//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', `X-WR-CALNAME:${esc(p.name)} — ${esc(bizName)}`];
-  for (const m of sched) {
+  sched.forEach((m, i) => {
+    const dEnd = new Date(m.date + 'T00:00:00Z');
+    if (isNaN(dEnd.getTime())) return; // guard: never let a bad date throw and 500 the whole file
     const d = m.date.replace(/-/g, '');
-    const dEnd = new Date(m.date + 'T00:00:00Z'); dEnd.setUTCDate(dEnd.getUTCDate() + 1);
+    dEnd.setUTCDate(dEnd.getUTCDate() + 1);
     const dNext = dEnd.toISOString().slice(0, 10).replace(/-/g, '');
-    lines.push('BEGIN:VEVENT', `UID:${_projShareToken()}@obra.build`, `DTSTAMP:${stamp}`,
+    // Stable UID (token+index) so re-adding or rescheduling UPDATES the event in the client's calendar
+    // instead of creating a duplicate (RFC 5545 — apps match events by UID).
+    lines.push('BEGIN:VEVENT', `UID:${t}-${i}@obra.build`, `DTSTAMP:${stamp}`,
       `DTSTART;VALUE=DATE:${d}`, `DTEND;VALUE=DATE:${dNext}`,
       `SUMMARY:${esc(m.title)} — ${esc(p.name)}`,
       `DESCRIPTION:${esc(m.note || ('Scheduled by ' + bizName))}`);
     if (p.address) lines.push(`LOCATION:${esc(p.address)}`);
     lines.push('END:VEVENT');
-  }
+  });
   lines.push('END:VCALENDAR');
   return new Response(lines.join('\r\n'), {
     headers: {

@@ -125,8 +125,12 @@ function render(){
 }
 async function approve(){
   const b=document.getElementById('apprBtn'); if(b){b.disabled=true;b.textContent='…';}
-  try{ const r=await fetch(API+'/api/public/project/approve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:tok})}); if(r.ok){ DATA.approvedAt=new Date().toISOString(); render(); } }
-  catch(e){ if(b){b.disabled=false;b.textContent=tr('approve');} }
+  try{
+    const r=await fetch(API+'/api/public/project/approve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:tok})});
+    if(r.ok){ DATA.approvedAt=new Date().toISOString(); render(); return; }
+    throw new Error('approve failed');   // fetch resolves on 4xx/5xx — must throw so the button recovers
+  }
+  catch(e){ if(b){ b.disabled=false; b.textContent=tr('approve'); } }
 }
 setL(L);
 load();
