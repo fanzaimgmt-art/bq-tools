@@ -407,7 +407,7 @@ export default {
 
       if (path === '/api/health') {
         // `version` bumps on meaningful deploys — lets us confirm an auto-deploy actually shipped.
-        return corsResponse(env, request, json({ ok: true, ts: Date.now(), version: 'obra-2026-07-03-metersafe' }));
+        return corsResponse(env, request, json({ ok: true, ts: Date.now(), version: 'obra-2026-07-03-freefirst' }));
       }
 
       // ── Payment Routes ──
@@ -865,9 +865,11 @@ async function handleTrustpackSign(request, env) { // PUBLIC — homeowner accep
   return json({ ok: true });
 }
 
-// Shared AI→JSON helper with provider fallback (fast model first).
+// Shared AI→JSON helper with provider fallback. FREE/cheap providers first (Groq, then Gemini),
+// paid OpenAI only as last resort — several callers are public or unmetered lead-gen tools
+// (scanner, bid-justify, price-estimate, trust-pack), so paid-first let abuse run up real spend.
 async function _aiJson(env, prompt) {
-  for (const [fn, model] of [[callOpenAIWithModel, 'gpt-5.4-mini'], [callGroqWithModel, 'openai/gpt-oss-120b'], [callGeminiWithModel, 'gemini-3.5-flash']]) {
+  for (const [fn, model] of [[callGroqWithModel, 'openai/gpt-oss-120b'], [callGeminiWithModel, 'gemini-3.5-flash'], [callOpenAIWithModel, 'gpt-5.4-mini']]) {
     try { const r = await fn(env, model, prompt, []); const m = String(r || '').match(/\{[\s\S]*\}/); if (m) return JSON.parse(m[0]); }
     catch (e) { /* try next provider */ }
   }
