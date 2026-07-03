@@ -213,12 +213,12 @@ function priceBookPromptLines(items) {
 function priceBookStatusLine(groundedCount) {
   if (groundedCount > 0) {
     const n = groundedCount;
-    return `<div class="pb-status" data-en="✓ Priced with your price book (${n} item${n !== 1 ? 's' : ''})" data-es="✓ Cotizado con tu libro de precios (${n} artículo${n !== 1 ? 's' : ''})">✓ Priced with your price book (${n} item${n !== 1 ? 's' : ''})</div>`;
+    return `<div class="pb-status" data-en="✓ Priced with the Obra price book — real contractor prices (${n} item${n !== 1 ? 's' : ''})" data-es="✓ Cotizado con el libro de precios de Obra — precios reales de contratistas (${n} artículo${n !== 1 ? 's' : ''})">✓ Priced with the Obra price book — real contractor prices (${n} item${n !== 1 ? 's' : ''})</div>`;
   }
   // Only nudge once ever per device — a helpful pointer, not a recurring nag.
   if (localStorage.getItem('bq_pb_nudge_shown')) return '';
   localStorage.setItem('bq_pb_nudge_shown', '1');
-  return `<div class="pb-status pb-nudge"><span data-en="No price-book match yet." data-es="Aún no hay coincidencias en tu libro de precios.">No price-book match yet.</span> <a href="/tools/price-book.html" data-en="Add your prices →" data-es="Agrega tus precios →">Add your prices →</a></div>`;
+  return `<div class="pb-status pb-nudge"><span data-en="No price-book match yet." data-es="Aún no hay coincidencias en el libro de precios.">No price-book match yet.</span> <a href="/tools/price-book.html" data-en="Add your prices →" data-es="Agrega tus precios →">Add your prices →</a></div>`;
 }
 
 async function generateEstimate() {
@@ -243,7 +243,7 @@ async function generateEstimate() {
 
     const groundedItems = await getPriceBookGrounding(desc);
     const groundingBlock = groundedItems.length
-      ? `\n\nGROUND ALL PRICES ON THIS CONTRACTOR'S OWN PRICE BOOK (authoritative over general knowledge): ${priceBookPromptLines(groundedItems)}`
+      ? `\n\nGROUND ALL PRICES ON THESE REAL LOCAL CONTRACTOR PRICES from the Obra price book (authoritative over general knowledge): ${priceBookPromptLines(groundedItems)}`
       : '';
 
     const prompt = `You are a construction cost estimator. Based on the photo (if provided) and description, provide a cost estimate.
