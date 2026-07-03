@@ -1562,7 +1562,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }).catch(() => {});
   }
 
-  // Stripe feature flag: enable card-payment buttons when Stripe is live
+  // Stripe feature flag: enable card-payment buttons when Stripe is live.
+  // Only fetch if this page actually has such buttons — otherwise it's a wasted API hit on every load.
+  if (document.querySelector('.stripe-card-btn'))
   fetch('https://bq-tools-api.fanzai-mgmt.workers.dev/api/config/flags').then(r => r.json()).then(f => {
     if (f.stripeEnabled) {
       document.querySelectorAll('.stripe-card-btn').forEach(btn => {

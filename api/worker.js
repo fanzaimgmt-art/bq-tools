@@ -406,7 +406,8 @@ export default {
       }
 
       if (path === '/api/health') {
-        return corsResponse(env, request, json({ ok: true, ts: Date.now() }));
+        // `version` bumps on meaningful deploys — lets us confirm an auto-deploy actually shipped.
+        return corsResponse(env, request, json({ ok: true, ts: Date.now(), version: 'obra-2026-07-03-projects' }));
       }
 
       // ── Payment Routes ──
