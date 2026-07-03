@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projects — Obra</title>
+<meta name="description" content="Every job gets its own brain, its own schedule, and a client link that closes into their calendar.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&family=Heebo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png">
+<style>
+  .pw{max-width:1080px;margin:0 auto;padding:88px 20px 60px}
+  [dir="rtl"] .pw{font-family:'Heebo','Inter',sans-serif}
+  .pw-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:8px}
+  .pw-head h1{font-family:'Space Grotesk',sans-serif;font-size:30px;letter-spacing:-.02em;margin:0}
+  .pw-head p{color:var(--txd);font-size:14px;margin:6px 0 0;max-width:520px;line-height:1.55}
+  .pw-layout{display:grid;grid-template-columns:300px 1fr;gap:22px;margin-top:26px;align-items:start}
+  @media(max-width:820px){.pw-layout{grid-template-columns:1fr}}
+  /* list rail */
+  .pl-new{display:flex;gap:8px;margin-bottom:14px}
+  .pl-new input{flex:1;background:var(--sf);border:1px solid var(--bd);border-radius:10px;color:var(--tx);padding:11px 13px;font-size:14px;font-family:inherit}
+  .pl-list{display:flex;flex-direction:column;gap:8px}
+  .pl-item{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:13px 15px;cursor:pointer;transition:border-color .18s ease,transform .18s ease}
+  .pl-item:hover{border-color:rgba(232,197,71,.4);transform:translateY(-1px)}
+  .pl-item.on{border-color:var(--ac);background:linear-gradient(135deg,rgba(232,197,71,.08),transparent 60%),var(--sf)}
+  .pl-item .nm{font-weight:700;font-size:14.5px}
+  .pl-item .meta{color:var(--txd);font-size:12px;margin-top:3px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .pill{font-size:10.5px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;padding:2px 8px;border-radius:100px}
+  .pill.active{background:rgba(232,197,71,.16);color:var(--ac)}
+  .pill.won{background:rgba(125,216,125,.16);color:#7dd87d}
+  .pill.done{background:rgba(150,150,160,.16);color:#b9b4ab}
+  .pill.ok{background:rgba(125,216,125,.16);color:#7dd87d}
+  /* editor */
+  .pe{background:var(--sf);border:1px solid var(--bd);border-radius:16px;padding:0;overflow:hidden}
+  .pe-empty{padding:70px 24px;text-align:center;color:var(--txd)}
+  .pe-empty .big{font-size:34px;margin-bottom:12px}
+  .pe-tabs{display:flex;border-bottom:1px solid var(--bd)}
+  .pe-tab{flex:1;padding:14px;text-align:center;cursor:pointer;font-size:13.5px;font-weight:600;color:var(--txd);border:none;background:none;font-family:inherit;border-bottom:2px solid transparent}
+  .pe-tab.on{color:var(--ac);border-bottom-color:var(--ac)}
+  .pe-body{padding:22px 24px}
+  .pane{display:none}.pane.on{display:block}
+  label.fl{display:block;font-size:12px;color:var(--txd);font-weight:600;margin:0 0 6px;letter-spacing:.02em}
+  .fld{width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--bd);border-radius:10px;color:var(--tx);padding:12px 13px;font-size:14px;font-family:inherit;margin-bottom:16px}
+  textarea.fld{min-height:200px;resize:vertical;line-height:1.6}
+  .brain-hint{background:linear-gradient(135deg,rgba(232,197,71,.09),transparent 60%);border:1px solid rgba(232,197,71,.3);border-radius:12px;padding:13px 15px;margin-bottom:16px;font-size:13px;color:var(--txd);line-height:1.55}
+  .brain-hint b{color:var(--ac)}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:560px){.row2{grid-template-columns:1fr}}
+  /* schedule builder */
+  .mile{display:grid;grid-template-columns:1fr 150px auto;gap:9px;margin-bottom:9px;align-items:start}
+  @media(max-width:560px){.mile{grid-template-columns:1fr;gap:6px;padding-bottom:10px;border-bottom:1px dashed var(--bd)}}
+  .mile input{background:var(--bg);border:1px solid var(--bd);border-radius:9px;color:var(--tx);padding:10px 12px;font-size:13.5px;font-family:inherit}
+  .mile .del{background:none;border:1px solid var(--bd);color:var(--txd);border-radius:9px;cursor:pointer;padding:0 12px;font-size:16px}
+  .mile .del:hover{border-color:#ff8f8f;color:#ff8f8f}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;align-items:center}
+  .savemsg{font-size:13px;color:#7dd87d}
+  .share-box{background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:15px;margin-top:8px}
+  .share-url{display:flex;gap:8px;margin-top:10px}
+  .share-url input{flex:1;background:var(--sf);border:1px solid var(--bd);border-radius:9px;color:var(--ac);padding:10px 12px;font-size:12.5px;font-family:ui-monospace,monospace}
+  .approve-state{margin-top:12px;font-size:13.5px;display:flex;align-items:center;gap:8px}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <a href="/home" class="nav-logo">Obra</a>
+  <div class="nav-links">
+    <a href="/home" class="nav-link" data-en="← Tools" data-he="→ כלים" data-es="← Herramientas">← Tools</a>
+    <a href="/crm" class="nav-link" data-en="Pipeline" data-he="פייפליין" data-es="Embudo">Pipeline</a>
+    <button class="theme-toggle" onclick="openLangPicker()" title="Language" aria-label="Language">🌐</button>
+  </div>
+</nav>
+
+<div class="pw">
+  <div class="pw-head">
+    <div>
+      <h1 data-en="Projects" data-he="פרויקטים" data-es="Proyectos">Projects</h1>
+      <p data-en="Every job gets its own brain, its own schedule, and a client link that drops the dates straight into their phone calendar." data-he="לכל עבודה יש מוח משלה, לוח זמנים משלה, וקישור ללקוח שמכניס את התאריכים ישר ליומן בטלפון שלו." data-es="Cada trabajo tiene su propio cerebro, su propio calendario, y un enlace que mete las fechas directo al calendario del cliente.">Every job gets its own brain, its own schedule, and a client link that drops the dates straight into their phone calendar.</p>
+    </div>
+  </div>
+
+  <div class="pw-layout">
+    <!-- rail -->
+    <div>
+      <div class="pl-new">
+        <input type="text" id="newName" maxlength="80" placeholder="New project name…" onkeydown="if(event.key==='Enter')createProject()">
+        <button class="btn btn-primary" onclick="createProject()" aria-label="Create project">+</button>
+      </div>
+      <div class="pl-list" id="plList"><div style="color:var(--txd);font-size:13px;padding:8px">Loading…</div></div>
+    </div>
+
+    <!-- editor -->
+    <div class="pe" id="editor">
+      <div class="pe-empty" id="emptyState">
+        <div class="big">🗂️</div>
+        <div style="font-size:16px;color:var(--tx);font-weight:600;margin-bottom:6px" data-en="Pick a project, or start one" data-he="בחר פרויקט, או פתח חדש" data-es="Elige un proyecto o crea uno">Pick a project, or start one</div>
+        <div style="font-size:13.5px" data-en="This is the difference between Obra and a chat: every job remembers its own details." data-he="זה ההבדל בין Obra לצ'אט: כל עבודה זוכרת את הפרטים שלה." data-es="Esta es la diferencia entre Obra y un chat: cada trabajo recuerda sus propios detalles.">This is the difference between Obra and a chat: every job remembers its own details.</div>
+      </div>
+
+      <div id="peContent" style="display:none">
+        <div class="pe-tabs">
+          <button class="pe-tab on" data-pane="brain" onclick="tab(this)" data-en="🧠 Brain" data-he="🧠 מוח" data-es="🧠 Cerebro">🧠 Brain</button>
+          <button class="pe-tab" data-pane="sched" onclick="tab(this)" data-en="📅 Schedule" data-he="📅 לוח זמנים" data-es="📅 Calendario">📅 Schedule</button>
+          <button class="pe-tab" data-pane="client" onclick="tab(this)" data-en="🤝 Client & share" data-he="🤝 לקוח ושיתוף" data-es="🤝 Cliente y enlace">🤝 Client & share</button>
+        </div>
+        <div class="pe-body">
+          <!-- BRAIN -->
+          <div class="pane on" id="pane-brain">
+            <div class="brain-hint" data-en="This is the project's <b>memory</b>. Write who it's for, the scope, materials, colors, gate codes, the client's quirks — anything. Tony reads this every time you ask about <b>this</b> job, so his quotes and messages fit it exactly." data-he="זה ה<b>זיכרון</b> של הפרויקט. כתוב למי זה, ההיקף, חומרים, צבעים, קודים לשער, הרגלים של הלקוח — הכל. טוני קורא את זה בכל פעם שאתה שואל על <b>העבודה הזאת</b>, כך שההצעות וההודעות שלו מדויקות." data-es="Esta es la <b>memoria</b> del proyecto. Escribe para quién es, el alcance, materiales, colores, códigos de entrada, las manías del cliente — todo. Tony lo lee cada vez que preguntas sobre <b>este</b> trabajo.">This is the project's <b>memory</b>. Write who it's for, the scope, materials, colors, gate codes, the client's quirks — anything. Tony reads this every time you ask about <b>this</b> job.</div>
+            <label class="fl" data-en="Project brain" data-he="מוח הפרויקט" data-es="Cerebro del proyecto">Project brain</label>
+            <textarea class="fld" id="fContext" maxlength="8000" placeholder="e.g. Kitchen remodel for the Ramirez family, 4212 Oak St. Scope: demo + new cabinets (shaker white), quartz counters, LVP floor. Gate code 4471. Client prefers texts, works nights — call after 5pm. Dog in yard."></textarea>
+            <button class="btn" onclick="askTony()" data-en="Ask Tony about this project →" data-he="→ שאל את טוני על הפרויקט הזה" data-es="Pregúntale a Tony sobre este proyecto →">Ask Tony about this project →</button>
+          </div>
+          <!-- SCHEDULE -->
+          <div class="pane" id="pane-sched">
+            <label class="fl" data-en="Milestones — what happens, and when" data-he="אבני דרך — מה קורה, ומתי" data-es="Hitos — qué pasa, y cuándo">Milestones — what happens, and when</label>
+            <div id="miles"></div>
+            <button class="btn" style="margin-top:4px" onclick="addMile()" data-en="+ Add milestone" data-he="+ הוסף אבן דרך" data-es="+ Agregar hito">+ Add milestone</button>
+          </div>
+          <!-- CLIENT -->
+          <div class="pane" id="pane-client">
+            <div class="row2">
+              <div><label class="fl" data-en="Client name" data-he="שם הלקוח" data-es="Nombre del cliente">Client name</label><input class="fld" id="fClientName" maxlength="120" placeholder="Sarah Ramirez"></div>
+              <div><label class="fl" data-en="Client email" data-he="אימייל הלקוח" data-es="Correo del cliente">Client email</label><input class="fld" id="fClientEmail" type="email" maxlength="160" placeholder="sarah@email.com"></div>
+            </div>
+            <label class="fl" data-en="Job address" data-he="כתובת העבודה" data-es="Dirección del trabajo">Job address</label>
+            <input class="fld" id="fAddress" maxlength="240" placeholder="4212 Oak St, Los Angeles CA">
+            <label class="fl" data-en="Status" data-he="סטטוס" data-es="Estado">Status</label>
+            <select class="fld" id="fStatus">
+              <option value="active" data-en="Active" data-he="פעיל" data-es="Activo">Active</option>
+              <option value="won" data-en="Won" data-he="נסגר" data-es="Ganado">Won</option>
+              <option value="done" data-en="Done" data-he="הושלם" data-es="Terminado">Done</option>
+              <option value="archived" data-en="Archived" data-he="בארכיון" data-es="Archivado">Archived</option>
+            </select>
+
+            <div class="share-box">
+              <div style="font-weight:700;font-size:14px" data-en="🔗 Share the schedule with your client" data-he="🔗 שתף את לוח הזמנים עם הלקוח" data-es="🔗 Comparte el calendario con tu cliente">🔗 Share the schedule with your client</div>
+              <div style="color:var(--txd);font-size:12.5px;margin-top:5px" data-en="They see the dates, tap once to add them to their phone calendar, and approve — you get notified." data-he="הוא רואה את התאריכים, מקיש פעם אחת כדי להוסיף ליומן בטלפון, ומאשר — ואתה מקבל התראה." data-es="Ve las fechas, toca una vez para agregarlas a su calendario, y aprueba — tú recibes aviso.">They see the dates, tap once to add them to their phone calendar, and approve — you get notified.</div>
+              <div class="share-url">
+                <input type="text" id="shareUrl" readonly placeholder="Save first, then generate a link">
+                <button class="btn btn-primary" id="shareBtn" onclick="genShare()" data-en="Get link" data-he="קבל קישור" data-es="Obtener enlace">Get link</button>
+              </div>
+              <div class="approve-state" id="approveState"></div>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="btn btn-primary" onclick="saveProject()" data-en="Save project" data-he="שמור פרויקט" data-es="Guardar proyecto">Save project</button>
+            <span class="savemsg" id="saveMsg"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/i18n-dict.js" defer></script>
+<script src="js/ai.js"></script>
+<script src="js/common.js"></script>
+<script>
+let PROJECTS = [], CUR = null;
+
+async function loadList() {
+  try {
+    const d = await apiCall('/api/projects');
+    PROJECTS = d.projects || [];
+    renderList();
+  } catch (e) { document.getElementById('plList').innerHTML = '<div style="color:var(--txd);font-size:13px;padding:8px">' + t({en:'Sign in to see your projects.',he:'התחבר כדי לראות פרויקטים.',es:'Inicia sesión para ver proyectos.'}) + '</div>'; }
+}
+function statusPill(s){ const m={active:'active',won:'won',done:'done',archived:'done'}; return '<span class="pill '+(m[s]||'active')+'">'+ (s||'active') +'</span>'; }
+function renderList() {
+  const el = document.getElementById('plList');
+  if (!PROJECTS.length) { el.innerHTML = '<div style="color:var(--txd);font-size:13px;padding:8px">'+ t({en:'No projects yet. Name one above ↑',he:'אין פרויקטים. תן שם למעלה ↑',es:'Aún no hay proyectos. Nombra uno arriba ↑'}) +'</div>'; return; }
+  el.innerHTML = PROJECTS.map(p => `<div class="pl-item ${CUR===p.id?'on':''}" onclick="openProject('${p.id}')">
+    <div class="nm">${escAttr(p.name)}</div>
+    <div class="meta">${statusPill(p.status)} ${p.client_approved_at?'<span class="pill ok">✓ '+t({en:'approved',he:'אושר',es:'aprobado'})+'</span>':''}</div>
+  </div>`).join('');
+}
+async function createProject() {
+  const inp = document.getElementById('newName');
+  const name = (inp.value||'').trim(); if (!name) return;
+  try {
+    const d = await apiCall('/api/projects', { method:'POST', body:{ name } });
+    inp.value='';
+    await loadList();
+    openProject(d.id);
+  } catch(e){ alert(e.message); }
+}
+async function openProject(id) {
+  CUR = id; renderList();
+  document.getElementById('emptyState').style.display='none';
+  document.getElementById('peContent').style.display='block';
+  try {
+    const d = await apiCall('/api/projects/get?id='+encodeURIComponent(id));
+    const p = d.project || {};
+    document.getElementById('fContext').value = p.context || '';
+    document.getElementById('fClientName').value = p.client_name || '';
+    document.getElementById('fClientEmail').value = p.client_email || '';
+    document.getElementById('fAddress').value = p.address || '';
+    document.getElementById('fStatus').value = p.status || 'active';
+    renderMiles(p.schedule || []);
+    // share state
+    document.getElementById('shareUrl').value = '';
+    const ap = document.getElementById('approveState');
+    if (p.client_approved_at) ap.innerHTML = '<span class="pill ok">✓</span> '+t({en:'Client approved on ',he:'הלקוח אישר ב-',es:'Cliente aprobó el '}) + new Date(p.client_approved_at+'Z').toLocaleDateString();
+    else ap.textContent = '';
+    if (p.share_token) { document.getElementById('shareUrl').value = location.origin + '/schedule?t=' + p.share_token; }
+    setLang(lang); // re-apply i18n to any data-en nodes
+  } catch(e){ alert(e.message); }
+}
+function tab(btn){ document.querySelectorAll('.pe-tab').forEach(b=>b.classList.remove('on')); btn.classList.add('on'); document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on')); document.getElementById('pane-'+btn.dataset.pane).classList.add('on'); }
+
+function mileRow(m){ m=m||{}; return `<div class="mile">
+  <input type="text" maxlength="120" class="m-title" placeholder="${t({en:'e.g. Demo starts',he:'לדוגמה: התחלת הריסה',es:'ej. Empieza demolición'})}" value="${escAttr(m.title||'')}">
+  <input type="date" class="m-date" value="${escAttr(m.date||'')}">
+  <button class="del" onclick="this.closest('.mile').remove()" aria-label="Remove">×</button>
+</div>`; }
+function renderMiles(arr){ document.getElementById('miles').innerHTML = (arr&&arr.length?arr:[{}]).map(mileRow).join(''); }
+function addMile(){ document.getElementById('miles').insertAdjacentHTML('beforeend', mileRow({})); }
+function collectMiles(){ return [...document.querySelectorAll('#miles .mile')].map(r=>({ title:r.querySelector('.m-title').value.trim(), date:r.querySelector('.m-date').value, note:'' })).filter(m=>m.title); }
+
+async function saveProject(){
+  if(!CUR) return;
+  const body = {
+    id: CUR,
+    context: document.getElementById('fContext').value,
+    client_name: document.getElementById('fClientName').value,
+    client_email: document.getElementById('fClientEmail').value,
+    address: document.getElementById('fAddress').value,
+    status: document.getElementById('fStatus').value,
+    schedule: collectMiles(),
+  };
+  const msg = document.getElementById('saveMsg');
+  try { await apiCall('/api/projects/update',{method:'POST',body}); msg.textContent = t({en:'Saved ✓',he:'נשמר ✓',es:'Guardado ✓'}); setTimeout(()=>msg.textContent='',2500); await loadList(); }
+  catch(e){ msg.style.color='#ff8f8f'; msg.textContent=e.message; }
+}
+async function genShare(){
+  if(!CUR) return;
+  const btn=document.getElementById('shareBtn'); btn.disabled=true;
+  try {
+    await saveProject(); // persist latest schedule before sharing
+    const d = await apiCall('/api/projects/share',{method:'POST',body:{id:CUR}});
+    const inp=document.getElementById('shareUrl'); inp.value=d.url;
+    inp.select(); try{ document.execCommand('copy'); }catch(e){}
+    btn.textContent = t({en:'Copied ✓',he:'הועתק ✓',es:'Copiado ✓'});
+    setTimeout(()=>{ btn.textContent=t({en:'Get link',he:'קבל קישור',es:'Obtener enlace'}); btn.disabled=false; },2500);
+  } catch(e){ alert(e.message); btn.disabled=false; }
+}
+async function askTony(){
+  if(!CUR) return;
+  try { await apiCall('/api/projects/active',{method:'POST',body:{id:CUR}}); } catch(e){}
+  location.href='/tony';
+}
+loadList();
+</script>
+</body>
+</html>
