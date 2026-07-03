@@ -310,10 +310,10 @@ async function init() {
 
   // Fill dropdowns
   const cSel = document.getElementById('clientSelect');
-  cSel.innerHTML = `<option value="">${lang === 'he' ? 'בחר לקוח' : 'Pick a client'}</option>` +
+  cSel.innerHTML = `<option value="">${lang === 'he' ? 'בחר לקוח' : lang === 'es' ? 'Elegir cliente' : 'Pick a client'}</option>` +
     clients.map(c => `<option value="${c.id}">${escHtml(c.name)}</option>`).join('');
   const pSel = document.getElementById('projectSelect');
-  pSel.innerHTML = `<option value="">${lang === 'he' ? 'ללא פרויקט' : 'No project'}</option>` +
+  pSel.innerHTML = `<option value="">${lang === 'he' ? 'ללא פרויקט' : lang === 'es' ? 'Sin proyecto' : 'No project'}</option>` +
     bprojects.map(p => `<option value="${p.id}">${escHtml(p.name)}</option>`).join('');
 
   // Defaults
@@ -377,7 +377,7 @@ function renderItems() {
   const el = document.getElementById('items');
   el.innerHTML = items.map((it, i) => `
     <div style="display:flex;gap:6px;margin-bottom:6px;">
-      <input class="input" style="flex:2;" placeholder="${lang === 'he' ? 'תיאור' : 'Description'}" value="${escHtml(it.description)}" onchange="items[${i}].description=this.value;calcTotals()">
+      <input class="input" style="flex:2;" placeholder="${lang === 'he' ? 'תיאור' : lang === 'es' ? 'Descripción' : 'Description'}" value="${escHtml(it.description)}" onchange="items[${i}].description=this.value;calcTotals()">
       <input class="input" type="number" step="0.01" style="width:80px;" placeholder="Qty" value="${it.quantity}" onchange="items[${i}].quantity=parseFloat(this.value)||0;calcLine(${i});calcTotals()">
       <input class="input" type="number" step="0.01" style="width:110px;" placeholder="Unit $" value="${it.unitPrice}" onchange="items[${i}].unitPrice=parseFloat(this.value)||0;calcLine(${i});calcTotals()">
       <div class="input" style="width:110px;display:flex;align-items:center;justify-content:flex-end;background:var(--bg);">$${it.total.toFixed(2)}</div>
@@ -404,9 +404,9 @@ function calcTotals() {
 
 async function saveInvoice(status) {
   const name = document.getElementById('clientName').value.trim();
-  if (!name) { showToast(lang === 'he' ? 'שם לקוח חובה' : 'Client name required', 'err'); return; }
+  if (!name) { showToast(lang === 'he' ? 'שם לקוח חובה' : lang === 'es' ? 'Se requiere el nombre del cliente' : 'Client name required', 'err'); return; }
   if (!items.some(it => it.description && it.total > 0)) {
-    showToast(lang === 'he' ? 'הוסף לפחות פריט אחד' : 'Add at least one line item', 'err');
+    showToast(lang === 'he' ? 'הוסף לפחות פריט אחד' : lang === 'es' ? 'Agrega al menos un artículo' : 'Add at least one line item', 'err');
     return;
   }
   const draftBtn = document.getElementById('saveDraftBtn');
@@ -457,7 +457,7 @@ async function saveInvoice(status) {
     renderPreview(saved);
     renderHistory();
     renderOutstanding();
-    showToast('✓ ' + (status === 'Draft' ? (lang === 'he' ? 'טיוטה נשמרה' : 'Draft saved') : (lang === 'he' ? 'נשלח' : 'Marked as sent')), 'ok');
+    showToast('✓ ' + (status === 'Draft' ? (lang === 'he' ? 'טיוטה נשמרה' : lang === 'es' ? 'Borrador guardado' : 'Draft saved') : (lang === 'he' ? 'נשלח' : lang === 'es' ? 'Marcado como enviado' : 'Marked as sent')), 'ok');
   } catch (err) { showToast(err.message, 'err'); }
   finally {
     if (draftBtn) draftBtn.disabled = false;
@@ -465,9 +465,15 @@ async function saveInvoice(status) {
   }
 }
 
+const INVOICE_LABELS = {
+  en: { issued: 'Issued', due: 'Due', billTo: 'Bill To', description: 'Description', qty: 'Qty', unit: 'Unit', total: 'Total', subtotal: 'Subtotal', tax: 'Tax', totalFinal: 'TOTAL', paid: 'Paid', amountDue: 'Amount Due', paymentTerms: 'Payment Terms' },
+  es: { issued: 'Emitida', due: 'Vence', billTo: 'Facturar A', description: 'Descripción', qty: 'Cant.', unit: 'Precio Unit.', total: 'Total', subtotal: 'Subtotal', tax: 'Impuesto', totalFinal: 'TOTAL', paid: 'Pagado', amountDue: 'Monto Adeudado', paymentTerms: 'Términos de Pago' },
+  he: { issued: 'תאריך', due: 'תאריך יעד', billTo: 'חשבונית עבור', description: 'תיאור', qty: 'כמות', unit: 'מחיר', total: 'סה״כ', subtotal: 'סיכום ביניים', tax: 'מס', totalFinal: 'סה״כ', paid: 'שולם', amountDue: 'חוב', paymentTerms: 'תנאי תשלום' }
+};
+
 function renderPreview(inv) {
   const user = getCachedUser() || {};
-  const h = lang === 'he';
+  const IL = INVOICE_LABELS[lang] || INVOICE_LABELS.en;
 
   const itemsHtml = (inv.lineItems || []).map(it => `
     <tr>
@@ -492,29 +498,29 @@ function renderPreview(inv) {
         <div class="inv-label">INVOICE</div>
         <div class="inv-num">${inv.invoiceNumber}</div>
         <div><span class="st-chip st-${effectiveStatus}">${effectiveStatus}</span></div>
-        <div style="margin-top:6px;">${h ? 'תאריך' : 'Issued'}: ${fmtDate(inv.issueDate)}</div>
-        <div>${h ? 'תאריך יעד' : 'Due'}: <strong>${fmtDate(inv.dueDate)}</strong></div>
+        <div style="margin-top:6px;">${IL.issued}: ${fmtDate(inv.issueDate)}</div>
+        <div>${IL.due}: <strong>${fmtDate(inv.dueDate)}</strong></div>
       </div>
     </div>
     <div class="ip-client">
-      <div class="cl-label">${h ? 'חשבונית עבור' : 'Bill To'}</div>
+      <div class="cl-label">${IL.billTo}</div>
       <div class="cl-name">${escHtml(inv.clientName)}</div>
       ${inv.clientAddress ? `<div style="font-size:13px;color:#666;">${escHtml(inv.clientAddress)}</div>` : ''}
     </div>
     ${inv.projectTitle ? `<h3 style="font-size:16px;margin-bottom:10px;">${escHtml(inv.projectTitle)}</h3>` : ''}
     <table class="ip-table">
-      <thead><tr><th>${h ? 'תיאור' : 'Description'}</th><th class="num">${h ? 'כמות' : 'Qty'}</th><th class="num">${h ? 'מחיר' : 'Unit'}</th><th class="num">${h ? 'סה״כ' : 'Total'}</th></tr></thead>
+      <thead><tr><th>${IL.description}</th><th class="num">${IL.qty}</th><th class="num">${IL.unit}</th><th class="num">${IL.total}</th></tr></thead>
       <tbody>${itemsHtml}</tbody>
     </table>
     <div class="ip-totals">
-      <div class="t-row"><span>${h ? 'סיכום ביניים' : 'Subtotal'}</span><span>$${(inv.subtotal || 0).toFixed(2)}</span></div>
-      <div class="t-row"><span>${h ? 'מס' : 'Tax'}</span><span>$${(inv.tax || 0).toFixed(2)}</span></div>
-      <div class="t-row final"><span>${h ? 'סה״כ' : 'TOTAL'}</span><span>$${(inv.total || 0).toFixed(2)}</span></div>
-      ${inv.amountPaid ? `<div class="t-row" style="color:#2d9a43;"><span>${h ? 'שולם' : 'Paid'}</span><span>-$${inv.amountPaid.toFixed(2)}</span></div>` : ''}
-      ${inv.status !== 'Paid' ? `<div class="t-row due"><span>${h ? 'חוב' : 'Amount Due'}</span><span>$${((inv.total || 0) - (inv.amountPaid || 0)).toFixed(2)}</span></div>` : ''}
+      <div class="t-row"><span>${IL.subtotal}</span><span>$${(inv.subtotal || 0).toFixed(2)}</span></div>
+      <div class="t-row"><span>${IL.tax}</span><span>$${(inv.tax || 0).toFixed(2)}</span></div>
+      <div class="t-row final"><span>${IL.totalFinal}</span><span>$${(inv.total || 0).toFixed(2)}</span></div>
+      ${inv.amountPaid ? `<div class="t-row" style="color:#2d9a43;"><span>${IL.paid}</span><span>-$${inv.amountPaid.toFixed(2)}</span></div>` : ''}
+      ${inv.status !== 'Paid' ? `<div class="t-row due"><span>${IL.amountDue}</span><span>$${((inv.total || 0) - (inv.amountPaid || 0)).toFixed(2)}</span></div>` : ''}
     </div>
     <div class="ip-payment">
-      <strong>${h ? 'תנאי תשלום' : 'Payment Terms'}:</strong> ${inv.paymentTerms || 'Net 15'}
+      <strong>${IL.paymentTerms}:</strong> ${inv.paymentTerms || 'Net 15'}
       ${inv.notes ? `<div style="margin-top:6px;">${escHtml(inv.notes).replace(/\n/g, '<br>')}</div>` : ''}
     </div>
     <div class="ip-footer">Powered by Obra · obra.build</div>`;
@@ -559,7 +565,7 @@ async function markPaid() {
     renderPreview(updated);
     renderHistory();
     renderOutstanding();
-    showToast('✅ ' + (lang === 'he' ? 'סומן כשולם' : 'Marked as paid'), 'ok');
+    showToast('✅ ' + (lang === 'he' ? 'סומן כשולם' : lang === 'es' ? 'Marcado como pagado' : 'Marked as paid'), 'ok');
   } catch (err) { showToast(err.message, 'err'); }
 }
 
@@ -593,13 +599,13 @@ function renderOutstanding() {
   const total = outstanding.reduce((s, i) => s + (parseFloat(i.total) - parseFloat(i.amountPaid || 0)), 0);
   bar.classList.add('show');
   document.getElementById('outstandingAmount').textContent = fmtMoney(total);
-  document.getElementById('outstandingCount').textContent = outstanding.length + (lang === 'he' ? ' חשבוניות' : ' invoice' + (outstanding.length !== 1 ? 's' : ''));
+  document.getElementById('outstandingCount').textContent = outstanding.length + (lang === 'he' ? ' חשבוניות' : lang === 'es' ? ' factura' + (outstanding.length !== 1 ? 's' : '') : ' invoice' + (outstanding.length !== 1 ? 's' : ''));
 }
 
 function renderHistory() {
   const el = document.getElementById('historyList');
   if (invoices.length === 0) {
-    el.innerHTML = `<p class="history-empty">${lang === 'he' ? 'אין חשבוניות עדיין' : 'No invoices yet'}</p>`;
+    el.innerHTML = `<p class="history-empty">${lang === 'he' ? 'אין חשבוניות עדיין' : lang === 'es' ? 'Aún no hay facturas' : 'No invoices yet'}</p>`;
     return;
   }
   el.innerHTML = invoices.slice(0, 30).map(inv => {
@@ -627,7 +633,7 @@ async function deleteInvoice(id) {
     invoices = invoices.filter(x => x.id !== id);
     renderHistory();
     renderOutstanding();
-    showToast(lang === 'he' ? 'נמחק' : 'Deleted', 'ok');
+    showToast(lang === 'he' ? 'נמחק' : lang === 'es' ? 'Eliminado' : 'Deleted', 'ok');
   } catch (err) { showToast(err.message, 'err'); }
 }
 

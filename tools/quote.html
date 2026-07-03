@@ -205,18 +205,21 @@ async function checkTraining() {
     const data = await apiCall('/api/training/knowledge');
     const alert = document.getElementById('trainingAlert');
     const text = document.getElementById('trainingAlertText');
-    const h = lang === 'he';
     alert.style.display = 'flex';
     if (data.knowledge?.trained) {
       alert.className = 'training-alert trained';
       alert.querySelector('span').textContent = '✓';
-      text.innerHTML = h
+      text.innerHTML = lang === 'he'
         ? `<strong>AI מאומן</strong> על ${data.knowledge.fileCount} מסמכים. ההצעה תשתמש במחירים שלך.`
+        : lang === 'es'
+        ? `<strong>IA entrenada</strong> con ${data.knowledge.fileCount} documentos. La cotización usará tus precios.`
         : `<strong>AI trained</strong> on ${data.knowledge.fileCount} documents. Quote will use your pricing.`;
     } else {
       alert.className = 'training-alert not-trained';
-      text.innerHTML = h
+      text.innerHTML = lang === 'he'
         ? `💡 <strong>טיפ:</strong> <a href="/training.html">העלה חוזים ישנים</a> כדי ש-AI ייצר הצעות עם המחירים שלך.`
+        : lang === 'es'
+        ? `💡 <strong>Consejo:</strong> <a href="/training.html">Sube contratos anteriores</a> para que la IA genere cotizaciones con TUS precios.`
         : `💡 <strong>Tip:</strong> <a href="/training.html">Upload past contracts</a> so AI generates quotes using YOUR pricing.`;
     }
   } catch {}
@@ -224,17 +227,17 @@ async function checkTraining() {
 
 async function generateQuote() {
   const desc = document.getElementById('projectDesc').value.trim();
-  if (!desc) { showToast(lang === 'he' ? 'תאר את הפרויקט' : 'Describe the project', 'err'); return; }
+  if (!desc) { showToast(lang === 'he' ? 'תאר את הפרויקט' : lang === 'es' ? 'Describe el proyecto' : 'Describe the project', 'err'); return; }
 
   const credits = getCredits();
   if (credits < 1) { showNoCreditModal(); return; }
 
-  const ok = await confirmCredit('quote', lang === 'he' ? 'יצירת הצעת מחיר' : 'Generate Quote');
+  const ok = await confirmCredit('quote', lang === 'he' ? 'יצירת הצעת מחיר' : lang === 'es' ? 'Generar Cotización' : 'Generate Quote');
   if (!ok) return;
 
   const btn = document.getElementById('genBtn');
   btn.disabled = true;
-  btn.innerHTML = '⏳ ' + (lang === 'he' ? 'מייצר...' : 'Generating...');
+  btn.innerHTML = '⏳ ' + (lang === 'he' ? 'מייצר...' : lang === 'es' ? 'Generando...' : 'Generating...');
 
   try {
     const data = await apiCall('/api/quotes/generate', {
@@ -260,9 +263,9 @@ async function generateQuote() {
     }
 
     if (data.personalized) {
-      showToast(lang === 'he' ? `✓ הצעה אישית (מבוסס על ${data.fileCount} קבצים)` : `✓ Personalized (based on ${data.fileCount} files)`, 'ok');
+      showToast(lang === 'he' ? `✓ הצעה אישית (מבוסס על ${data.fileCount} קבצים)` : lang === 'es' ? `✓ Personalizada (basada en ${data.fileCount} archivos)` : `✓ Personalized (based on ${data.fileCount} files)`, 'ok');
     } else {
-      showToast(lang === 'he' ? 'הצעה נוצרה' : 'Quote generated', 'ok');
+      showToast(lang === 'he' ? 'הצעה נוצרה' : lang === 'es' ? 'Cotización generada' : 'Quote generated', 'ok');
     }
 
     document.getElementById('quotePreview').scrollIntoView({ behavior: 'smooth' });
@@ -271,12 +274,18 @@ async function generateQuote() {
   }
 
   btn.disabled = false;
-  btn.innerHTML = '📝 <span>' + (lang === 'he' ? 'צור הצעת מחיר ⚡1' : 'Generate Quote ⚡1') + '</span>';
+  btn.innerHTML = '📝 <span>' + (lang === 'he' ? 'צור הצעת מחיר ⚡1' : lang === 'es' ? 'Generar Cotización ⚡1' : 'Generate Quote ⚡1') + '</span>';
 }
+
+const QUOTE_LABELS = {
+  en: { date: 'Date', validUntil: 'Valid Until', quoteFor: 'Quote For', description: 'Description', qty: 'Qty', unitPrice: 'Unit Price', total: 'Total', subtotal: 'Subtotal', tax: 'Tax', totalFinal: 'TOTAL', timeline: 'Timeline', terms: 'Terms & Conditions', notes: 'Notes', clientSignature: 'Client Signature' },
+  es: { date: 'Fecha', validUntil: 'Válido Hasta', quoteFor: 'Cotización Para', description: 'Descripción', qty: 'Cant.', unitPrice: 'Precio Unitario', total: 'Total', subtotal: 'Subtotal', tax: 'Impuesto', totalFinal: 'TOTAL', timeline: 'Cronograma', terms: 'Términos y Condiciones', notes: 'Notas', clientSignature: 'Firma del Cliente' },
+  he: { date: 'תאריך', validUntil: 'תקף עד', quoteFor: 'הצעת מחיר עבור', description: 'תיאור', qty: 'כמות', unitPrice: 'מחיר יחידה', total: 'סה״כ', subtotal: 'סיכום ביניים', tax: 'מע״מ', totalFinal: 'סה״כ', timeline: 'לוח זמנים', terms: 'תנאים', notes: 'הערות', clientSignature: 'חתימת לקוח' }
+};
 
 function renderPreview(q) {
   const user = getCachedUser() || {};
-  const h = lang === 'he';
+  const QL = QUOTE_LABELS[lang] || QUOTE_LABELS.en;
   const clientName = document.getElementById('clientName').value.trim() || '[Client Name]';
   const clientAddr = document.getElementById('clientAddress').value.trim() || '';
   const date = new Date().toLocaleDateString();
@@ -305,13 +314,13 @@ function renderPreview(q) {
       </div>
       <div class="qp-meta">
         <div class="q-num">${quoteNum}</div>
-        <div>${h ? 'תאריך' : 'Date'}: ${date}</div>
-        <div>${h ? 'תקף עד' : 'Valid Until'}: ${validUntil}</div>
+        <div>${QL.date}: ${date}</div>
+        <div>${QL.validUntil}: ${validUntil}</div>
       </div>
     </div>
 
     <div class="qp-client">
-      <div class="client-label">${h ? 'הצעת מחיר עבור' : 'Quote For'}</div>
+      <div class="client-label">${QL.quoteFor}</div>
       <div class="client-name">${escHtml(clientName)}</div>
       ${clientAddr ? `<div class="client-addr">${escHtml(clientAddr)}</div>` : ''}
     </div>
@@ -323,29 +332,29 @@ function renderPreview(q) {
 
     ${itemsHtml ? `<table class="qp-table">
       <thead><tr>
-        <th>${h ? 'תיאור' : 'Description'}</th>
-        <th class="num">${h ? 'כמות' : 'Qty'}</th>
-        <th class="num">${h ? 'מחיר יחידה' : 'Unit Price'}</th>
-        <th class="num">${h ? 'סה״כ' : 'Total'}</th>
+        <th>${QL.description}</th>
+        <th class="num">${QL.qty}</th>
+        <th class="num">${QL.unitPrice}</th>
+        <th class="num">${QL.total}</th>
       </tr></thead>
       <tbody>${itemsHtml}</tbody>
     </table>` : ''}
 
     <div class="qp-totals">
-      <div class="t-row"><span>${h ? 'סיכום ביניים' : 'Subtotal'}</span><span>$${(q.subtotal || 0).toLocaleString()}</span></div>
-      <div class="t-row"><span>${h ? 'מע״מ' : 'Tax'} (${q.taxRate || 9.5}%)</span><span>$${(q.tax || 0).toLocaleString()}</span></div>
-      <div class="t-row final"><span>${h ? 'סה״כ' : 'TOTAL'}</span><span>$${(q.total || 0).toLocaleString()}</span></div>
+      <div class="t-row"><span>${QL.subtotal}</span><span>$${(q.subtotal || 0).toLocaleString()}</span></div>
+      <div class="t-row"><span>${QL.tax} (${q.taxRate || 9.5}%)</span><span>$${(q.tax || 0).toLocaleString()}</span></div>
+      <div class="t-row final"><span>${QL.totalFinal}</span><span>$${(q.total || 0).toLocaleString()}</span></div>
     </div>
 
-    ${q.timeline ? `<div class="qp-terms"><h4>${h ? 'לוח זמנים' : 'Timeline'}</h4><p>${escHtml(q.timeline)}</p></div>` : ''}
+    ${q.timeline ? `<div class="qp-terms"><h4>${QL.timeline}</h4><p>${escHtml(q.timeline)}</p></div>` : ''}
 
-    ${q.terms ? `<div class="qp-terms"><h4>${h ? 'תנאים' : 'Terms & Conditions'}</h4><p style="white-space:pre-line;">${escHtml(q.terms)}</p></div>` : ''}
+    ${q.terms ? `<div class="qp-terms"><h4>${QL.terms}</h4><p style="white-space:pre-line;">${escHtml(q.terms)}</p></div>` : ''}
 
-    ${q.notes ? `<div class="qp-terms"><h4>${h ? 'הערות' : 'Notes'}</h4><p>${escHtml(q.notes)}</p></div>` : ''}
+    ${q.notes ? `<div class="qp-terms"><h4>${QL.notes}</h4><p>${escHtml(q.notes)}</p></div>` : ''}
 
     <div style="margin-top:24px;display:flex;gap:40px;font-size:12px;color:#555;">
-      <div style="flex:1;border-top:1px solid #333;padding-top:6px;">${h ? 'חתימת לקוח' : 'Client Signature'}</div>
-      <div style="flex:1;border-top:1px solid #333;padding-top:6px;">${h ? 'תאריך' : 'Date'}</div>
+      <div style="flex:1;border-top:1px solid #333;padding-top:6px;">${QL.clientSignature}</div>
+      <div style="flex:1;border-top:1px solid #333;padding-top:6px;">${QL.date}</div>
     </div>
 
     <div class="qp-footer">Powered by Obra · obra.build</div>
@@ -379,7 +388,7 @@ async function saveQuote() {
       }
     });
     if (!data.quote) throw new Error(data.error || 'Failed to save quote');
-    showToast(lang === 'he' ? `✓ נשמר (${data.quote.quoteNumber})` : `✓ Saved (${data.quote.quoteNumber})`, 'ok');
+    showToast(lang === 'he' ? `✓ נשמר (${data.quote.quoteNumber})` : lang === 'es' ? `✓ Guardado (${data.quote.quoteNumber})` : `✓ Saved (${data.quote.quoteNumber})`, 'ok');
   } catch (err) {
     showToast(err.message, 'err');
   }
