@@ -407,7 +407,7 @@ export default {
 
       if (path === '/api/health') {
         // `version` bumps on meaningful deploys — lets us confirm an auto-deploy actually shipped.
-        return corsResponse(env, request, json({ ok: true, ts: Date.now(), version: 'obra-2026-07-03-projects' }));
+        return corsResponse(env, request, json({ ok: true, ts: Date.now(), version: 'obra-2026-07-03-metersafe' }));
       }
 
       // ── Payment Routes ──
@@ -2308,6 +2308,11 @@ Use THESE rates whenever possible. If this project isn't covered by their histor
     }
   }
 
+  // Reserve the credit BEFORE the paid call so parallel requests can't bypass the meter; refund on failure.
+  updated.credits -= 1;
+  updated.creditsUsedThisMonth = (updated.creditsUsedThisMonth || 0) + 1;
+  await env.BQ_USERS.put(`user:${updated.email}`, JSON.stringify(updated));
+
   let aiResponse;
   try {
     // Try Claude first
@@ -2318,14 +2323,13 @@ Use THESE rates whenever possible. If this project isn't covered by their histor
       aiResponse = await callGeminiAPI(env, finalPrompt, images || []);
     } catch (geminiErr) {
       console.error('Gemini also failed:', geminiErr.message);
+      // Refund the reserved credit — no result was produced.
+      updated.credits += 1;
+      updated.creditsUsedThisMonth = Math.max(0, (updated.creditsUsedThisMonth || 0) - 1);
+      try { await env.BQ_USERS.put(`user:${updated.email}`, JSON.stringify(updated)); } catch (_) {}
       return json({ error: 'AI service temporarily unavailable' }, 502);
     }
   }
-
-  // Deduct credit
-  updated.credits -= 1;
-  updated.creditsUsedThisMonth = (updated.creditsUsedThisMonth || 0) + 1;
-  await env.BQ_USERS.put(`user:${updated.email}`, JSON.stringify(updated));
 
   // Log credit usage
   await logCreditUsage(updated.email, action, body.projectTitle || action, env);
@@ -3501,6 +3505,12 @@ async function handleSocialAnalyze(request, env) {
   const apifyToken = env.APIFY_TOKEN;
   if (!apifyToken) return json({ error: 'Apify not configured' }, 500);
 
+  // Reserve 2 credits BEFORE the paid Apify scrape + AI call so parallel requests can't bypass the
+  // meter (and can't spin up extra billable Apify runs on one credit). Refunded on the failure path.
+  updated.credits -= 2;
+  updated.creditsUsedThisMonth = (updated.creditsUsedThisMonth || 0) + 2;
+  await env.BQ_USERS.put(`user:${updated.email}`, JSON.stringify(updated));
+
   // Clean username
   const cleanUser = username.replace(/^@/, '').replace(/^https?:\/\/(www\.)?(instagram|facebook)\.com\//, '').replace(/\/$/, '').split('?')[0];
 
@@ -3607,14 +3617,15 @@ Provide a detailed analysis. Respond JSON only:
     try {
       aiResponse = await callGeminiAPI(env, prompt, []);
     } catch (e2) {
-      return json({ error: 'AI analysis failed: ' + e.message }, 502);
+      // Refund the reserved credits — no analysis was produced.
+      updated.credits += 2;
+      updated.creditsUsedThisMonth = Math.max(0, (updated.creditsUsedThisMonth || 0) - 2);
+      try { await env.BQ_USERS.put(`user:${updated.email}`, JSON.stringify(updated)); } catch (_) {}
+      return json({ error: 'AI analysis failed' }, 502);
     }
   }
 
-  // Deduct 2 credits
-  updated.credits -= 2;
-  updated.creditsUsedThisMonth = (updated.creditsUsedThisMonth || 0) + 2;
-  await env.BQ_USERS.put(`user:${updated.email}`, JSON.stringify(updated));
+  // Credits already reserved above; just record usage.
   await logCreditUsage(updated.email, 'social-analysis', '@' + cleanUser, env);
 
   // Parse AI response
@@ -4067,12 +4078,12 @@ async function handleRedeemCode(request, env) {
   if (gc.used) return json({ error: 'Code already used' }, 400);
 
   // Atomic claim: D1 PRIMARY KEY on the code makes concurrent redeems race-safe (KV read-check-write is not).
-  if (env.CRM_DB) {
-    try {
-      await env.CRM_DB.prepare('INSERT INTO redeemed_codes (code, email) VALUES (?, ?)').bind(code.toUpperCase().trim(), user.email).run();
-    } catch (e) {
-      return json({ error: 'Code already used' }, 400); // UNIQUE violation — another request already claimed it
-    }
+  // Fail CLOSED if the DB binding is missing — the KV-only path double-credits on concurrent redeems.
+  if (!env.CRM_DB) return json({ error: 'Redemption temporarily unavailable' }, 503);
+  try {
+    await env.CRM_DB.prepare('INSERT INTO redeemed_codes (code, email) VALUES (?, ?)').bind(code.toUpperCase().trim(), user.email).run();
+  } catch (e) {
+    return json({ error: 'Code already used' }, 400); // UNIQUE violation — another request already claimed it
   }
 
   // Mark as used (record-keeping)
@@ -4094,10 +4105,12 @@ async function handleAdminCreateGiftCode(request, env) {
   const { credits, note } = await request.json();
   if (!credits || credits < 1) return json({ error: 'credits required (min 1)' }, 400);
 
-  // Generate random 8-char code
+  // Generate random 8-char code — CSPRNG (not Math.random, whose PRNG state is recoverable from
+  // observed codes, which would let a holder of a few codes predict future ones).
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const rnd = crypto.getRandomValues(new Uint8Array(8));
   let code = '';
-  for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  for (let i = 0; i < 8; i++) code += chars[rnd[i] % chars.length];
 
   const gc = {
     code,
