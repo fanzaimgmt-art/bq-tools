@@ -109,7 +109,7 @@ body {
 .hero {
   position: relative;
   text-align: center;
-  padding: var(--space-5) 24px;
+  padding: 64px 24px 56px;
   overflow: hidden;
 }
 .hero::before {
@@ -129,7 +129,7 @@ body {
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--ac);
-  margin-bottom: var(--space-2);
+  margin-bottom: 10px;
   opacity: 0.8;
 }
 .hero h1 {
@@ -140,7 +140,7 @@ body {
   line-height: 0.93;
   text-transform: uppercase;
   color: #fff;
-  margin-bottom: var(--space-3);
+  margin-bottom: 18px;
   position: relative;
 }
 .hero h1 .accent { color: var(--ac); }
@@ -148,7 +148,7 @@ body {
   font-size: 18px;
   color: rgba(255,255,255,0.55);
   max-width: 480px;
-  margin: 0 auto var(--space-3);
+  margin: 0 auto 18px;
   line-height: 1.55;
   font-weight: 400;
 }
@@ -157,7 +157,24 @@ body {
   gap: 14px;
   justify-content: center;
   flex-wrap: wrap;
-  margin-bottom: var(--space-4);
+  margin-bottom: 20px;
+}
+.hero-trust {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 3px 10px;
+  margin: 0 auto 22px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.5);
+  letter-spacing: 0.01em;
+}
+.hero-trust .ht-sep {
+  color: var(--ac);
+  opacity: 0.6;
+  font-weight: 400;
 }
 .hero-image {
   width: 92%;
@@ -192,7 +209,7 @@ body {
   display: block;
   width: 90%;
   max-width: 640px;
-  margin: var(--space-4) auto 0;
+  margin: 20px auto 0;
   border-radius: var(--r-xl);
   overflow: hidden;
   line-height: 0;
@@ -669,7 +686,7 @@ body {
 
 <!-- Hero -->
 <section class="hero">
-  <p class="hero-eyebrow" data-en="For contractors" data-es="Para contratistas" data-he="לקבלנים" data-ar="للمقاولين" data-fa="برای پیمانکاران" data-hy="Կապալառուների համար">For contractors</p>
+  <p class="hero-eyebrow" data-en="Built for real crews" data-es="Hecho para cuadrillas de verdad" data-he="נבנה לצוותים אמיתיים">Built for real crews</p>
   <h1>
     <span data-en="GET PAID" data-es="COBRA" data-he="קבל תשלום" data-ar="احصل على أموالك" data-fa="پول بگیرید" data-hy="ՎՃԱՐՎԵՔ">GET PAID</span><br>
     <span class="accent" data-en="FASTER" data-es="MÁS RÁPIDO" data-he="מהר יותר" data-ar="أسرع" data-fa="سریع‌تر" data-hy="ԱՎԵԼԻ ԱՐԱԳ">FASTER</span>
@@ -678,6 +695,7 @@ body {
   <div class="hero-cta">
     <a href="/auth.html" class="btn btn-primary btn-large" data-en="Start Free →" data-es="Empieza Gratis →" data-he="← התחל בחינם" data-ar="ابدأ مجانًا →" data-fa="شروع رایگان →" data-hy="Սկսեք անվճար →">Start Free →</a>
   </div>
+  <p class="hero-trust"><span data-en="$14.99 flat" data-es="$14.99 fijo" data-he="$14.99 קבוע">$14.99 flat</span><span class="ht-sep" aria-hidden="true">·</span><span data-en="No contracts" data-es="Sin contratos" data-he="בלי חוזים">No contracts</span><span class="ht-sep" aria-hidden="true">·</span><span data-en="Cancel in one tap" data-es="Cancela con un toque" data-he="ביטול בלחיצה אחת">Cancel in one tap</span><span class="ht-sep" aria-hidden="true">·</span><span data-en="English &amp; Español" data-es="English &amp; Español" data-he="English &amp; Español">English &amp; Español</span></p>
   <a href="/auth.html" class="hero-video" aria-label="Start free — sign up">
     <video src="img/iso-edit.mp4" autoplay muted loop playsinline></video>
     <span class="hero-video-cta" data-en="Start Free →" data-es="Empieza Gratis →" data-he="← התחל בחינם" data-hy="Սկսեք անվճար →">Start Free →</span>
@@ -906,6 +924,56 @@ body {
     </div>
   </div>
 
+  <!-- The Obra Pledge — competitor sins (2026-07-03 teardowns), inverted into a documented promise -->
+  <div class="pledge-block" data-reveal>
+    <p class="section-eyebrow" data-en="The Promise" data-es="La Promesa">The Promise</p>
+    <h3 class="pledge-title" data-en="The Obra Pledge" data-es="El Compromiso Obra">The Obra Pledge</h3>
+    <div class="pledge-grid">
+      <div class="pledge-card">
+        <div class="pledge-ic">✓</div>
+        <div class="pledge-copy">
+          <strong data-en="Flat price. Never per-seat." data-es="Precio fijo. Nunca por asiento.">Flat price. Never per-seat.</strong>
+          <span data-en="Your whole crew works under one $14.99 plan. Competitors charge $29–$34 per user." data-es="Todo tu equipo trabaja con un solo plan de $14.99. Los competidores cobran $29–$34 por usuario.">Your whole crew works under one $14.99 plan. Competitors charge $29–$34 per user.</span>
+        </div>
+      </div>
+      <div class="pledge-card">
+        <div class="pledge-ic">✓</div>
+        <div class="pledge-copy">
+          <strong data-en="No 12-month contracts." data-es="Sin contratos de 12 meses.">No 12-month contracts.</strong>
+          <span data-en="Month to month. Others lock you for a year with 30% exit penalties." data-es="Mes a mes. Otros te atan por un año con penalizaciones de salida del 30%.">Month to month. Others lock you for a year with 30% exit penalties.</span>
+        </div>
+      </div>
+      <div class="pledge-card">
+        <div class="pledge-ic">✓</div>
+        <div class="pledge-copy">
+          <strong data-en="Cancel in one tap, in the app." data-es="Cancela con un toque, en la app.">Cancel in one tap, in the app.</strong>
+          <span data-en="Not buried in a web portal. No retention calls." data-es="No escondido en un portal web. Sin llamadas de retención.">Not buried in a web portal. No retention calls.</span>
+        </div>
+      </div>
+      <div class="pledge-card">
+        <div class="pledge-ic">✓</div>
+        <div class="pledge-copy">
+          <strong data-en="Your money goes straight to you." data-es="Tu dinero va directo a ti.">Your money goes straight to you.</strong>
+          <span data-en="We never hold your funds or ask for 3 months of bank statements." data-es="Nunca retenemos tus fondos ni pedimos 3 meses de estados de cuenta.">We never hold your funds or ask for 3 months of bank statements.</span>
+        </div>
+      </div>
+      <div class="pledge-card">
+        <div class="pledge-ic">✓</div>
+        <div class="pledge-copy">
+          <strong data-en="Your data leaves with you." data-es="Tus datos se van contigo.">Your data leaves with you.</strong>
+          <span data-en="Export everything, anytime, free." data-es="Exporta todo, cuando quieras, gratis.">Export everything, anytime, free.</span>
+        </div>
+      </div>
+      <div class="pledge-card">
+        <div class="pledge-ic">✓</div>
+        <div class="pledge-copy">
+          <strong data-en="No sales calls. Ever." data-es="Sin llamadas de ventas. Nunca.">No sales calls. Ever.</strong>
+          <span data-en="Try it, use it, decide alone. We don't chase." data-es="Pruébalo, úsalo, decide solo. No te perseguimos.">Try it, use it, decide alone. We don't chase.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Risk reversal + value anchor (Hormozi: kill the risk, name the alternative cost) -->
   <div class="price-reassure">
     <span class="pr-item">✓ <span data-en="Start free — no credit card" data-es="Empieza gratis — sin tarjeta" data-he="להתחיל חינם — בלי כרטיס אשראי">Start free — no credit card</span></span>
@@ -919,6 +987,14 @@ body {
   </div>
 </section>
 <style>
+  .pledge-block { max-width:900px; margin:8px auto 48px; }
+  .pledge-title { font-family:var(--font-display); font-size:26px; font-weight:700; letter-spacing:-0.02em; text-align:center; color:var(--tx); margin:4px 0 26px; }
+  .pledge-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; text-align:start; }
+  .pledge-card { display:flex; gap:14px; align-items:flex-start; background:linear-gradient(150deg,rgba(232,197,71,.06),transparent 55%),var(--sf); border:1px solid var(--bd); border-radius:16px; padding:20px 22px; }
+  .pledge-ic { flex:0 0 auto; width:28px; height:28px; border-radius:50%; background:var(--acd,rgba(232,197,71,.14)); color:var(--ac); font-weight:800; font-size:14px; display:flex; align-items:center; justify-content:center; }
+  .pledge-copy strong { display:block; font-size:15px; color:var(--tx); margin-bottom:4px; }
+  .pledge-copy span { display:block; font-size:13.5px; color:var(--txd); line-height:1.55; }
+  @media (max-width:700px) { .pledge-grid { grid-template-columns:1fr; } }
   .price-reassure { max-width:760px; margin:36px auto 0; text-align:center; }
   .price-reassure .pr-item { display:inline-block; margin:0 14px 8px; font-size:13px; color:var(--txd,#9a958c); font-weight:500; }
   .price-reassure .pr-item ~ .pr-item { }
@@ -949,6 +1025,7 @@ body {
       <a href="#pricing" data-en="Pricing" data-es="Precios" data-he="מחירים" data-hy="Գներ">Pricing</a>
       <a href="/directory.html" data-en="Directory" data-es="Directorio" data-he="ספר עסקים">Directory</a>
       <a href="/home.html" data-en="All Tools" data-es="Todas las Herramientas" data-he="כל הכלים">All Tools</a>
+      <a href="/compare/" data-en="vs. Competitors" data-es="vs. Competencia" data-he="מול המתחרים">vs. Competitors</a>
     </div>
     <div class="mf-col">
       <div class="mf-h" data-en="Connect" data-es="Conectar" data-he="התחבר">Connect</div>

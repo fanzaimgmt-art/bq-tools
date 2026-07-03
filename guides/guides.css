@@ -1,0 +1,104 @@
+/* Obra — Cost Guides (guides/*.html) — shared styles, built on style.css tokens */
+
+.guide-wrap { max-width: 880px; margin: 0 auto; padding: 88px 20px 60px; }
+[dir="rtl"] .guide-wrap { font-family: 'Heebo', 'Inter', sans-serif; }
+
+.guide-eyebrow {
+  display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: 1.5px;
+  color: var(--ac); text-transform: uppercase; margin-bottom: 14px;
+}
+.guide-head { text-align: center; margin-bottom: 32px; }
+.guide-head h1 {
+  font-family: 'Space Grotesk', sans-serif; font-size: clamp(26px, 4.4vw, 38px);
+  letter-spacing: -0.02em; line-height: 1.15; margin: 0 0 14px;
+}
+.guide-head .sub { color: var(--txd); font-size: 16px; max-width: 640px; margin: 0 auto; line-height: 1.65; }
+.guide-meta { color: var(--txd); font-size: 12.5px; margin-top: 14px; }
+
+.guide-answer {
+  background: rgba(232,197,71,.06); border: 1px solid var(--acd); border-radius: 14px;
+  padding: 18px 20px; margin: 0 0 28px; font-size: 15px; line-height: 1.65; color: var(--tx);
+}
+.guide-answer strong { color: var(--ac); }
+
+.guide-table-wrap { overflow-x: auto; border: 1px solid var(--bd); border-radius: 16px; background: var(--sf); margin-bottom: 10px; }
+table.guide-cost { width: 100%; border-collapse: collapse; min-width: 560px; font-size: 14px; }
+table.guide-cost th, table.guide-cost td { padding: 13px 14px; text-align: start; border-bottom: 1px solid var(--bd); vertical-align: top; }
+table.guide-cost thead th { font-family: 'Space Grotesk', sans-serif; font-size: 14px; color: var(--tx); border-bottom: 2px solid var(--bd); }
+table.guide-cost tr:last-child td { border-bottom: none; }
+table.guide-cost td.price, table.guide-cost th.price { text-align: end; color: var(--ac); font-weight: 700; white-space: nowrap; }
+[dir="rtl"] table.guide-cost td.price, [dir="rtl"] table.guide-cost th.price { direction: ltr; unicode-bidi: isolate; text-align: start; }
+.guide-note { color: var(--txd); font-size: 12.5px; margin: 12px 4px 0; line-height: 1.6; }
+
+.guide-section { margin: 44px 0; }
+.guide-section h2 {
+  font-family: 'Space Grotesk', sans-serif; font-size: clamp(20px, 3vw, 26px);
+  letter-spacing: -0.01em; margin: 0 0 12px;
+}
+.guide-section > p.intro { color: var(--txd); font-size: 15px; line-height: 1.7; margin: 0 0 18px; }
+.guide-section ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.guide-section ul.tips li, .guide-section ul.flags li {
+  background: var(--sf); border: 1px solid var(--bd); border-radius: 12px; padding: 14px 16px;
+  font-size: 14.5px; line-height: 1.6; color: var(--tx); display: flex; gap: 10px; align-items: flex-start;
+}
+.guide-section ul.tips li::before { content: '✓'; color: #7dd87d; font-weight: 800; flex-shrink: 0; }
+.guide-section ul.flags li::before { content: '⚠'; color: var(--red); flex-shrink: 0; }
+.guide-section ul.drivers li {
+  border-inline-start: 3px solid var(--ac); padding: 4px 0 4px 16px; font-size: 15px; line-height: 1.7; color: var(--tx);
+}
+[dir="rtl"] .guide-section ul.drivers li { padding: 4px 16px 4px 0; }
+.guide-section ul.drivers li strong { color: var(--ac); }
+
+/* ── CTA blocks ── */
+.guide-cta {
+  margin: 40px 0; background: var(--sf); border: 1px solid var(--bd); border-radius: 16px;
+  padding: 26px 24px; text-align: center;
+}
+.guide-cta.contractor { border-color: var(--acd); background: rgba(232,197,71,.04); }
+.guide-cta h3 { font-family: 'Space Grotesk', sans-serif; font-size: 19px; margin: 0 0 8px; }
+.guide-cta p { color: var(--txd); font-size: 14px; margin: 0 0 16px; line-height: 1.6; }
+
+/* ── FAQ ── */
+.guide-faq details {
+  background: var(--sf); border: 1px solid var(--bd); border-radius: 12px;
+  padding: 4px 18px; margin-bottom: 10px;
+}
+.guide-faq summary {
+  font-weight: 700; font-size: 15px; padding: 14px 0; cursor: pointer; list-style: none;
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+}
+.guide-faq summary::-webkit-details-marker { display: none; }
+.guide-faq summary::after { content: '+'; color: var(--ac); font-size: 20px; flex-shrink: 0; transition: transform .2s; }
+.guide-faq details[open] summary::after { transform: rotate(45deg); }
+.guide-faq details p { color: var(--txd); font-size: 14.5px; line-height: 1.7; padding: 0 0 16px; margin: 0; }
+
+/* ── Internal links / related guides ── */
+.guide-related { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 10px; }
+.guide-related a {
+  display: block; background: var(--sf); border: 1px solid var(--bd); border-radius: 12px;
+  padding: 16px; color: var(--tx); font-size: 13.5px; font-weight: 600; line-height: 1.4;
+}
+.guide-related a:hover { border-color: var(--ac); opacity: 1; color: var(--ac); }
+.guide-related a span { display: block; color: var(--txd); font-weight: 400; font-size: 12px; margin-top: 4px; }
+.guide-hub-link { text-align: center; font-size: 13.5px; color: var(--txd); margin-bottom: 30px; }
+
+.guide-src { color: var(--txd); font-size: 11.5px; margin-top: 30px; line-height: 1.8; }
+.guide-src a { color: var(--txd); }
+.guide-src strong { color: var(--txd); }
+
+/* ── Hub page cards ── */
+.hub-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+.hub-card {
+  background: var(--sf); border: 1px solid var(--bd); border-radius: 16px; padding: 22px 20px;
+  display: flex; flex-direction: column; gap: 8px; color: var(--tx);
+}
+.hub-card:hover { border-color: var(--ac); opacity: 1; }
+.hub-card .hc-icon { font-size: 26px; }
+.hub-card h3 { font-family: 'Space Grotesk', sans-serif; font-size: 17px; margin: 0; color: var(--tx); }
+.hub-card p { color: var(--txd); font-size: 13.5px; line-height: 1.55; margin: 0; }
+.hub-card .hc-range { color: var(--ac); font-weight: 700; font-size: 14px; margin-top: auto; }
+
+@media (max-width: 720px) {
+  .guide-related, .hub-cards { grid-template-columns: 1fr; }
+  table.guide-cost { min-width: 480px; }
+}
