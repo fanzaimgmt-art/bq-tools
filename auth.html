@@ -142,25 +142,14 @@
       <h2 data-en="Log In / Sign Up" data-es="Iniciar Sesión / Registrarse" data-he="התחבר / הרשם">Log In / Sign Up</h2>
       <p class="sub" data-en="Sign in with Google or your email. No password needed." data-es="Inicia sesión con Google o tu email. Sin contraseña." data-he="התחבר עם Google או עם המייל שלך. לא צריך סיסמה.">Sign in with Google or your email. No password needed.</p>
 
-      <!-- Google Sign-In Button -->
-      <div id="googleBtnWrap" style="display:flex;justify-content:center;margin-bottom:16px;">
-        <div id="g_id_onload"
-          data-client_id="791515986123-ahji6s7f0mff047c90mrnh5kpf8e7gh6.apps.googleusercontent.com"
-          data-callback="handleGoogleCallback"
-          data-auto_prompt="false">
-        </div>
-        <div class="g_id_signin"
-          data-type="standard"
-          data-size="large"
-          data-theme="filled_black"
-          data-text="sign_in_with"
-          data-shape="rectangular"
-          data-logo_alignment="left"
-          data-width="320">
-        </div>
-      </div>
-      <!-- Fallback manual Google button if GSI fails to load -->
-      <button id="googleFallbackBtn" class="btn" style="width:100%;font-size:16px;margin-bottom:16px;display:none;gap:10px;" onclick="manualGoogleSignIn()">
+      <!-- Google One Tap (desktop bonus; auto-prompt off). The visible, reliable button below uses the
+           redirect code-flow — works on mobile where GIS's popup/3p-cookie flow is blocked. -->
+      <div id="g_id_onload"
+        data-client_id="791515986123-ahji6s7f0mff047c90mrnh5kpf8e7gh6.apps.googleusercontent.com"
+        data-callback="handleGoogleCallback"
+        data-auto_prompt="false"></div>
+      <!-- Primary Google button — full-page redirect flow, works on every browser -->
+      <button id="googleFallbackBtn" class="btn" style="width:100%;font-size:16px;margin-bottom:16px;display:flex;align-items:center;justify-content:center;gap:10px;" onclick="startGoogleRedirect()">
         <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
         <span data-en="Sign in with Google" data-es="Iniciar sesión con Google" data-he="התחבר עם Google">Sign in with Google</span>
       </button>
@@ -228,7 +217,7 @@
   </div>
 </footer>
 
-<script src="https://accounts.google.com/gsi/client" async defer onload="document.getElementById('googleFallbackBtn').style.display='none'" onerror="document.getElementById('googleFallbackBtn').style.display='flex'"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="js/ai.js"></script>
 <script src="js/auth.js"></script>
 <script src="/js/i18n-dict.js" defer></script>
@@ -285,9 +274,45 @@ async function handleGoogleCallback(response) {
   }
 }
 
-function manualGoogleSignIn() {
-  showMsg(lang === 'he' ? 'Google Sign-In לא נטען. השתמש בהתחברות עם מייל.' : 'Google Sign-In not loaded. Use email sign-in instead.', 'err');
+// Robust Google login: full-page redirect to Google's consent, back to /auth.html?code=… — no popup,
+// no third-party cookies, no FedCM. This is what makes Google sign-in work on mobile.
+const GOOGLE_CLIENT_ID = '791515986123-ahji6s7f0mff047c90mrnh5kpf8e7gh6.apps.googleusercontent.com';
+const GOOGLE_REDIR = location.origin + '/auth.html';   // MUST exactly match the token-exchange redirect_uri
+function startGoogleRedirect() {
+  const state = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  sessionStorage.setItem('g_state', state);
+  const u = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+  u.searchParams.set('client_id', GOOGLE_CLIENT_ID);
+  u.searchParams.set('redirect_uri', GOOGLE_REDIR);
+  u.searchParams.set('response_type', 'code');
+  u.searchParams.set('scope', 'openid email profile');
+  u.searchParams.set('state', state);
+  u.searchParams.set('prompt', 'select_account');
+  window.location.href = u.toString();
 }
+function manualGoogleSignIn() { startGoogleRedirect(); } // legacy name kept
+
+// On return from Google (?code=…), exchange it server-side and log in.
+(function handleGoogleRedirectReturn() {
+  const p = new URLSearchParams(location.search);
+  const code = p.get('code');
+  if (!code) return;
+  const clean = location.origin + location.pathname; // strip query so a refresh can't replay the code
+  const state = p.get('state'), saved = sessionStorage.getItem('g_state');
+  if (saved && state && state !== saved) { history.replaceState(null, '', clean); showMsg(lang==='he'?'אימות Google נכשל — נסה שוב':'Google verification mismatch — try again','err'); return; }
+  sessionStorage.removeItem('g_state');
+  showMsg(lang === 'he' ? '...מתחבר עם Google' : 'Signing in with Google...', 'ok');
+  fetch(API_URL + '/api/auth/google/exchange', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code, redirect_uri: GOOGLE_REDIR })
+  }).then(r => r.json().then(d => ({ ok: r.ok, d }))).then(({ ok, d }) => {
+    if (!ok || !d.userToken) throw new Error(d.error || 'Google sign-in failed');
+    localStorage.setItem('bq_token', d.userToken); setCachedUser(d.user);
+    history.replaceState(null, '', clean);
+    showMsg(lang === 'he' ? '✓ מחובר!' : '✓ Logged in!', 'ok');
+    setTimeout(() => { d.user.isNew ? (window.location.href = '/onboarding.html') : _postLoginRedirect(); }, 400);
+  }).catch(e => { history.replaceState(null, '', clean); showMsg(e.message, 'err'); });
+})();
 
 function showStep(id) {
   document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));

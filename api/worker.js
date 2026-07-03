@@ -89,6 +89,9 @@ export default {
       if (path === '/api/auth/google' && request.method === 'POST') {
         return corsResponse(env, request, await handleGoogleAuth(request, env));
       }
+      if (path === '/api/auth/google/exchange' && request.method === 'POST') {
+        return corsResponse(env, request, await handleGoogleExchange(request, env));
+      }
       if (path === '/api/auth/logout' && request.method === 'POST') {
         return corsResponse(env, request, await handleLogout(request, env));
       }
@@ -413,7 +416,7 @@ export default {
 
       if (path === '/api/health') {
         // `version` bumps on meaningful deploys — lets us confirm an auto-deploy actually shipped.
-        return corsResponse(env, request, json({ ok: true, ts: Date.now(), version: 'obra-2026-07-03-micfix' }));
+        return corsResponse(env, request, json({ ok: true, ts: Date.now(), version: 'obra-2026-07-03-goog-redirect' }));
       }
 
       // ── Payment Routes ──
@@ -2097,34 +2100,60 @@ async function handleVerify(request, env) {
 
 // ── Google Auth ──
 
-async function handleGoogleAuth(request, env) {
-  const { credential } = await request.json();
-  if (!credential) return json({ error: 'credential required' }, 400);
-
-  // Verify JWT with Google
+// Verify a Google ID token via tokeninfo + enforce aud/iss/email_verified. Returns payload or null.
+// (tokeninfo confirms Google signed it; the aud check confirms it was minted for THIS app — without
+// that, any Google ID token carrying a victim's email would be an account takeover.)
+async function _verifyGoogleIdToken(idToken, env) {
+  if (!idToken) return null;
   let payload;
   try {
-    const res = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`);
-    if (!res.ok) throw new Error('Invalid token');
+    const res = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`);
+    if (!res.ok) return null;
     payload = await res.json();
-  } catch {
-    return json({ error: 'Invalid Google credential' }, 401);
-  }
-
-  // Security: tokeninfo only confirms Google signed the token — NOT that it was
-  // minted for THIS app. Without these checks any Google ID token (from any
-  // OAuth client) carrying a victim's email = account takeover.
+  } catch { return null; }
   const CLIENT_ID = env.GOOGLE_CLIENT_ID || '791515986123-ahji6s7f0mff047c90mrnh5kpf8e7gh6.apps.googleusercontent.com';
-  if (payload.aud !== CLIENT_ID) {
-    return json({ error: 'Invalid Google credential' }, 401);
-  }
-  if (payload.iss !== 'accounts.google.com' && payload.iss !== 'https://accounts.google.com') {
-    return json({ error: 'Invalid Google credential' }, 401);
-  }
-  if (payload.email_verified !== true && payload.email_verified !== 'true') {
-    return json({ error: 'Email not verified' }, 403);
-  }
+  if (payload.aud !== CLIENT_ID) return null;
+  if (payload.iss !== 'accounts.google.com' && payload.iss !== 'https://accounts.google.com') return null;
+  if (payload.email_verified !== true && payload.email_verified !== 'true') return null;
+  return payload;
+}
 
+// GIS credential (One Tap / rendered button) login — works on desktop; mobile browsers increasingly
+// block its popup/3p-cookie flow, so handleGoogleExchange (redirect code-flow) is the robust path.
+async function handleGoogleAuth(request, env) {
+  let b; try { b = await request.json(); } catch { return json({ error: 'Invalid request' }, 400); }
+  const payload = await _verifyGoogleIdToken(b && b.credential, env);
+  if (!payload) return json({ error: 'Invalid Google credential' }, 401);
+  return _finishGoogleLogin(payload, env);
+}
+
+// Robust mobile Google login: exchange an authorization code (full-page redirect flow) for an ID
+// token server-side, then log in. No popups / third-party cookies / FedCM — works on every browser.
+async function handleGoogleExchange(request, env) {
+  if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) return json({ error: 'Google not configured' }, 503);
+  let b; try { b = await request.json(); } catch { return json({ error: 'Invalid request' }, 400); }
+  const code = String((b && b.code) || '');
+  const redirect_uri = String((b && b.redirect_uri) || '');
+  if (!code || !redirect_uri) return json({ error: 'code and redirect_uri required' }, 400);
+  // redirect_uri must be one of ours (Google also enforces the registered set; this is defense-in-depth)
+  if (!/^https:\/\/(www\.)?obra\.build\/auth(\.html)?$/.test(redirect_uri)) return json({ error: 'Bad redirect_uri' }, 400);
+  let idToken;
+  try {
+    const tr = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ code, client_id: env.GOOGLE_CLIENT_ID, client_secret: env.GOOGLE_CLIENT_SECRET, redirect_uri, grant_type: 'authorization_code' })
+    });
+    const td = await tr.json();
+    if (!tr.ok || !td.id_token) return json({ error: 'Google sign-in failed — try again' }, 502);
+    idToken = td.id_token;
+  } catch { return json({ error: 'Google sign-in failed — try again' }, 502); }
+  const payload = await _verifyGoogleIdToken(idToken, env);
+  if (!payload) return json({ error: 'Invalid Google credential' }, 401);
+  return _finishGoogleLogin(payload, env);
+}
+
+// Shared: a verified Google payload → create-or-login the user → token response.
+async function _finishGoogleLogin(payload, env) {
   // Normalize identically to email-code signup so Google login and email signup resolve to the SAME
   // account (and one inbox can't farm dot/+tag variants).
   const email = normalizeEmail(payload.email);
@@ -3180,6 +3209,7 @@ async function handleAdminErrors(request, env) {
 // Baseline is version-controlled here (Claude appends when shipping changes); entries Moshe adds
 // via the page are stored in KV `admin:changelog`. GET merges: KV additions (newest first) then seed.
 const CHANGELOG_SEED = [
+  { date: '2026-07-03', type: 'fix', title: 'Google sign-in works on mobile', detail: 'Switched Google login to a full-page redirect flow (no popups/cookies/FedCM) so it works on phones, where the old Google button silently failed.' },
   { date: '2026-07-03', type: 'fix', title: 'Tony microphone gives feedback', detail: 'The voice button is always visible now and tells you why if it can’t start (mic permission, unsupported browser) instead of silently doing nothing.' },
   { date: '2026-07-03', type: 'fix', title: 'Admin login shows lockouts clearly', detail: 'After 5 wrong tries the IP is blocked for an hour; the login now says “temporarily blocked” instead of a misleading “wrong password”.' },
   { date: '2026-07-03', type: 'fix', title: 'Project update no longer wipes data', detail: 'A partial save (e.g. changing only status) was erasing the schedule/client/address. Now only the fields you send are touched.' },
