@@ -372,6 +372,16 @@ body { display: flex; flex-direction: column; }
   line-height: 1.7;
 }
 
+/* Price-book grounding status (same look as Smart Estimate's) */
+.pb-status {
+  font-size: 13px; padding: 9px 12px; border-radius: 8px; margin-bottom: 12px;
+  background: rgba(81,207,102,.08); border: 1px solid var(--grn); color: var(--grn); font-weight: 600;
+}
+.pb-status.pb-nudge {
+  background: var(--acd); border-color: var(--ac); color: var(--txd); font-weight: 500;
+}
+.pb-status.pb-nudge a { color: var(--ac); font-weight: 700; text-decoration: underline; }
+
 /* Error state */
 .vb-error {
   background: rgba(255,107,107,0.08);
@@ -589,6 +599,7 @@ body { display: flex; flex-direction: column; }
     <!-- Estimate -->
     <div class="vb-section" id="secEstimate" style="display:none;">
       <div class="vb-section-title"><span>💰</span><span data-en="Estimated Range" data-es="Rango Estimado" data-he="טווח מחירים משוער">Estimated Range</span></div>
+      <div id="pbStatus" style="display:none;"></div>
       <div class="vb-estimate" id="estimateRange"></div>
       <div class="vb-estimate-note" id="estimateNote"></div>
     </div>
@@ -828,7 +839,15 @@ analyzeBtn.addEventListener('click', async () => {
   try {
     const trade = document.getElementById('tradeSelect').value;
     const note = document.getElementById('noteInput').value.trim();
-    const pricebook = document.getElementById('pricebookInput').value.trim();
+    const manualPricebook = document.getElementById('pricebookInput').value.trim();
+
+    // Auto-fetch relevant Obra price-book entries (trade + note as the query) and merge
+    // with whatever the contractor typed manually — the manual field stays untouched
+    // on screen, this only affects the string sent to the AI.
+    const groundedItems = await getPriceBookGrounding(`${trade} ${note}`.trim());
+    lastPbGroundedCount = groundedItems.length;
+    const groundingLine = groundedItems.length ? priceBookPromptLines(groundedItems) : '';
+    const pricebook = [manualPricebook, groundingLine].filter(Boolean).join('; ');
 
     let result;
 
@@ -921,6 +940,79 @@ function seekVideo(timeStr) {
   // Toggle play/pause
   if (vid.paused) vid.play().catch(() => {});
   else vid.pause();
+}
+
+// ── Price-book grounding (front-end only) ──
+// Auto-fetches from the shared Obra price book (trade + note as the query) and folds
+// it into the analyze request, same approach as Smart Estimate's getPriceBookGrounding
+// (tools/estimate.html) — ported verbatim, query source swapped for this page's fields.
+// HONEST LABELING: this is a crowd-sourced/shared table (see api/pricebook-schema.sql —
+// no owner_email filtering on reads today), never call it "your price book" in copy.
+let lastPbGroundedCount = 0;
+const PB_STOPWORDS = new Set(['the','a','an','and','or','to','of','in','on','for','with','is','are','be','job','into','from','at','by','it','this','that','new','old','existing','need','needs','needed','replace','replacing','install','installing','installed','repair','repairing','repaired','fix','fixing','add','adding','remove','removing','build','building','my','our','some','all','full','complete','area','room']);
+
+function extractPricebookKeywords(desc) {
+  const words = String(desc || '').toLowerCase().replace(/[^a-z0-9\s-]/g, ' ').split(/\s+/).filter(Boolean);
+  const uniq = [];
+  for (const w of words) {
+    if (w.length > 3 && !PB_STOPWORDS.has(w) && !uniq.includes(w)) uniq.push(w);
+    if (uniq.length >= 3) break;
+  }
+  return uniq;
+}
+
+// Raw fetch, NOT apiCall — apiCall wipes the user's session on any 401, which is fine
+// for a required call but wrong here: this is a best-effort lookup, so any failure
+// (not logged in, expired token, network error, server error) must be silent and must
+// never log the user out or interrupt the analysis they're mid-way through running.
+async function searchPriceBookSafe(q) {
+  const token = getToken();
+  if (!token) return null;
+  try {
+    const res = await fetch(`${API_URL}/api/pricebook/search?q=${encodeURIComponent(q)}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch { return null; }
+}
+
+async function getPriceBookGrounding(desc) {
+  if (!isLoggedIn()) return [];
+  const keywords = extractPricebookKeywords(desc);
+  if (!keywords.length) return [];
+  const responses = await Promise.all(keywords.map(searchPriceBookSafe));
+  const seen = new Set();
+  const items = [];
+  for (const r of responses) {
+    if (!r || !Array.isArray(r.items)) continue;
+    for (const it of r.items) {
+      const key = `${it.item}|${it.unit}|${it.price}|${it.region}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      items.push(it);
+    }
+  }
+  return items.slice(0, 20);
+}
+
+function priceBookPromptLines(items) {
+  return items.map(it => {
+    const priceUnit = it.unit ? `$${it.price}/${it.unit}` : `$${it.price}`;
+    return `[${it.item} — ${priceUnit}${it.region ? ' — ' + it.region : ''}]`;
+  }).join('; ');
+}
+
+function priceBookStatusLine(groundedCount) {
+  if (groundedCount > 0) {
+    const n = groundedCount;
+    return `<div class="pb-status" data-en="✓ Priced with the Obra price book — real contractor prices (${n} item${n !== 1 ? 's' : ''})" data-es="✓ Cotizado con el libro de precios de Obra — precios reales de contratistas (${n} artículo${n !== 1 ? 's' : ''})">✓ Priced with the Obra price book — real contractor prices (${n} item${n !== 1 ? 's' : ''})</div>`;
+  }
+  // Only nudge once ever per device on THIS tool — a helpful pointer, not a recurring nag.
+  // Separate localStorage key from estimate.html's so each tool gets its own first-time hint.
+  if (localStorage.getItem('bq_pb_nudge_shown_vb')) return '';
+  localStorage.setItem('bq_pb_nudge_shown_vb', '1');
+  return `<div class="pb-status pb-nudge"><span data-en="No price-book match yet." data-es="Aún no hay coincidencias en el libro de precios.">No price-book match yet.</span> <a href="/tools/price-book.html" data-en="Add your prices →" data-es="Agrega tus precios →">Add your prices →</a></div>`;
 }
 
 // ── Deep-find a key anywhere in an object (for misplaced nesting) ──
@@ -1079,8 +1171,20 @@ function renderResults(resp) {
   if (estimate) {
     document.getElementById('estimateRange').textContent = estimate;
     document.getElementById('estimateNote').textContent = estimateNote;
+    const pbStatusEl = document.getElementById('pbStatus');
+    if (pbStatusEl) {
+      const html = priceBookStatusLine(lastPbGroundedCount);
+      pbStatusEl.innerHTML = html;
+      pbStatusEl.style.display = html ? '' : 'none';
+    }
     show('secEstimate');
   }
+
+  // Re-apply the current UI language — sections above were just built with innerHTML/
+  // textContent from scratch, including the price-book status line's data-en/data-es
+  // attributes, which only take effect on the next translation pass (same fix as
+  // estimate.html:289 for the same reason).
+  setLang(lang);
 }
 
 // ── Timeline copy/share helpers ──
